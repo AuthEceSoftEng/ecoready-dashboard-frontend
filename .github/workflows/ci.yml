@@ -4,7 +4,6 @@ on: push
 
 jobs:
   deploy:
-    if: ${{ false }}  # disable for now
     runs-on: ubuntu-latest
     steps:  
       - name: Checkout repository
@@ -44,12 +43,12 @@ jobs:
           remote_host: ${{ secrets.SSH_HOST }}
           remote_port: ${{ secrets.SSH_PORT }}
           remote_user: ${{ secrets.SSH_USERNAME }}
-          remote_key: ${{ secrets.SSH_KEY }}
+          remote_password: ${{ secrets.SSH_PASSWORD }}
       - uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_KEY }}
+          password: ${{ secrets.SSH_PASSWORD }}
           port: ${{ secrets.SSH_PORT }}
           script: |
             bash -ci 'pm2 restart client'
