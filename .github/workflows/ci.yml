@@ -39,7 +39,7 @@ jobs:
         uses: burnett01/rsync-deployments@5.2
         with:
           switches: -ahv --no-o --no-g --progress --delete --exclude=".git" --exclude="node_modules" --exclude=".env"
-          remote_path: /root/ecoready-dashboard-frontend
+          remote_path: ~/ecoready-dashboard-frontend
           remote_host: ${{ secrets.SSH_HOST }}
           remote_port: ${{ secrets.SSH_PORT }}
           remote_user: ${{ secrets.SSH_USERNAME }}
