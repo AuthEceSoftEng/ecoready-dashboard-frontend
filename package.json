@@ -1,19 +1,10 @@
 {
-	"name": "template-frontend",
-	"version": "0.0.1",
+	"name": "ecoready-dashboard-frontend",
+	"version": "1.0.0",
 	"private": true,
-	"description": "A template frontend.",
+	"description": "Frontend of the ECO-READY Dashboard",
 	"homepage": "",
-	"bugs": {
-		"url": "https://github.com/robotics-4-all/template-frontend/issues"
-	},
-	"repository": "github:robotics-4-all/template-frontend",
-	"contributors": [
-		{
-			"name": "Thomas Karanikiotis",
-			"email": "tkaranikio@gmail.com"
-		}
-	],
+	"repository": "github:AuthEceSoftEng/ecoready-dashboard-frontend",
 	"scripts": {
 		"build": "craco build",
 		"lint": "eslint . --cache",
