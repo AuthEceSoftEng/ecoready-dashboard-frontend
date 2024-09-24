@@ -44,7 +44,7 @@ jobs:
           remote_port: ${{ secrets.SSH_PORT }}
           remote_user: ${{ secrets.SSH_USERNAME }}
           remote_key: ${{ secrets.SSH_ΚΕΥ }}
-          remote_key_pass: ${{ secrets.PASSWORD }}
+          remote_key_pass: ${{ secrets.SSH_PASSWORD }}
       - uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SSH_HOST }}
