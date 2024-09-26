@@ -156,7 +156,7 @@ const SignIn = () => {
 				<Grid item container direction="column" justifyContent="center" align="center" sm={5} xs={12} sx={{ "> .MuiGrid-item": { p: 1 } }}>
 					<Grid item mt={2}>
 						<Typography variant="h3" className={classes.title}>{"WELCOME"}</Typography>
-						<Typography variant="h5" className={classes.subtitle}>{"to eenspector Platform"}</Typography>
+						<Typography variant="h5" className={classes.subtitle}>{"to ECO-READY Dashboard"}</Typography>
 					</Grid>
 					<Grid item container direction="column" justifyContent="center" alignItems="center">
 						<Form content={formContent} validationSchema="authenticationSchema" onSubmit={submitHandler} />
