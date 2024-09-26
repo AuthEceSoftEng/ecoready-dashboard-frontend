@@ -58,5 +58,8 @@ typings/
 # dotenv environment variables file
 .env
 
+# project files
+.project
+
 # Temporarily ignore tests
 cypress
