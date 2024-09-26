@@ -198,7 +198,7 @@ const Header = ({ isAuthenticated }) => {
 			<AppBar id="header" position="static" className={classes.grow}>
 				<Toolbar className="header-container">
 					<Box component={Link} to="/">
-						<Image src={logo} alt="Logo" sx={{ p: 0, my: 0, height: "100%", maxWidth: "200px" }} />
+						<Image src={logo} alt="Logo" sx={{ p: 0, my: 0, height: "100%", maxWidth: "130px" }} />
 					</Box>
 					<Box className={classes.grow} style={{ height: "100%" }} />
 					{isAuthenticated
