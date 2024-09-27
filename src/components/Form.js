@@ -43,7 +43,7 @@ const useStyles = makeStyles((theme) => ({
 		display: "flex",
 		justifyContent: "space-between",
 		alignItems: "center",
-		color: "white",
+		color: "black",
 	},
 	checkboxBox: {
 		width: "100%",
@@ -56,7 +56,7 @@ const useStyles = makeStyles((theme) => ({
 		display: "flex",
 		justifyContent: "space-between",
 		alignItems: "center",
-		color: "white",
+		color: "black",
 	},
 	radioBox: {
 		width: "100%",
@@ -64,7 +64,7 @@ const useStyles = makeStyles((theme) => ({
 		marginBottom: "10px",
 		display: "flex",
 		flexDirection: "column",
-		color: "white",
+		color: "black",
 	},
 	sliderBox: {
 		width: "100%",
@@ -72,7 +72,7 @@ const useStyles = makeStyles((theme) => ({
 		marginBottom: "10px",
 		display: "flex",
 		flexDirection: "column",
-		color: "white",
+		color: "black",
 	},
 	datepickerBox: {
 		width: "100%",
@@ -80,7 +80,7 @@ const useStyles = makeStyles((theme) => ({
 		marginBottom: "10px",
 		display: "flex",
 		flexDirection: "column",
-		color: "white",
+		color: "black",
 	},
 	switchBox: {
 		width: "100%",
@@ -91,14 +91,14 @@ const useStyles = makeStyles((theme) => ({
 		flexDirection: "row",
 		justifyContent: "space-between",
 		alignItems: "center",
-		color: "white",
+		color: "black",
 	},
 	buttonTitle: {
-		color: "white",
+		color: "black",
 		letterSpacing: theme.spacing(0.1),
 	},
 	markLabel: {
-		color: "white",
+		color: "black",
 	},
 	button: {
 		width: "100%",
@@ -355,7 +355,7 @@ const Form = forwardRef(({ disabled: dsb, content, validationSchema, onSubmit, o
 										label={comp.sublabel || ""}
 										views={comp.views || ["day", "month", "year"]}
 										background="secondary"
-										color="white"
+										color="black"
 										onChange={(value) => {
 											formikProps.handleChange({
 												target: {

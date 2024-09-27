@@ -66,7 +66,7 @@ const PopupExample = () => {
 				width="400px"
 				title="Example Popup with Form"
 				titleBackgroundColor="third"
-				backgroundColor="dark"
+				backgroundColor="primary"
 				open={popupFormOpen}
 				onClose={() => setPopupFormOpen(false)}
 			>
