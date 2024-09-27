@@ -12,7 +12,7 @@ const useStyles = makeStyles((theme) => ({
 	main: {
 		width: "100%",
 		height: "calc(100% - 160px)",
-		backgroundImage: `linear-gradient(to right, ${theme.palette.primary.main}, ${theme.palette.primaryDark.main})`,
+		backgroundColor: `${theme.palette.light.main}`,
 		position: "fixed",
 	},
 	mainBox: {

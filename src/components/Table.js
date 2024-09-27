@@ -13,11 +13,11 @@ import useGlobalState from "../use-global-state.js";
 
 const useStyles = makeStyles((theme) => ({
 	paginationButton: {
-		backgroundColor: theme.palette.secondary.main,
+		backgroundColor: theme.palette.primary.main,
 		borderRadius: 3 * theme.shape.borderRadius,
 		color: "white!important",
 		"&:hover": {
-			backgroundColor: theme.palette.secondaryDark.main,
+			backgroundColor: theme.palette.primaryDark.main,
 		},
 	},
 	formControl: {
@@ -77,14 +77,14 @@ const Table = (props) => {
 
 	const getTheadTrProps = useCallback(() => ({
 		style: {
-			backgroundColor: theme.palette.secondaryDark.main,
+			backgroundColor: theme.palette.primaryDark.main,
 			color: theme.palette.common.white,
 		},
-	}), [theme.palette.common.white, theme.palette.secondaryDark.main]);
+	}), [theme.palette.common.white, theme.palette.primaryDark.main]);
 
 	const getTableProps = useCallback(() => ({
 		style: {
-			border: `${theme.spacing(0.3)} solid ${theme.palette.secondaryDark.main}`,
+			border: `${theme.spacing(0.3)} solid ${theme.palette.primaryDark.main}`,
 			borderRadius: 2.5 * theme.shape.borderRadius,
 		},
 	}), [theme]);

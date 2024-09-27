@@ -16,7 +16,7 @@ const useStyles = makeStyles((theme) => ({
 	sidebar: {
 		height: "100%",
 		position: "absolute",
-		backgroundColor: theme.palette.third.main,
+		backgroundColor: theme.palette.primary.main,
 		color: "white",
 		overflow: "auto",
 	},
