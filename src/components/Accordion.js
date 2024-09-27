@@ -37,7 +37,7 @@ const useStyles = makeStyles(() => ({
 	},
 	accordionMain: {
 		backgroundColor: "transparent",
-		color: "white",
+		color: "black",
 		padding: "8px 40px 16px 16px",
 	},
 }));
@@ -45,11 +45,11 @@ const useStyles = makeStyles(() => ({
 const Accordion = ({
 	title,
 	titleColor = "white",
-	titleBackground = "secondary",
+	titleBackground = "primary",
 	subtitle,
 	subtitleColor = "white",
 	subtitleBackground = "third",
-	expandIconColor = "primary",
+	expandIconColor = "third",
 	content,
 	alwaysExpanded = false,
 }) => {

@@ -148,7 +148,7 @@ const Users = () => {
 						justifyContent="flex-end"
 						height="100%"
 					>
-						<SecondaryBorderButton title="Invite User" onClick={() => setPopupOpen(true)} />
+						<SecondaryBackgroundButton title="Invite User" onClick={() => setPopupOpen(true)} />
 					</Grid>
 				</Grid>
 				<Grid item mt={2} width="100%">

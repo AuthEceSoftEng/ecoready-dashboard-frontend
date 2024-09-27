@@ -27,7 +27,7 @@ const useStyles = makeStyles((theme) => ({
 		height: "30px",
 		padding: theme.spacing(0.5),
 		borderRadius: "0px",
-		background: theme.palette.grey.main,
+		background: theme.palette.greyDark.main,
 	},
 	icon: {
 		marginRight: 0.5,
