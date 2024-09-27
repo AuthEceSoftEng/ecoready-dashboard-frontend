@@ -6,10 +6,10 @@
 	"homepage": "",
 	"repository": "github:AuthEceSoftEng/ecoready-dashboard-frontend",
 	"scripts": {
-		"build": "craco build",
+		"build": "NODE_OPTIONS='--max-old-space-size=4096' craco build",
 		"lint": "eslint . --cache",
 		"serve": "serve -s -l 3050 build",
-		"start": "craco start",
+		"start": "NODE_OPTIONS='--max-old-space-size=4096' craco start",
 		"test": "npm run lint"
 	},
 	"browserslist": {
