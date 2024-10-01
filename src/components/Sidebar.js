@@ -100,6 +100,14 @@ const Sidebar = ({ isSmall: sidebarIsSmall }) => {
 		},
 		{
 			icon: inspectionIcon,
+			text: "Card",
+			handler: () => {
+				handleServicesMenuClose();
+				navigate("/card");
+			},
+		},
+		{
+			icon: inspectionIcon,
 			text: "Form",
 			handler: () => {
 				handleServicesMenuClose();
