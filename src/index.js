@@ -28,6 +28,7 @@ import Examples from "./screens/Examples.js";
 import Home from "./screens/Home.js";
 import Users from "./screens/Users.js";
 import ButtonsExample from "./examples/Buttons.js";
+import CardExample from "./examples/Card.js";
 import FormExample from "./examples/Form.js";
 import DropdownExample from "./examples/Dropdown.js";
 import TooltipExample from "./examples/Tooltip.js";
@@ -119,6 +120,7 @@ const App = () => {
 								<Route path="agrolab" element={<Protected c={<AgroLab />} />} />
 								{/* EXAMPLES */}
 								<Route path="buttons" element={<Protected c={<ButtonsExample />} />} />
+								<Route path="card" element={<Protected c={<CardExample />} />} />
 								<Route path="form" element={<Protected c={<FormExample />} />} />
 								<Route path="dropdown" element={<Protected c={<DropdownExample />} />} />
 								<Route path="tooltip" element={<Protected c={<TooltipExample />} />} />
