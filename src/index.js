@@ -1,8 +1,9 @@
+/* eslint-disable import/no-extraneous-dependencies */
 import { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 import { Route, Routes, BrowserRouter as Router, useLocation } from "react-router-dom";
 import { StyledEngineProvider, ThemeProvider, createTheme } from "@mui/material/styles";
-import * as Sentry from "@sentry/browser";
+import * as Sentry from "@sentry/react";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { ErrorBoundary } from "react-error-boundary";
@@ -61,6 +62,11 @@ Sentry.init({
 		"Non-Error promise rejection captured",
 	],
 	enabled: NODE_ENV === "production",
+	tracesSampleRate: 1,
+	tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+	profilesSampleRate: 1,
+	replaysSessionSampleRate: 0.1,
+	replaysOnErrorSampleRate: 1,
 });
 
 const theme = createTheme({
