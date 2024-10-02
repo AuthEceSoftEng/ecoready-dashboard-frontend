@@ -20,6 +20,13 @@ const Examples = () => {
 				<Grid item xs={2} sx={{ p: 1 }}>
 					<PrimaryBackgroundButton
 						width="100%"
+						title="Card"
+						onClick={() => navigate("/card")}
+					/>
+				</Grid>
+				<Grid item xs={2} sx={{ p: 1 }}>
+					<PrimaryBackgroundButton
+						width="100%"
 						title="Form"
 						onClick={() => navigate("/form")}
 					/>
