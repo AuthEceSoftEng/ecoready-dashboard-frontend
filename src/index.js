@@ -45,6 +45,7 @@ import LocalizationExample from "./examples/Localization.js";
 import { adjustColors, jwt, colorSuggestions } from "./utils/index.js";
 
 import "./i18n.js";
+import AgroLab from "./screens/AgroLab.js";
 
 const {
 	NODE_ENV,
@@ -115,6 +116,7 @@ const App = () => {
 								<Route path="home" element={<Protected c={<Home />} />} />
 								<Route path="examples" element={<Protected c={<Examples />} />} />
 								<Route path="users" element={<Protected c={<Users />} />} />
+								<Route path="agrolab" element={<Protected c={<AgroLab />} />} />
 								{/* EXAMPLES */}
 								<Route path="buttons" element={<Protected c={<ButtonsExample />} />} />
 								<Route path="form" element={<Protected c={<FormExample />} />} />

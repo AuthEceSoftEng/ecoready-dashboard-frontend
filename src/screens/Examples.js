@@ -9,7 +9,7 @@ const Examples = () => {
 
 	return (
 		<Grid container direction="column" alignItems="center" justifyContent="center">
-			<Grid container alignItems="center" justifyContent="space-around" width="70%" pt={5}>
+			<Grid container alignItems="center" justifyContent="center" width="90%" pt={5}>
 				<Grid item xs={2} sx={{ p: 1 }}>
 					<PrimaryBackgroundButton
 						width="100%"
