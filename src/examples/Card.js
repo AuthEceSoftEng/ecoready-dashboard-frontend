@@ -4,11 +4,11 @@ import { memo } from "react";
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
 
-const ButtonsExample = () => (
+const CardsExample = () => (
 	<Grid container display="flex" direction="column" justifyContent="center" alignItems="center">
 		<Grid item width={400}>
 			<Card title="Card Example">
-				<Typography variant="body" component="p">{"This is a card example."}</Typography>
+				<Typography variant="body" component="p">{"This an example of crop yield."}</Typography>
 			</Card>
 		</Grid>
 		<Grid item width={700} mt={2}>
@@ -89,4 +89,4 @@ const ButtonsExample = () => (
 	</Grid>
 );
 
-export default memo(ButtonsExample);
+export default memo(CardsExample);

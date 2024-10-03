@@ -1,4 +1,4 @@
-import { Box, Typography, Grid } from "@mui/material";
+import { Box, Typography, Grid, Divider } from "@mui/material";
 import { memo } from "react";
 
 import colors from "../_colors.scss";
@@ -12,8 +12,8 @@ const Card = ({
 	titleFontSize = "16px",
 	footer = "",
 	footerExists = true,
-	footerColor = "white.main",
-	footerBackgroundColor = "primary",
+	footerColor = "greyDark.main",
+	footerBackgroundColor = "white.main",
 	backgroundColor = "white.main",
 	footerFontSize = "16px",
 	width = "100%",
@@ -40,7 +40,7 @@ const Card = ({
 				alignItems="center"
 			>
 				{typeof title === "string" ? (
-					<Typography variant="body" component="h2" fontSize={titleFontSize}>{title}</Typography>
+					<Typography variant="body" component="h2" sx = {{ fontWeight: "bold", fontSize: titleFontSize}}>{title}</Typography>
 				) : (
 					title
 				)}
@@ -55,12 +55,15 @@ const Card = ({
 				color={colors?.[footerColor] || footerColor}
 				backgroundColor={colors?.[footerBackgroundColor] || footerBackgroundColor}
 				display="flex"
-				flexDirection="row"
+				flexDirection="column"
 				justifyContent="space-between"
 				alignItems="center"
 			>
+				<Divider style={{ width: '100%', margin: '0px 0' }} />
 				{typeof footer === "string" ? (
-					<Typography variant="h6" component="h2" fontSize={footerFontSize}>{footer}</Typography>
+					<Typography variant="h6" component="h2" align="left" fontSize={footerFontSize} >
+						{footer}
+						</Typography>
 				) : (
 					footer
 				)}
