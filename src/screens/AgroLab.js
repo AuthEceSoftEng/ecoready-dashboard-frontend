@@ -13,17 +13,21 @@ const AgroLab = () => {
 		<Grid container display="flex" direction="row" justifyContent="space-around">
             <Grid item width={400}>
                 <Card title="Anual Crop Yield" justifyContent="center" alignItems="center">
-                    <Typography variant="h4" component="div">{"This an example of crop yield."}</Typography>
+                    <Typography variant="h4" component="p" align="center">
+                        {"This an example of crop yield."}
+                    </Typography>
                 </Card>
             </Grid>
             <Grid item width={400}>
                 <Card title="Monthly Irrigation">
-                    <Typography variant="body" component="p">{"This an example of this months irrigation."}</Typography>
+                    <Typography variant="body" component="p" align="center">
+                        {"This an example of this months irrigation."}
+                    </Typography>
                 </Card>
             </Grid>
             <Grid item width={400}>
                 <Card title="Average Crop Yield per Field">
-                    <Typography variant="body" component="p">{"This an example of crop yield per field."}</Typography>
+                    <Typography variant="body" component="p" align="center">{"This an example of crop yield per field."}</Typography>
                 </Card>
             </Grid>
             <Grid item width={400} m={2}>
@@ -51,6 +55,7 @@ const AgroLab = () => {
                         title="First Plot"
                         showLegend={false}
                         displayBar={false}
+                        height="400px"
                     />
                 </Card>
             </Grid>
