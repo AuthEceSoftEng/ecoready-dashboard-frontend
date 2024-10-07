@@ -107,6 +107,7 @@ const Plot = ({
 				paper_bgcolor: colors?.[background] || background,
 				plot_bgcolor: colors?.[background] || background,
 				margin: { t: title ? 60 : 40, l: 40, b: 40, ...(!showLegend && { r: 40 }) },
+				autosize: true,
 			}}
 			config={{
 				scrollZoom,
@@ -115,6 +116,7 @@ const Plot = ({
 				displaylogo: false,
 			}}
 			style={{ width, height }}
+			useResizeHandler={true} // Enable resize handler
 		/>
 	);
 };
