@@ -84,153 +84,154 @@ const Sidebar = ({ isSmall: sidebarIsSmall }) => {
 	const buttons = [
 		{
 			icon: inspectionIcon,
-			text: "Users",
+			text: "Overview",
 			handler: () => {
 				handleServicesMenuClose();
-				navigate("/users");
+				navigate("/home");
 			},
 		},
-		{
-			icon: inspectionIcon,
-			text: "Buttons",
-			handler: () => {
-				handleServicesMenuClose();
-				navigate("/buttons");
-			},
-		},
-		{
-			icon: inspectionIcon,
-			text: "Card",
-			handler: () => {
-				handleServicesMenuClose();
-				navigate("/card");
-			},
-		},
-		{
-			icon: inspectionIcon,
-			text: "Form",
-			handler: () => {
-				handleServicesMenuClose();
-				navigate("/form");
-			},
-		},
-		{
-			icon: inspectionIcon,
-			text: "Tooltip",
-			handler: () => {
-				handleServicesMenuClose();
-				navigate("/tooltip");
-			},
-		},
-		{
-			icon: inspectionIcon,
-			text: "Table",
-			handler: () => {
-				handleServicesMenuClose();
-				navigate("/table");
-			},
-		},
-		{
-			icon: inspectionIcon,
-			text: "File Upload",
-			handler: () => {
-				handleServicesMenuClose();
-				navigate("/file-upload");
-			},
-		},
-		{
-			icon: inspectionIcon,
-			text: "Broker",
-			handler: () => {
-				handleServicesMenuClose();
-				navigate("/broker");
-			},
-		},
-		{
-			icon: inspectionIcon,
-			text: "Plot",
-			handler: () => {
-				handleServicesMenuClose();
-				navigate("/plot");
-			},
-		},
-		{
-			icon: inspectionIcon,
-			text: "Accordion",
-			handler: () => {
-				handleServicesMenuClose();
-				navigate("/accordion");
-			},
-		},
-		{
-			icon: inspectionIcon,
-			text: "Search",
-			handler: () => {
-				handleServicesMenuClose();
-				navigate("/search");
-			},
-		},
-		{
-			icon: inspectionIcon,
-			text: "Toast",
-			handler: () => {
-				handleServicesMenuClose();
-				navigate("/toast");
-			},
-		},
-		{
-			icon: inspectionIcon,
-			text: "Popup",
-			handler: () => {
-				handleServicesMenuClose();
-				navigate("/popup");
-			},
-		},
-		{
-			icon: inspectionIcon,
-			text: "Dialog",
-			handler: () => {
-				handleServicesMenuClose();
-				navigate("/dialog");
-			},
-		},
-		{
-			icon: inspectionIcon,
-			text: "Dropdown",
-			handler: () => {
-				handleServicesMenuClose();
-				navigate("/dropdown");
-			},
-		},
-		{
-			icon: inspectionIcon,
-			text: "Date Picker",
-			handler: () => {
-				handleServicesMenuClose();
-				navigate("/datepicker");
-			},
-		},
-		{
-			icon: inspectionIcon,
-			text: "Localization",
-			handler: () => {
-				handleServicesMenuClose();
-				navigate("/localization");
-			},
-		},
+		// {
+		// 	icon: inspectionIcon,
+		// 	text: "Buttons",
+		// 	handler: () => {
+		// 		handleServicesMenuClose();
+		// 		navigate("/buttons");
+		// 	},
+		// },
+		// {
+		// 	icon: inspectionIcon,
+		// 	text: "Card",
+		// 	handler: () => {
+		// 		handleServicesMenuClose();
+		// 		navigate("/card");
+		// 	},
+		// },
+		// {
+		// 	icon: inspectionIcon,
+		// 	text: "Form",
+		// 	handler: () => {
+		// 		handleServicesMenuClose();
+		// 		navigate("/form");
+		// 	},
+		// },
+		// {
+		// 	icon: inspectionIcon,
+		// 	text: "Tooltip",
+		// 	handler: () => {
+		// 		handleServicesMenuClose();
+		// 		navigate("/tooltip");
+		// 	},
+		// },
+		// {
+		// 	icon: inspectionIcon,
+		// 	text: "Table",
+		// 	handler: () => {
+		// 		handleServicesMenuClose();
+		// 		navigate("/table");
+		// 	},
+		// },
+		// {
+		// 	icon: inspectionIcon,
+		// 	text: "File Upload",
+		// 	handler: () => {
+		// 		handleServicesMenuClose();
+		// 		navigate("/file-upload");
+		// 	},
+		// },
+		// {
+		// 	icon: inspectionIcon,
+		// 	text: "Broker",
+		// 	handler: () => {
+		// 		handleServicesMenuClose();
+		// 		navigate("/broker");
+		// 	},
+		// },
+		// {
+		// 	icon: inspectionIcon,
+		// 	text: "Plot",
+		// 	handler: () => {
+		// 		handleServicesMenuClose();
+		// 		navigate("/plot");
+		// 	},
+		// },
+		// {
+		// 	icon: inspectionIcon,
+		// 	text: "Accordion",
+		// 	handler: () => {
+		// 		handleServicesMenuClose();
+		// 		navigate("/accordion");
+		// 	},
+		// },
+		// {
+		// 	icon: inspectionIcon,
+		// 	text: "Search",
+		// 	handler: () => {
+		// 		handleServicesMenuClose();
+		// 		navigate("/search");
+		// 	},
+		// },
+		// {
+		// 	icon: inspectionIcon,
+		// 	text: "Toast",
+		// 	handler: () => {
+		// 		handleServicesMenuClose();
+		// 		navigate("/toast");
+		// 	},
+		// },
+		// {
+		// 	icon: inspectionIcon,
+		// 	text: "Popup",
+		// 	handler: () => {
+		// 		handleServicesMenuClose();
+		// 		navigate("/popup");
+		// 	},
+		// },
+		// {
+		// 	icon: inspectionIcon,
+		// 	text: "Dialog",
+		// 	handler: () => {
+		// 		handleServicesMenuClose();
+		// 		navigate("/dialog");
+		// 	},
+		// },
+		// {
+		// 	icon: inspectionIcon,
+		// 	text: "Dropdown",
+		// 	handler: () => {
+		// 		handleServicesMenuClose();
+		// 		navigate("/dropdown");
+		// 	},
+		// },
+		// {
+		// 	icon: inspectionIcon,
+		// 	text: "Date Picker",
+		// 	handler: () => {
+		// 		handleServicesMenuClose();
+		// 		navigate("/datepicker");
+		// 	},
+		// },
+		// {
+		// 	icon: inspectionIcon,
+		// 	text: "Localization",
+		// 	handler: () => {
+		// 		handleServicesMenuClose();
+		// 		navigate("/localization");
+		// 	},
+		// },
 		{
 			icon: isselServicesIcon,
-			text: "Issel Services",
+			text: "Living Labs",
 			handler: (event) => {
 				handleServicesMenuClose();
 				handleServicesMenuOpen(event);
 			},
 			more: [
-				{ title: "Users", handler: () => navigate("/issel-services/users") },
-				{ title: "Services", handler: () => navigate("/issel-services/services") },
-				{ title: "Hacking", handler: () => navigate("/issel-services/hacking") },
+				{ title: "AgroLab", handler: () => navigate("/agrolab") },
+				{ title: "FarmLab", handler: () => navigate("/farmlab") },
+				// { title: "VertiLab", handler: () => navigate("/vertilab") },
 			],
 		},
+		
 	];
 
 	const renderServicesMenu = (
@@ -242,7 +243,7 @@ const Sidebar = ({ isSmall: sidebarIsSmall }) => {
 			open={isMenuOpenServices}
 			onClose={handleServicesMenuClose}
 		>
-			{buttons.find((button) => button.text === "Issel Services").more.map((moreButton) => (
+			{buttons.find((button) => button.text === "Living Labs").more.map((moreButton) => (
 				<MenuItem key={moreButton.title} onClick={() => { handleServicesMenuClose(); moreButton.handler(); }}>
 					<p style={{ marginLeft: "5px" }}>{moreButton.title}</p>
 				</MenuItem>
@@ -255,7 +256,7 @@ const Sidebar = ({ isSmall: sidebarIsSmall }) => {
 			{!isSmall && buttons.map((button) => (
 				<ButtonWithText
 					key={button.text}
-					icon={button.icon}
+					// icon={button.icon} // Uncomment to add icons
 					text={button.text}
 					handler={button.handler}
 					more={button.more}

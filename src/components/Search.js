@@ -35,7 +35,7 @@ const Search = ({
 			startAdornment={(
 				<InputAdornment sx={{ position: "absolute", display: value ? "none" : "flex", marginLeft: "0px" }} position="end">
 					<SearchIcon />
-					<Typography ml={1}>{"Search"}</Typography>
+					<Typography ml={1}>{"Search..."}</Typography>
 				</InputAdornment>
 			)}
 			onChange={onChange}

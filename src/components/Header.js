@@ -10,6 +10,8 @@ import { makeStyles } from "@mui/styles";
 import { Image } from "mui-image";
 
 import { jwt, capitalize } from "../utils/index.js";
+import Search from "./Search.js";
+import { isFuzzyMatch } from "../utils/index.js";
 import logo from "../assets/images/logo.png";
 import inspectionIcon from "../assets/icons/inspection.png";
 import servicesIcon from "../assets/icons/services.png";
@@ -84,6 +86,7 @@ const Header = ({ isAuthenticated }) => {
 	const navigate = useNavigate();
 	const [anchorElServices, setAnchorElServices] = useState(null);
 	const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = useState(null);
+	const [searchFilter, setSearchFilter] = useState("");
 
 	const isMenuOpenServices = Boolean(anchorElServices);
 	const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
@@ -96,31 +99,34 @@ const Header = ({ isAuthenticated }) => {
 		handleServicesMenuClose();
 		handleMobileMenuClose();
 	};
+	const handleSearchChange = (event) => {
+        setSearchFilter(event.target.value);
+    };
 
 	const CrumpLink = styled(Link)(({ theme }) => ({ display: "flex", color: theme.palette.primary.main }));
 
 	const buttons = [
-		{
-			icon: inspectionIcon,
-			text: "Inspection",
-			handler: () => {
-				closeAll();
-				navigate("/inspection");
-			},
-		},
-		{
-			icon: servicesIcon,
-			text: "Services",
-			handler: (event) => {
-				closeAll();
-				handleServicesMenuOpen(event);
-			},
-			more: [
-				{ title: "Users", path: "/users", icon: servicesIcon },
-				{ title: "Services", path: "/services", icon: servicesIcon },
-				{ title: "Hacking", path: "/hacking", icon: servicesIcon },
-			],
-		},
+		// {
+		// 	icon: inspectionIcon,
+		// 	text: "Inspection",
+		// 	handler: () => {
+		// 		closeAll();
+		// 		navigate("/inspection");
+		// 	},
+		// },
+		// {
+		// 	icon: servicesIcon,
+		// 	text: "Services",
+		// 	handler: (event) => {
+		// 		closeAll();
+		// 		handleServicesMenuOpen(event);
+		// 	},
+		// 	more: [
+		// 		{ title: "Users", path: "/users", icon: servicesIcon },
+		// 		{ title: "Services", path: "/services", icon: servicesIcon },
+		// 		{ title: "Hacking", path: "/hacking", icon: servicesIcon },
+		// 	],
+		// },
 		{
 			icon: logoutIcon,
 			text: "Logout",
@@ -151,23 +157,23 @@ const Header = ({ isAuthenticated }) => {
 		</Menu>
 	);
 
-	const renderServicesMenu = (
-		<Menu
-			keepMounted
-			anchorEl={anchorElServices}
-			anchorOrigin={{ vertical: "top", horizontal: "right" }}
-			transformOrigin={{ vertical: "top", horizontal: "right" }}
-			open={isMenuOpenServices}
-			onClose={handleServicesMenuClose}
-		>
-			{buttons.find((button) => button.text === "Services").more.map((moreButton) => (
-				<MenuItem key={moreButton.title} onClick={() => { closeAll(); navigate(moreButton.path); }}>
-					<Image src={moreButton.icon} width="20px" />
-					<p style={{ marginLeft: "5px" }}>{moreButton.title}</p>
-				</MenuItem>
-			))}
-		</Menu>
-	);
+	// const renderServicesMenu = (
+	// 	<Menu
+	// 		keepMounted
+	// 		anchorEl={anchorElServices}
+	// 		anchorOrigin={{ vertical: "top", horizontal: "right" }}
+	// 		transformOrigin={{ vertical: "top", horizontal: "right" }}
+	// 		open={isMenuOpenServices}
+	// 		onClose={handleServicesMenuClose}
+	// 	>
+	// 		{buttons.find((button) => button.text === "Services").more.map((moreButton) => (
+	// 			<MenuItem key={moreButton.title} onClick={() => { closeAll(); navigate(moreButton.path); }}>
+	// 				<Image src={moreButton.icon} width="20px" />
+	// 				<p style={{ marginLeft: "5px" }}>{moreButton.title}</p>
+	// 			</MenuItem>
+	// 		))}
+	// 	</Menu>
+	// );
 
 	const pathnames = location.pathname.split("/").filter(Boolean);
 	const crumps = [];
@@ -204,6 +210,9 @@ const Header = ({ isAuthenticated }) => {
 					{isAuthenticated
 					&& (
 						<>
+							<Box sx={{ display: { xs: "none", sm: "flex", md: "flex" }, alignItems: "center", ml: 2 }}>
+                                <Search value={searchFilter} onChange={handleSearchChange} />
+                            </Box>
 							<Box sx={{ display: { xs: "none", sm: "none", md: "flex" }, height: "100%", py: 1 }}>
 								{buttons.map((button) => (
 									<ButtonWithText
@@ -232,7 +241,7 @@ const Header = ({ isAuthenticated }) => {
 			&& (
 				<>
 					{renderMobileMenu}
-					{renderServicesMenu}
+					{/* {renderServicesMenu} */}
 				</>
 			)}
 		</>

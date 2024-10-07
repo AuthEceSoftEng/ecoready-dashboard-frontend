@@ -32,11 +32,15 @@ body {
 	overflow-y: auto !important;
 	color: black;
 	font-family: 'Roboto', sans-serif;
+	display: flex;
+    flex-direction: column;
 }
 
 #root {
 	display: flex;
 	flex-direction: column;
+	flex: 1;
+    min-height: 100vh; 	
 }
 
 /* ===== Scrollbar CSS ===== */

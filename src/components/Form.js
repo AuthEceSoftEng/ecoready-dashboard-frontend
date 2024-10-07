@@ -37,9 +37,9 @@ const useStyles = makeStyles((theme) => ({
 		},
 	},
 	dropdown: {
-		width: "100%",
+		width: "50%",
 		maxWidth: "300px",
-		marginBottom: "10px",
+		marginBottom: "5px",
 		display: "flex",
 		justifyContent: "space-between",
 		alignItems: "center",
@@ -75,9 +75,9 @@ const useStyles = makeStyles((theme) => ({
 		color: "black",
 	},
 	datepickerBox: {
-		width: "100%",
+		width: "50%",
 		maxWidth: "300px",
-		marginBottom: "10px",
+		marginBottom: "5px",
 		display: "flex",
 		flexDirection: "column",
 		color: "black",
@@ -195,10 +195,10 @@ const Form = forwardRef(({ disabled: dsb, content, validationSchema, onSubmit, o
 										items={comp.items}
 										value={formikProps.values[comp.id]}
 										disabled={disabled || comp.disabled}
-										size="medium"
-										width="200px"
+										size={comp.size || "medium"}
+										width={comp.width || "200px"}
 										filled={false}
-										background="secondary"
+										background={comp.color || "secondary"}
 										onChange={(event) => {
 											formikProps.handleChange({
 												target: {
@@ -354,7 +354,7 @@ const Form = forwardRef(({ disabled: dsb, content, validationSchema, onSubmit, o
 										disabled={disabled || comp.disabled}
 										label={comp.sublabel || ""}
 										views={comp.views || ["day", "month", "year"]}
-										background="secondary"
+										background={comp.background || "secondary"}
 										color="black"
 										onChange={(value) => {
 											formikProps.handleChange({

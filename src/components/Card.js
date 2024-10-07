@@ -59,7 +59,6 @@ const Card = ({
 				justifyContent="space-between"
 				alignItems="center"
 			>
-				<Divider style={{ width: '100%', margin: '0px 0' }} />
 				{typeof footer === "string" ? (
 					<Typography variant="h6" component="h2" align="left" fontSize={footerFontSize} >
 						{footer}
