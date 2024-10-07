@@ -27,7 +27,7 @@ const ButtonWithText = ({ text, icon, more, handler }) => (
 		{!more
 		&& (
 			<Button key={text} sx={{ width: "100%", display: "flex", flexDirection: "row", justifyContent: "flex-start", padding: "8px 40px 8px 16px" }} onClick={(event) => handler(event)}>
-				<Image src={icon} alt={text} fit="contain" width="25px" />
+				{/* <Image src={icon} alt={text} fit="contain" width="25px" /> */}
 				<Typography align="center" color="white.main" fontSize="medium" ml={1} display="flex" alignItems="center" sx={{ textTransform: "capitalize" }}>
 					{text}
 					{more && <ExpandMore />}
@@ -40,8 +40,8 @@ const ButtonWithText = ({ text, icon, more, handler }) => (
 				key={text}
 				title={(
 					<Grid item sx={{ width: "100%", display: "flex", flexDirection: "row", justifyContent: "flex-start" }}>
-						<Image src={icon} alt={text} fit="contain" width="25px" />
-						<Typography align="center" color="white.main" fontSize="medium" ml={1} display="flex" alignItems="center" sx={{ textTransform: "capitalize" }}>
+						{/* <Image src={icon} alt={text} fit="contain" width="25px" /> */}
+						<Typography align="" color="white.main" fontSize="medium" ml={1} display="flex" alignItems="center" sx={{ textTransform: "capitalize" }}>
 							{text}
 						</Typography>
 					</Grid>
@@ -70,6 +70,8 @@ const ButtonSimple = ({ text, icon, handler, ind }) => (
 );
 
 const Sidebar = ({ isSmall: sidebarIsSmall }) => {
+	const [isSidebarVisible, setSidebarVisible] = useState(true);
+
 	const [isSmall, setIsSmall] = useState(false);
 	const [anchorElServices, setAnchorElServices] = useState(null);
 	const navigate = useNavigate();
@@ -83,7 +85,7 @@ const Sidebar = ({ isSmall: sidebarIsSmall }) => {
 
 	const buttons = [
 		{
-			icon: inspectionIcon,
+			//icon: inspectionIcon,
 			text: "Overview",
 			handler: () => {
 				handleServicesMenuClose();
@@ -97,129 +99,9 @@ const Sidebar = ({ isSmall: sidebarIsSmall }) => {
 		// 		handleServicesMenuClose();
 		// 		navigate("/buttons");
 		// 	},
-		// },
-		// {
-		// 	icon: inspectionIcon,
-		// 	text: "Card",
-		// 	handler: () => {
-		// 		handleServicesMenuClose();
-		// 		navigate("/card");
-		// 	},
-		// },
-		// {
-		// 	icon: inspectionIcon,
-		// 	text: "Form",
-		// 	handler: () => {
-		// 		handleServicesMenuClose();
-		// 		navigate("/form");
-		// 	},
-		// },
-		// {
-		// 	icon: inspectionIcon,
-		// 	text: "Tooltip",
-		// 	handler: () => {
-		// 		handleServicesMenuClose();
-		// 		navigate("/tooltip");
-		// 	},
-		// },
-		// {
-		// 	icon: inspectionIcon,
-		// 	text: "Table",
-		// 	handler: () => {
-		// 		handleServicesMenuClose();
-		// 		navigate("/table");
-		// 	},
-		// },
-		// {
-		// 	icon: inspectionIcon,
-		// 	text: "File Upload",
-		// 	handler: () => {
-		// 		handleServicesMenuClose();
-		// 		navigate("/file-upload");
-		// 	},
-		// },
-		// {
-		// 	icon: inspectionIcon,
-		// 	text: "Broker",
-		// 	handler: () => {
-		// 		handleServicesMenuClose();
-		// 		navigate("/broker");
-		// 	},
-		// },
-		// {
-		// 	icon: inspectionIcon,
-		// 	text: "Plot",
-		// 	handler: () => {
-		// 		handleServicesMenuClose();
-		// 		navigate("/plot");
-		// 	},
-		// },
-		// {
-		// 	icon: inspectionIcon,
-		// 	text: "Accordion",
-		// 	handler: () => {
-		// 		handleServicesMenuClose();
-		// 		navigate("/accordion");
-		// 	},
-		// },
-		// {
-		// 	icon: inspectionIcon,
-		// 	text: "Search",
-		// 	handler: () => {
-		// 		handleServicesMenuClose();
-		// 		navigate("/search");
-		// 	},
-		// },
-		// {
-		// 	icon: inspectionIcon,
-		// 	text: "Toast",
-		// 	handler: () => {
-		// 		handleServicesMenuClose();
-		// 		navigate("/toast");
-		// 	},
-		// },
-		// {
-		// 	icon: inspectionIcon,
-		// 	text: "Popup",
-		// 	handler: () => {
-		// 		handleServicesMenuClose();
-		// 		navigate("/popup");
-		// 	},
-		// },
-		// {
-		// 	icon: inspectionIcon,
-		// 	text: "Dialog",
-		// 	handler: () => {
-		// 		handleServicesMenuClose();
-		// 		navigate("/dialog");
-		// 	},
-		// },
-		// {
-		// 	icon: inspectionIcon,
-		// 	text: "Dropdown",
-		// 	handler: () => {
-		// 		handleServicesMenuClose();
-		// 		navigate("/dropdown");
-		// 	},
-		// },
-		// {
-		// 	icon: inspectionIcon,
-		// 	text: "Date Picker",
-		// 	handler: () => {
-		// 		handleServicesMenuClose();
-		// 		navigate("/datepicker");
-		// 	},
-		// },
-		// {
-		// 	icon: inspectionIcon,
-		// 	text: "Localization",
-		// 	handler: () => {
-		// 		handleServicesMenuClose();
-		// 		navigate("/localization");
-		// 	},
-		// },
+		
 		{
-			icon: isselServicesIcon,
+			//icon: isselServicesIcon,
 			text: "Living Labs",
 			handler: (event) => {
 				handleServicesMenuClose();
@@ -251,30 +133,41 @@ const Sidebar = ({ isSmall: sidebarIsSmall }) => {
 		</Menu>
 	);
 
+	const toggleSidebar = () => {
+        setSidebarVisible(!isSidebarVisible);
+    };
+
 	return (
-		<div className={classes.sidebar} style={{ width: (isSmall) ? "50px" : "200px", padding: (isSmall) ? "20px 5px" : "20px 5px", textAlign: "center" }}>
-			{!isSmall && buttons.map((button) => (
-				<ButtonWithText
-					key={button.text}
-					// icon={button.icon} // Uncomment to add icons
-					text={button.text}
-					handler={button.handler}
-					more={button.more}
-				/>
-			))}
-			{isSmall && buttons.map((button, ind) => (
-				<ButtonSimple
-					key={button.text}
-					icon={button.icon}
-					text={button.text}
-					handler={button.handler}
-					more={button.more}
-					ind={ind}
-				/>
-			))}
-			{renderServicesMenu}
-		</div>
-	);
+        <>
+            <Button onClick={toggleSidebar} sx={{ size: "small", position: "absolute", top: "0", left: "0", zIndex: 1000 }}>
+                {isSidebarVisible ? 'Hide Sidebar' : 'Show Sidebar'}
+            </Button>
+            {isSidebarVisible && (
+                <div className={classes.sidebar} style={{ width: (isSmall) ? "50px" : "200px", padding: (isSmall) ? "20px 5px" : "20px 5px", textAlign: "center" }}>
+                    {!isSmall && buttons.map((button) => (
+                        <ButtonWithText
+                            key={button.text}
+                            // icon={button.icon} // Uncomment to add icons
+                            text={button.text}
+                            handler={button.handler}
+                            more={button.more}
+                        />
+                    ))}
+                    {isSmall && buttons.map((button, ind) => (
+                        <ButtonSimple
+                            key={button.text}
+                            // icon={button.icon}
+                            text={button.text}
+                            handler={button.handler}
+                            more={button.more}
+                            ind={ind}
+                        />
+                    ))}
+                    {renderServicesMenu}
+                </div>
+            )}
+        </>
+    );
 };
 
 export default Sidebar;
