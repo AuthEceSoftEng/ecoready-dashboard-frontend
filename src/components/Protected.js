@@ -11,7 +11,7 @@ import Sidebar from "./Sidebar.js";
 const useStyles = makeStyles((theme) => ({
 	main: {
 		width: "100%",
-		height: "calc(100% - 160px)",
+		height: "calc(100% - 100px)",
 		backgroundColor: `${theme.palette.light.main}`,
 		position: "fixed",
 	},

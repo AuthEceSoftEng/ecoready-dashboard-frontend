@@ -72,3 +72,6 @@ export const deleteFile = (info) => api.post("file/delete/", info);
 export const inviteUser = (email) => api.post("user", { email });
 export const removeUser = (id) => api.post("user/delete", { id });
 export const getUsersData = () => api.get("user");
+
+// EcoReadyServices
+export const getEcoReadyData = () => api.get("eco-ready-data");

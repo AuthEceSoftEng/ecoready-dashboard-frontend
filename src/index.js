@@ -47,6 +47,8 @@ import { adjustColors, jwt, colorSuggestions } from "./utils/index.js";
 
 import "./i18n.js";
 import AgroLab from "./screens/AgroLab.js";
+import FarmLab from "./screens/FarmLab.js";
+// import VertiLab from "./screens/VertiLab.js";
 
 const {
 	NODE_ENV,
@@ -106,7 +108,7 @@ const App = () => {
 				<ErrorBoundary FallbackComponent={ErrorFallback}>
 					<LocalizationProvider dateAdapter={AdapterDayjs}>
 						<Header isAuthenticated={authenticated} />
-						<main style={{ position: "relative", zIndex: 0, height: `calc(100vh - ${authenticated ? "160" : "70"}px)` }}>
+						<main style={{ position: "relative", zIndex: 0, height: `calc(100vh - ${authenticated ? "100" : "70"}px)` }}>
 							<Routes>
 								<Route index element={<GuestOnly c={<SignIn />} />} />
 								<Route path="auth" element={<GuestOnly c={<Auth />} />} />
@@ -118,6 +120,8 @@ const App = () => {
 								<Route path="examples" element={<Protected c={<Examples />} />} />
 								<Route path="users" element={<Protected c={<Users />} />} />
 								<Route path="agrolab" element={<Protected c={<AgroLab />} />} />
+								<Route path="farmlab" element={<Protected c={<FarmLab />} />} />
+								{/*<Route path="vertilab" element={<Protected c={<VertiLab />} />} /> */}
 								{/* EXAMPLES */}
 								<Route path="buttons" element={<Protected c={<ButtonsExample />} />} />
 								<Route path="card" element={<Protected c={<CardExample />} />} />
@@ -139,7 +143,6 @@ const App = () => {
 								<Route path="*" element={<NotFound />} />
 							</Routes>
 						</main>
-						{authenticated && <Footer /> }
 						<Snackbar />
 					</LocalizationProvider>
 				</ErrorBoundary>

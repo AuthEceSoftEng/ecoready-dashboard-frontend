@@ -11,12 +11,32 @@ const Home = () => {
 		<Grid container direction="column" alignItems="center" justifyContent="center" sx={{ textAlign: "center" }}>
 			<Typography variant="h2" sx={{ color: "third.main", p: 1 }}>{"Welcome to the Ecoready Observatory"}</Typography>
 			<Typography variant="h3" sx={{ color: "secondary.main", p: 2 }}>{"Explore one  of our Living Labs"}</Typography>
-			<SecondaryBackgroundButton
-				size="large"
-				width="150px"
-				title="AgroLab"
-				onClick={() => navigate("../agroLab", { replace: true })}
-			/>
+			<Grid container justifyContent="center" sx={{ p: 1 }}>
+				<Grid item xs={2} sx={{ p: 1 }}>
+					<SecondaryBackgroundButton
+						size="large"
+						width="150px"
+						title="AgroLab"
+						onClick={() => navigate("../agrolab", { replace: true })}
+					/>
+				</Grid>
+				<Grid item xs={2} sx={{ p: 1 }}>
+					<SecondaryBackgroundButton
+						size="large"
+						width="150px"
+						title="FarmLab"
+						onClick={() => navigate("../farmlab", { replace: true })}
+					/>
+				</Grid>
+				{/* <Grid item xs={2} sx={{ p: 1 }}>
+					<SecondaryBackgroundButton
+						size="large"
+						width="150px"
+						title="VertiLab"
+						onClick={() => navigate("../vertilab", { replace: true })}
+					/>
+				</Grid> */}
+			</Grid>
 		</Grid>
 	);
 };
