@@ -5,6 +5,7 @@ import { PrimaryBackgroundButton } from "../components/Buttons.js";
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
 import Form from "../components/Form.js";
+import colors from "../_colors.scss";
 
 // import { CollectionDataManagement } from 'eco-ready-services.js';
 
@@ -122,7 +123,10 @@ const AgroLab = () => {
                     )}
                 >
                     <Typography variant="h4" component="p" align="center" sx={{ fontWeight: "bold" }}>
-                        {`${((Math.random() * 5) + 2).toFixed(2)} Metric Tons for ${year}`}
+                        {`${((Math.random() * 5) + 2).toFixed(2)} T`}
+                        <Typography variant="body2" component="p" sx={{ fontSize: "0.6em" }}>
+                            <span style={{ color: colors.secondary }}>6%</span> increase from {year - 1}
+                        </Typography>
                     </Typography>
                 </Card>
             </Grid>
@@ -138,7 +142,10 @@ const AgroLab = () => {
                     )}
                 >
                     <Typography variant="h4" component="p" align="center" sx={{ fontWeight: "bold" }}>
-                        {`${monthNames[month].text}: ${Math.floor(Math.random() * 500) + 300} Litres`}
+                        {`${Math.floor(Math.random() * 500) + 300} Litres`}
+                        <Typography variant="body2" component="p" sx={{ fontSize: "0.6em" }}>
+                            <span style={{ color: colors.error }}>10%</span> decrease since last {monthNames[month - 1].text}  
+                        </Typography>                          
                     </Typography>
                 </Card>
             </Grid>
@@ -155,6 +162,9 @@ const AgroLab = () => {
                 >
                     <Typography variant="h4" component="p" align="center" sx={{ fontWeight: "bold" }}>
                         {`${Math.floor(Math.random() * 10) + 20}°C`}
+                        <Typography variant="body2" component="p" sx={{ fontSize: "0.6em" }}>
+                            <span style={{ color: colors.warning }}>Sunny</span> <span style={{ color: colors.third }}>skies</span> at your area
+                        </Typography>
                     </Typography>
                 </Card>
             </Grid>

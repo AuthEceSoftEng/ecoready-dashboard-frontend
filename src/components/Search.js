@@ -5,7 +5,7 @@ import { memo, useEffect, useState } from "react";
 
 const useStyles = makeStyles(() => ({
 	search: {
-		background: "rgba(255, 255, 255, 0.6)",
+		background: "rgba(211, 211, 211, 0.6)",
 		borderRadius: "10px",
 		position: "relative",
 		padding: "5px 10px",
