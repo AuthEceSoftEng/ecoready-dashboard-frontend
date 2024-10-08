@@ -47,8 +47,8 @@ import LocalizationExample from "./examples/Localization.js";
 import { adjustColors, jwt, colorSuggestions } from "./utils/index.js";
 
 import "./i18n.js";
-import AgroLab from "./screens/AgroLab.js";
-import FarmLab from "./screens/FarmLab.js";
+import AgroLab from "./screens lls/AgroLab.js";
+import FarmLab from "./screens lls/FarmLab.js";
 // import VertiLab from "./screens/VertiLab.js";
 
 const {

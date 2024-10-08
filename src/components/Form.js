@@ -356,6 +356,14 @@ const Form = forwardRef(({ disabled: dsb, content, validationSchema, onSubmit, o
 										views={comp.views || ["day", "month", "year"]}
 										background={comp.background || "secondary"}
 										color="black"
+										sx={{
+                                            width: {
+                                                xs: "100%", // Full width on extra-small screens
+                                                sm: "75%",  // 75% width on small screens
+                                                md: "50%",  // 50% width on medium screens
+                                                lg: "25%",  // 25% width on large screens
+                                            },
+                                        }}
 										onChange={(value) => {
 											formikProps.handleChange({
 												target: {

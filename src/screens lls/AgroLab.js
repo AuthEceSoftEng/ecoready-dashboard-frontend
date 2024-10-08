@@ -53,8 +53,10 @@ const AgroLab = () => {
         return arr.map(value => (value / sum) * 100);
     };
 
-    const values = generateRandomPercentages(10);
-
+    const generateRandomNumbers = (length, min=0, max=1) => {
+        return Array.from({ length }, () => (Math.random() * (max - min)) + min);
+    };
+    
     // Form Parameters
     const monthNames = [
         { value: "January", text: "January" },
@@ -171,8 +173,8 @@ const AgroLab = () => {
                         scrollZoom
                         data={[
                             {
-                                x: ["Week 1", "Week 2", "Week 3", "Week 4"],
-                                y: Array.from({ length: 4 }, (_, i) => (Math.random() * 10) + 25),
+                                x: Array.from({ length: 4 }, (_, i) => `Week ${i + 1}`),
+                                y: generateRandomNumbers(4, 25, 35),
                                 type: "bar",
                                 title: "bar",
                                 color: "secondary", 
@@ -184,7 +186,7 @@ const AgroLab = () => {
                         height="400px"
                     />
                 </Card>
-            </Grid>
+            </Grid>                        
             <Grid item width="32%" alignItems="center" flexDirection="column" mt={4}>
                 <Card
                     title="Soil Moisture"
@@ -201,7 +203,7 @@ const AgroLab = () => {
                         data={[
                             {
                                 x: Array.from({ length: 24 }, (_, i) => i + 1), // Generate a range of values for the number of days in the current month
-                                y: Array.from({ length: 24 }, (_, i) => Math.random()), // Example y values
+                                y: generateRandomNumbers(24, 0, 100),
                                 type: "scatter", // One of: scatter, bar, pie
                                 title: "scatter",
                                 mode: "lines+markers", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
@@ -231,7 +233,7 @@ const AgroLab = () => {
                         data={[
                             {
                                 x: Array.from({ length: 24 }, (_, i) => i + 1), // Generate a range of values for the number of days in the current month
-                                y: Array.from({ length: 24 }, (_, i) => Math.random() * 90), // Example y values
+                                y: generateRandomNumbers(24, 0, 90), // Example y values
                                 type: "scatter", // One of: scatter, bar, pie
                                 title: "scatter",
                                 mode: "lines+markers", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
@@ -262,7 +264,7 @@ const AgroLab = () => {
                         data={[
                             {
                                 labels: Array.from({ length: 4 }, (_, i) => `field ${i + 1}`), // Generate labels from "field 1" to "field 10"
-                                values: values,
+                                values: generateRandomPercentages(10),
                                 type: "pie",
                                 title: "pie",
                             },
@@ -288,19 +290,19 @@ const AgroLab = () => {
                                 scrollZoom
                                 data={[
                                     {
-                                        y: Array.from({ length: daysInMonth }, () => Math.floor(Math.random() * 20) + 20),
+                                        y:  generateRandomNumbers(daysInMonth, 20, 40),
                                         type: "box", // One of: scatter, bar, pie
                                         title: "June",
                                         color: "secondary",
                                     },
                                     {
-                                        y: Array.from({ length: daysInMonth }, () => Math.floor(Math.random() * 10) + 32),
+                                        y: generateRandomNumbers(daysInMonth, 32, 42),
                                         type: "box", // One of: scatter, bar, pie
                                         title: "July",
                                         color: "secondary",
                                     },
                                     {
-                                        y: Array.from({ length: daysInMonth }, () => Math.floor(Math.random() * 10) + 28),
+                                        y: generateRandomNumbers(daysInMonth, 28, 38),
                                         type: "box", // One of: scatter, bar, pie
                                         title: "August",
                                         color: "secondary",
@@ -336,28 +338,28 @@ const AgroLab = () => {
                                 data={[
                                     {
                                         x: Array.from({ length: 4 }, (_, i) => `week ${i + 1}`),
-                                        y: Array.from({ length: monthsInYear }, () => Math.floor(Math.random() * 10)),
+                                        y: generateRandomNumbers(monthsInYear, 0, 10),
                                         type: "bar", // One of: scatter, bar, pie
                                         title: "Field 1",
                                         color: "primary",
                                     },
                                     {
                                         x: Array.from({ length: 4 }, (_, i) => `week ${i + 1}`),
-                                        y: Array.from({ length: monthsInYear }, () => Math.floor(Math.random() * 10)),
+                                        y: generateRandomNumbers(monthsInYear, 0, 10),
                                         type: "bar", // One of: scatter, bar, pie
                                         title: "Field 2",
                                         color: "secondary",
                                     },
                                     {
                                         x: Array.from({ length: 4 }, (_, i) => `week ${i + 1}`),
-                                        y: Array.from({ length: monthsInYear }, () => Math.floor(Math.random() * 10)),
+                                        y: generateRandomNumbers(monthsInYear, 0, 10),
                                         type: "bar",
                                         title: "Field 3",
                                         color: "third",
                                     },
                                     {
                                         x: Array.from({ length: 4 }, (_, i) => `week ${i + 1}`),
-                                        y: Array.from({ length: monthsInYear }, () => Math.floor(Math.random() * 10)),
+                                        y: generateRandomNumbers(monthsInYear, 0, 10),
                                         type: "bar",
                                         title: "Field 4",
                                         color: "green",
@@ -389,7 +391,7 @@ const AgroLab = () => {
                         data={[
                             {
                                 x: Array.from({ length: monthsInYear }, (_, i) => i + 1),
-                                y: Array.from({ length: monthsInYear }, () => Math.random() ),
+                                y: generateRandomNumbers(monthsInYear),
                                 texts: ["One", "Two", "Three"], // Text for each data point
                                 type: "scatter", // One of: scatter, bar, pie
                                 title: "Field 1",
@@ -398,7 +400,7 @@ const AgroLab = () => {
                             },
                             {
                                 x: Array.from({ length: monthsInYear }, (_, i) => i + 1),
-                                y: Array.from({ length: monthsInYear }, () => Math.random() ),
+                                y: generateRandomNumbers(monthsInYear),
                                 type: "scatter", // One of: scatter, bar, pie
                                 title: "Field 2",
                                 mode: "lines", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
@@ -406,7 +408,7 @@ const AgroLab = () => {
                             },
                             {
                                 x: Array.from({ length: monthsInYear }, (_, i) => i + 1),
-                                y: Array.from({ length: monthsInYear }, () => Math.random() ),
+                                y: generateRandomNumbers(monthsInYear),
                                 type: "scatter", // One of: scatter, bar, pie
                                 title: "FIeld 3",
                                 mode: "lines", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
