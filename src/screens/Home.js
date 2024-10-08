@@ -9,7 +9,7 @@ const Home = () => {
 
     return (
         <Grid container direction="column" alignItems="center" justifyContent="center" sx={{ textAlign: "center" }}>
-            <Typography variant="h2" sx={{ color: "third.main", p: 1 }}>{"Welcome to the Ecoready Observatory"}</Typography>
+            <Typography variant="h2" sx={{ color: "third.main", p: 1, }}>{"Welcome to the Ecoready Observatory"}</Typography>
             <Typography variant="h3" sx={{ color: "secondary.main", p: 2 }}>{"Explore one of our Living Labs"}</Typography>
             <Grid container justifyContent="center" spacing={2} sx={{ p: 1 }}>
                 <Grid item xs={12} sm={6} md={4} lg={3} xl={2} sx={{ p: 1 }}>

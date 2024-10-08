@@ -26,6 +26,9 @@ const useStyles = makeStyles((theme) => ({
         right: "0",
         zIndex: 1000,
         color: "white",
+		padding: "4px", // Adjust padding to make the button smaller
+        minWidth: "30px", // Set a smaller minimum width
+        minHeight: "30px", // Set a smaller minimum height
     },
 }));
 
@@ -140,7 +143,9 @@ const Sidebar = ({ isSmall: sidebarIsSmall }) => {
 	);
 
 	const toggleSidebar = () => {
-        setIsSmall(!isSmall);
+        if (window.innerWidth >= 900) {
+            setIsSmall(!isSmall);
+        }
     };
 
 	return (

@@ -21,6 +21,7 @@ const useStyles = makeStyles((theme) => ({
 		position: "absolute",
 		display: "flex",
 		height: "100%",
+		transition: "width 0.3s, margin-left 0.3s",
 	},
 }));
 
@@ -47,7 +48,13 @@ const Protected = ({ c }) => {
 		? (
 			<div className={classes.main}>
 				<Sidebar isSmall={isSmall} />
-				<div className={classes.mainBox} style={{ width: (isSmall) ? "calc(100% - 50px)" : "calc(100% - 200px)", marginLeft: (isSmall) ? "50px" : "200px" }}>
+				<div
+					className={classes.mainBox}
+					style={{
+						width: isSmall ? "calc(100% - 50px)" : "calc(100% - 200px)",
+						marginLeft: isSmall ? "50px" : "200px",
+					}}
+				>
 					<div className="header-container">
 						{c}
 					</div>
