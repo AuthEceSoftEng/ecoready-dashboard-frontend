@@ -210,9 +210,16 @@ const Header = ({ isAuthenticated }) => {
 					{isAuthenticated
 					&& (
 						<>
-							<Box sx={{ display: { xs: "none", sm: "flex", md: "flex" }, alignItems: "center", ml: 2 }}>
-                                <Search value={searchFilter} onChange={handleSearchChange} />
-                            </Box>
+							<Box
+								sx={{
+									display: { xs: "flex", sm: "flex", md: "flex" },
+									alignItems: "center",
+									ml: 2,
+									width: { xs: "108px", sm: "200px", md: "300px" }
+								}}
+							>
+								<Search value={searchFilter} onChange={handleSearchChange} />
+							</Box>
 							<Box sx={{ display: { xs: "none", sm: "none", md: "flex" }, height: "100%", py: 1 }}>
 								{buttons.map((button) => (
 									<ButtonWithText
@@ -225,7 +232,9 @@ const Header = ({ isAuthenticated }) => {
 								))}
 							</Box>
 							<Box sx={{ display: { xs: "flex", sm: "flex", md: "none" } }}>
-								<IconButton color="primary" onClick={handleMobileMenuOpen}><MoreIcon /></IconButton>
+								<IconButton  onClick={handleMobileMenuOpen}>
+									<MoreIcon sx={{color: "primary.main"}}/>
+								</IconButton>
 							</Box>
 						</>
 					)}
