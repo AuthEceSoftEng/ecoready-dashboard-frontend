@@ -20,6 +20,13 @@ const useStyles = makeStyles((theme) => ({
 		color: "white",
 		overflow: "auto",
 	},
+	toggleButton: {
+        position: "absolute",
+        top: "0",
+        right: "0",
+        zIndex: 1000,
+        color: "white",
+    },
 }));
 
 const ButtonWithText = ({ text, icon, more, handler }) => (
@@ -70,8 +77,7 @@ const ButtonSimple = ({ text, icon, handler, ind }) => (
 );
 
 const Sidebar = ({ isSmall: sidebarIsSmall }) => {
-	const [isSidebarVisible, setSidebarVisible] = useState(true);
-
+	
 	const [isSmall, setIsSmall] = useState(false);
 	const [anchorElServices, setAnchorElServices] = useState(null);
 	const navigate = useNavigate();
@@ -134,39 +140,39 @@ const Sidebar = ({ isSmall: sidebarIsSmall }) => {
 	);
 
 	const toggleSidebar = () => {
-        setSidebarVisible(!isSidebarVisible);
+        setIsSmall(!isSmall);
     };
 
 	return (
-        <>
-            <Button onClick={toggleSidebar} sx={{ size: "small", position: "absolute", top: "0", left: "0", zIndex: 1000 }}>
-                {isSidebarVisible ? 'Hide Sidebar' : 'Show Sidebar'}
+        <div className={classes.sidebar} style={{ width: isSmall ? "50px" : "200px", padding: isSmall ? "20px 5px" : "20px 5px", textAlign: "center" }}>
+            <Button 
+                onClick={toggleSidebar} 
+                className={classes.toggleButton}
+                sx={{ 
+                    transform: isSmall ? "rotate(-90deg)" : "rotate(90deg)"
+                }}
+            >
+                <ExpandMore fontSize="small" /> 
             </Button>
-            {isSidebarVisible && (
-                <div className={classes.sidebar} style={{ width: (isSmall) ? "50px" : "200px", padding: (isSmall) ? "20px 5px" : "20px 5px", textAlign: "center" }}>
-                    {!isSmall && buttons.map((button) => (
-                        <ButtonWithText
-                            key={button.text}
-                            // icon={button.icon} // Uncomment to add icons
-                            text={button.text}
-                            handler={button.handler}
-                            more={button.more}
-                        />
-                    ))}
-                    {isSmall && buttons.map((button, ind) => (
-                        <ButtonSimple
-                            key={button.text}
-                            // icon={button.icon}
-                            text={button.text}
-                            handler={button.handler}
-                            more={button.more}
-                            ind={ind}
-                        />
-                    ))}
-                    {renderServicesMenu}
-                </div>
-            )}
-        </>
+            {!isSmall && buttons.map((button) => (
+                <ButtonWithText
+                    key={button.text}
+                    text={button.text}
+                    handler={button.handler}
+                    more={button.more}
+                />
+            ))}
+            {isSmall && buttons.map((button, ind) => (
+                <ButtonSimple
+                    key={button.text}
+                    text={button.text}
+                    handler={button.handler}
+                    more={button.more}
+                    ind={ind}
+                />
+            ))}
+            {renderServicesMenu}
+        </div>
     );
 };
 
