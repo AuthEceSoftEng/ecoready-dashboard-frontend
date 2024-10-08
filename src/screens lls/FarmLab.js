@@ -6,6 +6,8 @@ import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
 import Form from "../components/Form.js";
 
+import colors from "../_colors.scss";
+
 // import { CollectionDataManagement } from 'eco-ready-services.js';
 
 const FarmLab = () => {
@@ -112,7 +114,10 @@ const FarmLab = () => {
                     )}
                 >
                     <Typography variant="h4" component="p" align="center" sx={{ fontWeight: "bold" }}>
-                        {`${((Math.random() * 5) + 25).toFixed(2)} Liters for ${year}`}
+                        {`${Math.floor(Math.random() * 500) + 300} Litres`}
+                        <Typography variant="body2" component="p" sx={{ fontSize: "0.6em" }}>
+                            <span style={{ color: colors.error }}>4%</span> decrease since {year}  
+                        </Typography>
                     </Typography>
                 </Card>
             </Grid>
@@ -128,7 +133,11 @@ const FarmLab = () => {
                     )}
                 >
                     <Typography variant="h4" component="p" align="center" sx={{ fontWeight: "bold" }}>
-                        {`${monthNames[month].text}: ${(Math.floor(Math.random() * 15) + 15)*12} $`}
+                        {`${(Math.floor(Math.random() * 15) + 15)*12} $`}
+                        {`${Math.floor(Math.random() * 500) + 300} Litres`}
+                        <Typography variant="body2" component="p" sx={{ fontSize: "0.6em" }}>
+                            <span style={{ color: colors.secondary }}>5%</span> decrease since last {monthNames[month - 1].text}  
+                        </Typography>
                     </Typography>
                 </Card>
             </Grid>
@@ -144,7 +153,10 @@ const FarmLab = () => {
                     )}
                 >
                     <Typography variant="h4" component="p" align="center" sx={{ fontWeight: "bold" }}>
-                        {`${Math.floor(Math.random() * 240000) + 80000} Honeybees`}
+                        {`${Math.floor(Math.random() * 240000) + 80000} `} <span style={{ color: "yellow" }}>Honeybess</span>
+                        <Typography variant="body2" component="p" sx={{ fontSize: "0.6em" }}>
+                            <span style={{ color: colors.secondary }}>8%</span> increase since {year-1}  
+                        </Typography>
                     </Typography>
                 </Card>
             </Grid>
@@ -287,93 +299,6 @@ const FarmLab = () => {
                     />
                 </Card>
             </Grid>
-            
-           
-            {/* <Grid item width="45%">
-                <Card
-                    title="Seasonal Weight Distribution"
-                    footer={(
-                        <Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
-                            <Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
-                                {"🕗 updated 4 min ago"}
-                            </Typography>
-                        </Grid>
-                    )}
-                >
-                    <Grid container display="flex" direction="row" justifyContent="space-around">
-                    <Plot
-                        scrollZoom
-                        data={[
-                            {
-                                y: Array.from({ length: daysInMonth }, () => Math.floor(Math.random() * 20) + 500),
-                                type: "box", // One of: scatter, bar, pie
-                                title: "June",
-                                color: "secondary",
-                            },
-                            {
-                                y: Array.from({ length: daysInMonth }, () => Math.floor(Math.random() * 20) + 520),
-                                type: "box", // One of: scatter, bar, pie
-                                title: "July",
-                                color: "secondary",
-                            },
-                            {
-                                y: Array.from({ length: daysInMonth }, () => Math.floor(Math.random() * 20) + 510),
-                                type: "box", // One of: scatter, bar, pie
-                                title: "August",
-                                color: "secondary",
-                            },
-                        ]}
-                        title="Summer Time"
-                        showLegend={false}
-                        displayBar={false}
-                    />
-                    </Grid>
-                </Card>
-            </Grid> */}
-            {/*<Grid item width="100%" mt={4}>
-                <Card
-                    title="Health Index"
-                    footer={(
-                        <Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
-                            <Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
-                                {"🕗 updated 4 min ago"}
-                            </Typography>
-                        </Grid>
-                    )}
-                >
-                     <Plot
-                        scrollZoom
-                        data={[
-                            {
-                                x: Array.from({ length: monthsInYear }, (_, i) => i + 1),
-                                y: Array.from({ length: monthsInYear }, () => Math.random() ),
-                                texts: ["One", "Two", "Three"], // Text for each data point
-                                type: "scatter", // One of: scatter, bar, pie
-                                title: "Field 1",
-                                mode: "lines", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
-                                color: "primary",
-                            },
-                            {
-                                x: Array.from({ length: monthsInYear }, (_, i) => i + 1),
-                                y: Array.from({ length: monthsInYear }, () => Math.random() ),
-                                type: "scatter", // One of: scatter, bar, pie
-                                title: "Field 2",
-                                mode: "lines", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
-                                color: "secondary",
-                            },
-                            {
-                                x: Array.from({ length: monthsInYear }, (_, i) => i + 1),
-                                y: Array.from({ length: monthsInYear }, () => Math.random() ),
-                                type: "scatter", // One of: scatter, bar, pie
-                                title: "Field 3",
-                                mode: "lines", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
-                                color: "third",
-                            },
-                        ]}
-                        title="Average Soil Quality per Month"
-                    />
-                </Card>
-            </Grid> */}
         </Grid>
     );
 };
