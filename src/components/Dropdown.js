@@ -138,6 +138,7 @@ const Dropdown = ({
 	onChange,
 }) => {
 	const classes = useStyles();
+
 	return (
 		<Select
 			id={id}
@@ -156,8 +157,8 @@ const Dropdown = ({
 			renderValue={(selected) => (selected || placeholder)}
 			onChange={onChange}
 		>
-			{items.map((it) => (
-				<MenuItem key={it.text} value={it.value}>{it.text}</MenuItem>
+			{items.map((it, index) => (
+				<MenuItem key={it.text || index} value={it.value}>{it.text}</MenuItem>
 			))}
 		</Select>
 	);

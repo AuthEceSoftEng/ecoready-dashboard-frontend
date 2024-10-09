@@ -113,7 +113,7 @@ const FarmLab = () => {
                         </Grid>
                     )}
                 >
-                    <Typography variant="h4" component="p" align="center" sx={{ fontWeight: "bold" }}>
+                    <Typography variant="h4" component="h4" align="center" sx={{ fontWeight: "bold" }}>
                         {`${Math.floor(Math.random() * 500) + 300} Litres`}
                         <Typography variant="body2" component="p" sx={{ fontSize: "0.6em" }}>
                             <span style={{ color: colors.error }}>4%</span> decrease since {year}  
@@ -132,8 +132,8 @@ const FarmLab = () => {
                         </Grid>
                     )}
                 >
-                    <Typography variant="h4" component="p" align="center" sx={{ fontWeight: "bold" }}>
-                        {`${Math.floor(Math.random() * 500) + 300} Litres`}
+                    <Typography variant="h4" component="h4" align="center" sx={{ fontWeight: "bold" }}>
+                        {`${(Math.random() * 5 + 3).toFixed(2)}k $`}
                         <Typography variant="body2" component="p" sx={{ fontSize: "0.6em" }}>
                             <span style={{ color: colors.secondary }}>5%</span> decrease since last {monthNames[month - 1].text}  
                         </Typography>
@@ -151,8 +151,8 @@ const FarmLab = () => {
                         </Grid>
                     )}
                 >
-                    <Typography variant="h4" component="p" align="center" sx={{ fontWeight: "bold" }}>
-                        {`${Math.floor(Math.random() * 240000) + 80000} `} <span style={{ color: "yellow" }}>Honeybess</span>
+                    <Typography variant="h4" component="h4" align="center" sx={{ fontWeight: "bold" }}>
+                        {`${(Math.random() * 240 + 80).toFixed(2)}k `} <span style={{ color: "yellow" }}>Honeybess</span>
                         <Typography variant="body2" component="p" sx={{ fontSize: "0.6em" }}>
                             <span style={{ color: colors.secondary }}>8%</span> increase since {year-1}  
                         </Typography>
