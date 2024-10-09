@@ -205,7 +205,8 @@ const Form = forwardRef(({ disabled: dsb, content, validationSchema, onSubmit, o
 													name: comp.id,
 													value: event.target.value,
 												},
-											});
+											})
+											console.log('Dropdown value:', formikProps.values[comp.id]);
 											if (comp.onChange) {
 												comp.onChange(event);
 											}
@@ -234,6 +235,7 @@ const Form = forwardRef(({ disabled: dsb, content, validationSchema, onSubmit, o
 											checkedIcon={comp.checkedIcon}
 											disabled={disabled || comp.disabled}
 											onChange={(event) => {
+												
 												formikProps.handleChange({
 													target: {
 														name: comp.id,

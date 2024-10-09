@@ -36,13 +36,31 @@ const ButtonWithText = ({ text, icon, more, handler }) => (
 	<span key={text}>
 		{!more
 		&& (
-			<Button key={text} sx={{ width: "100%", display: "flex", flexDirection: "row", justifyContent: "flex-start", padding: "8px 40px 8px 16px" }} onClick={(event) => handler(event)}>
-				{/* <Image src={icon} alt={text} fit="contain" width="25px" /> */}
-				<Typography align="center" color="white.main" fontSize="medium" ml={1} display="flex" alignItems="center" sx={{ textTransform: "capitalize" }}>
-					{text}
-					{more && <ExpandMore />}
-				</Typography>
-			</Button>
+			<Button
+			key={text}
+			sx={{
+			  width: "100%",
+			  display: "flex",
+			  flexDirection: "row",
+			  justifyContent: "flex-start",
+			  padding: "8px 40px 8px 16px",
+			}}
+			onClick={(event) => handler(event)}
+		  >
+			{icon && <Image src={icon} alt={text} fit="contain" width="25px" />}
+			<Typography
+			  align="center"
+			  color="white.main"
+			  fontSize="medium"
+			  ml={1}
+			  display="flex"
+			  alignItems="center"
+			  sx={{ textTransform: "capitalize" }}
+			>
+			  {text}
+			  {more && <ExpandMore />}
+			</Typography>
+		  </Button>
 		)}
 		{more
 		&& (
@@ -50,8 +68,16 @@ const ButtonWithText = ({ text, icon, more, handler }) => (
 				key={text}
 				title={(
 					<Grid item sx={{ width: "100%", display: "flex", flexDirection: "row", justifyContent: "flex-start" }}>
-						{/* <Image src={icon} alt={text} fit="contain" width="25px" /> */}
-						<Typography align="center" color="white.main" fontSize="medium" ml={1} display="flex" alignItems="center" sx={{ textTransform: "capitalize" }}>
+						{icon && <Image src={icon} alt={text} fit="contain" width="25px" />}
+						<Typography
+							align="center"
+							color="white.main"
+							fontSize="medium"
+							ml={1}
+							display="flex"
+							alignItems="center"
+							sx={{ textTransform: "capitalize" }}
+						>
 							{text}
 						</Typography>
 					</Grid>
