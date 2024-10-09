@@ -51,7 +51,7 @@ const ButtonWithText = ({ text, icon, more, handler }) => (
 				title={(
 					<Grid item sx={{ width: "100%", display: "flex", flexDirection: "row", justifyContent: "flex-start" }}>
 						{/* <Image src={icon} alt={text} fit="contain" width="25px" /> */}
-						<Typography align="" color="white.main" fontSize="medium" ml={1} display="flex" alignItems="center" sx={{ textTransform: "capitalize" }}>
+						<Typography align="center" color="white.main" fontSize="medium" ml={1} display="flex" alignItems="center" sx={{ textTransform: "capitalize" }}>
 							{text}
 						</Typography>
 					</Grid>

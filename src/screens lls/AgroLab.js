@@ -122,7 +122,7 @@ const AgroLab = () => {
                         </Grid>
                     )}
                 >
-                    <Typography variant="h4" component="p" align="center" sx={{ fontWeight: "bold" }}>
+                    <Typography variant="h4" component="h4" align="center" sx={{ fontWeight: "bold" }}>
                         {`${((Math.random() * 5) + 2).toFixed(2)} T`}
                         <Typography variant="body2" component="p" sx={{ fontSize: "0.6em" }}>
                             <span style={{ color: colors.secondary }}>6%</span> increase from {year - 1}
@@ -141,7 +141,7 @@ const AgroLab = () => {
                         </Grid>
                     )}
                 >
-                    <Typography variant="h4" component="p" align="center" sx={{ fontWeight: "bold" }}>
+                    <Typography variant="h4" component="h4" align="center" sx={{ fontWeight: "bold" }}>
                         {`${Math.floor(Math.random() * 500) + 300} Litres`}
                         <Typography variant="body2" component="p" sx={{ fontSize: "0.6em" }}>
                             <span style={{ color: colors.error }}>10%</span> decrease since last {monthNames[month - 1].text}  
@@ -160,7 +160,7 @@ const AgroLab = () => {
                         </Grid>
                     )}
                 >
-                    <Typography variant="h4" component="p" align="center" sx={{ fontWeight: "bold" }}>
+                    <Typography variant="h4" component="h4" align="center" sx={{ fontWeight: "bold" }}>
                         {`${Math.floor(Math.random() * 10) + 20}°C`}
                         <Typography variant="body2" component="p" sx={{ fontSize: "0.6em" }}>
                             <span style={{ color: colors.warning }}>Sunny</span> <span style={{ color: colors.third }}>skies</span> at your area
