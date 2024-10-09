@@ -133,7 +133,6 @@ const FarmLab = () => {
                     )}
                 >
                     <Typography variant="h4" component="p" align="center" sx={{ fontWeight: "bold" }}>
-                        {`${(Math.floor(Math.random() * 15) + 15)*12} $`}
                         {`${Math.floor(Math.random() * 500) + 300} Litres`}
                         <Typography variant="body2" component="p" sx={{ fontSize: "0.6em" }}>
                             <span style={{ color: colors.secondary }}>5%</span> decrease since last {monthNames[month - 1].text}  
@@ -290,7 +289,7 @@ const FarmLab = () => {
                                 type: "scatter", // One of: scatter, bar, pie
                                 title: "Hive 4",
                                 mode: "lines+markers", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
-                                color: "gree",
+                                color: "green",
                             },
                         ]}
                         title={`${monthNames[month].text}`}
