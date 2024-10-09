@@ -10,12 +10,8 @@ import colors from "../_colors.scss";
 // import { CollectionDataManagement } from 'eco-ready-services.js';
 
 const AgroLab = () => {
-    const formRef = useRef();
-    const [plotData, setPlotData] = useState(null);
-    
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [sortValue, setSortValue] = useState("month");
 
     //Get Data
     // useEffect(() => {
@@ -74,22 +70,25 @@ const AgroLab = () => {
         { value: "December", text: "December" }
       ];
     
+    const formRef = useRef();
     const [value, setValue] = useState("");
 
     const formContent = [
 		
 		{   customType: "dropdown",
-			id: "sort",
+			id: "time period sort",
             label: "Sort By:",
             items: [
-                { value: "Month", label: "Month" },
                 { value: "Week", label: "Week" },
+                { value: "Month", label: "Month" },
                 { value: "Year", label: "Year" },
             ],
-            size: "small",
-            background: "grey",
+            value: value,
+            size: "large",
             defaultValue: "Month",
-            onChange: (event) => setSortValue(event.target.value),
+            onChange: (event) => {
+                console.log(`Status changed to ${event.target.value}`);
+            },
         },
         {
 			customType: "date-picker",
@@ -379,8 +378,22 @@ const AgroLab = () => {
                                 style={{ zIndex: 1 }}
                             />
                         </Grid>
-                        <Grid item sx={{ position: 'absolute', bottom: 0, right: -95, width: '52%', height: '50%', zIndex: 2, display: 'flex' }}>
-                            <Form ref={formRef} content={formContent} />
+                        <Grid
+                            container
+                            sx={{
+                                position: 'absolute',
+                                bottom: 0,
+                                right: -95,
+                                width: '52%',
+                                height: '50%',
+                                zIndex: 20,
+                                display: 'flex',
+                            }}
+                        >
+                            <Form
+                                ref={formRef}
+                                content={formContent}
+                            />
                         </Grid>
                     </Grid>
                 </Card>
