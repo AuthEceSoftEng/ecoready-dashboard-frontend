@@ -332,7 +332,7 @@ const AgroLab = () => {
             </Grid>
             <Grid container direction="row" alignItems="center" justifyContent="space-between" width="49.5%" mt={4}>
                 <Card
-                    title="Percipitation"
+                    title="Precipitation"
                     footer={(
                         <Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
                             <Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
