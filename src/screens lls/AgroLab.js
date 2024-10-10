@@ -32,7 +32,6 @@ const AgroLab = () => {
     //     getData(organization, project, collection, accessKey);
     // }, []);
         
-
     // Get the current year and month
     const now = new Date();
     const year = now.getFullYear();
@@ -84,7 +83,6 @@ const AgroLab = () => {
                 { value: "Year", label: "Year" },
             ],
             value: value,
-            size: "large",
             defaultValue: "Month",
             onChange: (event) => {
                 console.log(`Status changed to ${event.target.value}`);
@@ -109,8 +107,8 @@ const AgroLab = () => {
     const onChange = (event) => setValue(event.target.value);
 
     return (
-        <Grid container display="flex" direction="row" justifyContent="space-around">
-            <Grid item width="32%" alignItems="center" flexDirection="column">
+        <Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
+            <Grid item xs={7} md={4} alignItems="center" flexDirection="column">
                 <Card
                     title="Annual Crop Yield"
                     footer={(
@@ -129,7 +127,7 @@ const AgroLab = () => {
                     </Typography>
                 </Card>
             </Grid>
-            <Grid item width="32%" alignItems="center" flexDirection="column">
+            <Grid item xs={7} md={4} alignItems="center" flexDirection="column">
                 <Card
                     title="Monthly Irrigation"
                     footer={(
@@ -148,7 +146,7 @@ const AgroLab = () => {
                     </Typography>
                 </Card>
             </Grid>
-            <Grid item width="32%" alignItems="center" flexDirection="column">
+            <Grid item xs={7} md={4} alignItems="center" flexDirection="column">
                 <Card
                     title="Temperature"
                     footer={(
@@ -167,7 +165,7 @@ const AgroLab = () => {
                     </Typography>
                 </Card>
             </Grid>
-            <Grid item width="32%" alignItems="center" flexDirection="column" mt={4}>
+            <Grid item xs={12} md={4} alignItems="center" flexDirection="column" mt={4}>
                 <Card
                     title="Monthly Crop Yield Distribution"
                     footer={(
@@ -196,7 +194,7 @@ const AgroLab = () => {
                     />
                 </Card>
             </Grid>                        
-            <Grid item width="32%" alignItems="center" flexDirection="column" mt={4}>
+            <Grid item xs={12} md={4} alignItems="center" flexDirection="column" mt={4}>
                 <Card
                     title="Soil Moisture"
                     footer={(
@@ -226,7 +224,7 @@ const AgroLab = () => {
                     />
                 </Card>
             </Grid>
-            <Grid item width="32%" mt={4}>
+            <Grid item xs={12} md={4} alignItems="center" flexDirection="column" mt={4}>
                 <Card
                     title="Daily Humidity"
                     footer={(
@@ -256,7 +254,7 @@ const AgroLab = () => {
                     />
                 </Card>
             </Grid>
-            <Grid item width="60%" mt={4}>
+            <Grid item xs={12} md={8} mt={4}>
                 <Card
                     title="Annual Yield Per Field"
                     footer={(
@@ -282,7 +280,7 @@ const AgroLab = () => {
                     />
                 </Card>
             </Grid>
-            <Grid item width="49.5%" mt={4}>
+            <Grid item xs={12} md={6} mt={4}>
                 <Card
                     title="Seasonal Temperature Distribution"
                     footer={(
@@ -293,8 +291,8 @@ const AgroLab = () => {
                         </Grid>
                     )}
                 >
-                    <Grid item sx={{ position: 'relative', width: '100%'}}>
-                        <Grid item sx={{ position: 'relative', width: '90%'}}>
+                    <Grid container flexDirection="row" sx={{ position: 'relative', width: '100%'}}>
+                        <Grid item sx={{ position: 'relative', width: '85%',  zIndex: 1}}> 
                             <Plot
                                 scrollZoom
                                 data={[
@@ -319,17 +317,27 @@ const AgroLab = () => {
                                 ]}
                                 title="Summer Time"
                                 showLegend={false}
-                                displayBar={false}
-                                style={{ zIndex: 1 }}
-                                />
-                        </Grid>
-                        <Grid item sx={{ position: 'absolute', bottom: 0, right: -95, width: '52%', height: '50%', zIndex: 2, display: 'flex' }}>
+                            />
+                        </Grid>   
+                        <Grid
+                            item
+                            md={7}
+                            sx={{
+                                position: 'absolute', 
+                                top: 0,
+                                right: -85,
+                                width: '52%',
+                                height: '50%',
+                                zIndex: 10,
+                                
+                            }}
+                        >
                             <Form ref={formRef} content={formContent.slice(1)} />
                         </Grid>
                     </Grid>
                 </Card>
             </Grid>
-            <Grid container direction="row" alignItems="center" justifyContent="space-between" width="49.5%" mt={4}>
+            <Grid item xs={12} md={6} mt={4}>
                 <Card
                     title="Precipitation"
                     footer={(
@@ -340,8 +348,8 @@ const AgroLab = () => {
                         </Grid>
                     )}
                 >
-                    <Grid item sx={{ position: 'relative', width: '100%'}}>
-                        <Grid item sx={{ position: 'relative', width: '90%'}}> 
+                    <Grid container flexDirection="row" sx={{ position: 'relative', width: '100%'}}>
+                        <Grid item sx={{ position: 'relative', width: '90%',  zIndex: 1}}> 
                             <Plot
                                 scrollZoom
                                 data={[
@@ -375,25 +383,22 @@ const AgroLab = () => {
                                     },
                                 ]}
                                 title="Average Percipitation per Week"
-                                style={{ zIndex: 1 }}
                             />
                         </Grid>
                         <Grid
-                            container
+                            item
+                            md={7}
                             sx={{
                                 position: 'absolute',
                                 bottom: 0,
-                                right: -95,
+                                right: -85,
                                 width: '52%',
                                 height: '50%',
                                 zIndex: 20,
-                                display: 'flex',
+                                display: 'grid',
                             }}
                         >
-                            <Form
-                                ref={formRef}
-                                content={formContent}
-                            />
+                            <Form ref={formRef} content={formContent}/>
                         </Grid>
                     </Grid>
                 </Card>
