@@ -254,7 +254,7 @@ const AgroLab = () => {
                     />
                 </Card>
             </Grid>
-            <Grid item xs={12} md={8} mt={4}>
+            <Grid item xs={12} md={12} mt={4}>
                 <Card
                     title="Annual Yield Per Field"
                     footer={(

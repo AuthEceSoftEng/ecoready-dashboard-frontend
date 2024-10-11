@@ -75,8 +75,8 @@ const FarmLab = () => {
     const onChange = (event) => setValue(event.target.value);
 
     return (
-        <Grid container display="flex" direction="row" justifyContent="space-around">
-            <Grid item width="70%" m={4}>
+        <Grid container display="flex" direction="row" justifyContent="space-around" >
+            <Grid item xs={12}>
                 <Card
                     title="Annual Honey Yield Distribution"
                     footer={(
@@ -102,64 +102,65 @@ const FarmLab = () => {
                     />
                 </Card>
             </Grid>
-            <Grid item width="32%">
-                <Card
-                    title="Annual Honey Production"
-                    footer={(
-                        <Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
-                            <Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
-                                {"🕗 updated 4 min ago"}
+            <Grid container width="100%" mt={4} display="flex" direction="row" spacing={2} justifyContent="space-around">
+                <Grid item xs={12} md={4} alignItems="center" flexDirection="column">
+                    <Card
+                        title="Annual Honey Production"
+                        footer={(
+                            <Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
+                                <Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
+                                    {"🕗 updated 4 min ago"}
+                                </Typography>
+                            </Grid>
+                        )}
+                    >
+                        <Typography variant="h4" component="h4" align="center" sx={{ fontWeight: "bold" }}>
+                            {`${Math.floor(Math.random() * 500) + 300} Litres`}
+                            <Typography variant="body2" component="p" sx={{ fontSize: "0.6em" }}>
+                                <span style={{ color: colors.error }}>4%</span> decrease since {year}  
                             </Typography>
-                        </Grid>
-                    )}
-                >
-                    <Typography variant="h4" component="h4" align="center" sx={{ fontWeight: "bold" }}>
-                        {`${Math.floor(Math.random() * 500) + 300} Litres`}
-                        <Typography variant="body2" component="p" sx={{ fontSize: "0.6em" }}>
-                            <span style={{ color: colors.error }}>4%</span> decrease since {year}  
                         </Typography>
-                    </Typography>
-                </Card>
-            </Grid>
-            <Grid item width="32%">
-                <Card
-                    title="Annual Costs of Production"
-                    footer={(
-                        <Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
-                            <Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
-                                {"🕗 updated 4 min ago"}
+                    </Card>
+                </Grid>
+                <Grid item xs={12} md={4} alignItems="center" flexDirection="column">
+                    <Card
+                        title="Annual Costs of Production"
+                        footer={(
+                            <Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
+                                <Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
+                                    {"🕗 updated 4 min ago"}
+                                </Typography>
+                            </Grid>
+                        )}
+                    >
+                        <Typography variant="h4" component="h4" align="center" sx={{ fontWeight: "bold" }}>
+                            {`${(Math.random() * 5 + 3).toFixed(2)}k $`}
+                            <Typography variant="body2" component="p" sx={{ fontSize: "0.6em" }}>
+                                <span style={{ color: colors.secondary }}>5%</span> decrease since last {monthNames[month - 1].text}  
                             </Typography>
-                        </Grid>
-                    )}
-                >
-                    <Typography variant="h4" component="h4" align="center" sx={{ fontWeight: "bold" }}>
-                        {`${(Math.random() * 5 + 3).toFixed(2)}k $`}
-                        <Typography variant="body2" component="p" sx={{ fontSize: "0.6em" }}>
-                            <span style={{ color: colors.secondary }}>5%</span> decrease since last {monthNames[month - 1].text}  
                         </Typography>
-                    </Typography>
-                </Card>
-            </Grid>
-            <Grid item width="32%">
-                <Card
-                    title="Current Bee Count Estimation"
-                    footer={(
-                        <Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
-                            <Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
-                                {"🕗 updated 4 min ago"}
+                    </Card>
+                </Grid>
+                <Grid item xs={12} md={4} alignItems="center" flexDirection="column">
+                    <Card
+                        title="Current Bee Count Estimation"
+                        footer={(
+                            <Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
+                                <Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
+                                    {"🕗 updated 4 min ago"}
+                                </Typography>
+                            </Grid>
+                        )}
+                    >
+                        <Typography variant="h4" component="h4" align="center" sx={{ fontWeight: "bold" }}>
+                            {`${(Math.random() * 240 + 80).toFixed(2)}k `} <span style={{ color: "goldenrod" }}>Honeybees</span>                        <Typography variant="body2" component="p" sx={{ fontSize: "0.6em" }}>
+                                <span style={{ color: colors.secondary }}>8%</span> increase since {year-1}  
                             </Typography>
-                        </Grid>
-                    )}
-                >
-                    <Typography variant="h4" component="h4" align="center" sx={{ fontWeight: "bold" }}>
-                        {`${(Math.random() * 240 + 80).toFixed(2)}k `} <span style={{ color: "yellow" }}>Honeybess</span>
-                        <Typography variant="body2" component="p" sx={{ fontSize: "0.6em" }}>
-                            <span style={{ color: colors.secondary }}>8%</span> increase since {year-1}  
                         </Typography>
-                    </Typography>
-                </Card>
+                    </Card>
+                </Grid>
             </Grid>
-            <Grid item width="70%" m={4}>
+            <Grid item xs={12} mt={4}>
                 <Card
                     title="Monthly Honey Yield Distribution"
                     footer={(
@@ -208,95 +209,97 @@ const FarmLab = () => {
                     />
                 </Card>
             </Grid>
-            <Grid item width="49%">
-                <Card
-                    title="Average Area Coverage"
-                    footer={(
-                        <Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
-                            <Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
-                                {"🕗 updated 4 min ago"}
-                            </Typography>
-                        </Grid>
-                    )}
-                >
-                    <Grid item sx={{ position: 'relative', width: '100%'}}>
+            <Grid container xs={12} mt={4} display="flex" spacing={2} justifyContent="space-between">
+                <Grid item xs={12} md={6}>
+                    <Card
+                        title="Average Area Coverage"
+                        footer={(
+                            <Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
+                                <Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
+                                    {"🕗 updated 4 min ago"}
+                                </Typography>
+                            </Grid>
+                        )}
+                    >
                         <Grid item sx={{ position: 'relative', width: '100%'}}>
-                            <Plot
-                                scrollZoom
-                                data={[
-                                    {
-                                        x: Array.from({ length: daysInMonth }, (_, i) => i + 1),
-                                        y: Array.from({ length: daysInMonth }, () => Math.floor(Math.random() * 20) + 20),
-                                        type: "bar", // One of: scatter, bar, pie
-                                        title: "June",
-                                        color: "secondary",
-                                    },
-                                ]}
-                                title={`${monthNames[month].text}`}
-                                showLegend={false}
-                                displayBar={false}
-                                height="400px"
-                                style={{ zIndex: 1 }}
-                                />
+                            <Grid item sx={{ position: 'relative', width: '100%'}}>
+                                <Plot
+                                    scrollZoom
+                                    data={[
+                                        {
+                                            x: Array.from({ length: daysInMonth }, (_, i) => i + 1),
+                                            y: Array.from({ length: daysInMonth }, () => Math.floor(Math.random() * 20) + 20),
+                                            type: "bar", // One of: scatter, bar, pie
+                                            title: "June",
+                                            color: "secondary",
+                                        },
+                                    ]}
+                                    title={`${monthNames[month].text}`}
+                                    showLegend={false}
+                                    displayBar={false}
+                                    height="400px"
+                                    style={{ zIndex: 1 }}
+                                    />
+                            </Grid>
+                            <Grid item sx={{ position: 'absolute', bottom: 0, right: -95, width: '52%', height: '50%', zIndex: 2, display: 'flex' }}>
+                                <Form ref={formRef} content={formContent.slice(1)} />
+                            </Grid>
                         </Grid>
-                        <Grid item sx={{ position: 'absolute', bottom: 0, right: -95, width: '52%', height: '50%', zIndex: 2, display: 'flex' }}>
-                            <Form ref={formRef} content={formContent.slice(1)} />
-                        </Grid>
-                    </Grid>
-                </Card>
-            </Grid> 
-            <Grid item width="49%" >
-                <Card
-                    title="Activity Levels"
-                    footer={(
-                        <Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
-                            <Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
-                                {"🕗 updated 4 min ago"}
-                            </Typography>
-                        </Grid>
-                    )}
-                >
-                    <Plot
-                        scrollZoom
-                        data={[
-                            {
-                                x: Array.from({ length: daysInMonth }, (_, i) => i + 1), // Generate a range of values for the number of days in the current month
-                                y: Array.from({ length: daysInMonth }, (_, i) => Math.random() ), // Example y values
-                                type: "scatter", // One of: scatter, bar, pie
-                                title: "Hive 1",
-                                mode: "lines+markers", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
-                                color: "primary",
-                            },
-                            {
-                                x: Array.from({ length: daysInMonth }, (_, i) => i + 1), // Generate a range of values for the number of days in the current month
-                                y: Array.from({ length: daysInMonth }, (_, i) => Math.random() ), // Example y values
-                                type: "scatter", // One of: scatter, bar, pie
-                                title: "Hive 2",
-                                mode: "lines+markers", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
-                                color: "secondary",
-                            },
-                            {
-                                x: Array.from({ length: daysInMonth }, (_, i) => i + 1), // Generate a range of values for the number of days in the current month
-                                y: Array.from({ length: daysInMonth }, (_, i) => Math.random() ), // Example y values
-                                type: "scatter", // One of: scatter, bar, pie
-                                title: "Hive 3",
-                                mode: "lines+markers", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
-                                color: "third",
-                            },
-                            {
-                                x: Array.from({ length: daysInMonth }, (_, i) => i + 1), // Generate a range of values for the number of days in the current month
-                                y: Array.from({ length: daysInMonth }, (_, i) => Math.random() ), // Example y values
-                                type: "scatter", // One of: scatter, bar, pie
-                                title: "Hive 4",
-                                mode: "lines+markers", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
-                                color: "green",
-                            },
-                        ]}
-                        title={`${monthNames[month].text}`}
-                        displayBar={false}
-                        height="400px"
-                    />
-                </Card>
+                    </Card>
+                </Grid> 
+                <Grid item xs={12} md={6} >
+                    <Card
+                        title="Activity Levels"
+                        footer={(
+                            <Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
+                                <Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
+                                    {"🕗 updated 4 min ago"}
+                                </Typography>
+                            </Grid>
+                        )}
+                    >
+                        <Plot
+                            scrollZoom
+                            data={[
+                                {
+                                    x: Array.from({ length: daysInMonth }, (_, i) => i + 1), // Generate a range of values for the number of days in the current month
+                                    y: Array.from({ length: daysInMonth }, (_, i) => Math.random() ), // Example y values
+                                    type: "scatter", // One of: scatter, bar, pie
+                                    title: "Hive 1",
+                                    mode: "lines+markers", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
+                                    color: "primary",
+                                },
+                                {
+                                    x: Array.from({ length: daysInMonth }, (_, i) => i + 1), // Generate a range of values for the number of days in the current month
+                                    y: Array.from({ length: daysInMonth }, (_, i) => Math.random() ), // Example y values
+                                    type: "scatter", // One of: scatter, bar, pie
+                                    title: "Hive 2",
+                                    mode: "lines+markers", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
+                                    color: "secondary",
+                                },
+                                {
+                                    x: Array.from({ length: daysInMonth }, (_, i) => i + 1), // Generate a range of values for the number of days in the current month
+                                    y: Array.from({ length: daysInMonth }, (_, i) => Math.random() ), // Example y values
+                                    type: "scatter", // One of: scatter, bar, pie
+                                    title: "Hive 3",
+                                    mode: "lines+markers", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
+                                    color: "third",
+                                },
+                                {
+                                    x: Array.from({ length: daysInMonth }, (_, i) => i + 1), // Generate a range of values for the number of days in the current month
+                                    y: Array.from({ length: daysInMonth }, (_, i) => Math.random() ), // Example y values
+                                    type: "scatter", // One of: scatter, bar, pie
+                                    title: "Hive 4",
+                                    mode: "lines+markers", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
+                                    color: "green",
+                                },
+                            ]}
+                            title={`${monthNames[month].text}`}
+                            displayBar={false}
+                            height="400px"
+                        />
+                    </Card>
+                </Grid>
             </Grid>
         </Grid>
     );
