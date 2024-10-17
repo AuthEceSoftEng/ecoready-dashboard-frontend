@@ -144,7 +144,7 @@ const Sidebar = ({ isSmall: sidebarIsSmall }) => {
 			},
 			more: [
 				{ title: "AgroLab", handler: () => navigate("/agrolab") },
-				{ title: "FarmLab", handler: () => navigate("/farmlab") },
+				{ title: "HiveLab", handler: () => navigate("/hivelab") },
 				// { title: "VertiLab", handler: () => navigate("/vertilab") },
 			],
 		},

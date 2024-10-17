@@ -10,7 +10,7 @@ import colors from "../_colors.scss";
 
 // import { CollectionDataManagement } from 'eco-ready-services.js';
 
-const FarmLab = () => {
+const HiveLab = () => {
     const formRef = useRef();
     const [plotData, setPlotData] = useState(null);
     
@@ -179,7 +179,7 @@ const FarmLab = () => {
                                 y: Array.from({ length: 4 }, (_, i) => Math.floor(Math.random() * (10 - 3 + 1) + 3)),
                                 type: "bar",
                                 title: "Hive 1",
-                                color: "priary",     
+                                color: "primary",     
                             },
                             {
                                 x: Array.from({ length: 4 }, (_, i) => `Week ${i + 1}`),
@@ -305,4 +305,4 @@ const FarmLab = () => {
     );
 };
 
-export default memo(FarmLab);
+export default memo(HiveLab);

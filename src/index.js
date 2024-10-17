@@ -48,7 +48,7 @@ import { adjustColors, jwt, colorSuggestions } from "./utils/index.js";
 
 import "./i18n.js";
 import AgroLab from "./screens lls/AgroLab.js";
-import FarmLab from "./screens lls/FarmLab.js";
+import HiveLab from "./screens lls/HiveLab.js";
 // import VertiLab from "./screens/VertiLab.js";
 
 const {
@@ -126,7 +126,7 @@ const App = () => {
 								<Route path="examples" element={<Protected c={<Examples />} />} />
 								<Route path="users" element={<Protected c={<Users />} />} />
 								<Route path="agrolab" element={<Protected c={<AgroLab />} />} />
-								<Route path="farmlab" element={<Protected c={<FarmLab />} />} />
+								<Route path="hivelab" element={<Protected c={<HiveLab />} />} />
 								{/*<Route path="vertilab" element={<Protected c={<VertiLab />} />} /> */}
 								{/* EXAMPLES */}
 								<Route path="buttons" element={<Protected c={<ButtonsExample />} />} />

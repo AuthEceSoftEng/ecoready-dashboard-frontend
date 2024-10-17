@@ -74,4 +74,4 @@ export const removeUser = (id) => api.post("user/delete", { id });
 export const getUsersData = () => api.get("user");
 
 // EcoReadyServices
-export const getEcoReadyData = () => api.get("eco-ready-data");
+export const getEcoReadyData = (organization, project, collection, accessKey) => EcoReadyServicesApi(accessKey).get(`api/organizations/${organization}/projects/${project}/collections/${collection}/get_data`);
