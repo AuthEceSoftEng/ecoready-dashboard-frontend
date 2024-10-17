@@ -24,8 +24,8 @@ const Home = () => {
                     <SecondaryBackgroundButton
                         size="large"
                         width="100%"
-                        title="FarmLab"
-                        onClick={() => navigate("../farmlab", { replace: true })}
+                        title="HiveLab"
+                        onClick={() => navigate("../hivelab", { replace: true })}
                     />
                 </Grid>
                 {/* <Grid item xs={12} sm={6} md={4} lg={3} xl={2} sx={{ p: 1 }}>
