@@ -108,7 +108,7 @@ const AgroLab = () => {
 
     return (
         <Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
-            <Grid item xs={7} md={4} alignItems="center" flexDirection="column">
+            <Grid item xs={12} md={4} alignItems="center" flexDirection="column">
                 <Card
                     title="Annual Crop Yield"
                     footer={(
@@ -127,7 +127,7 @@ const AgroLab = () => {
                     </Typography>
                 </Card>
             </Grid>
-            <Grid item xs={7} md={4} alignItems="center" flexDirection="column">
+            <Grid item xs={12} md={4} alignItems="center" flexDirection="column">
                 <Card
                     title="Monthly Irrigation"
                     footer={(
@@ -146,7 +146,7 @@ const AgroLab = () => {
                     </Typography>
                 </Card>
             </Grid>
-            <Grid item xs={7} md={4} alignItems="center" flexDirection="column">
+            <Grid item xs={12} md={4} alignItems="center" flexDirection="column">
                 <Card
                     title="Temperature"
                     footer={(
