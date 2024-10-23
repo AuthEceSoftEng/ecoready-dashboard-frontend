@@ -228,7 +228,7 @@ const HiveLab = () => {
                                     data={[
                                         {
                                             x: Array.from({ length: daysInMonth }, (_, i) => i + 1),
-                                            y: Array.from({ length: daysInMonth }, () => Math.floor(Math.random() * 20) + 20),
+                                            y: Array.from({ length: daysInMonth }, () => Math.floor(Math.random() * 6) + 10),
                                             type: "bar", // One of: scatter, bar, pie
                                             title: "June",
                                             color: "secondary",
@@ -239,6 +239,19 @@ const HiveLab = () => {
                                     displayBar={false}
                                     height="400px"
                                     style={{ zIndex: 1 }}
+                                    xaxis= {{
+                                        title: "Day",
+                                        tickmode: "linear",
+                                        // tickangle: 45,
+                                        tick0: 1,
+                                        dtick: 2,
+                                    }}
+                                    yaxis= {{
+                                        title: "Area * 1000 (ha)",
+                                        tickmode: "linear",
+                                        tick0: 0,
+                                        dtick: 10,
+                                    }}
                                     />
                             </Grid>
                             <Grid item sx={{ position: 'absolute', bottom: 0, right: -95, width: '52%', height: '50%', zIndex: 2, display: 'flex' }}>
@@ -263,7 +276,7 @@ const HiveLab = () => {
                             data={[
                                 {
                                     x: Array.from({ length: daysInMonth }, (_, i) => i + 1), // Generate a range of values for the number of days in the current month
-                                    y: Array.from({ length: daysInMonth }, (_, i) => Math.random() ), // Example y values
+                                    y: Array.from({ length: daysInMonth }, (_, i) => Math.random() * 100), // Example y values
                                     type: "scatter", // One of: scatter, bar, pie
                                     title: "Hive 1",
                                     mode: "lines+markers", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
@@ -271,7 +284,7 @@ const HiveLab = () => {
                                 },
                                 {
                                     x: Array.from({ length: daysInMonth }, (_, i) => i + 1), // Generate a range of values for the number of days in the current month
-                                    y: Array.from({ length: daysInMonth }, (_, i) => Math.random() ), // Example y values
+                                    y: Array.from({ length: daysInMonth }, (_, i) => Math.random() * 100), // Example y values
                                     type: "scatter", // One of: scatter, bar, pie
                                     title: "Hive 2",
                                     mode: "lines+markers", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
@@ -279,7 +292,7 @@ const HiveLab = () => {
                                 },
                                 {
                                     x: Array.from({ length: daysInMonth }, (_, i) => i + 1), // Generate a range of values for the number of days in the current month
-                                    y: Array.from({ length: daysInMonth }, (_, i) => Math.random() ), // Example y values
+                                    y: Array.from({ length: daysInMonth }, (_, i) => Math.random() * 100), // Example y values
                                     type: "scatter", // One of: scatter, bar, pie
                                     title: "Hive 3",
                                     mode: "lines+markers", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
@@ -287,7 +300,7 @@ const HiveLab = () => {
                                 },
                                 {
                                     x: Array.from({ length: daysInMonth }, (_, i) => i + 1), // Generate a range of values for the number of days in the current month
-                                    y: Array.from({ length: daysInMonth }, (_, i) => Math.random() ), // Example y values
+                                    y: Array.from({ length: daysInMonth }, (_, i) => Math.random() * 100 ), // Example y values
                                     type: "scatter", // One of: scatter, bar, pie
                                     title: "Hive 4",
                                     mode: "lines+markers", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
@@ -297,6 +310,19 @@ const HiveLab = () => {
                             title={`${monthNames[month].text}`}
                             displayBar={false}
                             height="400px"
+                            xaxis= {{
+                                title: "Day",
+                                tickmode: "linear",
+                                // tickangle: 45,
+                                tick0: 1,
+                                dtick: 2,
+                            }}
+                            yaxis= {{
+                                title: "Activity Level (%)",
+                                tickmode: "linear",
+                                tick0: 0,
+                                dtick: 10,
+                            }}
                         />
                     </Card>
                 </Grid>

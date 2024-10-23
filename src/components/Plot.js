@@ -18,6 +18,8 @@ const Plot = ({
 	width: plotWidth = "100%",
 	height: plotHeight = "100%",
 	background: plotBackground = "white",
+	xaxis: plotXaxis = {},
+	yaxis: plotYaxis = {},
 }) => {
 	const [data, setData] = useState(plotData);
 	const [title, setTitle] = useState(plotTitle);
@@ -31,6 +33,9 @@ const Plot = ({
 	const [width, setWidth] = useState(plotWidth);
 	const [height, setHeight] = useState(plotHeight);
 	const [background, setBackground] = useState(plotBackground);
+
+	const [xaxis, setXaxis] = useState(plotXaxis);
+	const [yaxis, setYaxis] = useState(plotYaxis);
 
 	useEffect(() => {
 		setData(plotData);
@@ -80,6 +85,14 @@ const Plot = ({
 		setBackground(plotBackground);
 	}, [plotBackground]);
 
+	useEffect(() => {
+		setXaxis(plotXaxis);
+	}, [plotXaxis]);
+
+	useEffect(() => {
+		setYaxis(plotYaxis);
+	}, [plotYaxis]);
+
 	return (
 		<Plotly
 			data={data.map((d) => ({
@@ -103,6 +116,12 @@ const Plot = ({
 				showlegend: showLegend,
 				legend: {
 					font: { color: colors?.[titleColor] || titleColor, size: legendFontSize },
+				},
+				xaxis: {
+					...xaxis,
+				},
+				yaxis: {
+					...yaxis,
 				},
 				paper_bgcolor: colors?.[background] || background,
 				plot_bgcolor: colors?.[background] || background,

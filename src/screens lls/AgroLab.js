@@ -1,36 +1,63 @@
 import { Grid, Typography } from "@mui/material";
-import { memo, useState, useRef } from "react";
+import { memo, useEffect, useState, useRef } from "react";
 
-import { PrimaryBackgroundButton } from "../components/Buttons.js";
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
 import Form from "../components/Form.js";
+import {useSnackbar} from "../utils/index.js";
 import colors from "../_colors.scss";
 
-// import { CollectionDataManagement } from 'eco-ready-services.js';
+import { getCollectionData, getCollectionDataStatistics } from "../api/index.js";
 
 const AgroLab = () => {
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const { success, error } = useSnackbar();
+    const [data, setData] = useState(null);
+    const [sortedData, setSortedData] = useState(null);
+    const [pageRefreshTime, setPageRefreshTime] = useState(new Date());
 
-    //Get Data
-    // useEffect(() => {
-    //     const organization = 'living_lab_agro';
-    //     const project = 'irrigation';
-    //     const collection = 'sensors_data';
-    //     const accessKey = '76c8041409329428763ed6b1a7c31cc9e16119b4f57c34d007d644a4fac2b331';
 
-    //     const getData = async (organization, project, collection, accessKey) => {
-    //         try {
-    //             const data = await CollectionDataManagement.getData(organization, project, collection, accessKey);
-    //             return data;
-    //         } catch (error) {
-    //             console.error('Error fetching data:', error);
-    //             throw error;
-    //         };
-    //     };
-    //     getData(organization, project, collection, accessKey);
-    // }, []);
+    // Get Data
+    useEffect(() => {
+        const organization = 'agrolab';
+        const project = 'wheat';
+        const collection = 'sensors';
+        const params = JSON.stringify({
+            "attributes": ["timestamp", "soil_quality"],
+            "filters": [
+                {
+                    "property_name": "soil_quality",
+                    "operator": "gte",
+                    "property_value": 0.8
+                }
+            ],
+            "order_by": {
+                "field":"timestamp",
+                "order":"asc"
+            }
+        });
+        // const order_by = {"field":"soil_moisture","order":"desc"};
+        const accessKey = 'd797e79f40385c2948de74ab6b07ebc336f5733da31ced691117fe7700ac22c8';
+
+        const fetchData = async (organization, project, collection, accessKey, params) => {
+            try {
+                const response = await getCollectionData(organization, project, collection, accessKey, params);
+                setData(response);
+                console.log('Data fetched:', response);
+                success("Data fetched successfully!");
+            } catch (error) {
+                error('Error fetching data:', error);
+                throw error;
+            };
+        };
+        fetchData(organization, project, collection, accessKey, params);
+    }, []);
+
+    const minutesAgo = Math.floor((new Date() - pageRefreshTime) / 60000);
+
+    // const timestamp = data.map(item => item.timestamp);
+    // console.log('Timestamps1:', timestamp);
+    // const soilmoist = data.map(item => item.soil_moisture);
+    // console.log('Soil Moisture1:', soilmoist);
         
     // Get the current year and month
     const now = new Date();
@@ -52,6 +79,26 @@ const AgroLab = () => {
     const generateRandomNumbers = (length, min=0, max=1) => {
         return Array.from({ length }, () => (Math.random() * (max - min)) + min);
     };
+
+    const generateTimesOfDay = () => {
+        const times = [];
+        for (let i = 0; i < 24; i++) {
+            const hour = i < 10 ? `0${i}` : i;
+            times.push(`${hour}:00`);
+        }
+        return times;
+    };
+
+    const generateTimesOfDayUntilNow = () => {
+        const now = new Date();
+        const hours = [];
+        for (let i = 0; i <= now.getHours(); i++) {
+            const hour = i < 10 ? `0${i}` : i;
+            hours.push(`${hour}:00`);
+        }
+        return { hours, count: hours.length };
+    };
+    const { hours, count } = generateTimesOfDayUntilNow();
     
     // Form Parameters
     const monthNames = [
@@ -78,9 +125,9 @@ const AgroLab = () => {
 			id: "time period sort",
             label: "Sort By:",
             items: [
-                { value: "Week", label: "Week" },
-                { value: "Month", label: "Month" },
-                { value: "Year", label: "Year" },
+                { value: "Week", text: "Week" },
+                { value: "Month", text: "Month" },
+                { value: "Year", text: "Year" },
             ],
             value: value,
             defaultValue: "Month",
@@ -105,6 +152,7 @@ const AgroLab = () => {
 	];
 
     const onChange = (event) => setValue(event.target.value);
+    const annualYield = ((Math.random() * 5) + 2).toFixed(2);
 
     return (
         <Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
@@ -114,13 +162,13 @@ const AgroLab = () => {
                     footer={(
                         <Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
                             <Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
-                                {"🕗 updated 4 min ago"}
+                                {`🕗 updated ${minutesAgo} minutes ago`}
                             </Typography>
                         </Grid>
                     )}
                 >
                     <Typography variant="h4" component="h4" align="center" sx={{ fontWeight: "bold" }}>
-                        {`${((Math.random() * 5) + 2).toFixed(2)} T`}
+                        {`${annualYield} T`}
                         <Typography variant="body2" component="p" sx={{ fontSize: "0.6em" }}>
                             <span style={{ color: colors.secondary }}>6%</span> increase from {year - 1}
                         </Typography>
@@ -133,7 +181,7 @@ const AgroLab = () => {
                     footer={(
                         <Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
                             <Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
-                                {"🕗 updated 4 min ago"}
+                                {`🕗 updated ${minutesAgo} minutes ago`}
                             </Typography>
                         </Grid>
                     )}
@@ -152,15 +200,15 @@ const AgroLab = () => {
                     footer={(
                         <Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
                             <Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
-                                {"🕗 updated 4 min ago"}
+                                {`🕗 updated ${minutesAgo} minutes ago`}
                             </Typography>
                         </Grid>
                     )}
                 >
-                    <Typography variant="h4" component="h4" align="center" sx={{ fontWeight: "bold" }}>
+                    <Typography variant="h4" component="h4" align="center" sx={{ fontWeight: "bold", textAlign: "center" }}>
                         {`${Math.floor(Math.random() * 10) + 20}°C`}
                         <Typography variant="body2" component="p" sx={{ fontSize: "0.6em" }}>
-                            <span style={{ color: colors.warning }}>Sunny</span> <span style={{ color: colors.third }}>skies</span> at your area
+                            <span style={{ color: colors.warning }}>Sunny</span> <span style={{ color: colors.third }}>skies</span> in your area
                         </Typography>
                     </Typography>
                 </Card>
@@ -171,7 +219,7 @@ const AgroLab = () => {
                     footer={(
                         <Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
                             <Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
-                                {"🕗 updated 4 min ago"}
+                                {`🕗 updated ${minutesAgo} minutes ago`}
                             </Typography>
                         </Grid>
                     )}
@@ -191,6 +239,7 @@ const AgroLab = () => {
                         showLegend={false}
                         displayBar={false}
                         height="400px"
+                        yaxis={{ title: "Tonnes" }}   
                     />
                 </Card>
             </Grid>                        
@@ -200,7 +249,7 @@ const AgroLab = () => {
                     footer={(
                         <Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
                             <Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
-                                {"🕗 updated 4 min ago"}
+                                {`🕗 updated ${minutesAgo} minutes ago`}
                             </Typography>
                         </Grid>
                     )}
@@ -209,8 +258,8 @@ const AgroLab = () => {
                         scrollZoom
                         data={[
                             {
-                                x: Array.from({ length: 24 }, (_, i) => i + 1), // Generate a range of values for the number of days in the current month
-                                y: generateRandomNumbers(24, 0, 100),
+                                x: hours,//generateHoursUntilNow(), // generateTimesOfDay(), // Generate an array of each hour in the day
+                                y: generateRandomNumbers(count, 0, 100),
                                 type: "scatter", // One of: scatter, bar, pie
                                 title: "scatter",
                                 mode: "lines+markers", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
@@ -221,6 +270,13 @@ const AgroLab = () => {
                         showLegend={false}
                         displayBar={false}
                         height="400px"
+                        xaxis={{
+                            // title: "Time of Day",
+                            tickangle: 45,
+                        }}
+                        yaxis={{
+                            title: "Soil Moisture (%)",
+                        }}
                     />
                 </Card>
             </Grid>
@@ -230,7 +286,7 @@ const AgroLab = () => {
                     footer={(
                         <Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
                             <Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
-                                {"🕗 updated 4 min ago"}
+                                {`🕗 updated ${minutesAgo} minutes ago`}
                             </Typography>
                         </Grid>
                     )}
@@ -239,8 +295,8 @@ const AgroLab = () => {
                         scrollZoom
                         data={[
                             {
-                                x: Array.from({ length: 24 }, (_, i) => i + 1), // Generate a range of values for the number of days in the current month
-                                y: generateRandomNumbers(24, 0, 90), // Example y values
+                                x: hours, //generateTimesOfDay(), // Generate an array of each hour in the day
+                                y: generateRandomNumbers(count, 0, 90), // Example y values
                                 type: "scatter", // One of: scatter, bar, pie
                                 title: "scatter",
                                 mode: "lines+markers", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
@@ -251,6 +307,13 @@ const AgroLab = () => {
                         showLegend={false}
                         displayBar={false}
                         height="400px"
+                        xaxis={{
+                            // title: "Time of Day",
+                            tickangle: 45,
+                        }}
+                        yaxis={{
+                            title: "Humidity (%)",
+                        }}
                     />
                 </Card>
             </Grid>
@@ -260,7 +323,7 @@ const AgroLab = () => {
                     footer={(
                         <Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
                             <Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
-                                {"🕗 updated 4 min ago"}
+                                {`🕗 updated ${minutesAgo} minutes ago`}
                             </Typography>
                         </Grid>
                     )}
@@ -270,23 +333,23 @@ const AgroLab = () => {
                         scrollZoom
                         data={[
                             {
-                                labels: Array.from({ length: 4 }, (_, i) => `field ${i + 1}`), // Generate labels from "field 1" to "field 10"
-                                values: generateRandomPercentages(10),
+                                labels: Array.from({ length: 4 }, (_, i) => `Field ${i + 1}`), // Generate labels from "field 1" to "field 10"
+                                values: generateRandomPercentages(4),
                                 type: "pie",
                                 title: "pie",
                             },
                         ]}
-                       
+                        displayBar={false}
                     />
                 </Card>
             </Grid>
-            <Grid item xs={12} md={6} mt={4}>
+            <Grid item xs={12} sm={12} md={6} mt={4}>
                 <Card
                     title="Seasonal Temperature Distribution"
                     footer={(
                         <Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
                             <Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
-                                {"🕗 updated 4 min ago"}
+                                {`🕗 updated ${minutesAgo} minutes ago`}
                             </Typography>
                         </Grid>
                     )}
@@ -317,6 +380,9 @@ const AgroLab = () => {
                                 ]}
                                 title="Summer Time"
                                 showLegend={false}
+                                yaxis={{
+                                    title: "Temperature (°C)",
+                                }}
                             />
                         </Grid>   
                         <Grid
@@ -337,13 +403,13 @@ const AgroLab = () => {
                     </Grid>
                 </Card>
             </Grid>
-            <Grid item xs={12} md={6} mt={4}>
+            <Grid item xs={12} sm={12} md={6} mt={4}>
                 <Card
                     title="Precipitation"
                     footer={(
                         <Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
                             <Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
-                                {"🕗 updated 4 min ago"}
+                                {`🕗 updated ${minutesAgo} minutes ago`}
                             </Typography>
                         </Grid>
                     )}
@@ -382,7 +448,10 @@ const AgroLab = () => {
                                         color: "green",
                                     },
                                 ]}
-                                title="Average Percipitation per Week"
+                                title="Average Precipitation per Week"
+                                yaxis={{
+                                    title: "Precipitation (mm)",
+                                }}
                             />
                         </Grid>
                         <Grid
@@ -391,7 +460,7 @@ const AgroLab = () => {
                             sx={{
                                 position: 'absolute',
                                 bottom: 0,
-                                right: -85,
+                                right: -70,
                                 width: '52%',
                                 height: '50%',
                                 zIndex: 20,
@@ -409,7 +478,7 @@ const AgroLab = () => {
                     footer={(
                         <Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
                             <Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
-                                {"🕗 updated 4 min ago"}
+                                {`🕗 updated ${minutesAgo} minutes ago`}
                             </Typography>
                         </Grid>
                     )}
@@ -418,8 +487,8 @@ const AgroLab = () => {
                         scrollZoom
                         data={[
                             {
-                                x: Array.from({ length: monthsInYear }, (_, i) => i + 1),
-                                y: generateRandomNumbers(monthsInYear),
+                                x: monthNames.map(month => month.text).slice(0, 10), //Array.from({ length: monthsInYear }, (_, i) => i + 1),
+                                y: generateRandomNumbers(monthsInYear-2, 0, 100),
                                 texts: ["One", "Two", "Three"], // Text for each data point
                                 type: "scatter", // One of: scatter, bar, pie
                                 title: "Field 1",
@@ -427,16 +496,16 @@ const AgroLab = () => {
                                 color: "primary",
                             },
                             {
-                                x: Array.from({ length: monthsInYear }, (_, i) => i + 1),
-                                y: generateRandomNumbers(monthsInYear),
+                                x: monthNames.map(month => month.text).slice(0, 10), //Array.from({ length: monthsInYear }, (_, i) => i + 1),
+                                y: generateRandomNumbers(monthsInYear-2, 0, 100),
                                 type: "scatter", // One of: scatter, bar, pie
                                 title: "Field 2",
                                 mode: "lines", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
                                 color: "secondary",
                             },
                             {
-                                x: Array.from({ length: monthsInYear }, (_, i) => i + 1),
-                                y: generateRandomNumbers(monthsInYear),
+                                x: monthNames.map(month => month.text).slice(0, 10), //Array.from({ length: monthsInYear }, (_, i) => i + 1),
+                                y: generateRandomNumbers(monthsInYear-2, 0, 100),
                                 type: "scatter", // One of: scatter, bar, pie
                                 title: "FIeld 3",
                                 mode: "lines", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
@@ -444,7 +513,53 @@ const AgroLab = () => {
                             },
                         ]}
                         title="Average Soil Quality per Month"
+                        xaxis= {{
+                            //title: "Month",
+                            tickmode: "linear",
+                            tick0: 1,
+                            dtick: 1,
+                        }}
+                        yaxis= {{
+                            title: "Soil Quality (%)",
+                            tickmode: "linear",
+                            tick0: 0,
+                            dtick: 5,
+                        }}
                     />
+                </Card>
+            </Grid>
+            <Grid item width="100%" mt={4}>
+                <Card
+                    title="Soil Quality"
+                    footer={(
+                        <Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
+                            <Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
+                                {`🕗 updated ${minutesAgo} minutes ago`}
+                            </Typography>
+                        </Grid>
+                    )}
+                >
+                    {data &&(
+                        <Plot
+                            scrollZoom
+                            data={[
+                                {
+                                    x: data.map(item => item.timestamp),
+                                    y: data.map(item => item.soil_quality),
+                                    texts: ["One", "Two", "Three"], // Text for each data point
+                                    type: "scatter", // One of: scatter, bar, pie
+                                    title: "Field 1",
+                                    mode: "lines", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
+                                    color: "secondary",
+                                },
+                            ]}
+                            title="Average Soil Quality per Month"
+                            // xaxis={{
+                            //     tick0: 1,
+                            //     dtick:1,
+                            // }}
+                        />
+                    )}
                 </Card>
             </Grid>
         </Grid>
