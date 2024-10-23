@@ -4,60 +4,98 @@ import { memo, useEffect, useState, useRef } from "react";
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
 import Form from "../components/Form.js";
-import {useSnackbar} from "../utils/index.js";
+import { useSnackbar } from "../utils/index.js";
 import colors from "../_colors.scss";
-
 import { getCollectionData, getCollectionDataStatistics } from "../api/index.js";
 
 const AgroLab = () => {
     const { success, error } = useSnackbar();
-    const [data, setData] = useState(null);
-    const [sortedData, setSortedData] = useState(null);
+    const [dataSets, setDataSets] = useState({});
     const [pageRefreshTime, setPageRefreshTime] = useState(new Date());
+    const [minutesAgo, setMinutesAgo] = useState(0);
 
-
-    // Get Data
-    useEffect(() => {
-        const organization = 'agrolab';
-        const project = 'wheat';
-        const collection = 'sensors';
-        const params = JSON.stringify({
-            "attributes": ["timestamp", "soil_quality"],
-            "filters": [
-                {
-                    "property_name": "soil_quality",
-                    "operator": "gte",
-                    "property_value": 0.8
-                }
-            ],
-            "order_by": {
-                "field":"timestamp",
-                "order":"asc"
+    const fetchData = async (type='data', organization, project, collection, accessKey, params, plotId) => {
+        try {
+            let response;
+            if (type === 'stats') {
+                response = await getCollectionDataStatistics(organization, project, collection, accessKey, params);
+            } else {
+                response = await getCollectionData(organization, project, collection, accessKey, params);
             }
-        });
-        // const order_by = {"field":"soil_moisture","order":"desc"};
-        const accessKey = 'd797e79f40385c2948de74ab6b07ebc336f5733da31ced691117fe7700ac22c8';
-
-        const fetchData = async (organization, project, collection, accessKey, params) => {
-            try {
-                const response = await getCollectionData(organization, project, collection, accessKey, params);
-                setData(response);
-                console.log('Data fetched:', response);
-                success("Data fetched successfully!");
-            } catch (error) {
-                error('Error fetching data:', error);
-                throw error;
-            };
+            setDataSets(prevDataSets => ({
+                ...prevDataSets,
+                [plotId]: response
+            }));
+            setPageRefreshTime(new Date());
+            console.log(`Data fetched for plot ${plotId}:`, response);
+            success("Data fetched successfully!");
+        } catch (err) {
+            console.error('Error fetching data:', err);
+            error('Error fetching data: ' + err.message); // Use the error function from useSnackbar
+            throw err;
         };
-        fetchData(organization, project, collection, accessKey, params);
+    };
+
+        // Get Data
+    useEffect(() => {
+        const accessKey = 'd797e79f40385c2948de74ab6b07ebc336f5733da31ced691117fe7700ac22c8';
+        const fetchConfigs = [
+            {
+                organization: 'agrolab',
+                project: 'wheat',
+                collection: 'sensors',
+                
+                params: JSON.stringify({
+                    "attributes": ["timestamp", "soil_quality"],
+                    "filters": [
+                        {
+                            "property_name": "soil_quality",
+                            "operator": "gte",
+                            "property_value": 0.5
+                        }
+                    ],
+                    "order_by": {
+                        "field":"timestamp",
+                        "order":"asc"
+                    }
+                }),
+                plotId: 'plot1'
+            },
+            // {
+            //     type: 'stats',
+            //     organization: 'agrolab',
+            //     project: 'wheat',
+            //     collection: 'yield_data',
+            //     params: JSON.stringify({
+            //         "attribute": 'crop_yield',
+            //         "interval": 'every_1_years',
+            //     }),
+            //     plotId: 'plot2'
+            // },
+        ];
+
+        // Loop through the fetchConfigs to call fetchData for each set of parameters
+        fetchConfigs.forEach(({ type, organization, project, collection, params, plotId }) => {
+            fetchData(type, organization, project, collection, accessKey, params, plotId);
+        });
+
+        // // Set interval to fetch data every 30 minutes
+        // const fetchInterval = setInterval(() => {
+        //     fetchData(organization, project, collection, accessKey, params);
+        // }, 30 * 60 * 1000); // 30 minutes in milliseconds
+
+        // Set interval to update minutesAgo every minute
+        const updateMinutesAgo = () => {
+            setMinutesAgo(Math.floor((new Date() - pageRefreshTime) / 60000));
+        };
+        const updateInterval = setInterval(updateMinutesAgo, 60 * 1000); // 1 minute in milliseconds
+
+        // Cleanup intervals on component unmount
+        return () => {
+            // clearInterval(fetchInterval);
+            clearInterval(updateInterval);
+        };
     }, []);
-
-    const minutesAgo = Math.floor((new Date() - pageRefreshTime) / 60000);
-
-    // const timestamp = data.map(item => item.timestamp);
-    // console.log('Timestamps1:', timestamp);
-    // const soilmoist = data.map(item => item.soil_moisture);
-    // console.log('Soil Moisture1:', soilmoist);
         
     // Get the current year and month
     const now = new Date();
@@ -153,6 +191,19 @@ const AgroLab = () => {
 
     const onChange = (event) => setValue(event.target.value);
     const annualYield = ((Math.random() * 5) + 2).toFixed(2);
+
+    const generate2024Months = () => {
+        const months = [];
+        for (let month = 0; month < 12; month++) {
+            const date = new Date(2024, month, 2);
+            months.push(date.toISOString().split('T')[0]); // Format as YYYY-MM-DD
+        }
+        console.log(months);
+        return months;
+    };
+    
+    const tickvals = generate2024Months();
+    console.log('Tickvals:', tickvals);
 
     return (
         <Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
@@ -282,7 +333,7 @@ const AgroLab = () => {
             </Grid>
             <Grid item xs={12} md={4} alignItems="center" flexDirection="column" mt={4}>
                 <Card
-                    title="Daily Humidity"
+                    title="Monthly Humidity"
                     footer={(
                         <Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
                             <Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
@@ -303,7 +354,7 @@ const AgroLab = () => {
                                 color: "secondary",
                             }
                         ]}
-                        title={`${monthNames[month].text} ${day}`}
+                        title={`${monthNames[month].text}`}
                         showLegend={false}
                         displayBar={false}
                         height="400px"
@@ -507,7 +558,7 @@ const AgroLab = () => {
                                 x: monthNames.map(month => month.text).slice(0, 10), //Array.from({ length: monthsInYear }, (_, i) => i + 1),
                                 y: generateRandomNumbers(monthsInYear-2, 0, 100),
                                 type: "scatter", // One of: scatter, bar, pie
-                                title: "FIeld 3",
+                                title: "Field 3",
                                 mode: "lines", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
                                 color: "third",
                             },
@@ -539,13 +590,13 @@ const AgroLab = () => {
                         </Grid>
                     )}
                 >
-                    {data &&(
+                    {dataSets['plot1'] &&(
                         <Plot
                             scrollZoom
                             data={[
                                 {
-                                    x: data.map(item => item.timestamp),
-                                    y: data.map(item => item.soil_quality),
+                                    x: dataSets['plot1'].map(item => item.timestamp),
+                                    y: dataSets['plot1'].map(item => item.soil_quality),
                                     texts: ["One", "Two", "Three"], // Text for each data point
                                     type: "scatter", // One of: scatter, bar, pie
                                     title: "Field 1",
@@ -554,10 +605,13 @@ const AgroLab = () => {
                                 },
                             ]}
                             title="Average Soil Quality per Month"
-                            // xaxis={{
-                            //     tick0: 1,
-                            //     dtick:1,
-                            // }}
+                            xaxis={{
+                                tickvals: tickvals,
+                                ticktext: tickvals.map(date => new Date(date).toLocaleString('default', { month: 'long' })), // Get full month name
+                            }}
+                            yaxis={{
+                                title: "Soil Quality",
+                            }}
                         />
                     )}
                 </Card>
