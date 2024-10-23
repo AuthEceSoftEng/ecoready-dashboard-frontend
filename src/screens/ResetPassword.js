@@ -9,7 +9,7 @@ import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { useSnackbar } from "../utils/index.js";
 import Spinner from "../components/Spinner.js";
 import background from "../assets/images/background.png";
-import { resetPassword } from "../api/index.js";
+import { mycall } from "../api/index.js";
 import Form from "../components/Form.js";
 
 const useStyles = makeStyles((theme) => ({
@@ -52,11 +52,16 @@ const ResetPassword = () => {
 		setIsSubmitting(true);
 
 		try {
-			const { success: successCode, message } = await resetPassword(values.password, token);
-
+			const organization = 'living_lab_agro';
+			const project = 'irrigation';
+			const collection = 'sensors_data';
+			const accessKey = '******';
+	
+			const { success: successCode, message } = await mycall(organization, project, collection, accessKey);
+			console.log(message);
 			if (successCode) {
-				success(message);
-				navigate("/");
+				success(JSON.stringify(message));
+			//	navigate("/");
 			} else {
 				error(message);
 			}
