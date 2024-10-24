@@ -1,12 +1,11 @@
 import { Grid, Typography } from "@mui/material";
-import { memo, useEffect, useState, useRef } from "react";
+import { memo, useEffect, useState, useRef, useCallback } from "react";
 
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
 import Form from "../components/Form.js";
-import { useSnackbar, fetchData} from "../utils/index.js";
+import { useSnackbar, fetchAllData} from "../utils/index.js";
 import colors from "../_colors.scss";
-import { getCollectionData, getCollectionDataStatistics } from "../api/index.js";
 
 const AgroLab = () => {
     const { success, error } = useSnackbar();
@@ -14,16 +13,35 @@ const AgroLab = () => {
     const [pageRefreshTime, setPageRefreshTime] = useState(new Date());
     const [minutesAgo, setMinutesAgo] = useState(0);
 
-    // Get Data
-    useEffect(() => {
+    const updateData = useCallback(() => {
         const accessKey = '******';
         const fetchConfigs = [
+            // {
+            //     type: 'data',
+            //     organization: 'agrolab',
+            //     project: 'wheat',
+            //     collection: 'sensors',
+            //     params: JSON.stringify({
+            //         "attributes": ["timestamp", "temperature"],
+            //         "filters": [
+            //             {
+            //                 "property_name": "timestamp",
+            //                 "operator": "gte", "lte",
+            //                 "property_value": 0.5
+            //             }
+            //         ],
+            //         "order_by": {
+            //             "field":"timestamp",
+            //             "order":"asc"
+            //         }
+            //     }),
+            //     plotId: 'plot1'
+            // },
             {
                 type: 'data',
                 organization: 'agrolab',
                 project: 'wheat',
                 collection: 'sensors',
-                
                 params: JSON.stringify({
                     "attributes": ["timestamp", "soil_quality"],
                     "filters": [
@@ -38,67 +56,33 @@ const AgroLab = () => {
                         "order":"asc"
                     }
                 }),
-                plotId: 'plot1'
+                plotId: 'plot2'
             },
-            // {
-            //     type: 'stats',
-            //     organization: 'agrolab',
-            //     project: 'wheat',
-            //     collection: 'yield_data',
-            //     params: JSON.stringify({
-            //         "attribute": 'crop_yield',
-            //         "interval": 'every_1_years',
-            //     }),
-            //     plotId: 'plot2'
-            // },
+            // Add more configurations here as needed
         ];
 
-        // Create an array of promises for each fetch operation
-        const fetchPromises = fetchConfigs.map(async ({ type, organization, project, collection, params, plotId }) => {
-            try {
-                return await fetchData(
-                    type, 
-                    organization, 
-                    project, 
-                    collection, 
-                    accessKey, 
-                    params, 
-                    plotId, 
-                    setDataSets, 
-                    setPageRefreshTime
-                );
-            } catch (err) {
-                console.error('Error fetching data:', err);
-                throw err; // Re-throw the error to be caught by Promise.all
-            }
-        });
+        fetchAllData(fetchConfigs, accessKey, setDataSets, setPageRefreshTime, success, error);
+    }, []);
 
-        // Wait for all fetch operations to complete
-        Promise.all(fetchPromises)
-            .then(() => {
-                success('All data fetched successfully');
-            })
-            .catch(err => {
-                error('Error fetching some data: ' + err.message);
-            });
-
-        // // Set interval to fetch data every 30 minutes
-        // const fetchInterval = setInterval(() => {
-        //     fetchData(organization, project, collection, accessKey, params);
-        // }, 30 * 60 * 1000); // 30 minutes in milliseconds
-
-        // Set interval to update minutesAgo every minute
+    // Set data update interval and reset last update timer when new data is fetched
+    useEffect(() => {
         const updateMinutesAgo = () => {
             setMinutesAgo(Math.floor((new Date() - pageRefreshTime) / 60000));
         };
-        const updateInterval = setInterval(updateMinutesAgo, 60 * 1000); // 1 minute in milliseconds
 
-        // Cleanup intervals on component unmount
+        // Fetch data on component mount and set an interval to fetch every 30 minutes
+        updateData(); // Fetch immediately on mount
+        const fetchInterval = setInterval(updateData, 30 * 60 * 1000); // Fetch data every 30 minutes
+
+        // Set interval to show minutes since last update
+        const minutesAgoInterval = setInterval(updateMinutesAgo, 60 * 1000); // Update every 1 minute
+
+        // Cleanup intervals on unmount
         return () => {
-            // clearInterval(fetchInterval);
-            clearInterval(updateInterval);
+            clearInterval(fetchInterval);
+            clearInterval(minutesAgoInterval);
         };
-    }, []);
+    }, [updateData]);
         
     // Get the current year and month
     const now = new Date();
@@ -201,7 +185,6 @@ const AgroLab = () => {
             const date = new Date(2024, month, 2);
             months.push(date.toISOString().split('T')[0]); // Format as YYYY-MM-DD
         }
-        console.log(months);
         return months;
     };
     
@@ -593,13 +576,13 @@ const AgroLab = () => {
                         </Grid>
                     )}
                 >
-                    {dataSets['plot1'] &&(
+                    {dataSets['plot2'] &&(
                         <Plot
                             scrollZoom
                             data={[
                                 {
-                                    x: dataSets['plot1'].map(item => item.timestamp),
-                                    y: dataSets['plot1'].map(item => item.soil_quality),
+                                    x: dataSets['plot2'].map(item => item.timestamp),
+                                    y: dataSets['plot2'].map(item => item.soil_quality),
                                     texts: ["One", "Two", "Three"], // Text for each data point
                                     type: "scatter", // One of: scatter, bar, pie
                                     title: "Field 1",
