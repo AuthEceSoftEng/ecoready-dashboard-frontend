@@ -4,7 +4,7 @@ import { memo, useEffect, useState, useRef } from "react";
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
 import Form from "../components/Form.js";
-import { useSnackbar } from "../utils/index.js";
+import { useSnackbar, fetchData} from "../utils/index.js";
 import colors from "../_colors.scss";
 import { getCollectionData, getCollectionDataStatistics } from "../api/index.js";
 
@@ -14,33 +14,12 @@ const AgroLab = () => {
     const [pageRefreshTime, setPageRefreshTime] = useState(new Date());
     const [minutesAgo, setMinutesAgo] = useState(0);
 
-    const fetchData = async (type='data', organization, project, collection, accessKey, params, plotId) => {
-        try {
-            let response;
-            if (type === 'stats') {
-                response = await getCollectionDataStatistics(organization, project, collection, accessKey, params);
-            } else {
-                response = await getCollectionData(organization, project, collection, accessKey, params);
-            }
-            setDataSets(prevDataSets => ({
-                ...prevDataSets,
-                [plotId]: response
-            }));
-            setPageRefreshTime(new Date());
-            console.log(`Data fetched for plot ${plotId}:`, response);
-            success("Data fetched successfully!");
-        } catch (err) {
-            console.error('Error fetching data:', err);
-            error('Error fetching data: ' + err.message); // Use the error function from useSnackbar
-            throw err;
-        };
-    };
-
-        // Get Data
+    // Get Data
     useEffect(() => {
         const accessKey = '******';
         const fetchConfigs = [
             {
+                type: 'data',
                 organization: 'agrolab',
                 project: 'wheat',
                 collection: 'sensors',
@@ -74,10 +53,34 @@ const AgroLab = () => {
             // },
         ];
 
-        // Loop through the fetchConfigs to call fetchData for each set of parameters
-        fetchConfigs.forEach(({ type, organization, project, collection, params, plotId }) => {
-            fetchData(type, organization, project, collection, accessKey, params, plotId);
+        // Create an array of promises for each fetch operation
+        const fetchPromises = fetchConfigs.map(async ({ type, organization, project, collection, params, plotId }) => {
+            try {
+                return await fetchData(
+                    type, 
+                    organization, 
+                    project, 
+                    collection, 
+                    accessKey, 
+                    params, 
+                    plotId, 
+                    setDataSets, 
+                    setPageRefreshTime
+                );
+            } catch (err) {
+                console.error('Error fetching data:', err);
+                throw err; // Re-throw the error to be caught by Promise.all
+            }
         });
+
+        // Wait for all fetch operations to complete
+        Promise.all(fetchPromises)
+            .then(() => {
+                success('All data fetched successfully');
+            })
+            .catch(err => {
+                error('Error fetching some data: ' + err.message);
+            });
 
         // // Set interval to fetch data every 30 minutes
         // const fetchInterval = setInterval(() => {
