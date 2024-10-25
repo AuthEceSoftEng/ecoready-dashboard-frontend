@@ -16,41 +16,56 @@ const AgroLab = () => {
     const updateData = useCallback(() => {
         const accessKey = 'd797e79f40385c2948de74ab6b07ebc336f5733da31ced691117fe7700ac22c8';
         const fetchConfigs = [
-            // {
-            //     type: 'data',
-            //     organization: 'agrolab',
-            //     project: 'wheat',
-            //     collection: 'sensors',
-            //     params: JSON.stringify({
-            //         "attributes": ["timestamp", "temperature"],
-            //         "filters": [
-            //             {
-            //                 "property_name": "timestamp",
-            //                 "operator": "gte", "lte",
-            //                 "property_value": 0.5
-            //             }
-            //         ],
-            //         "order_by": {
-            //             "field":"timestamp",
-            //             "order":"asc"
-            //         }
-            //     }),
-            //     plotId: 'plot1'
-            // },
+            {
+                type: 'data',
+                organization: 'agrolab',
+                project: 'wheat',
+                collection: 'yield_data',
+                params: JSON.stringify({
+                    "attributes": ["crop_yield"],
+                }),
+                plotId: 'sum1'
+            },
             {
                 type: 'data',
                 organization: 'agrolab',
                 project: 'wheat',
                 collection: 'sensors',
                 params: JSON.stringify({
-                    "attributes": ["timestamp", "soil_quality"],
+                    "attributes": ["timestamp", "humidity"],
                     "filters": [
                         {
-                            "property_name": "soil_quality",
+                            "property_name": "timestamp",
                             "operator": "gte",
-                            "property_value": 0.5
+                            "property_value": "2024-10-01T00:00:00"
+                        },
+                        {
+                            "property_name": "timestamp",
+                            "operator": "lte",
+                            "property_value": "2024-10-26T00:00:00"
                         }
                     ],
+                    "order_by": {
+                        "field":"timestamp",
+                        "order":"asc"
+                    }
+                }),
+                plotId: 'plot1'
+            },
+            {
+                type: 'data',
+                organization: 'agrolab',
+                project: 'wheat',
+                collection: 'sensors',
+                params: JSON.stringify({
+                    "attributes": ["timestamp", "irrigation", "soil_quality"],
+                    // "filters": [
+                    //     {
+                    //         "property_name": "soil_quality",
+                    //         "operator": "gte",
+                    //         "property_value": 0.5
+                    //     }
+                    // ],
                     "order_by": {
                         "field":"timestamp",
                         "order":"asc"
@@ -177,7 +192,8 @@ const AgroLab = () => {
 	];
 
     const onChange = (event) => setValue(event.target.value);
-    const annualYield = ((Math.random() * 5) + 2).toFixed(2);
+    // Calculate annual yield if dataSets['sum1'] exists
+    const annualYield = dataSets['sum1'] ? dataSets['sum1'].reduce((sum, item) => sum + item.crop_yield, 0).toFixed(2) : 'N/A';
 
     const generate2024Months = () => {
         const months = [];
@@ -291,30 +307,32 @@ const AgroLab = () => {
                         </Grid>
                     )}
                 >
-                    <Plot
-                        scrollZoom
-                        data={[
-                            {
-                                x: hours,//generateHoursUntilNow(), // generateTimesOfDay(), // Generate an array of each hour in the day
-                                y: generateRandomNumbers(count, 0, 100),
-                                type: "scatter", // One of: scatter, bar, pie
-                                title: "scatter",
-                                mode: "lines+markers", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
-                                color: "secondary",
-                            }
-                        ]}
-                        title={`${monthNames[month].text} ${day}`}
-                        showLegend={false}
-                        displayBar={false}
-                        height="400px"
-                        xaxis={{
-                            // title: "Time of Day",
-                            tickangle: 45,
-                        }}
-                        yaxis={{
-                            title: "Soil Moisture (%)",
-                        }}
-                    />
+                    {dataSets['plot2'] &&(
+                        <Plot
+                            scrollZoom
+                            data={[
+                                {
+                                    x: dataSets['plot2'].map(item => item.timestamp),//generateHoursUntilNow(), // generateTimesOfDay(), // Generate an array of each hour in the day
+                                    y: dataSets['plot2'].map(item => item.irrigation), // Example y values
+                                    type: "scatter", // One of: scatter, bar, pie
+                                    title: "scatter",
+                                    mode: "lines+markers", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
+                                    color: "secondary",
+                                }
+                            ]}
+                            title={`${monthNames[month].text} ${day}`}
+                            showLegend={false}
+                            displayBar={false}
+                            height="400px"
+                            xaxis={{
+                                // title: "Time of Day",
+                                tickangle: 45,
+                            }}
+                            yaxis={{
+                                title: "Soil Moisture (%)",
+                            }}
+                        />
+                    )}
                 </Card>
             </Grid>
             <Grid item xs={12} md={4} alignItems="center" flexDirection="column" mt={4}>
@@ -328,30 +346,32 @@ const AgroLab = () => {
                         </Grid>
                     )}
                 >
-                    <Plot
-                        scrollZoom
-                        data={[
-                            {
-                                x: hours, //generateTimesOfDay(), // Generate an array of each hour in the day
-                                y: generateRandomNumbers(count, 0, 90), // Example y values
-                                type: "scatter", // One of: scatter, bar, pie
-                                title: "scatter",
-                                mode: "lines+markers", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
-                                color: "secondary",
-                            }
-                        ]}
-                        title={`${monthNames[month].text}`}
-                        showLegend={false}
-                        displayBar={false}
-                        height="400px"
-                        xaxis={{
-                            // title: "Time of Day",
-                            tickangle: 45,
-                        }}
-                        yaxis={{
-                            title: "Humidity (%)",
-                        }}
-                    />
+                    {dataSets['plot1'] &&(
+                        <Plot
+                            scrollZoom
+                            data={[
+                                {
+                                    x: dataSets['plot1'].map(item => item.timestamp), //generateTimesOfDay(), // Generate an array of each hour in the day
+                                    y: dataSets['plot1'].map(item => item.humidity), // Example y values
+                                    type: "scatter", // One of: scatter, bar, pie
+                                    title: "scatter",
+                                    mode: "lines+markers", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
+                                    color: "secondary",
+                                }
+                            ]}
+                            title={`${monthNames[month].text}`}
+                            showLegend={false}
+                            displayBar={false}
+                            height="400px"
+                            xaxis={{
+                                // title: "Time of Day",
+                                tickangle: 45,
+                            }}
+                            yaxis={{
+                                title: "Humidity (%)",
+                            }}
+                        />
+                    )}
                 </Card>
             </Grid>
             <Grid item xs={12} md={12} mt={4}>
