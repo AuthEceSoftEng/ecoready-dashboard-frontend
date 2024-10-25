@@ -21,15 +21,15 @@ const useStyles = makeStyles((theme) => ({
 		overflow: "auto",
 	},
 	toggleButton: {
-        position: "absolute",
-        top: "0",
-        right: "0",
-        zIndex: 1000,
-        color: "white",
+		position: "absolute",
+		top: "0",
+		right: "0",
+		zIndex: 1000,
+		color: "white",
 		padding: "4px", // Adjust padding to make the button smaller
-        minWidth: "30px", // Set a smaller minimum width
-        minHeight: "30px", // Set a smaller minimum height
-    },
+		minWidth: "30px", // Set a smaller minimum width
+		minHeight: "30px", // Set a smaller minimum height
+	},
 }));
 
 const ButtonWithText = ({ text, icon, more, handler }) => (
@@ -37,30 +37,30 @@ const ButtonWithText = ({ text, icon, more, handler }) => (
 		{!more
 		&& (
 			<Button
-			key={text}
-			sx={{
+				key={text}
+				sx={{
 			  width: "100%",
 			  display: "flex",
 			  flexDirection: "row",
 			  justifyContent: "flex-start",
 			  padding: "8px 40px 8px 16px",
-			}}
-			onClick={(event) => handler(event)}
-		  >
-			{icon && <Image src={icon} alt={text} fit="contain" width="25px" />}
-			<Typography
-			  align="center"
-			  color="white.main"
-			  fontSize="medium"
-			  ml={1}
-			  display="flex"
-			  alignItems="center"
-			  sx={{ textTransform: "capitalize" }}
+				}}
+				onClick={(event) => handler(event)}
 			>
-			  {text}
-			  {more && <ExpandMore />}
-			</Typography>
-		  </Button>
+				{icon && <Image src={icon} alt={text} fit="contain" width="25px" />}
+				<Typography
+					align="center"
+					color="white.main"
+					fontSize="medium"
+					ml={1}
+					display="flex"
+					alignItems="center"
+					sx={{ textTransform: "capitalize" }}
+				>
+					{text}
+					{more && <ExpandMore />}
+				</Typography>
+			</Button>
 		)}
 		{more
 		&& (
@@ -106,7 +106,6 @@ const ButtonSimple = ({ text, icon, handler, ind }) => (
 );
 
 const Sidebar = ({ isSmall: sidebarIsSmall }) => {
-	
 	const [isSmall, setIsSmall] = useState(false);
 	const [anchorElServices, setAnchorElServices] = useState(null);
 	const navigate = useNavigate();
@@ -120,7 +119,7 @@ const Sidebar = ({ isSmall: sidebarIsSmall }) => {
 
 	const buttons = [
 		{
-			//icon: inspectionIcon,
+			// icon: inspectionIcon,
 			text: "Overview",
 			handler: () => {
 				handleServicesMenuClose();
@@ -134,9 +133,9 @@ const Sidebar = ({ isSmall: sidebarIsSmall }) => {
 		// 		handleServicesMenuClose();
 		// 		navigate("/buttons");
 		// 	},
-		
+
 		{
-			//icon: isselServicesIcon,
+			// icon: isselServicesIcon,
 			text: "Living Labs",
 			handler: (event) => {
 				handleServicesMenuClose();
@@ -148,7 +147,7 @@ const Sidebar = ({ isSmall: sidebarIsSmall }) => {
 				// { title: "VertiLab", handler: () => navigate("/vertilab") },
 			],
 		},
-		
+
 	];
 
 	const renderServicesMenu = (
@@ -169,42 +168,42 @@ const Sidebar = ({ isSmall: sidebarIsSmall }) => {
 	);
 
 	const toggleSidebar = () => {
-        if (window.innerWidth >= 900) {
-            setIsSmall(!isSmall);
-        }
-    };
+		if (window.innerWidth >= 900) {
+			setIsSmall(!isSmall);
+		}
+	};
 
 	return (
-        <div className={classes.sidebar} style={{ width: isSmall ? "50px" : "200px", padding: isSmall ? "20px 5px" : "20px 5px", textAlign: "center" }}>
-            <Button 
-                onClick={toggleSidebar} 
-                className={classes.toggleButton}
-                sx={{ 
-                    transform: isSmall ? "rotate(-90deg)" : "rotate(90deg)"
-                }}
-            >
-                <ExpandMore fontSize="small" /> 
-            </Button>
-            {!isSmall && buttons.map((button) => (
-                <ButtonWithText
-                    key={button.text}
-                    text={button.text}
-                    handler={button.handler}
-                    more={button.more}
-                />
-            ))}
-            {isSmall && buttons.map((button, ind) => (
-                <ButtonSimple
-                    key={button.text}
-                    text={button.text}
-                    handler={button.handler}
-                    more={button.more}
-                    ind={ind}
-                />
-            ))}
-            {renderServicesMenu}
-        </div>
-    );
+		<div className={classes.sidebar} style={{ width: isSmall ? "50px" : "200px", padding: isSmall ? "20px 5px" : "20px 5px", textAlign: "center" }}>
+			<Button
+				className={classes.toggleButton}
+				sx={{
+					transform: isSmall ? "rotate(-90deg)" : "rotate(90deg)",
+				}}
+				onClick={toggleSidebar}
+			>
+				<ExpandMore fontSize="small" />
+			</Button>
+			{!isSmall && buttons.map((button) => (
+				<ButtonWithText
+					key={button.text}
+					text={button.text}
+					handler={button.handler}
+					more={button.more}
+				/>
+			))}
+			{isSmall && buttons.map((button, ind) => (
+				<ButtonSimple
+					key={button.text}
+					text={button.text}
+					handler={button.handler}
+					more={button.more}
+					ind={ind}
+				/>
+			))}
+			{renderServicesMenu}
+		</div>
+	);
 };
 
 export default Sidebar;

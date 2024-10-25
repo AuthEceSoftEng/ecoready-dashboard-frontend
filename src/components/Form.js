@@ -205,8 +205,8 @@ const Form = forwardRef(({ disabled: dsb, content, validationSchema, onSubmit, o
 													name: comp.id,
 													value: event.target.value,
 												},
-											})
-											console.log('Dropdown value:', formikProps.values[comp.id]);
+											});
+											console.log("Dropdown value:", formikProps.values[comp.id]);
 											if (comp.onChange) {
 												comp.onChange(event);
 											}
@@ -235,7 +235,6 @@ const Form = forwardRef(({ disabled: dsb, content, validationSchema, onSubmit, o
 											checkedIcon={comp.checkedIcon}
 											disabled={disabled || comp.disabled}
 											onChange={(event) => {
-												
 												formikProps.handleChange({
 													target: {
 														name: comp.id,
@@ -359,13 +358,13 @@ const Form = forwardRef(({ disabled: dsb, content, validationSchema, onSubmit, o
 										background={comp.background || "secondary"}
 										color="black"
 										sx={{
-                                            width: {
-                                                xs: "100%", // Full width on extra-small screens
-                                                sm: "75%",  // 75% width on small screens
-                                                md: "50%",  // 50% width on medium screens
-                                                lg: "25%",  // 25% width on large screens
-                                            },
-                                        }}
+											width: {
+												xs: "100%", // Full width on extra-small screens
+												sm: "75%", // 75% width on small screens
+												md: "50%", // 50% width on medium screens
+												lg: "25%", // 25% width on large screens
+											},
+										}}
 										onChange={(value) => {
 											formikProps.handleChange({
 												target: {

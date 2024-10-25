@@ -9,13 +9,13 @@ import {
 import { makeStyles } from "@mui/styles";
 import { Image } from "mui-image";
 
-import { jwt, capitalize } from "../utils/index.js";
-import Search from "./Search.js";
-import { isFuzzyMatch } from "../utils/index.js";
+import { jwt, capitalize, isFuzzyMatch } from "../utils/index.js";
 import logo from "../assets/images/logo.png";
 import inspectionIcon from "../assets/icons/inspection.png";
 import servicesIcon from "../assets/icons/services.png";
 import logoutIcon from "../assets/icons/logout.png";
+
+import Search from "./Search.js";
 
 const useStyles = makeStyles((theme) => ({
 	grow: {
@@ -99,9 +99,10 @@ const Header = ({ isAuthenticated }) => {
 		handleServicesMenuClose();
 		handleMobileMenuClose();
 	};
+
 	const handleSearchChange = (event) => {
-        setSearchFilter(event.target.value);
-    };
+		setSearchFilter(event.target.value);
+	};
 
 	const CrumpLink = styled(Link)(({ theme }) => ({ display: "flex", color: theme.palette.primary.main }));
 
@@ -215,7 +216,7 @@ const Header = ({ isAuthenticated }) => {
 									display: { xs: "flex", sm: "flex", md: "flex" },
 									alignItems: "center",
 									ml: 2,
-									width: { xs: "108px", sm: "200px", md: "300px" }
+									width: { xs: "108px", sm: "200px", md: "300px" },
 								}}
 							>
 								<Search value={searchFilter} onChange={handleSearchChange} />
@@ -232,8 +233,8 @@ const Header = ({ isAuthenticated }) => {
 								))}
 							</Box>
 							<Box sx={{ display: { xs: "flex", sm: "flex", md: "none" } }}>
-								<IconButton  onClick={handleMobileMenuOpen}>
-									<MoreIcon sx={{color: "primary.main"}}/>
+								<IconButton onClick={handleMobileMenuOpen}>
+									<MoreIcon sx={{ color: "primary.main" }} />
 								</IconButton>
 							</Box>
 						</>
