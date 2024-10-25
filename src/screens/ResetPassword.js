@@ -52,11 +52,11 @@ const ResetPassword = () => {
 		setIsSubmitting(true);
 
 		try {
-			const organization = 'living_lab_agro';
-			const project = 'irrigation';
-			const collection = 'sensors_data';
-			const accessKey = '******';
-	
+			const organization = "living_lab_agro";
+			const project = "irrigation";
+			const collection = "sensors_data";
+			const accessKey = "******";
+
 			const { success: successCode, message } = await mycall(organization, project, collection, accessKey);
 			console.log(message);
 			if (successCode) {

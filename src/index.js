@@ -1,4 +1,4 @@
-/* eslint-disable import/no-extraneous-dependencies */
+
 import { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 import { Route, Routes, BrowserRouter as Router, useLocation } from "react-router-dom";
@@ -127,7 +127,7 @@ const App = () => {
 								<Route path="users" element={<Protected c={<Users />} />} />
 								<Route path="agrolab" element={<Protected c={<AgroLab />} />} />
 								<Route path="hivelab" element={<Protected c={<HiveLab />} />} />
-								{/*<Route path="vertilab" element={<Protected c={<VertiLab />} />} /> */}
+								{/* <Route path="vertilab" element={<Protected c={<VertiLab />} />} /> */}
 								{/* EXAMPLES */}
 								<Route path="buttons" element={<Protected c={<ButtonsExample />} />} />
 								<Route path="card" element={<Protected c={<CardExample />} />} />

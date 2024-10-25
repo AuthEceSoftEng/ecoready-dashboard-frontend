@@ -95,6 +95,7 @@ const Plot = ({
 
 	return (
 		<Plotly
+			useResizeHandler // Enable resize handler
 			data={data.map((d) => ({
 				x: d.x,
 				y: d.y,
@@ -135,7 +136,6 @@ const Plot = ({
 				displaylogo: false,
 			}}
 			style={{ width, height }}
-			useResizeHandler={true} // Enable resize handler
 		/>
 	);
 };
