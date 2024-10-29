@@ -74,7 +74,7 @@ const AgroLab = () => {
 	const organization = "agrolab";
 	const [state, dispatch] = useReducer(reducer, initialState);
 	// Memoize the date calculations and fetchConfigs to reduce re-calculations
-	const { year, month, day, currentDate, formattedBeginningOfMonth } = useMemo(() => {
+	const { year, month, currentDate, formattedBeginningOfMonth } = useMemo(() => {
 		const now = new Date();
 		const yearTemp = now.getFullYear();
 		const beginningOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -82,7 +82,6 @@ const AgroLab = () => {
 		return {
 			year: yearTemp,
 			month: now.getMonth(),
-			day: now.getDay(),
 			currentDate: now.toISOString().slice(0, 19),
 			formattedBeginningOfMonth: beginningOfMonth.toISOString().slice(0, 19),
 		};
@@ -392,7 +391,7 @@ const AgroLab = () => {
 									color: "secondary",
 								},
 							]}
-							title={`${monthNames[month].text} ${day}`}
+							title={`${monthNames[month].text}`}
 							showLegend={false}
 							displayBar={false}
 							height="400px"
@@ -462,7 +461,7 @@ const AgroLab = () => {
 						scrollZoom
 						data={[
 							{
-								labels: percentages.map((item) => item.key), // Generate labels from "field 1" to "field 10"
+								labels: percentages.map((item) => item.key),
 								values: percentages.map((item) => item.percentage),
 								type: "pie",
 								title: "pie",
