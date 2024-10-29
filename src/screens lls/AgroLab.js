@@ -74,7 +74,7 @@ const AgroLab = () => {
 	const organization = "agrolab";
 	const [state, dispatch] = useReducer(reducer, initialState);
 	// Memoize the date calculations and fetchConfigs to reduce re-calculations
-	const { year, month, day, daysInMonth, currentDate, formattedBeginningOfMonth } = useMemo(() => {
+	const { year, month, day, currentDate, formattedBeginningOfMonth } = useMemo(() => {
 		const now = new Date();
 		const yearTemp = now.getFullYear();
 		const beginningOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -83,7 +83,6 @@ const AgroLab = () => {
 			year: yearTemp,
 			month: now.getMonth(),
 			day: now.getDay(),
-			daysInMonth: new Date(yearTemp, now.getMonth() + 1, 0).getDate(),
 			currentDate: now.toISOString().slice(0, 19),
 			formattedBeginningOfMonth: beginningOfMonth.toISOString().slice(0, 19),
 		};
@@ -127,11 +126,6 @@ const AgroLab = () => {
 			clearInterval(fetchInterval);
 		};
 	}, [updateData]);
-
-	// Get the number of days in the current month
-	const monthsInYear = 12;
-
-	const generateRandomNumbers = (length, min = 0, max = 1) => Array.from({ length }, () => (Math.random() * (max - min)) + min);
 
 	// Form Parameters
 	const monthNames = [
@@ -186,14 +180,68 @@ const AgroLab = () => {
 
 	// Calculate annual yield if dataSets['cropYield'] exists
 	const annualYield = state.dataSets.cropYield ? state.dataSets.cropYield.reduce((sum, item) => sum + item.crop_yield, 0).toFixed(2) : "N/A";
-	const sumsByField = state.dataSets.cropYield ? sumCropYieldByKey(state.dataSets.cropYield) : {};
+	const sumsByField = useMemo(() => (
+		state.dataSets.cropYield ? sumCropYieldByKey(state.dataSets.cropYield) : {}
+	), [state.dataSets.cropYield]);
 
 	// // Group soilQuality data by "key"
-	// const groupedSoilQuality = useMemo(() => (
-	// 	state.dataSets.soilQuality ? groupByKey(state.dataSets.soilQuality, "key") : {}
-	// ), [state.dataSets.soilQuality]);
-	// console.log("Soil Quality:", state.dataSets.soilQuality);
-	// console.log("Grouped Soil Quality:", groupedSoilQuality);
+	const groupedSoilQuality = useMemo(() => (
+		state.dataSets.soilQuality ? groupByKey(state.dataSets.soilQuality, "key") : {}
+	), [state.dataSets.soilQuality]);
+
+	const getMaxValuesByProperty = (groupedObject, property) => {
+		const maxValues = {};
+
+		for (const key of Object.keys(groupedObject)) {
+			const maxValue = groupedObject[key].reduce(
+				(max, item) => (item[property] > max ? item[property] : max),
+				Number.NEGATIVE_INFINITY,
+			);
+			maxValues[key] = maxValue;
+		}
+
+		return maxValues;
+	};
+
+	const getSumValuesByProperty = (groupedObject, property) => {
+		const sumValues = {};
+
+		for (const key of Object.keys(groupedObject)) {
+			const sumValue = groupedObject[key].reduce(
+				(sum, item) => sum + (item[property] || 0),
+				0,
+			);
+			sumValues[key] = sumValue;
+		}
+
+		return sumValues;
+	};
+
+	const groupedSoilMoisture = useMemo(() => (
+		state.dataSets.soilMoisture ? groupByKey(state.dataSets.soilMoisture, "interval_start") : {}
+	), [state.dataSets.soilMoisture]);
+
+	const maxSoilMoistureByDate = useMemo(() => (
+		getMaxValuesByProperty(groupedSoilMoisture, "max_soil_moisture")
+	), [groupedSoilMoisture]);
+
+	const groupedHumidity = useMemo(() => (
+		state.dataSets.humidity ? groupByKey(state.dataSets.humidity, "interval_start") : {}
+	), [state.dataSets.humidity]);
+
+	const maxHumidityByDate = useMemo(() => (
+		getMaxValuesByProperty(groupedHumidity, "max_humidity")
+	), [groupedHumidity]);
+
+	const groupedYieldDistribution = useMemo(() => (
+		state.dataSets.yieldDistribution ? groupByKey(state.dataSets.yieldDistribution, "interval_start") : {}
+	), [state.dataSets.yieldDistribution]);
+
+	const sumYieldDistribution = useMemo(() => (
+		getSumValuesByProperty(groupedYieldDistribution, "sum_crop_yield")
+	), [groupedYieldDistribution]);
+	console.log("Grouped Distribution:", Object.keys(sumYieldDistribution));
+
 	// Calculate percentages
 	const percentages = useMemo(() => {
 		if (annualYield === "N/A") return [];
@@ -207,6 +255,7 @@ const AgroLab = () => {
 	const monthIrrigation = state.dataSets.irrigation ? state.dataSets.irrigation.reduce((sum, item) => sum + item.irrigation, 0).toFixed(2) : "N/A";
 
 	const meanTemp = state.dataSets.temperature_now ? (state.dataSets.temperature_now.reduce((sum, item) => sum + item.temperature, 0) / state.dataSets.temperature_now.length).toFixed(2) : "N/A";
+
 	const generate2024Months = useMemo(() => {
 		const months = [];
 		for (let mnth = 0; mnth < 12; mnth++) {
@@ -218,7 +267,6 @@ const AgroLab = () => {
 	}, []);
 
 	const tickvals = generate2024Months;
-	console.log("Tickvals:", tickvals);
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
@@ -291,7 +339,7 @@ const AgroLab = () => {
 			</Grid>
 			<Grid item xs={12} md={4} alignItems="center" flexDirection="column" mt={4}>
 				<Card
-					title="Monthly Crop Yield Distribution"
+					title="Harvest's Crop Yield Distribution"
 					footer={(
 						<Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
 							<Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
@@ -304,24 +352,25 @@ const AgroLab = () => {
 						scrollZoom
 						data={[
 							{
-								x: Array.from({ length: 4 }, (_, i) => `Week ${i + 1}`),
-								y: generateRandomNumbers(4, 25, 35),
+								x: Object.keys(groupedYieldDistribution),
+								y: Object.values(sumYieldDistribution),
 								type: "bar",
 								title: "bar",
 								color: "secondary",
 							},
 						]}
-						title="Total Crop Yield per Week"
+						// title="Total Crop Yield per Week during Harvest"
 						showLegend={false}
 						displayBar={false}
 						height="400px"
+						xaxis={{ tickvals: Object.keys(groupedYieldDistribution), tickangle: 15 }}
 						yaxis={{ title: "Tonnes" }}
 					/>
 				</Card>
 			</Grid>
 			<Grid item xs={12} md={4} alignItems="center" flexDirection="column" mt={4}>
 				<Card
-					title="Soil Moisture"
+					title="Month's Soil Moisture"
 					footer={(
 						<Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
 							<Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
@@ -330,13 +379,13 @@ const AgroLab = () => {
 						</Grid>
 					)}
 				>
-					{state.dataSets.plot1 && (
+					{maxSoilMoistureByDate && (
 						<Plot
 							scrollZoom
 							data={[
 								{
-									x: state.dataSets.plot1.map((item) => item.timestamp), // generateHoursUntilNow()
-									y: state.dataSets.plot1.map((item) => item.soil_moisture), // Example y values
+									x: Object.keys(maxSoilMoistureByDate),
+									y: Object.values(maxSoilMoistureByDate),
 									type: "scatter", // One of: scatter, bar, pie
 									title: "scatter",
 									mode: "lines+markers", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
@@ -349,7 +398,7 @@ const AgroLab = () => {
 							height="400px"
 							xaxis={{
 								// title: "Time of Day",
-								tickangle: 45,
+								tickangle: 15,
 							}}
 							yaxis={{
 								title: "Soil Moisture (%)",
@@ -360,7 +409,7 @@ const AgroLab = () => {
 			</Grid>
 			<Grid item xs={12} md={4} alignItems="center" flexDirection="column" mt={4}>
 				<Card
-					title="Monthly Humidity"
+					title="Month's Humidity"
 					footer={(
 						<Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
 							<Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
@@ -369,13 +418,13 @@ const AgroLab = () => {
 						</Grid>
 					)}
 				>
-					{state.dataSets.plot1 && (
+					{maxHumidityByDate && (
 						<Plot
 							scrollZoom
 							data={[
 								{
-									x: state.dataSets.plot1.map((item) => item.timestamp), // generateTimesOfDay()
-									y: state.dataSets.plot1.map((item) => item.humidity), // Example y values
+									x: Object.keys(maxHumidityByDate),
+									y: Object.values(maxHumidityByDate),
 									type: "scatter", // One of: scatter, bar, pie
 									title: "scatter",
 									mode: "lines+markers", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
@@ -388,7 +437,7 @@ const AgroLab = () => {
 							height="400px"
 							xaxis={{
 								// title: "Time of Day",
-								tickangle: 45,
+								tickangle: 15,
 							}}
 							yaxis={{
 								title: "Humidity (%)",
@@ -440,19 +489,19 @@ const AgroLab = () => {
 								scrollZoom
 								data={[
 									{
-										y: generateRandomNumbers(daysInMonth, 20, 40),
+										y: state.dataSets.temperature_june ? state.dataSets.temperature_june.map((item) => item.temperature) : [],
 										type: "box", // One of: scatter, bar, pie
 										title: "June",
 										color: "secondary",
 									},
 									{
-										y: generateRandomNumbers(daysInMonth, 32, 42),
+										y: state.dataSets.temperature_july ? state.dataSets.temperature_july.map((item) => item.temperature) : [],
 										type: "box", // One of: scatter, bar, pie
 										title: "July",
 										color: "secondary",
 									},
 									{
-										y: generateRandomNumbers(daysInMonth, 28, 38),
+										y: state.dataSets.temperature_august ? state.dataSets.temperature_august.map((item) => item.temperature) : [],
 										type: "box", // One of: scatter, bar, pie
 										title: "August",
 										color: "secondary",
@@ -501,28 +550,28 @@ const AgroLab = () => {
 								data={[
 									{
 										x: Array.from({ length: 4 }, (_, i) => `week ${i + 1}`),
-										y: generateRandomNumbers(monthsInYear, 0, 10),
+										y: (state.dataSets.precipitation ? state.dataSets.precipitation.filter((item) => item.key === "field1").map((item) => item.avg_precipitation) : []),
 										type: "bar", // One of: scatter, bar, pie
 										title: "Field 1",
 										color: "primary",
 									},
 									{
 										x: Array.from({ length: 4 }, (_, i) => `week ${i + 1}`),
-										y: generateRandomNumbers(monthsInYear, 0, 10),
+										y: (state.dataSets.precipitation ? state.dataSets.precipitation.filter((item) => item.key === "field2").map((item) => item.avg_precipitation) : []),
 										type: "bar", // One of: scatter, bar, pie
 										title: "Field 2",
 										color: "secondary",
 									},
 									{
 										x: Array.from({ length: 4 }, (_, i) => `week ${i + 1}`),
-										y: generateRandomNumbers(monthsInYear, 0, 10),
+										y: (state.dataSets.precipitation ? state.dataSets.precipitation.filter((item) => item.key === "field3").map((item) => item.avg_precipitation) : []),
 										type: "bar",
 										title: "Field 3",
 										color: "third",
 									},
 									{
 										x: Array.from({ length: 4 }, (_, i) => `week ${i + 1}`),
-										y: generateRandomNumbers(monthsInYear, 0, 10),
+										y: (state.dataSets.precipitation ? state.dataSets.precipitation.filter((item) => item.key === "field4").map((item) => item.avg_precipitation) : []),
 										type: "bar",
 										title: "Field 4",
 										color: "green",
@@ -563,7 +612,7 @@ const AgroLab = () => {
 						</Grid>
 					)}
 				>
-					{/* {groupedSoilQuality && (
+					{groupedSoilQuality?.field1 && (
 						<Plot
 							scrollZoom
 							data={[
@@ -613,7 +662,7 @@ const AgroLab = () => {
 								title: "Soil Quality",
 							}}
 						/>
-					)} */}
+					)}
 				</Card>
 			</Grid>
 		</Grid>
