@@ -1,39 +1,137 @@
+/* eslint-disable camelcase */
 import { Grid, Typography } from "@mui/material";
-import { memo, useState, useRef } from "react";
+import { memo, useEffect, useReducer, useRef, useCallback, useMemo } from "react";
 
-import { PrimaryBackgroundButton } from "../components/Buttons.js";
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
-import Form from "../components/Form.js";
+// import Form from "../components/Form.js";
+import { useSnackbar } from "../utils/index.js";
+import fetchAllData from "../api/fetch-data.js";
+import hiveConfigs from "../config/HiveConfig.js";
 import colors from "../_colors.scss";
 
-// import { CollectionDataManagement } from 'eco-ready-services.js';
+const initialState = {
+	dataSets: {},
+	minutesAgo: 0,
+	pageRefreshTime: new Date(),
+};
+
+const reducer = (state, action) => {
+	switch (action.type) {
+		case "FETCH_SUCCESS": {
+			const { plotId, response } = action.payload;
+			return {
+				...state,
+				dataSets: {
+					...state.dataSets,
+					[plotId]: response,
+				},
+				pageRefreshTime: new Date(),
+				minutesAgo: 0, // Reset minutes ago to 0 on new data fetch
+			};
+		}
+
+		case "UPDATE_MINUTES_AGO": {
+			return {
+				...state,
+				minutesAgo: Math.floor((Date.now() - state.pageRefreshTime) / 60_000),
+			};
+		}
+
+		default: {
+			return state;
+		}
+	}
+};
+
+const sumHiveYieldByKey = (array) => {
+	const sums = {};
+
+	for (const { key, honey_yield } of array) {
+		if (!sums[key]) {
+			sums[key] = 0;
+		}
+
+		sums[key] += honey_yield;
+	}
+
+	return sums;
+};
 
 const HiveLab = () => {
-	const formRef = useRef();
-	const [plotData, setPlotData] = useState(null);
+	const { success, error } = useSnackbar();
+	const accessKey = "e8c8f95ee4ef808b33c306a1142b39e123499f607b7eecdf02f33b86ee0a7af4";
+	const organization = "Hivelab";
+	const [state, dispatch] = useReducer(reducer, initialState);
+	// Memoize the date calculations and fetchConfigs to reduce re-calculations
+	const { year, month, currentDate, formattedBeginningOfMonth } = useMemo(() => {
+		const now = new Date();
+		const yearTemp = now.getFullYear();
+		const beginningOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+		beginningOfMonth.setHours(beginningOfMonth.getHours() + 3);
+		return {
+			year: yearTemp,
+			month: now.getMonth(),
+			currentDate: now.toISOString().slice(0, 19),
+			formattedBeginningOfMonth: beginningOfMonth.toISOString().slice(0, 19),
+		};
+	}, []);
 
-	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState(null);
-	const [sortValue, setSortValue] = useState("month");
+	const fetchConfigs = useMemo(
+		() => hiveConfigs(formattedBeginningOfMonth, currentDate),
+		[formattedBeginningOfMonth, currentDate],
+	);
+	// Use refs for stable references
+	const successRef = useRef(success);
+	const errorRef = useRef(error);
 
-	// Get the current year and month
-	const now = new Date();
-	const year = now.getFullYear();
-	const month = now.getMonth();
+	useEffect(() => {
+		successRef.current = success;
+		errorRef.current = error;
+	}, [success, error]);
 
-	// Get the number of days in the current month
-	const daysInMonth = new Date(year, month + 1, 0).getDate();
-	const monthsInYear = 12;
+	// Function to fetch and update data
+	const updateData = useCallback(async () => {
+		try {
+			await fetchAllData(dispatch, organization, accessKey, fetchConfigs);
+			successRef.current("All data fetched successfully");
+		} catch (error_) {
+			errorRef.current(`Error fetching data: ${error_.message}`);
+		}
+	}, [fetchConfigs]);
 
-	// Generate ten random percentages that sum up to 100%
-	const generateRandomPercentages = (num) => {
-		const arr = Array.from({ length: num }, () => Math.random());
-		const sum = arr.reduce((a, b) => a + b, 0);
-		return arr.map((value) => (value / sum) * 100);
-	};
+	useEffect(() => {
+		// Set interval for updating "minutesAgo"
+		const minutesAgoInterval = setInterval(() => {
+			dispatch({ type: "UPDATE_MINUTES_AGO" });
+		}, 60 * 1000);
 
-	const values = generateRandomPercentages(10);
+		// Fetch data immediately and set fetch interval
+		updateData();
+		const fetchInterval = setInterval(updateData, 30 * 60 * 1000);
+
+		return () => {
+			clearInterval(minutesAgoInterval);
+			clearInterval(fetchInterval);
+		};
+	}, [updateData]);
+
+	const annualYield = state.dataSets.honeyYield ? state.dataSets.honeyYield.reduce((sum, item) => sum + item.honey_yield, 0).toFixed(2) : "N/A";
+	const sumsByHive = useMemo(() => (
+		state.dataSets.honeyYield ? sumHiveYieldByKey(state.dataSets.honeyYield) : {}
+	), [state.dataSets.honeyYield]);
+
+	// Calculate percentages
+	const percentages = useMemo(() => {
+		if (annualYield === "N/A") return [];
+
+		return Object.keys(sumsByHive).map((key) => ({
+			key,
+			percentage: ((sumsByHive[key] / annualYield) * 100).toFixed(2),
+		}));
+	}, [annualYield, sumsByHive]);
+
+	const bees = state.dataSets.beeCount ? state.dataSets.beeCount.reduce((sum, item) => sum + item.avg_bee_count, 0).toFixed(2) : "N/A";
 
 	// Form Parameters
 	const monthNames = [
@@ -51,27 +149,26 @@ const HiveLab = () => {
 		{ value: "December", text: "December" },
 	];
 
-	const [value, setValue] = useState("");
-
-	const formContent = [
-		{
-			customType: "dropdown",
-			id: "sort",
-			label: "Hive:",
-			items: [
-				{ value: 1, label: "1" },
-				{ value: 2, label: "2" },
-				{ value: 3, label: "3" },
-				{ value: 4, label: "4" },
-			],
-			size: "small",
-			background: "grey",
-			defaultValue: "Month",
-			onChange: (event) => setSortValue(event.target.value),
-		},
-	];
-
-	const onChange = (event) => setValue(event.target.value);
+	// const formRef = useRef();
+	// const formContent = [
+	// 	{
+	// 		customType: "dropdown",
+	// 		id: "sort",
+	// 		label: "Hive:",
+	// 		items: [
+	// 			{ value: 1, label: "1" },
+	// 			{ value: 2, label: "2" },
+	// 			{ value: 3, label: "3" },
+	// 			{ value: 4, label: "4" },
+	// 		],
+	// 		size: "small",
+	// 		background: "grey",
+	// 		defaultValue: "Month",
+	// 		onChange: (event) => {
+	// 			console.log(`Status changed to ${event.target.value}`);
+	// 		},
+	// 	},
+	// ];
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around">
@@ -81,7 +178,7 @@ const HiveLab = () => {
 					footer={(
 						<Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
 							<Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
-								{"🕗 updated 4 min ago"}
+								{`🕗 updated ${state.minutesAgo} minutes ago`}
 							</Typography>
 						</Grid>
 					)}
@@ -91,8 +188,8 @@ const HiveLab = () => {
 						scrollZoom
 						data={[
 							{
-								labels: Array.from({ length: 4 }, (_, i) => `Hive ${i + 1}`), // Generate labels from "Cow 1" to "Cow 4"
-								values,
+								labels: percentages.map((item) => item.key),
+								values: percentages.map((item) => item.percentage),
 								type: "pie",
 								title: "pie",
 							},
@@ -108,18 +205,18 @@ const HiveLab = () => {
 						footer={(
 							<Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
 								<Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
-									{"🕗 updated 4 min ago"}
+									{`🕗 updated ${state.minutesAgo} minutes ago`}
 								</Typography>
 							</Grid>
 						)}
 					>
 						<Typography variant="h4" component="h4" align="center" sx={{ fontWeight: "bold" }}>
-							{`${Math.floor(Math.random() * 500) + 300} Litres`}
+							{`${annualYield} Litres`}
 							<Typography variant="body2" component="p" sx={{ fontSize: "0.6em" }}>
 								<span style={{ color: colors.error }}>{"4%"}</span>
 								{" "}
-								{"decrease since"}
-								{year}
+								{"decrease since "}
+								{year - 1}
 							</Typography>
 						</Typography>
 					</Card>
@@ -130,7 +227,7 @@ const HiveLab = () => {
 						footer={(
 							<Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
 								<Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
-									{"🕗 updated 4 min ago"}
+									{`🕗 updated ${state.minutesAgo} minutes ago`}
 								</Typography>
 							</Grid>
 						)}
@@ -140,7 +237,7 @@ const HiveLab = () => {
 							<Typography variant="body2" component="p" sx={{ fontSize: "0.6em" }}>
 								<span style={{ color: colors.secondary }}>{"5%"}</span>
 								{" "}
-								{"decrease since last"}
+								{"decrease since last "}
 								{monthNames[month - 1].text}
 							</Typography>
 						</Typography>
@@ -152,13 +249,13 @@ const HiveLab = () => {
 						footer={(
 							<Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
 								<Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
-									{"🕗 updated 4 min ago"}
+									{`🕗 updated ${state.minutesAgo} minutes ago`}
 								</Typography>
 							</Grid>
 						)}
 					>
 						<Typography variant="h4" component="h4" align="center" sx={{ fontWeight: "bold" }}>
-							{`${(Math.random() * 240 + 80).toFixed(2)}k `}
+							{`${(bees / 1000).toFixed(2)}k `}
 							{" "}
 							<span style={{ color: "goldenrod" }}>{"Honeybees"}</span>
 							{" "}
@@ -174,11 +271,11 @@ const HiveLab = () => {
 			</Grid>
 			<Grid item xs={12} mt={4}>
 				<Card
-					title="Monthly Honey Yield Distribution"
+					title="Honey Yield per Harvest"
 					footer={(
 						<Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
 							<Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
-								{"🕗 updated 4 min ago"}
+								{`🕗 updated ${state.minutesAgo} minutes ago`}
 							</Typography>
 						</Grid>
 					)}
@@ -187,35 +284,60 @@ const HiveLab = () => {
 						scrollZoom
 						data={[
 							{
-								x: Array.from({ length: 4 }, (_, i) => `Week ${i + 1}`),
-								y: Array.from({ length: 4 }, (_, i) => Math.floor(Math.random() * (10 - 3 + 1) + 3)),
+								x: state.dataSets.yieldDistribution
+									? state.dataSets.yieldDistribution.map((item) => item.interval_start)
+									: [],
+								y: state.dataSets.yieldDistribution
+									? state.dataSets.yieldDistribution
+										.filter((item) => item.key === "hive1")
+										.map((item) => item.sum_honey_yield) : [],
 								type: "bar",
 								title: "Hive 1",
 								color: "primary",
 							},
 							{
-								x: Array.from({ length: 4 }, (_, i) => `Week ${i + 1}`),
-								y: Array.from({ length: 4 }, (_, i) => Math.floor(Math.random() * (10 - 3 + 1) + 3)),
+								x: state.dataSets.yieldDistribution
+									? state.dataSets.yieldDistribution.map((item) => item.interval_start)
+									: [],
+								y: state.dataSets.yieldDistribution
+									? state.dataSets.yieldDistribution
+										.filter((item) => item.key === "hive2")
+										.map((item) => item.sum_honey_yield) : [],
 								type: "bar",
 								title: "Hive 2",
 								color: "secondary",
 							},
 							{
-								x: Array.from({ length: 4 }, (_, i) => `Week ${i + 1}`),
-								y: Array.from({ length: 4 }, (_, i) => Math.floor(Math.random() * (10 - 3 + 1) + 3)),
+								x: state.dataSets.yieldDistribution
+									? state.dataSets.yieldDistribution.map((item) => item.interval_start)
+									: [],
+								y: state.dataSets.yieldDistribution
+									? state.dataSets.yieldDistribution
+										.filter((item) => item.key === "hive3")
+										.map((item) => item.sum_honey_yield) : [],
 								type: "bar",
 								title: "Hive 3",
 								color: "third",
 							},
 							{
-								x: Array.from({ length: 4 }, (_, i) => `Week ${i + 1}`),
-								y: Array.from({ length: 4 }, (_, i) => Math.floor(Math.random() * (10 - 3 + 1) + 3)),
+								x: state.dataSets.yieldDistribution
+									? state.dataSets.yieldDistribution.map((item) => item.interval_start)
+									: [],
+								y: state.dataSets.yieldDistribution
+									? state.dataSets.yieldDistribution
+										.filter((item) => item.key === "hive4")
+										.map((item) => item.sum_honey_yield) : [],
 								type: "bar",
 								title: "Hive 4",
 								color: "green",
 							},
 						]}
 						title="Amount of Honey per Hive (Kg)"
+						xaxis={{
+							tickvals: state.dataSets.yieldDistribution
+								? state.dataSets.yieldDistribution.map((item) => item.interval_start)
+								: [],
+						}}
 						displayBar={false}
 						height="400px"
 					/>
@@ -228,7 +350,7 @@ const HiveLab = () => {
 						footer={(
 							<Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
 								<Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
-									{"🕗 updated 4 min ago"}
+									{`🕗 updated ${state.minutesAgo} minutes ago`}
 								</Typography>
 							</Grid>
 						)}
@@ -239,11 +361,14 @@ const HiveLab = () => {
 									scrollZoom
 									data={[
 										{
-											x: Array.from({ length: daysInMonth }, (_, i) => i + 1),
-											y: Array.from({ length: daysInMonth }, () => Math.floor(Math.random() * 6) + 10),
+											x: Array.from({ length: state.dataSets.coverage
+												? state.dataSets.coverage.length : 0 }, (_, i) => i + 1),
+											y: state.dataSets.coverage
+												? state.dataSets.coverage
+													.map((item) => item.sum_area_coverage) : [],
 											type: "bar", // One of: scatter, bar, pie
 											title: "June",
-											color: "secondary",
+											color: "goldenrod",
 										},
 									]}
 									title={`${monthNames[month].text}`}
@@ -252,23 +377,24 @@ const HiveLab = () => {
 									height="400px"
 									style={{ zIndex: 1 }}
 									xaxis={{
-										title: "Day",
+										title: "Date",
+										tickvals: Array.from({ length: state.dataSets.coverage
+											? state.dataSets.coverage.length : 0 }, (_, i) => i + 1),
+										tickangle: 0,
 										tickmode: "linear",
-										// tickangle: 45,
 										tick0: 1,
-										dtick: 2,
+										dtick: 3,
 									}}
 									yaxis={{
 										title: "Area * 1000 (ha)",
-										tickmode: "linear",
-										tick0: 0,
-										dtick: 10,
 									}}
 								/>
 							</Grid>
-							<Grid item sx={{ position: "absolute", bottom: 0, right: -95, width: "52%", height: "50%", zIndex: 2, display: "flex" }}>
+							{/* <
+							Grid
+							item sx={{ position: "absolute", bottom: 0, right: -95, width: "52%", height: "50%", zIndex: 2, display: "flex" }}>
 								<Form ref={formRef} content={formContent.slice(1)} />
-							</Grid>
+							</Grid> */}
 						</Grid>
 					</Card>
 				</Grid>
@@ -278,7 +404,7 @@ const HiveLab = () => {
 						footer={(
 							<Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
 								<Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
-									{"🕗 updated 4 min ago"}
+									{`🕗 updated ${state.minutesAgo} minutes ago`}
 								</Typography>
 							</Grid>
 						)}
@@ -287,32 +413,48 @@ const HiveLab = () => {
 							scrollZoom
 							data={[
 								{
-									x: Array.from({ length: daysInMonth }, (_, i) => i + 1), // Generate a range of values for the number of days in the current month
-									y: Array.from({ length: daysInMonth }, (_, i) => Math.random() * 100), // Example y values
+									x: Array.from({ length: state.dataSets.coverage
+										? state.dataSets.coverage.length : 0 }, (_, i) => i + 1),
+									y: state.dataSets.activity
+										? state.dataSets.activity
+											.filter((item) => item.key === "hive1")
+											.map((item) => item.avg_activity_level) : [],
 									type: "scatter", // One of: scatter, bar, pie
 									title: "Hive 1",
 									mode: "lines+markers", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
 									color: "primary",
 								},
 								{
-									x: Array.from({ length: daysInMonth }, (_, i) => i + 1), // Generate a range of values for the number of days in the current month
-									y: Array.from({ length: daysInMonth }, (_, i) => Math.random() * 100), // Example y values
+									x: Array.from({ length: state.dataSets.coverage
+										? state.dataSets.coverage.length : 0 }, (_, i) => i + 1),
+									y: state.dataSets.activity
+										? state.dataSets.activity
+											.filter((item) => item.key === "hive2")
+											.map((item) => item.avg_activity_level) : [],
 									type: "scatter", // One of: scatter, bar, pie
 									title: "Hive 2",
 									mode: "lines+markers", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
 									color: "secondary",
 								},
 								{
-									x: Array.from({ length: daysInMonth }, (_, i) => i + 1), // Generate a range of values for the number of days in the current month
-									y: Array.from({ length: daysInMonth }, (_, i) => Math.random() * 100), // Example y values
+									x: Array.from({ length: state.dataSets.coverage
+										? state.dataSets.coverage.length : 0 }, (_, i) => i + 1),
+									y: state.dataSets.activity
+										? state.dataSets.activity
+											.filter((item) => item.key === "hive3")
+											.map((item) => item.avg_activity_level) : [],
 									type: "scatter", // One of: scatter, bar, pie
 									title: "Hive 3",
 									mode: "lines+markers", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
 									color: "third",
 								},
 								{
-									x: Array.from({ length: daysInMonth }, (_, i) => i + 1), // Generate a range of values for the number of days in the current month
-									y: Array.from({ length: daysInMonth }, (_, i) => Math.random() * 100), // Example y values
+									x: Array.from({ length: state.dataSets.coverage
+										? state.dataSets.coverage.length : 0 }, (_, i) => i + 1),
+									y: state.dataSets.activity
+										? state.dataSets.activity
+											.filter((item) => item.key === "hive4")
+											.map((item) => item.avg_activity_level) : [],
 									type: "scatter", // One of: scatter, bar, pie
 									title: "Hive 4",
 									mode: "lines+markers", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
@@ -323,17 +465,16 @@ const HiveLab = () => {
 							displayBar={false}
 							height="400px"
 							xaxis={{
-								title: "Day",
+								title: "Date",
+								tickvals: Array.from({ length: state.dataSets.coverage
+									? state.dataSets.coverage.length : 0 }, (_, i) => i + 1),
+								tickangle: 0,
 								tickmode: "linear",
-								// tickangle: 45,
 								tick0: 1,
-								dtick: 2,
+								dtick: 3,
 							}}
 							yaxis={{
 								title: "Activity Level (%)",
-								tickmode: "linear",
-								tick0: 0,
-								dtick: 10,
 							}}
 						/>
 					</Card>
