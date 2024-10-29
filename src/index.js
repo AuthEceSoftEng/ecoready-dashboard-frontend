@@ -13,7 +13,7 @@ import "./index.scss";
 import colors from "./_colors.scss";
 import "react-table-6/react-table.css";
 import Header from "./components/Header.js";
-import Footer from "./components/Footer.js";
+// import Footer from "./components/Footer.js";
 import Protected from "./components/Protected.js";
 import GuestOnly from "./components/GuestOnly.js";
 import ErrorFallback from "./components/ErrorFallback.js";
@@ -45,7 +45,6 @@ import DialogExample from "./examples/Dialog.js";
 import DatePickerExample from "./examples/DatePicker.js";
 import LocalizationExample from "./examples/Localization.js";
 import { adjustColors, jwt, colorSuggestions } from "./utils/index.js";
-
 import "./i18n.js";
 import AgroLab from "./screens lls/AgroLab.js";
 import HiveLab from "./screens lls/HiveLab.js";

@@ -1,132 +1,135 @@
+/* eslint-disable camelcase */
 import { Grid, Typography } from "@mui/material";
-import { memo, useEffect, useState, useRef, useCallback } from "react";
+import { memo, useEffect, useReducer, useRef, useCallback, useMemo } from "react";
 
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
 import Form from "../components/Form.js";
-import { useSnackbar, fetchAllData } from "../utils/index.js";
+import { useSnackbar } from "../utils/index.js";
+import fetchAllData from "../api/fetch-data.js";
+import agroConfigs from "../config/AgroConfig.js";
 import colors from "../_colors.scss";
+
+const initialState = {
+	dataSets: {},
+	minutesAgo: 0,
+	pageRefreshTime: new Date(),
+};
+
+const reducer = (state, action) => {
+	switch (action.type) {
+		case "FETCH_SUCCESS": {
+			const { plotId, response } = action.payload;
+			return {
+				...state,
+				dataSets: {
+					...state.dataSets,
+					[plotId]: response,
+				},
+				pageRefreshTime: new Date(),
+				minutesAgo: 0, // Reset minutes ago to 0 on new data fetch
+			};
+		}
+
+		case "UPDATE_MINUTES_AGO": {
+			return {
+				...state,
+				minutesAgo: Math.floor((Date.now() - state.pageRefreshTime) / 60_000),
+			};
+		}
+
+		default: {
+			return state;
+		}
+	}
+};
+
+const sumCropYieldByKey = (array) => {
+	const sums = {};
+
+	for (const { key, crop_yield } of array) {
+		if (!sums[key]) {
+			sums[key] = 0;
+		}
+
+		sums[key] += crop_yield;
+	}
+
+	return sums;
+};
+
+const groupByKey = (data, key) => data.reduce((result, item) => {
+	const groupKey = item[key];
+	if (!result[groupKey]) {
+		result[groupKey] = [];
+	}
+
+	result[groupKey].push(item);
+	return result;
+}, {});
 
 const AgroLab = () => {
 	const { success, error } = useSnackbar();
-	const [dataSets, setDataSets] = useState({});
-	const [pageRefreshTime, setPageRefreshTime] = useState(new Date());
-	const [minutesAgo, setMinutesAgo] = useState(0);
-
-	// Get the current year and month
-	const now = new Date();
-	const currentDate = now.toISOString().slice(0, 19);
-	console.log("Current Date:", currentDate);
-	const year = now.getFullYear();
-	const month = now.getMonth();
-	const day = now.getDate();
-
-	const beginningOfMonth = new Date(year, month, 1);
-	beginningOfMonth.setHours(beginningOfMonth.getHours() + 3); // acount for timezone
-	const formattedBeginningOfMonth = beginningOfMonth.toISOString().slice(0, 19);
-	console.log("Beginning of Month:", formattedBeginningOfMonth);
-
-	const updateData = useCallback(() => {
-		const accessKey = "******";
-		const fetchConfigs = [
-			{
-				type: "data",
-				organization: "agrolab",
-				project: "wheat",
-				collection: "yield_data",
-				params: JSON.stringify({
-					attributes: ["crop_yield"],
-				}),
-				plotId: "sum1",
-			},
-			{
-				type: "data",
-				organization: "agrolab",
-				project: "wheat",
-				collection: "sensor_iot_data",
-				params: JSON.stringify({
-					attributes: ["timestamp", "soil_moisture", "humidity"],
-					filters: [
-						{
-							property_name: "timestamp",
-							operator: "gte",
-							property_value: `${formattedBeginningOfMonth}`,
-						},
-						{
-							property_name: "timestamp",
-							operator: "lte",
-							property_value: `${currentDate}`,
-						},
-					],
-					order_by: {
-						field: "timestamp",
-						order: "asc",
-					},
-				}),
-				plotId: "plot1",
-			},
-			{
-				type: "data",
-				organization: "agrolab",
-				project: "wheat",
-				collection: "sensor_iot_data",
-				params: JSON.stringify({
-					attributes: ["timestamp", "soil_quality"],
-					filters: [
-						{
-							property_name: "soil_quality",
-							operator: "gte",
-							property_value: 0.2,
-						},
-						{
-							property_name: "soil_quality",
-							operator: "lte",
-							property_value: 0.8,
-						},
-					],
-					order_by: {
-						field: "timestamp",
-						order: "asc",
-					},
-				}),
-				plotId: "plot2",
-			},
-			// Add more configurations here as needed
-		];
-
-		fetchAllData(fetchConfigs, accessKey, setDataSets, setPageRefreshTime, success, error);
-	}, [error, formattedBeginningOfMonth, success]);
-
-	// Set data update interval and reset last update timer when new data is fetched
-	useEffect(() => {
-		const updateMinutesAgo = () => {
-			setMinutesAgo(Math.floor((Date.now() - pageRefreshTime) / 60_000));
+	const accessKey = "******";
+	const organization = "agrolab";
+	const [state, dispatch] = useReducer(reducer, initialState);
+	// Memoize the date calculations and fetchConfigs to reduce re-calculations
+	const { year, month, day, daysInMonth, currentDate, formattedBeginningOfMonth } = useMemo(() => {
+		const now = new Date();
+		const yearTemp = now.getFullYear();
+		const beginningOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+		beginningOfMonth.setHours(beginningOfMonth.getHours() + 3);
+		return {
+			year: yearTemp,
+			month: now.getMonth(),
+			day: now.getDay(),
+			daysInMonth: new Date(yearTemp, now.getMonth() + 1, 0).getDate(),
+			currentDate: now.toISOString().slice(0, 19),
+			formattedBeginningOfMonth: beginningOfMonth.toISOString().slice(0, 19),
 		};
+	}, []);
 
-		// Fetch data on component mount and set an interval to fetch every 30 minutes
-		updateData(); // Fetch immediately on mount
-		const fetchInterval = setInterval(updateData, 30 * 60 * 1000); // Fetch data every 30 minutes
+	const fetchConfigs = useMemo(
+		() => agroConfigs(formattedBeginningOfMonth, currentDate),
+		[formattedBeginningOfMonth, currentDate],
+	);
+	// Use refs for stable references
+	const successRef = useRef(success);
+	const errorRef = useRef(error);
 
-		// Set interval to show minutes since last update
-		const minutesAgoInterval = setInterval(updateMinutesAgo, 60 * 1000); // Update every 1 minute
+	useEffect(() => {
+		successRef.current = success;
+		errorRef.current = error;
+	}, [success, error]);
 
-		// Cleanup intervals on unmount
+	// Function to fetch and update data
+	const updateData = useCallback(async () => {
+		try {
+			await fetchAllData(dispatch, organization, accessKey, fetchConfigs);
+			successRef.current("All data fetched successfully");
+		} catch (error_) {
+			errorRef.current(`Error fetching data: ${error_.message}`);
+		}
+	}, [fetchConfigs]);
+
+	useEffect(() => {
+		// Set interval for updating "minutesAgo"
+		const minutesAgoInterval = setInterval(() => {
+			dispatch({ type: "UPDATE_MINUTES_AGO" });
+		}, 60 * 1000);
+
+		// Fetch data immediately and set fetch interval
+		updateData();
+		const fetchInterval = setInterval(updateData, 30 * 60 * 1000);
+
 		return () => {
-			clearInterval(fetchInterval);
 			clearInterval(minutesAgoInterval);
+			clearInterval(fetchInterval);
 		};
 	}, [updateData]);
 
 	// Get the number of days in the current month
-	const daysInMonth = new Date(year, month + 1, 0).getDate();
 	const monthsInYear = 12;
-
-	// Generate ten random percentages that sum up to 100%
-	const generateRandomPercentages = (num) => {
-		const arr = Array.from({ length: num }, () => Math.random());
-		const sum = arr.reduce((a, b) => a + b, 0);
-		return arr.map((value) => (value / sum) * 100);
-	};
 
 	const generateRandomNumbers = (length, min = 0, max = 1) => Array.from({ length }, () => (Math.random() * (max - min)) + min);
 
@@ -181,10 +184,30 @@ const AgroLab = () => {
 		},
 	];
 
-	// Calculate annual yield if dataSets['sum1'] exists
-	const annualYield = dataSets.sum1 ? dataSets.sum1.reduce((sum, item) => sum + item.crop_yield, 0).toFixed(2) : "N/A";
+	// Calculate annual yield if dataSets['cropYield'] exists
+	const annualYield = state.dataSets.cropYield ? state.dataSets.cropYield.reduce((sum, item) => sum + item.crop_yield, 0).toFixed(2) : "N/A";
+	const sumsByField = state.dataSets.cropYield ? sumCropYieldByKey(state.dataSets.cropYield) : {};
 
-	const generate2024Months = () => {
+	// // Group soilQuality data by "key"
+	// const groupedSoilQuality = useMemo(() => (
+	// 	state.dataSets.soilQuality ? groupByKey(state.dataSets.soilQuality, "key") : {}
+	// ), [state.dataSets.soilQuality]);
+	// console.log("Soil Quality:", state.dataSets.soilQuality);
+	// console.log("Grouped Soil Quality:", groupedSoilQuality);
+	// Calculate percentages
+	const percentages = useMemo(() => {
+		if (annualYield === "N/A") return [];
+
+		return Object.keys(sumsByField).map((key) => ({
+			key,
+			percentage: ((sumsByField[key] / annualYield) * 100).toFixed(2),
+		}));
+	}, [annualYield, sumsByField]);
+
+	const monthIrrigation = state.dataSets.irrigation ? state.dataSets.irrigation.reduce((sum, item) => sum + item.irrigation, 0).toFixed(2) : "N/A";
+
+	const meanTemp = state.dataSets.temperature_now ? (state.dataSets.temperature_now.reduce((sum, item) => sum + item.temperature, 0) / state.dataSets.temperature_now.length).toFixed(2) : "N/A";
+	const generate2024Months = useMemo(() => {
 		const months = [];
 		for (let mnth = 0; mnth < 12; mnth++) {
 			const date = new Date(2024, mnth, 2);
@@ -192,9 +215,9 @@ const AgroLab = () => {
 		}
 
 		return months;
-	};
+	}, []);
 
-	const tickvals = generate2024Months();
+	const tickvals = generate2024Months;
 	console.log("Tickvals:", tickvals);
 
 	return (
@@ -205,7 +228,7 @@ const AgroLab = () => {
 					footer={(
 						<Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
 							<Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
-								{`🕗 updated ${minutesAgo} minutes ago`}
+								{`🕗 updated ${state.minutesAgo} minutes ago`}
 							</Typography>
 						</Grid>
 					)}
@@ -215,7 +238,7 @@ const AgroLab = () => {
 						<Typography variant="body2" component="p" sx={{ fontSize: "0.6em" }}>
 							<span style={{ color: colors.secondary }}>{"6%"}</span>
 							{" "}
-							{"increase from"}
+							{"increase from "}
 							{year - 1}
 						</Typography>
 					</Typography>
@@ -223,21 +246,21 @@ const AgroLab = () => {
 			</Grid>
 			<Grid item xs={12} md={4} alignItems="center" flexDirection="column">
 				<Card
-					title="Monthly Irrigation"
+					title="Current Month's Irrigation"
 					footer={(
 						<Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
 							<Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
-								{`🕗 updated ${minutesAgo} minutes ago`}
+								{`🕗 updated ${state.minutesAgo} minutes ago`}
 							</Typography>
 						</Grid>
 					)}
 				>
 					<Typography variant="h4" component="h4" align="center" sx={{ fontWeight: "bold" }}>
-						{`${Math.floor(Math.random() * 500) + 300} Litres`}
+						{`${monthIrrigation} Litres`}
 						<Typography variant="body2" component="p" sx={{ fontSize: "0.6em" }}>
 							<span style={{ color: colors.error }}>{"10%"}</span>
 							{" "}
-							{"decrease since last"}
+							{"decrease since "}
 							{monthNames[month - 1].text}
 						</Typography>
 					</Typography>
@@ -249,13 +272,13 @@ const AgroLab = () => {
 					footer={(
 						<Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
 							<Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
-								{`🕗 updated ${minutesAgo} minutes ago`}
+								{`🕗 updated ${state.minutesAgo} minutes ago`}
 							</Typography>
 						</Grid>
 					)}
 				>
 					<Typography variant="h4" component="h4" align="center" sx={{ fontWeight: "bold", textAlign: "center" }}>
-						{`${Math.floor(Math.random() * 10) + 20}°C`}
+						{`${meanTemp}°C`}
 						<Typography variant="body2" component="p" sx={{ fontSize: "0.6em" }}>
 							<span style={{ color: colors.warning }}>{"Sunny"}</span>
 							{" "}
@@ -272,7 +295,7 @@ const AgroLab = () => {
 					footer={(
 						<Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
 							<Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
-								{`🕗 updated ${minutesAgo} minutes ago`}
+								{`🕗 updated ${state.minutesAgo} minutes ago`}
 							</Typography>
 						</Grid>
 					)}
@@ -302,18 +325,18 @@ const AgroLab = () => {
 					footer={(
 						<Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
 							<Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
-								{`🕗 updated ${minutesAgo} minutes ago`}
+								{`🕗 updated ${state.minutesAgo} minutes ago`}
 							</Typography>
 						</Grid>
 					)}
 				>
-					{dataSets.plot1 && (
+					{state.dataSets.plot1 && (
 						<Plot
 							scrollZoom
 							data={[
 								{
-									x: dataSets.plot1.map((item) => item.timestamp), // generateHoursUntilNow()
-									y: dataSets.plot1.map((item) => item.soil_moisture), // Example y values
+									x: state.dataSets.plot1.map((item) => item.timestamp), // generateHoursUntilNow()
+									y: state.dataSets.plot1.map((item) => item.soil_moisture), // Example y values
 									type: "scatter", // One of: scatter, bar, pie
 									title: "scatter",
 									mode: "lines+markers", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
@@ -341,18 +364,18 @@ const AgroLab = () => {
 					footer={(
 						<Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
 							<Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
-								{`🕗 updated ${minutesAgo} minutes ago`}
+								{`🕗 updated ${state.minutesAgo} minutes ago`}
 							</Typography>
 						</Grid>
 					)}
 				>
-					{dataSets.plot1 && (
+					{state.dataSets.plot1 && (
 						<Plot
 							scrollZoom
 							data={[
 								{
-									x: dataSets.plot1.map((item) => item.timestamp), // generateTimesOfDay()
-									y: dataSets.plot1.map((item) => item.humidity), // Example y values
+									x: state.dataSets.plot1.map((item) => item.timestamp), // generateTimesOfDay()
+									y: state.dataSets.plot1.map((item) => item.humidity), // Example y values
 									type: "scatter", // One of: scatter, bar, pie
 									title: "scatter",
 									mode: "lines+markers", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
@@ -380,7 +403,7 @@ const AgroLab = () => {
 					footer={(
 						<Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
 							<Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
-								{`🕗 updated ${minutesAgo} minutes ago`}
+								{`🕗 updated ${state.minutesAgo} minutes ago`}
 							</Typography>
 						</Grid>
 					)}
@@ -390,8 +413,8 @@ const AgroLab = () => {
 						scrollZoom
 						data={[
 							{
-								labels: Array.from({ length: 4 }, (_, i) => `Field ${i + 1}`), // Generate labels from "field 1" to "field 10"
-								values: generateRandomPercentages(4),
+								labels: percentages.map((item) => item.key), // Generate labels from "field 1" to "field 10"
+								values: percentages.map((item) => item.percentage),
 								type: "pie",
 								title: "pie",
 							},
@@ -406,7 +429,7 @@ const AgroLab = () => {
 					footer={(
 						<Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
 							<Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
-								{`🕗 updated ${minutesAgo} minutes ago`}
+								{`🕗 updated ${state.minutesAgo} minutes ago`}
 							</Typography>
 						</Grid>
 					)}
@@ -466,7 +489,7 @@ const AgroLab = () => {
 					footer={(
 						<Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
 							<Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
-								{`🕗 updated ${minutesAgo} minutes ago`}
+								{`🕗 updated ${state.minutesAgo} minutes ago`}
 							</Typography>
 						</Grid>
 					)}
@@ -535,79 +558,50 @@ const AgroLab = () => {
 					footer={(
 						<Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
 							<Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
-								{`🕗 updated ${minutesAgo} minutes ago`}
+								{`🕗 updated ${state.minutesAgo} minutes ago`}
 							</Typography>
 						</Grid>
 					)}
 				>
-					<Plot
-						scrollZoom
-						data={[
-							{
-								x: monthNames.map((item) => item.text).slice(0, 10), // Array.from({ length: monthsInYear }, (_, i) => i + 1),
-								y: generateRandomNumbers(monthsInYear - 2, 0, 100),
-								texts: ["One", "Two", "Three"], // Text for each data point
-								type: "scatter", // One of: scatter, bar, pie
-								title: "Field 1",
-								mode: "lines", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
-								color: "primary",
-							},
-							{
-								x: monthNames.map((item) => item.text).slice(0, 10), // Array.from({ length: monthsInYear }, (_, i) => i + 1),
-								y: generateRandomNumbers(monthsInYear - 2, 0, 100),
-								type: "scatter", // One of: scatter, bar, pie
-								title: "Field 2",
-								mode: "lines", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
-								color: "secondary",
-							},
-							{
-								x: monthNames.map((item) => item.text).slice(0, 10), // Array.from({ length: monthsInYear }, (_, i) => i + 1),
-								y: generateRandomNumbers(monthsInYear - 2, 0, 100),
-								type: "scatter", // One of: scatter, bar, pie
-								title: "Field 3",
-								mode: "lines", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
-								color: "third",
-							},
-						]}
-						title="Average Soil Quality per Month"
-						xaxis={{
-							// title: "Month",
-							tickmode: "linear",
-							tick0: 1,
-							dtick: 1,
-						}}
-						yaxis={{
-							title: "Soil Quality (%)",
-							tickmode: "linear",
-							tick0: 0,
-							dtick: 5,
-						}}
-					/>
-				</Card>
-			</Grid>
-			<Grid item width="100%" mt={4}>
-				<Card
-					title="Soil Quality"
-					footer={(
-						<Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
-							<Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
-								{`🕗 updated ${minutesAgo} minutes ago`}
-							</Typography>
-						</Grid>
-					)}
-				>
-					{dataSets.plot2 && (
+					{/* {groupedSoilQuality && (
 						<Plot
 							scrollZoom
 							data={[
 								{
-									x: dataSets.plot2.map((item) => item.timestamp),
-									y: dataSets.plot2.map((item) => item.soil_quality),
+									x: groupedSoilQuality.field1.map((item) => item.interval_start),
+									y: groupedSoilQuality.field1.map((item) => item.avg_soil_quality),
 									texts: ["One", "Two", "Three"], // Text for each data point
 									type: "scatter", // One of: scatter, bar, pie
-									title: "Field 1",
+									title: Object.keys(groupedSoilQuality)[0],
+									mode: "lines", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
+									color: "primary",
+								},
+								{
+									x: groupedSoilQuality.field2.map((item) => item.interval_start),
+									y: groupedSoilQuality.field2.map((item) => item.avg_soil_quality),
+									texts: ["One", "Two", "Three"], // Text for each data point
+									type: "scatter", // One of: scatter, bar, pie
+									title: Object.keys(groupedSoilQuality)[1],
 									mode: "lines", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
 									color: "secondary",
+								},
+								{
+									x: groupedSoilQuality.field3.map((item) => item.interval_start),
+									y: groupedSoilQuality.field3.map((item) => item.avg_soil_quality),
+									texts: ["One", "Two", "Three"], // Text for each data point
+									type: "scatter", // One of: scatter, bar, pie
+									title: Object.keys(groupedSoilQuality)[2],
+									mode: "lines", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
+									color: "third",
+								},
+								{
+									x: groupedSoilQuality.field4.map((item) => item.interval_start),
+									y: groupedSoilQuality.field4.map((item) => item.avg_soil_quality),
+									texts: ["One", "Two", "Three"], // Text for each data point
+									type: "scatter", // One of: scatter, bar, pie
+									title: Object.keys(groupedSoilQuality)[3],
+									mode: "lines", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
+									color: "green",
 								},
 							]}
 							title="Average Soil Quality per Month"
@@ -619,7 +613,7 @@ const AgroLab = () => {
 								title: "Soil Quality",
 							}}
 						/>
-					)}
+					)} */}
 				</Card>
 			</Grid>
 		</Grid>
