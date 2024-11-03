@@ -195,10 +195,10 @@ const Form = forwardRef(({ disabled: dsb, content, validationSchema, onSubmit, o
 										items={comp.items}
 										value={formikProps.values[comp.id]}
 										disabled={disabled || comp.disabled}
-										size={comp.size || "medium"}
-										width={comp.width || "200px"}
+										size={comp?.size || "medium"}
+										width={comp?.width || "200px"}
 										filled={false}
-										background={comp.color || "secondary"}
+										background={comp?.color || "secondary"}
 										onChange={(event) => {
 											formikProps.handleChange({
 												target: {
