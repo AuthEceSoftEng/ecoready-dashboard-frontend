@@ -159,7 +159,7 @@ const SignIn = () => {
 						<Typography variant="h5" className={classes.subtitle}>{"to ECO-READY Dashboard"}</Typography>
 					</Grid>
 					<Grid item container direction="column" justifyContent="center" alignItems="center">
-						<Form content={formContent} validationSchema="authenticationSchema" onSubmit={submitHandler} />
+						<Form content={formContent} validationSchema="authenticationSchema" toResetForm={false} onSubmit={submitHandler} />
 					</Grid>
 					<Grid item>
 						<div id="googleLoginButton" style={{ width: "200px" }} />
