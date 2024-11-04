@@ -1,4 +1,3 @@
-/* eslint-disable camelcase */
 import { Grid, Typography } from "@mui/material";
 import { memo, useEffect, useReducer, useRef, useCallback, useMemo } from "react";
 
@@ -9,83 +8,17 @@ import { useSnackbar } from "../utils/index.js";
 import fetchAllData from "../api/fetch-data.js";
 import agroConfigs from "../config/AgroConfig.js";
 import colors from "../_colors.scss";
-
-const initialState = {
-	dataSets: {},
-	minutesAgo: 0,
-	pageRefreshTime: new Date(),
-};
-
-const reducer = (state, action) => {
-	switch (action.type) {
-		case "FETCH_SUCCESS": {
-			const { plotId, response } = action.payload;
-			return {
-				...state,
-				dataSets: {
-					...state.dataSets,
-					[plotId]: response,
-				},
-				pageRefreshTime: new Date(),
-				minutesAgo: 0, // Reset minutes ago to 0 on new data fetch
-			};
-		}
-
-		case "UPDATE_MINUTES_AGO": {
-			return {
-				...state,
-				minutesAgo: Math.floor((Date.now() - state.pageRefreshTime) / 60_000),
-			};
-		}
-
-		default: {
-			return state;
-		}
-	}
-};
-
-const sumCropYieldByKey = (array) => {
-	const sums = {};
-
-	for (const { key, crop_yield } of array) {
-		if (!sums[key]) {
-			sums[key] = 0;
-		}
-
-		sums[key] += crop_yield;
-	}
-
-	return sums;
-};
-
-const groupByKey = (data, key) => data.reduce((result, item) => {
-	const groupKey = item[key];
-	if (!result[groupKey]) {
-		result[groupKey] = [];
-	}
-
-	result[groupKey].push(item);
-	return result;
-}, {});
+import { initialState, reducer, sumByKey, groupByKey,
+	getMaxValuesByProperty, getSumValuesByProperty, calculateDates } from "../utils/data-handling-functions.js";
 
 const AgroLab = () => {
 	const { success, error } = useSnackbar();
 	const accessKey = "******";
 	const organization = "agrolab";
 	const [state, dispatch] = useReducer(reducer, initialState);
+
 	// Memoize the date calculations and fetchConfigs to reduce re-calculations
-	const { year, month, currentDate, formattedBeginningOfMonth } = useMemo(() => {
-		const now = new Date();
-		const yearTemp = now.getFullYear();
-		const beginningOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-		beginningOfMonth.setHours(beginningOfMonth.getHours() + 3);
-		return {
-			year: yearTemp,
-			month: now.getMonth(),
-			currentDate: now.toISOString().slice(0, 19),
-			formattedBeginningOfMonth: beginningOfMonth.toISOString().slice(0, 19),
-		};
-	}, []);
+	const { year, month, currentDate, formattedBeginningOfMonth } = useMemo(calculateDates, []);
 
 	const fetchConfigs = useMemo(
 		() => agroConfigs(formattedBeginningOfMonth, currentDate),
@@ -143,8 +76,6 @@ const AgroLab = () => {
 	];
 
 	const formRef = useRef();
-	// const [value, setValue] = useState("");
-
 	const formContent = [
 
 		{ customType: "dropdown",
@@ -180,41 +111,12 @@ const AgroLab = () => {
 	// Calculate annual yield if dataSets['cropYield'] exists
 	const annualYield = state.dataSets.cropYield ? state.dataSets.cropYield.reduce((sum, item) => sum + item.crop_yield, 0).toFixed(2) : "N/A";
 	const sumsByField = useMemo(() => (
-		state.dataSets.cropYield ? sumCropYieldByKey(state.dataSets.cropYield) : {}
+		state.dataSets.cropYield ? sumByKey(state.dataSets.cropYield, "key", "crop_yield") : {}
 	), [state.dataSets.cropYield]);
 
-	// // Group soilQuality data by "key"
 	const groupedSoilQuality = useMemo(() => (
 		state.dataSets.soilQuality ? groupByKey(state.dataSets.soilQuality, "key") : {}
 	), [state.dataSets.soilQuality]);
-
-	const getMaxValuesByProperty = (groupedObject, property) => {
-		const maxValues = {};
-
-		for (const key of Object.keys(groupedObject)) {
-			const maxValue = groupedObject[key].reduce(
-				(max, item) => (item[property] > max ? item[property] : max),
-				Number.NEGATIVE_INFINITY,
-			);
-			maxValues[key] = maxValue;
-		}
-
-		return maxValues;
-	};
-
-	const getSumValuesByProperty = (groupedObject, property) => {
-		const sumValues = {};
-
-		for (const key of Object.keys(groupedObject)) {
-			const sumValue = groupedObject[key].reduce(
-				(sum, item) => sum + (item[property] || 0),
-				0,
-			);
-			sumValues[key] = sumValue;
-		}
-
-		return sumValues;
-	};
 
 	const groupedSoilMoisture = useMemo(() => (
 		state.dataSets.soilMoisture ? groupByKey(state.dataSets.soilMoisture, "interval_start") : {}

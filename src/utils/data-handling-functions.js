@@ -1,0 +1,99 @@
+// src/utils.js
+
+export const initialState = {
+	dataSets: {},
+	minutesAgo: 0,
+	pageRefreshTime: new Date(),
+};
+
+export const reducer = (state, action) => {
+	switch (action.type) {
+		case "FETCH_SUCCESS": {
+			const { plotId, response } = action.payload;
+			return {
+				...state,
+				dataSets: {
+					...state.dataSets,
+					[plotId]: response,
+				},
+				pageRefreshTime: new Date(),
+				minutesAgo: 0, // Reset minutes ago to 0 on new data fetch
+			};
+		}
+
+		case "UPDATE_MINUTES_AGO": {
+			return {
+				...state,
+				minutesAgo: Math.floor((Date.now() - state.pageRefreshTime) / 60_000),
+			};
+		}
+
+		default: {
+			return state;
+		}
+	}
+};
+
+export const sumByKey = (array, key, valueKey) => {
+	const sums = {};
+
+	for (const item of array) {
+		if (!sums[item[key]]) {
+			sums[item[key]] = 0;
+		}
+
+		sums[item[key]] += item[valueKey];
+	}
+
+	return sums;
+};
+
+export const groupByKey = (data, key) => data.reduce((result, item) => {
+	const groupKey = item[key];
+	if (!result[groupKey]) {
+		result[groupKey] = [];
+	}
+
+	result[groupKey].push(item);
+	return result;
+}, {});
+
+export const getMaxValuesByProperty = (groupedObject, property) => {
+	const maxValues = {};
+
+	for (const key of Object.keys(groupedObject)) {
+		const maxValue = groupedObject[key].reduce(
+			(max, item) => (item[property] > max ? item[property] : max),
+			Number.NEGATIVE_INFINITY,
+		);
+		maxValues[key] = maxValue;
+	}
+
+	return maxValues;
+};
+
+export const getSumValuesByProperty = (groupedObject, property) => {
+	const sumValues = {};
+
+	for (const key of Object.keys(groupedObject)) {
+		const sumValue = groupedObject[key].reduce(
+			(sum, item) => sum + (item[property] || 0),
+			0,
+		);
+		sumValues[key] = sumValue;
+	}
+
+	return sumValues;
+};
+
+export const calculateDates = () => {
+	const now = new Date();
+	const year = now.getFullYear();
+	const month = now.getMonth();
+	const currentDate = now.toISOString().slice(0, 19);
+	const beginningOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+	beginningOfMonth.setHours(beginningOfMonth.getHours() + 3);
+	const formattedBeginningOfMonth = beginningOfMonth.toISOString().slice(0, 19);
+
+	return { year, month, currentDate, formattedBeginningOfMonth };
+};
