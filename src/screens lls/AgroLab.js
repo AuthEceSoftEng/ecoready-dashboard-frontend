@@ -6,15 +6,13 @@ import Plot from "../components/Plot.js";
 import Form from "../components/Form.js";
 import { useSnackbar } from "../utils/index.js";
 import fetchAllData from "../api/fetch-data.js";
-import agroConfigs from "../config/AgroConfig.js";
+import agroConfigs, { organization } from "../config/AgroConfig.js";
 import colors from "../_colors.scss";
 import { initialState, reducer, sumByKey, groupByKey,
 	getMaxValuesByProperty, getSumValuesByProperty, calculateDates } from "../utils/data-handling-functions.js";
 
 const AgroLab = () => {
 	const { success, error } = useSnackbar();
-	const accessKey = "******";
-	const organization = "agrolab";
 	const [state, dispatch] = useReducer(reducer, initialState);
 
 	// Memoize the date calculations and fetchConfigs to reduce re-calculations
@@ -36,7 +34,7 @@ const AgroLab = () => {
 	// Function to fetch and update data
 	const updateData = useCallback(async () => {
 		try {
-			await fetchAllData(dispatch, organization, accessKey, fetchConfigs);
+			await fetchAllData(dispatch, organization, fetchConfigs); // accessKey,
 			successRef.current("All data fetched successfully");
 		} catch (error_) {
 			errorRef.current(`Error fetching data: ${error_.message}`);

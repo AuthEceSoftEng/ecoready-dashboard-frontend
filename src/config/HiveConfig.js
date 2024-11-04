@@ -1,7 +1,9 @@
+// export const accessKey = "process.env.ACCESS_KEY_HIVE"; // "******";
+export const organization = "Hivelab";
+
 const hiveConfigs = (formattedBeginningOfMonth, currentDate) => [
 	{
 		type: "data",
-		organization: "Hivelab",
 		project: "honey",
 		collection: "yield",
 		params: JSON.stringify({
@@ -11,7 +13,6 @@ const hiveConfigs = (formattedBeginningOfMonth, currentDate) => [
 	},
 	{
 		type: "stats",
-		organization: "Hivelab",
 		project: "honey",
 		collection: "count",
 		params: JSON.stringify({
@@ -20,13 +21,11 @@ const hiveConfigs = (formattedBeginningOfMonth, currentDate) => [
 			interval: "every_1_months",
 			start_time: `${formattedBeginningOfMonth}`,
 			end_time: `${currentDate}`,
-			// group_by: "timestamp",
 		}),
 		plotId: "beeCount",
 	},
 	{
 		type: "stats",
-		organization: "Hivelab",
 		project: "honey",
 		collection: "yield",
 		params: JSON.stringify({
@@ -40,7 +39,6 @@ const hiveConfigs = (formattedBeginningOfMonth, currentDate) => [
 	},
 	{
 		type: "stats",
-		organization: "Hivelab",
 		project: "honey",
 		collection: "coverage",
 		params: JSON.stringify({
@@ -55,7 +53,6 @@ const hiveConfigs = (formattedBeginningOfMonth, currentDate) => [
 	},
 	{
 		type: "stats",
-		organization: "Hivelab",
 		project: "honey",
 		collection: "temperature_activity",
 		params: JSON.stringify({
