@@ -5,10 +5,10 @@ import { Button, Grid, Menu, MenuItem, Typography } from "@mui/material";
 import Image from "mui-image";
 import { ExpandMore } from "@mui/icons-material";
 
-// eslint-disable-next-line import/no-duplicates
-import inspectionIcon from "../assets/icons/inspection.png";
-// eslint-disable-next-line import/no-duplicates
-import isselServicesIcon from "../assets/icons/inspection.png";
+// // eslint-disable-next-line import/no-duplicates
+// import inspectionIcon from "../assets/icons/inspection.png";
+// // eslint-disable-next-line import/no-duplicates
+// import isselServicesIcon from "../assets/icons/inspection.png";
 
 import Accordion from "./Accordion.js";
 
@@ -39,11 +39,11 @@ const ButtonWithText = ({ text, icon, more, handler }) => (
 			<Button
 				key={text}
 				sx={{
-			  width: "100%",
-			  display: "flex",
-			  flexDirection: "row",
-			  justifyContent: "flex-start",
-			  padding: "8px 40px 8px 16px",
+					width: "100%",
+					display: "flex",
+					flexDirection: "row",
+					justifyContent: "flex-start",
+					padding: "8px 40px 8px 16px",
 				}}
 				onClick={(event) => handler(event)}
 			>
@@ -144,7 +144,7 @@ const Sidebar = ({ isSmall: sidebarIsSmall }) => {
 			more: [
 				{ title: "AgroLab", handler: () => navigate("/agrolab") },
 				{ title: "HiveLab", handler: () => navigate("/hivelab") },
-				// { title: "VertiLab", handler: () => navigate("/vertilab") },
+				{ title: "EcoVitaLL", handler: () => navigate("/ecovitall") },
 			],
 		},
 

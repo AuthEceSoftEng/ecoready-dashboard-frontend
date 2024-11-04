@@ -6,14 +6,12 @@ import Plot from "../components/Plot.js";
 // import Form from "../components/Form.js";
 import { useSnackbar } from "../utils/index.js";
 import fetchAllData from "../api/fetch-data.js";
-import hiveConfigs from "../config/HiveConfig.js";
+import hiveConfigs, { organization } from "../config/HiveConfig.js";
 import colors from "../_colors.scss";
 import { initialState, reducer, sumByKey, calculateDates } from "../utils/data-handling-functions.js";
 
 const HiveLab = () => {
 	const { success, error } = useSnackbar();
-	const accessKey = "e8c8f95ee4ef808b33c306a1142b39e123499f607b7eecdf02f33b86ee0a7af4";
-	const organization = "Hivelab";
 	const [state, dispatch] = useReducer(reducer, initialState);
 	// Memoize the date calculations and fetchConfigs to reduce re-calculations
 	const { year, month, currentDate, formattedBeginningOfMonth } = useMemo(calculateDates, []);
@@ -34,7 +32,7 @@ const HiveLab = () => {
 	// Function to fetch and update data
 	const updateData = useCallback(async () => {
 		try {
-			await fetchAllData(dispatch, organization, accessKey, fetchConfigs);
+			await fetchAllData(dispatch, organization, fetchConfigs);
 			successRef.current("All data fetched successfully");
 		} catch (error_) {
 			errorRef.current(`Error fetching data: ${error_.message}`);

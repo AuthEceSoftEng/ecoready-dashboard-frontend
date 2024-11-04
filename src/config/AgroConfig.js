@@ -1,7 +1,9 @@
+// export const accessKey = "process.env.ACCESS_KEY_AGRO"; // "d797e79f40385c2948de74ab6b07ebc336f5733da31ced691117fe7700ac22c8";
+export	const organization = "agrolab";
+
 const agroConfigs = (formattedBeginningOfMonth, currentDate) => [
 	{
 		type: "data",
-		organization: "agrolab",
 		project: "wheat",
 		collection: "crop_yield_data",
 		params: JSON.stringify({
@@ -11,7 +13,6 @@ const agroConfigs = (formattedBeginningOfMonth, currentDate) => [
 	},
 	{
 		type: "data",
-		organization: "agrolab",
 		project: "wheat",
 		collection: "irrigation_data",
 		params: JSON.stringify({
@@ -33,7 +34,6 @@ const agroConfigs = (formattedBeginningOfMonth, currentDate) => [
 	},
 	{
 		type: "data",
-		organization: "agrolab",
 		project: "wheat",
 		collection: "sensor_iot_data",
 		params: JSON.stringify({
@@ -54,7 +54,6 @@ const agroConfigs = (formattedBeginningOfMonth, currentDate) => [
 	},
 	{
 		type: "stats",
-		organization: "agrolab",
 		project: "wheat",
 		collection: "crop_yield_data",
 		params: JSON.stringify({
@@ -68,7 +67,6 @@ const agroConfigs = (formattedBeginningOfMonth, currentDate) => [
 	},
 	{
 		type: "data",
-		organization: "agrolab",
 		project: "wheat",
 		collection: "sensor_iot_data",
 		params: JSON.stringify({
@@ -94,7 +92,6 @@ const agroConfigs = (formattedBeginningOfMonth, currentDate) => [
 	},
 	{
 		type: "data",
-		organization: "agrolab",
 		project: "wheat",
 		collection: "sensor_iot_data",
 		params: JSON.stringify({
@@ -120,7 +117,6 @@ const agroConfigs = (formattedBeginningOfMonth, currentDate) => [
 	},
 	{
 		type: "data",
-		organization: "agrolab",
 		project: "wheat",
 		collection: "sensor_iot_data",
 		params: JSON.stringify({
@@ -146,7 +142,6 @@ const agroConfigs = (formattedBeginningOfMonth, currentDate) => [
 	},
 	{
 		type: "stats",
-		organization: "agrolab",
 		project: "wheat",
 		collection: "sensor_iot_data",
 		params: JSON.stringify({
@@ -160,7 +155,6 @@ const agroConfigs = (formattedBeginningOfMonth, currentDate) => [
 	},
 	{
 		type: "stats",
-		organization: "agrolab",
 		project: "wheat",
 		collection: "sensor_iot_data",
 		params: JSON.stringify({
@@ -190,7 +184,6 @@ const agroConfigs = (formattedBeginningOfMonth, currentDate) => [
 	},
 	{
 		type: "stats",
-		organization: "agrolab",
 		project: "wheat",
 		collection: "sensor_iot_data",
 		params: JSON.stringify({
@@ -204,7 +197,6 @@ const agroConfigs = (formattedBeginningOfMonth, currentDate) => [
 	},
 	{
 		type: "stats",
-		organization: "agrolab",
 		project: "wheat",
 		collection: "sensor_iot_data",
 		params: JSON.stringify({
