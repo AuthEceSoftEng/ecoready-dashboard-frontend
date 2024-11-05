@@ -1,4 +1,4 @@
-import { Box, Typography, Grid, Divider } from "@mui/material";
+import { Box, Typography, Grid } from "@mui/material";
 import { memo } from "react";
 
 import colors from "../_colors.scss";
@@ -22,7 +22,7 @@ const Card = ({
 }) => (
 	<Box
 		sx={{
-			width: "100%",
+			width,
 			height,
 			padding,
 			backgroundColor: colors?.[backgroundColor] || backgroundColor,

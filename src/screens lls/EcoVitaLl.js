@@ -3,13 +3,12 @@ import { memo, useEffect, useReducer, useRef, useCallback, useMemo } from "react
 
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
-import Form from "../components/Form.js";
+// import Form from "../components/Form.js";
 import { useSnackbar } from "../utils/index.js";
 import fetchAllData from "../api/fetch-data.js";
-import agroConfigs, { organization } from "../config/AgroConfig.js";
-import colors from "../_colors.scss";
-import { initialState, reducer, sumByKey, groupByKey,
-	getMaxValuesByProperty, getSumValuesByProperty, calculateDates } from "../utils/data-handling-functions.js";
+import randomDataGauge, { randomDataRadial, organization } from "../config/EcoVitallConfig.js";
+// import colors from "../_colors.scss";
+import { initialState, reducer, calculateDates } from "../utils/data-handling-functions.js";
 
 const EcoVItaLl = () => {
 	const { success, error } = useSnackbar();
@@ -34,7 +33,7 @@ const EcoVItaLl = () => {
 	// Function to fetch and update data
 	const updateData = useCallback(async () => {
 		try {
-			await fetchAllData(dispatch, organization, accessKey, fetchConfigs);
+			await fetchAllData(dispatch, organization, fetchConfigs);
 			successRef.current("All data fetched successfully");
 		} catch (error_) {
 			errorRef.current(`Error fetching data: ${error_.message}`);
@@ -56,95 +55,6 @@ const EcoVItaLl = () => {
 			clearInterval(fetchInterval);
 		};
 	}, [updateData]);
-	
-	const randomDataGauge = {
-		nutrientPH: {
-			min: 0,
-			max: 14,
-			symbol: "pH",
-			title: "Nutrient pH",
-		},
-		nutrientEC: {
-			min: 0,
-			max: 5,
-			symbol: "mS",
-			title: "Nutrient EC",
-		},
-		phTarget: {
-			min: 0,
-			max: 14,
-			value: 5.9,
-			symbol: "",
-			title: "pH Target",
-		},
-		ecTarget: {
-			min: 0,
-			max: 5,
-			value: 2.25,
-			symbol: "",
-			title: "EC Target",
-		},
-		nutrientTank: {
-			min: 0,
-			max: 100,
-			symbol: "%",
-			title: "Nutrient Tank",
-		},
-		nutrientTemperature: {
-			min: 0,
-			max: 40,
-			symbol: "°C",
-			title: "Nutrient Temperature",
-		},
-		roomTemperature1: {
-			min: 0,
-			max: 40,
-			symbol: "°C",
-			title: "Room Temperature 1",
-		},
-		roomTemperature2: {
-			min: 0,
-			max: 40,
-			symbol: "°C",
-			title: "Room Temperature 2",
-		},
-	};
-
-	const randomDataRadial = {
-		"Romain Lettuce": {
-			Color: Math.random(),
-			"Leaf Shape": Math.random(),
-			Crunchiness: Math.random(),
-			Tenderness: Math.random(),
-			Bitterness: Math.random(),
-			Sweetness: Math.random(),
-			Umami: Math.random(),
-			Freshness: Math.random(),
-			Aftertaste: Math.random(),
-		},
-		"Butterhead Lettuce": {
-			Color: Math.random(),
-			"Leaf Shape": Math.random(),
-			Crunchiness: Math.random(),
-			Tenderness: Math.random(),
-			Bitterness: Math.random(),
-			Sweetness: Math.random(),
-			Umami: Math.random(),
-			Freshness: Math.random(),
-			Aftertaste: Math.random(),
-		},
-		"Oak Leaf Lettuce": {
-			Color: Math.random(),
-			"Leaf Shape": Math.random(),
-			Crunchiness: Math.random(),
-			Tenderness: Math.random(),
-			Bitterness: Math.random(),
-			Sweetness: Math.random(),
-			Umami: Math.random(),
-			Freshness: Math.random(),
-			Aftertaste: Math.random(),
-		},
-	};
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
