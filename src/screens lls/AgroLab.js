@@ -306,6 +306,14 @@ const AgroLab = () => {
 					],
 					yaxis: { title: "Temperature (°C)" },
 					formContent: formContent.slice(1),
+					formConfig: {
+						position: "absolute",
+						top: 0,
+						right: -85,
+						width: "54%",
+						height: "50%",
+						zIndex: 10,
+					},
 				},
 				{
 					title: "Precipitation",
@@ -341,34 +349,37 @@ const AgroLab = () => {
 					],
 					yaxis: { title: "Precipitation (mm)" },
 					formContent,
+					formConfig: {
+						position: "absolute",
+						bottom: 0,
+						right: -70,
+						width: "54%",
+						height: "50%",
+						zIndex: 20,
+						display: "grid",
+					},
 				},
 			].map((plot, index) => (
 				<Grid key={index} item xs={12} sm={12} md={6} mt={4}>
-					<Card title={plot.title} footer={cardFooter({ minutesAgo: state.minutesAgo })} />
-					<Grid container flexDirection="row" sx={{ position: "relative", width: "100%" }}>
-						<Grid item sx={{ position: "relative", width: "85%", zIndex: 1 }}>
-							<Plot
-								scrollZoom
-								data={plot.data}
-								showLegend={false}
-								yaxis={plot.yaxis}
-							/>
+					<Card title={plot.title} footer={cardFooter({ minutesAgo: state.minutesAgo })}>
+						<Grid container flexDirection="row" sx={{ position: "relative", width: "100%" }}>
+							<Grid item sx={{ position: "relative", width: "75%", zIndex: 1 }}>
+								<Plot
+									scrollZoom
+									data={plot.data}
+									showLegend={false}
+									yaxis={plot.yaxis}
+								/>
+							</Grid>
+							<Grid
+								item
+								md={7}
+								sx={plot.formConfig}
+							>
+								<Form ref={formRef} content={plot.formContent} />
+							</Grid>
 						</Grid>
-						<Grid
-							item
-							md={7}
-							sx={{
-								position: "absolute",
-								top: 0,
-								right: -85,
-								width: "52%",
-								height: "50%",
-								zIndex: 10,
-							}}
-						>
-							<Form ref={formRef} content={plot.formContent} />
-						</Grid>
-					</Grid>
+					</Card>
 				</Grid>
 			))}
 			<Grid item width="100%" mt={4}>
