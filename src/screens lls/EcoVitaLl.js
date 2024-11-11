@@ -7,16 +7,21 @@ import Plot from "../components/Plot.js";
 import { useSnackbar } from "../utils/index.js";
 import fetchAllData from "../api/fetch-data.js";
 import randomDataGauge, { ecoVitallConfigs, randomDataRadial, organization } from "../config/EcoVitallConfig.js";
-// import colors from "../_colors.scss";
-import { initialState, reducer, calculateDates } from "../utils/data-handling-functions.js";
+import colors from "../_colors.scss";
+import { initialState, reducer, calculateDates, getCustomDateTime } from "../utils/data-handling-functions.js";
 import { cardFooter } from "../utils/card-footer.js";
 
 const EcoVItaLl = () => {
 	const { success, error } = useSnackbar();
 	const [state, dispatch] = useReducer(reducer, initialState);
+	const customDate = useMemo(() => getCustomDateTime(2024, 9), []);
+	console.log("Custom Date", customDate);
 
 	// Memoize the date calculations and fetchConfigs to reduce re-calculations
-	const { year, month, currentDate, formattedBeginningOfMonth, formattedBeginningOfHour } = useMemo(calculateDates, []);
+	const { currentDate, formattedBeginningOfMonth, formattedBeginningOfHour } = useMemo(() => calculateDates(customDate),
+		[customDate]);
+	console.log("Beginning of set Month", formattedBeginningOfMonth);
+	console.log("Beginning of set Hour", formattedBeginningOfHour);
 
 	// Add one hour to formattedBeginningOfHour
 	const oneHourLater = useMemo(() => {
@@ -68,44 +73,36 @@ const EcoVItaLl = () => {
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
 			{[
 				{
-					title: "Maximum EC Monitoring",
+					title: "Temperature and Humidity Evolution",
 					data: [
 						{
-							x: Array.from({ length: 4 }, (_, i) => `week ${i + 1}`),
-							y: state.dataSets.precipitation ? state.dataSets.precipitation.filter((item) => item.key === "field1").map((item) => item.avg_precipitation) : [],
-							type: "bar",
-							title: "Field 1",
-							color: "primary",
+							x: Array.from({ length: state.dataSets.tempterature
+								? state.dataSets.tempterature.length : 0 }, (_, i) => i + 1),
+							y: state.dataSets.tempterature
+								? state.dataSets.tempterature
+									.map((item) => item.avg_envtemp) : [],
+							type: "bar", // One of: scatter, bar, pie
+							title: "Temperature",
+							color: colors.primary,
 						},
 						{
-							x: Array.from({ length: 4 }, (_, i) => `week ${i + 1}`),
-							y: state.dataSets.precipitation ? state.dataSets.precipitation.filter((item) => item.key === "field2").map((item) => item.avg_precipitation) : [],
-							type: "bar",
-							title: "Field 2",
-							color: "secondary",
-						},
-						{
-							x: Array.from({ length: 4 }, (_, i) => `week ${i + 1}`),
-							y: state.dataSets.precipitation ? state.dataSets.precipitation.filter((item) => item.key === "field3").map((item) => item.avg_precipitation) : [],
-							type: "bar",
-							title: "Field 3",
-							color: "third",
-						},
-						{
-							x: Array.from({ length: 4 }, (_, i) => `week ${i + 1}`),
-							y: state.dataSets.precipitation ? state.dataSets.precipitation.filter((item) => item.key === "field4").map((item) => item.avg_precipitation) : [],
-							type: "bar",
-							title: "Field 4",
-							color: "green",
+							x: Array.from({ length: state.dataSets.tempterature
+								? state.dataSets.tempterature.length : 0 }, (_, i) => i + 1),
+							y: state.dataSets.humidity
+								? state.dataSets.humidity
+									.map((item) => item.max_humidity) : [],
+							type: "bar", // One of: scatter, bar, pie
+							title: "Humidity",
+							color: colors.secondary,
 						},
 					],
-					yaxis: { title: "Precipitation (mm)" },
+					yaxis: { title: "Units" },
 				},
 			].map((plot, index) => (
 				<Grid key={index} item xs={12} sm={12} md={12} mt={4}>
 					<Card title={plot.title} footer={cardFooter({ minutesAgo: state.minutesAgo })}>
 						<Grid container flexDirection="row" sx={{ position: "relative", width: "100%" }}>
-							<Grid item sx={{ position: "relative", width: "75%", zIndex: 1 }}>
+							<Grid item sx={{ position: "relative", width: "100%", zIndex: 1 }}>
 								<Plot
 									scrollZoom
 									data={plot.data}

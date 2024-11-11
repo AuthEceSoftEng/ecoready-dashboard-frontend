@@ -9,6 +9,7 @@ import fetchAllData from "../api/fetch-data.js";
 import hiveConfigs, { organization } from "../config/HiveConfig.js";
 import colors from "../_colors.scss";
 import { initialState, reducer, sumByKey, calculateDates } from "../utils/data-handling-functions.js";
+import { cardFooter } from "../utils/card-footer.js";
 
 const HiveLab = () => {
 	const { success, error } = useSnackbar();
@@ -20,6 +21,8 @@ const HiveLab = () => {
 		() => hiveConfigs(formattedBeginningOfMonth, currentDate),
 		[formattedBeginningOfMonth, currentDate],
 	);
+	console.log("currentDate", currentDate);
+	console.log("formattedBeginningOfMonth", formattedBeginningOfMonth);
 	// Use refs for stable references
 	const successRef = useRef(success);
 	const errorRef = useRef(error);
@@ -93,13 +96,7 @@ const HiveLab = () => {
 			<Grid item xs={12}>
 				<Card
 					title="Annual Honey Yield Distribution"
-					footer={(
-						<Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
-							<Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
-								{`🕗 updated ${state.minutesAgo} minutes ago`}
-							</Typography>
-						</Grid>
-					)}
+					footer={cardFooter({ minutesAgo: state.minutesAgo })}
 				>
 					<Plot
 						showLegend
@@ -112,144 +109,65 @@ const HiveLab = () => {
 								title: "pie",
 							},
 						]}
-
 					/>
 				</Card>
 			</Grid>
 			<Grid container width="100%" mt={4} display="flex" direction="row" spacing={2} justifyContent="space-around">
-				<Grid item xs={12} md={4} alignItems="center" flexDirection="column">
-					<Card
-						title="Annual Honey Production"
-						footer={(
-							<Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
-								<Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
-									{`🕗 updated ${state.minutesAgo} minutes ago`}
+				{[
+					{
+						title: "Annual Honey Production",
+						value: `${annualYield} Litres`,
+						change: "4%",
+						changeText: `decrease since ${year - 1}`,
+						color: colors.error,
+						footer: cardFooter({ minutesAgo: state.minutesAgo }),
+					},
+					{
+						title: "Annual Costs of Production",
+						value: `${(Math.random() * 5 + 3).toFixed(2)}k $`,
+						change: "5%",
+						changeText: `decrease since last ${monthNames[month - 1].text}`,
+						color: colors.secondary,
+						footer: cardFooter({ minutesAgo: state.minutesAgo }),
+					},
+					{
+						title: "Current Bee Count Estimation",
+						value: `${(bees / 1000).toFixed(2)}k Honeybees`,
+						change: "8%",
+						changeText: `increase since ${year - 1}`,
+						color: "goldenrod",
+						footer: cardFooter({ minutesAgo: state.minutesAgo }),
+					},
+				].map((card, index) => (
+					<Grid key={index} item xs={12} md={4} alignItems="center" flexDirection="column">
+						<Card title={card.title} footer={card.footer}>
+							<Typography variant="h4" component="h4" align="center" sx={{ fontWeight: "bold" }}>
+								{card.value}
+								<Typography variant="body2" component="p" sx={{ fontSize: "0.6em" }}>
+									<span style={{ color: card.color }}>{card.change}</span>
+									{" "}
+									{card.changeText}
 								</Typography>
-							</Grid>
-						)}
-					>
-						<Typography variant="h4" component="h4" align="center" sx={{ fontWeight: "bold" }}>
-							{`${annualYield} Litres`}
-							<Typography variant="body2" component="p" sx={{ fontSize: "0.6em" }}>
-								<span style={{ color: colors.error }}>{"4%"}</span>
-								{" "}
-								{"decrease since "}
-								{year - 1}
 							</Typography>
-						</Typography>
-					</Card>
-				</Grid>
-				<Grid item xs={12} md={4} alignItems="center" flexDirection="column">
-					<Card
-						title="Annual Costs of Production"
-						footer={(
-							<Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
-								<Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
-									{`🕗 updated ${state.minutesAgo} minutes ago`}
-								</Typography>
-							</Grid>
-						)}
-					>
-						<Typography variant="h4" component="h4" align="center" sx={{ fontWeight: "bold" }}>
-							{`${(Math.random() * 5 + 3).toFixed(2)}k $`}
-							<Typography variant="body2" component="p" sx={{ fontSize: "0.6em" }}>
-								<span style={{ color: colors.secondary }}>{"5%"}</span>
-								{" "}
-								{"decrease since last "}
-								{monthNames[month - 1].text}
-							</Typography>
-						</Typography>
-					</Card>
-				</Grid>
-				<Grid item xs={12} md={4} alignItems="center" flexDirection="column">
-					<Card
-						title="Current Bee Count Estimation"
-						footer={(
-							<Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
-								<Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
-									{`🕗 updated ${state.minutesAgo} minutes ago`}
-								</Typography>
-							</Grid>
-						)}
-					>
-						<Typography variant="h4" component="h4" align="center" sx={{ fontWeight: "bold" }}>
-							{`${(bees / 1000).toFixed(2)}k `}
-							{" "}
-							<span style={{ color: "goldenrod" }}>{"Honeybees"}</span>
-							{" "}
-							<Typography variant="body2" component="p" sx={{ fontSize: "0.6em" }}>
-								<span style={{ color: colors.secondary }}>{"8%"}</span>
-								{" "}
-								{"increase since"}
-								{year - 1}
-							</Typography>
-						</Typography>
-					</Card>
-				</Grid>
+						</Card>
+					</Grid>
+				))}
 			</Grid>
 			<Grid item xs={12} mt={4}>
-				<Card
-					title="Honey Yield per Harvest"
-					footer={(
-						<Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
-							<Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
-								{`🕗 updated ${state.minutesAgo} minutes ago`}
-							</Typography>
-						</Grid>
-					)}
-				>
+				<Card title="Honey Yield per Harvest" footer={cardFooter({ minutesAgo: state.minutesAgo })}>
 					<Plot
 						scrollZoom
-						data={[
-							{
-								x: state.dataSets.yieldDistribution
-									? state.dataSets.yieldDistribution.map((item) => item.interval_start)
-									: [],
-								y: state.dataSets.yieldDistribution
-									? state.dataSets.yieldDistribution
-										.filter((item) => item.key === "hive1")
-										.map((item) => item.sum_honey_yield) : [],
-								type: "bar",
-								title: "Hive 1",
-								color: "primary",
-							},
-							{
-								x: state.dataSets.yieldDistribution
-									? state.dataSets.yieldDistribution.map((item) => item.interval_start)
-									: [],
-								y: state.dataSets.yieldDistribution
-									? state.dataSets.yieldDistribution
-										.filter((item) => item.key === "hive2")
-										.map((item) => item.sum_honey_yield) : [],
-								type: "bar",
-								title: "Hive 2",
-								color: "secondary",
-							},
-							{
-								x: state.dataSets.yieldDistribution
-									? state.dataSets.yieldDistribution.map((item) => item.interval_start)
-									: [],
-								y: state.dataSets.yieldDistribution
-									? state.dataSets.yieldDistribution
-										.filter((item) => item.key === "hive3")
-										.map((item) => item.sum_honey_yield) : [],
-								type: "bar",
-								title: "Hive 3",
-								color: "third",
-							},
-							{
-								x: state.dataSets.yieldDistribution
-									? state.dataSets.yieldDistribution.map((item) => item.interval_start)
-									: [],
-								y: state.dataSets.yieldDistribution
-									? state.dataSets.yieldDistribution
-										.filter((item) => item.key === "hive4")
-										.map((item) => item.sum_honey_yield) : [],
-								type: "bar",
-								title: "Hive 4",
-								color: "green",
-							},
-						]}
+						data={["hive1", "hive2", "hive3", "hive4"].map((hive, index) => ({
+							x: state.dataSets.yieldDistribution
+								? state.dataSets.yieldDistribution.map((item) => item.interval_start)
+								: [],
+							y: state.dataSets.yieldDistribution
+								? state.dataSets.yieldDistribution.filter((item) => item.key === hive).map((item) => item.sum_honey_yield)
+								: [],
+							type: "bar",
+							title: `Hive ${index + 1}`,
+							color: ["primary", "secondary", "third", "green"][index],
+						}))}
 						title="Amount of Honey per Hive (Kg)"
 						xaxis={{
 							tickvals: state.dataSets.yieldDistribution
@@ -262,141 +180,60 @@ const HiveLab = () => {
 				</Card>
 			</Grid>
 			<Grid container xs={12} mt={4} display="flex" spacing={2} justifyContent="space-between">
-				<Grid item xs={12} md={6}>
-					<Card
-						title="Average Area Coverage"
-						footer={(
-							<Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
-								<Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
-									{`🕗 updated ${state.minutesAgo} minutes ago`}
-								</Typography>
-							</Grid>
-						)}
-					>
-						<Grid item sx={{ position: "relative", width: "100%" }}>
-							<Grid item sx={{ position: "relative", width: "100%" }}>
-								<Plot
-									scrollZoom
-									data={[
-										{
-											x: Array.from({ length: state.dataSets.coverage
-												? state.dataSets.coverage.length : 0 }, (_, i) => i + 1),
-											y: state.dataSets.coverage
-												? state.dataSets.coverage
-													.map((item) => item.sum_area_coverage) : [],
-											type: "bar", // One of: scatter, bar, pie
-											title: "June",
-											color: "goldenrod",
-										},
-									]}
-									title={`${monthNames[month].text}`}
-									showLegend={false}
-									displayBar={false}
-									height="400px"
-									style={{ zIndex: 1 }}
-									xaxis={{
-										title: "Date",
-										tickvals: Array.from({ length: state.dataSets.coverage
-											? state.dataSets.coverage.length : 0 }, (_, i) => i + 1),
-										tickangle: 0,
-										tickmode: "linear",
-										tick0: 1,
-										dtick: 3,
-									}}
-									yaxis={{
-										title: "Area * 1000 (ha)",
-									}}
-								/>
-							</Grid>
-							{/* <
-							Grid
-							item sx={{ position: "absolute", bottom: 0, right: -95, width: "52%", height: "50%", zIndex: 2, display: "flex" }}>
-								<Form ref={formRef} content={formContent.slice(1)} />
-							</Grid> */}
-						</Grid>
-					</Card>
-				</Grid>
-				<Grid item xs={12} md={6}>
-					<Card
-						title="Activity Levels"
-						footer={(
-							<Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
-								<Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
-									{`🕗 updated ${state.minutesAgo} minutes ago`}
-								</Typography>
-							</Grid>
-						)}
-					>
-						<Plot
-							scrollZoom
-							data={[
-								{
-									x: Array.from({ length: state.dataSets.coverage
-										? state.dataSets.coverage.length : 0 }, (_, i) => i + 1),
-									y: state.dataSets.activity
-										? state.dataSets.activity
-											.filter((item) => item.key === "hive1")
-											.map((item) => item.avg_activity_level) : [],
-									type: "scatter", // One of: scatter, bar, pie
-									title: "Hive 1",
-									mode: "lines+markers", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
-									color: "primary",
-								},
-								{
-									x: Array.from({ length: state.dataSets.coverage
-										? state.dataSets.coverage.length : 0 }, (_, i) => i + 1),
-									y: state.dataSets.activity
-										? state.dataSets.activity
-											.filter((item) => item.key === "hive2")
-											.map((item) => item.avg_activity_level) : [],
-									type: "scatter", // One of: scatter, bar, pie
-									title: "Hive 2",
-									mode: "lines+markers", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
-									color: "secondary",
-								},
-								{
-									x: Array.from({ length: state.dataSets.coverage
-										? state.dataSets.coverage.length : 0 }, (_, i) => i + 1),
-									y: state.dataSets.activity
-										? state.dataSets.activity
-											.filter((item) => item.key === "hive3")
-											.map((item) => item.avg_activity_level) : [],
-									type: "scatter", // One of: scatter, bar, pie
-									title: "Hive 3",
-									mode: "lines+markers", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
-									color: "third",
-								},
-								{
-									x: Array.from({ length: state.dataSets.coverage
-										? state.dataSets.coverage.length : 0 }, (_, i) => i + 1),
-									y: state.dataSets.activity
-										? state.dataSets.activity
-											.filter((item) => item.key === "hive4")
-											.map((item) => item.avg_activity_level) : [],
-									type: "scatter", // One of: scatter, bar, pie
-									title: "Hive 4",
-									mode: "lines+markers", // For scatter one of: lines, markers, text and combinations (e.g. lines+markers)
-									color: "green",
-								},
-							]}
-							title={`${monthNames[month].text}`}
-							displayBar={false}
-							height="400px"
-							xaxis={{
-								title: "Date",
-								tickvals: Array.from({ length: state.dataSets.coverage
+				{[
+					{
+						title: "Average Area Coverage",
+						data: [
+							{
+								x: Array.from({ length: state.dataSets.coverage
 									? state.dataSets.coverage.length : 0 }, (_, i) => i + 1),
-								tickangle: 0,
-								tickmode: "linear",
-								tick0: 1,
-								dtick: 3,
-							}}
-							yaxis={{
-								title: "Activity Level (%)",
-							}}
-						/>
-					</Card>
-				</Grid>
+								y: state.dataSets.coverage
+									? state.dataSets.coverage
+										.map((item) => item.sum_area_coverage) : [],
+								type: "bar",
+							},
+						],
+						yaxisTitle: "Area * 1000 (ha)",
+						color: "goldenrod",
+					},
+					{
+						title: "Activity Levels",
+						data: ["hive1", "hive2", "hive3", "hive4"].map((hive, index) => ({
+							x: Array.from({ length: state.dataSets.coverage ? state.dataSets.coverage.length : 0 }, (_, i) => i + 1),
+							y: state.dataSets.activity
+								? state.dataSets.activity.filter((item) => item.key === hive).map((item) => item.avg_activity_level)
+								: [],
+							type: "scatter",
+							title: `Hive ${index + 1}`,
+							mode: "lines+markers",
+							color: ["primary", "secondary", "third", "green"][index],
+						})),
+						yaxisTitle: "Activity Level (%)",
+					},
+				].map((plot, index) => (
+					<Grid key={index} item xs={12} md={6}>
+						<Card title={plot.title} footer={cardFooter({ minutesAgo: state.minutesAgo })}>
+							<Plot
+								scrollZoom
+								data={plot.data}
+								title={`${monthNames[month].text}`}
+								displayBar={false}
+								height="400px"
+								xaxis={{
+									title: "Date",
+									tickvals: Array.from({ length: state.dataSets.coverage ? state.dataSets.coverage.length : 0 }, (_, i) => i + 1),
+									tickangle: 0,
+									tickmode: "linear",
+									tick0: 1,
+									dtick: 3,
+								}}
+								yaxis={{
+									title: plot.yaxisTitle,
+								}}
+							/>
+						</Card>
+					</Grid>
+				))}
 			</Grid>
 		</Grid>
 	);

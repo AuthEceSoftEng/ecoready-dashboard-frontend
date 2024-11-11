@@ -1,34 +1,35 @@
 export	const organization = "ecovitall";
 
-export const ecoVitallConfigs = (formattedBeginningOfMonth, currentDate, 
+export const ecoVitallConfigs = (formattedBeginningOfMonth, currentDate,
 	formattedBeginningOfHour, oneHourLater) => [
 	{
 		type: "stats",
 		project: "ecovitall_project",
-		collection: "enviromental_data",
+		collection: "environmental_data",
 		params: JSON.stringify({
 			attribute: ["envtemp"],
 			stat: "avg",
 			interval: "every_1_days",
 			start_time: `${formattedBeginningOfMonth}`,
-			end_time: `${currentDate}`,
+			end_time: `${formattedBeginningOfHour}`,
 		}),
-		plotId: "tankLevel",
+		plotId: "temperature",
 	},
 	{
 		type: "stats",
 		project: "ecovitall_project",
-		collection: "enviromental_data",
+		collection: "environmental_data",
 		params: JSON.stringify({
 			attribute: ["humidity"],
 			stat: "max",
 			interval: "every_1_days",
 			start_time: `${formattedBeginningOfMonth}`,
-			end_time: `${currentDate}`,
+			end_time: `${formattedBeginningOfHour}`,
 		}),
-		plotId: "ec",
+		plotId: "humidity",
 	},
 ];
+
 const randomDataGauge = {
 	nutrientPH: {
 		min: 0,
