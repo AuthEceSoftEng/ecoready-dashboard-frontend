@@ -234,7 +234,7 @@ const AgroLab = () => {
 						},
 					],
 					xaxis: { tickangle: 15 },
-					yaxis: { title: "Soil Moisture (%)" },
+					yaxis: { title: "Soil Moisture (%)", tickangle: -30 },
 				},
 				{
 					title: "Month's Humidity",
@@ -248,10 +248,10 @@ const AgroLab = () => {
 						},
 					],
 					xaxis: { tickangle: 15 },
-					yaxis: { title: "Humidity (%)" },
+					yaxis: { title: "Humidity (%)", tickangle: -30 },
 				},
 			].map((plot, index) => (
-				<Grid key={index} item xs={12} md={4} alignItems="center" flexDirection="column" mt={4}>
+				<Grid key={index} item xs={12} md={4} alignItems="center" flexDirection="column" mt={2}>
 					<Card title={plot.title} footer={cardFooter({ minutesAgo: state.minutesAgo })}>
 						<Plot
 							scrollZoom
@@ -265,7 +265,7 @@ const AgroLab = () => {
 					</Card>
 				</Grid>
 			))}
-			<Grid item xs={12} md={12} mt={4}>
+			<Grid item xs={12} md={12} mt={2}>
 				<Card title="Annual Yield Per Field" footer={cardFooter({ minutesAgo: state.minutesAgo })}>
 					<Plot
 						showLegend
@@ -360,7 +360,7 @@ const AgroLab = () => {
 					},
 				},
 			].map((plot, index) => (
-				<Grid key={index} item xs={12} sm={12} md={6} mt={4}>
+				<Grid key={index} item xs={12} sm={12} md={6} mt={2}>
 					<Card title={plot.title} footer={cardFooter({ minutesAgo: state.minutesAgo })}>
 						<Grid container flexDirection="row" sx={{ position: "relative", width: "100%" }}>
 							<Grid item sx={{ position: "relative", width: "75%", zIndex: 1 }}>
@@ -382,7 +382,7 @@ const AgroLab = () => {
 					</Card>
 				</Grid>
 			))}
-			<Grid item width="100%" mt={4}>
+			<Grid item width="100%" mt={2}>
 				<Card title="Soil Quality" footer={cardFooter({ minutesAgo: state.minutesAgo })}>
 					{groupedSoilQuality?.field1 && (
 						<Plot

@@ -1,7 +1,8 @@
 export	const organization = "ecovitall";
 
 export const ecoVitallConfigs = (formattedBeginningOfMonth, currentDate,
-	formattedBeginningOfHour, oneHourLater) => [
+	formattedBeginningOfHour) => [
+
 	{
 		type: "stats",
 		project: "ecovitall_project",
@@ -26,7 +27,20 @@ export const ecoVitallConfigs = (formattedBeginningOfMonth, currentDate,
 			start_time: `${formattedBeginningOfMonth}`,
 			end_time: `${formattedBeginningOfHour}`,
 		}),
-		plotId: "humidity",
+		plotId: "humidity_max",
+	},
+	{
+		type: "stats",
+		project: "ecovitall_project",
+		collection: "environmental_data",
+		params: JSON.stringify({
+			attribute: ["humidity"],
+			stat: "min",
+			interval: "every_1_days",
+			start_time: `${formattedBeginningOfMonth}`,
+			end_time: `${formattedBeginningOfHour}`,
+		}),
+		plotId: "humidity_min",
 	},
 ];
 
