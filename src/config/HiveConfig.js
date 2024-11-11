@@ -1,4 +1,3 @@
-// export const accessKey = "process.env.ACCESS_KEY_HIVE"; // "******";
 export const organization = "Hivelab";
 
 const hiveConfigs = (formattedBeginningOfMonth, currentDate) => [

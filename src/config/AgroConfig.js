@@ -1,4 +1,3 @@
-// export const accessKey = "process.env.ACCESS_KEY_AGRO"; // "******";
 export	const organization = "agrolab";
 
 const agroConfigs = (formattedBeginningOfMonth, currentDate) => [

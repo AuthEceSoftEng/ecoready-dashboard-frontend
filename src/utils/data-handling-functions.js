@@ -86,14 +86,37 @@ export const getSumValuesByProperty = (groupedObject, property) => {
 	return sumValues;
 };
 
-export const calculateDates = () => {
-	const now = new Date();
+export const calculateDates = (now = new Date()) => {
 	const year = now.getFullYear();
 	const month = now.getMonth();
 	const currentDate = now.toISOString().slice(0, 19);
-	const beginningOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-	beginningOfMonth.setHours(beginningOfMonth.getHours() + 3);
+
+	const beginningOfMonth = new Date(year, month, 1, 3);
 	const formattedBeginningOfMonth = beginningOfMonth.toISOString().slice(0, 19);
 
-	return { year, month, currentDate, formattedBeginningOfMonth };
+	const beginningOfHour = new Date(now.setMinutes(0, 0, 0));
+	const formattedBeginningOfHour = beginningOfHour.toISOString().slice(0, 19);
+
+	console.log("Beginning of Month", formattedBeginningOfMonth);
+	console.log("Beginning of Hour", formattedBeginningOfHour);
+
+	return { year, month, currentDate, formattedBeginningOfMonth, formattedBeginningOfHour };
+};
+
+export const getCustomDateTime = (year, month) => {
+	// Create a new Date object with the specified year and month
+	const date = new Date(year, month - 1); // month is 0-indexed in JavaScript Date
+
+	// Get the current date and time components
+	const currentDate = new Date();
+	date.setDate(currentDate.getDate());
+	date.setHours(currentDate.getHours());
+	date.setMinutes(currentDate.getMinutes());
+	date.setSeconds(currentDate.getSeconds());
+	date.setMilliseconds(currentDate.getMilliseconds());
+
+	// Format the date and time as an ISO string
+	const formattedDateTime = date.toISOString().slice(0, 19);
+
+	return formattedDateTime;
 };
