@@ -86,7 +86,8 @@ export const getSumValuesByProperty = (groupedObject, property) => {
 	return sumValues;
 };
 
-export const calculateDates = (now = new Date()) => {
+export const calculateDates = (now) => {
+	now = now || new Date();
 	const year = now.getFullYear();
 	const month = now.getMonth();
 	const currentDate = now.toISOString().slice(0, 19);
@@ -94,11 +95,10 @@ export const calculateDates = (now = new Date()) => {
 	const beginningOfMonth = new Date(year, month, 1, 3);
 	const formattedBeginningOfMonth = beginningOfMonth.toISOString().slice(0, 19);
 
-	const beginningOfHour = new Date(now.setMinutes(0, 0, 0));
+	const beginningOfHour = new Date(now);
+	beginningOfHour.setMinutes(180, 0, 0);
 	const formattedBeginningOfHour = beginningOfHour.toISOString().slice(0, 19);
-
-	console.log("Beginning of Month", formattedBeginningOfMonth);
-	console.log("Beginning of Hour", formattedBeginningOfHour);
+	console.log("formattedBeginningOfHour", formattedBeginningOfHour);
 
 	return { year, month, currentDate, formattedBeginningOfMonth, formattedBeginningOfHour };
 };
@@ -115,8 +115,5 @@ export const getCustomDateTime = (year, month) => {
 	date.setSeconds(currentDate.getSeconds());
 	date.setMilliseconds(currentDate.getMilliseconds());
 
-	// Format the date and time as an ISO string
-	const formattedDateTime = date.toISOString().slice(0, 19);
-
-	return formattedDateTime;
+	return date;
 };
