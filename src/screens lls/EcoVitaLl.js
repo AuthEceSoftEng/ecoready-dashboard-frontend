@@ -7,7 +7,6 @@ import Plot from "../components/Plot.js";
 import { useSnackbar } from "../utils/index.js";
 import fetchAllData from "../api/fetch-data.js";
 import randomDataGauge, { ecoVitallConfigs, randomDataRadial, organization } from "../config/EcoVitallConfig.js";
-import colors from "../_colors.scss";
 import { initialState, reducer, calculateDates, getCustomDateTime } from "../utils/data-handling-functions.js";
 import { cardFooter } from "../utils/card-footer.js";
 
@@ -18,21 +17,35 @@ const EcoVItaLl = () => {
 	console.log("Custom Date", customDate);
 
 	// Memoize the date calculations and fetchConfigs to reduce re-calculations
-	const { currentDate, formattedBeginningOfMonth, formattedBeginningOfHour } = useMemo(() => calculateDates(customDate),
+	const { month, currentDate, formattedBeginningOfMonth, formattedBeginningOfHour } = useMemo(() => calculateDates(customDate),
 		[customDate]);
 	console.log("Beginning of set Month", formattedBeginningOfMonth);
 	console.log("Beginning of set Hour", formattedBeginningOfHour);
 
-	// Add one hour to formattedBeginningOfHour
-	const oneHourLater = useMemo(() => {
-		const date = new Date(formattedBeginningOfHour);
-		date.setHours(date.getHours() + 1);
-		return date.toISOString().slice(0, 19);
-	}, [formattedBeginningOfHour]);
+	const monthNames = [
+		{ value: "January", text: "January" },
+		{ value: "February", text: "February" },
+		{ value: "March", text: "March" },
+		{ value: "April", text: "April" },
+		{ value: "May", text: "May" },
+		{ value: "June", text: "June" },
+		{ value: "July", text: "July" },
+		{ value: "August", text: "August" },
+		{ value: "September", text: "September" },
+		{ value: "October", text: "October" },
+		{ value: "November", text: "November" },
+		{ value: "December", text: "December" },
+	];
+	// // Add one hour to formattedBeginningOfHour
+	// const oneHourLater = useMemo(() => {
+	// 	const date = new Date(formattedBeginningOfHour);
+	// 	date.setHours(date.getHours() + 1);
+	// 	return date.toISOString().slice(0, 19);
+	// }, [formattedBeginningOfHour]);
 
 	const fetchConfigs = useMemo(
-		() => ecoVitallConfigs(formattedBeginningOfMonth, currentDate, formattedBeginningOfHour, oneHourLater),
-		[formattedBeginningOfMonth, currentDate, formattedBeginningOfHour, oneHourLater],
+		() => ecoVitallConfigs(formattedBeginningOfMonth, currentDate, formattedBeginningOfHour),
+		[formattedBeginningOfMonth, currentDate, formattedBeginningOfHour],
 	);
 	// Use refs for stable references
 	const successRef = useRef(success);
@@ -73,44 +86,66 @@ const EcoVItaLl = () => {
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
 			{[
 				{
-					title: "Temperature and Humidity Evolution",
+					title: "Temperature Evolution Per Day",
 					data: [
 						{
-							x: Array.from({ length: state.dataSets.tempterature
-								? state.dataSets.tempterature.length : 0 }, (_, i) => i + 1),
-							y: state.dataSets.tempterature
-								? state.dataSets.tempterature
+							x: state.dataSets.temperature
+								? state.dataSets.temperature.map((item) => item.interval_start)
+								: [],
+							y: state.dataSets.temperature
+								? state.dataSets.temperature
 									.map((item) => item.avg_envtemp) : [],
-							type: "bar", // One of: scatter, bar, pie
+							type: "bar",
 							title: "Temperature",
-							color: colors.primary,
-						},
-						{
-							x: Array.from({ length: state.dataSets.tempterature
-								? state.dataSets.tempterature.length : 0 }, (_, i) => i + 1),
-							y: state.dataSets.humidity
-								? state.dataSets.humidity
-									.map((item) => item.max_humidity) : [],
-							type: "bar", // One of: scatter, bar, pie
-							title: "Humidity",
-							color: colors.secondary,
+							color: "secondary",
 						},
 					],
-					yaxis: { title: "Units" },
+					xaxis: { title: "Days" },
+					yaxis: { title: "Temperature (°C)" },
+					subtitle: monthNames[month].text,
+				},
+				{
+					title: "Humidity Range Per Day",
+					data: [
+						{
+							x: state.dataSets.humidity_min
+								? state.dataSets.humidity_min.map((item) => item.interval_start)
+								: [],
+							y: state.dataSets.humidity_min
+								? state.dataSets.humidity_min
+									.map((item) => item.min_humidity) : [],
+							type: "line",
+							title: "Min",
+							color: "third",
+						},
+						{
+							x: state.dataSets.humidity_max
+								? state.dataSets.humidity_max.map((item) => item.interval_start)
+								: [],
+							y: state.dataSets.humidity_max
+								? state.dataSets.humidity_max
+									.map((item) => item.max_humidity) : [],
+							type: "line",
+							title: "Max",
+							color: "primary",
+						},
+					],
+					xaxis: { title: "Days" },
+					yaxis: { title: "Humidity (%)" },
+					subtitle: monthNames[month].text,
 				},
 			].map((plot, index) => (
-				<Grid key={index} item xs={12} sm={12} md={12} mt={4}>
+				<Grid key={index} item xs={12} sm={12} md={12} mt={2}>
 					<Card title={plot.title} footer={cardFooter({ minutesAgo: state.minutesAgo })}>
-						<Grid container flexDirection="row" sx={{ position: "relative", width: "100%" }}>
-							<Grid item sx={{ position: "relative", width: "100%", zIndex: 1 }}>
-								<Plot
-									scrollZoom
-									data={plot.data}
-									showLegend={false}
-									yaxis={plot.yaxis}
-								/>
-							</Grid>
-						</Grid>
+						<Plot
+							scrollZoom
+							displayBar
+							data={plot.data}
+							title={plot.subtitle}
+							showLegend={false}
+							xaxis={plot.xaxis}
+							yaxis={plot.yaxis}
+						/>
 					</Card>
 				</Grid>
 			))}
@@ -118,6 +153,7 @@ const EcoVItaLl = () => {
 				<Grid key={key} item xs={12} md={6}>
 					<Card
 						title={randomDataGauge[key].title}
+						footer={cardFooter({ minutesAgo: state.minutesAgo })}
 					>
 						<Plot
 							showLegend
@@ -146,6 +182,7 @@ const EcoVItaLl = () => {
 			<Grid item xs={12} md={12} mt={4}>
 				<Card
 					title="Sensory Analysis of Leafy Greens"
+					footer={cardFooter({ minutesAgo: state.minutesAgo })}
 				>
 					<Plot
 						showLegend
