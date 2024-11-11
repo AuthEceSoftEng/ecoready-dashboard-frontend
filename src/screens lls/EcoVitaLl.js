@@ -6,20 +6,28 @@ import Plot from "../components/Plot.js";
 // import Form from "../components/Form.js";
 import { useSnackbar } from "../utils/index.js";
 import fetchAllData from "../api/fetch-data.js";
-import randomDataGauge, { randomDataRadial, organization } from "../config/EcoVitallConfig.js";
+import randomDataGauge, { ecoVitallConfigs, randomDataRadial, organization } from "../config/EcoVitallConfig.js";
 // import colors from "../_colors.scss";
 import { initialState, reducer, calculateDates } from "../utils/data-handling-functions.js";
+import { cardFooter } from "../utils/card-footer.js";
 
 const EcoVItaLl = () => {
 	const { success, error } = useSnackbar();
 	const [state, dispatch] = useReducer(reducer, initialState);
 
 	// Memoize the date calculations and fetchConfigs to reduce re-calculations
-	const { year, month, currentDate, formattedBeginningOfMonth } = useMemo(calculateDates, []);
+	const { year, month, currentDate, formattedBeginningOfMonth, formattedBeginningOfHour } = useMemo(calculateDates, []);
+
+	// Add one hour to formattedBeginningOfHour
+	const oneHourLater = useMemo(() => {
+		const date = new Date(formattedBeginningOfHour);
+		date.setHours(date.getHours() + 1);
+		return date.toISOString().slice(0, 19);
+	}, [formattedBeginningOfHour]);
 
 	const fetchConfigs = useMemo(
-		() => agroConfigs(formattedBeginningOfMonth, currentDate),
-		[formattedBeginningOfMonth, currentDate],
+		() => ecoVitallConfigs(formattedBeginningOfMonth, currentDate, formattedBeginningOfHour, oneHourLater),
+		[formattedBeginningOfMonth, currentDate, formattedBeginningOfHour, oneHourLater],
 	);
 	// Use refs for stable references
 	const successRef = useRef(success);
@@ -58,6 +66,57 @@ const EcoVItaLl = () => {
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
+			{[
+				{
+					title: "Maximum EC Monitoring",
+					data: [
+						{
+							x: Array.from({ length: 4 }, (_, i) => `week ${i + 1}`),
+							y: state.dataSets.precipitation ? state.dataSets.precipitation.filter((item) => item.key === "field1").map((item) => item.avg_precipitation) : [],
+							type: "bar",
+							title: "Field 1",
+							color: "primary",
+						},
+						{
+							x: Array.from({ length: 4 }, (_, i) => `week ${i + 1}`),
+							y: state.dataSets.precipitation ? state.dataSets.precipitation.filter((item) => item.key === "field2").map((item) => item.avg_precipitation) : [],
+							type: "bar",
+							title: "Field 2",
+							color: "secondary",
+						},
+						{
+							x: Array.from({ length: 4 }, (_, i) => `week ${i + 1}`),
+							y: state.dataSets.precipitation ? state.dataSets.precipitation.filter((item) => item.key === "field3").map((item) => item.avg_precipitation) : [],
+							type: "bar",
+							title: "Field 3",
+							color: "third",
+						},
+						{
+							x: Array.from({ length: 4 }, (_, i) => `week ${i + 1}`),
+							y: state.dataSets.precipitation ? state.dataSets.precipitation.filter((item) => item.key === "field4").map((item) => item.avg_precipitation) : [],
+							type: "bar",
+							title: "Field 4",
+							color: "green",
+						},
+					],
+					yaxis: { title: "Precipitation (mm)" },
+				},
+			].map((plot, index) => (
+				<Grid key={index} item xs={12} sm={12} md={12} mt={4}>
+					<Card title={plot.title} footer={cardFooter({ minutesAgo: state.minutesAgo })}>
+						<Grid container flexDirection="row" sx={{ position: "relative", width: "100%" }}>
+							<Grid item sx={{ position: "relative", width: "75%", zIndex: 1 }}>
+								<Plot
+									scrollZoom
+									data={plot.data}
+									showLegend={false}
+									yaxis={plot.yaxis}
+								/>
+							</Grid>
+						</Grid>
+					</Card>
+				</Grid>
+			))}
 			{Object.keys(randomDataGauge).map((key) => (
 				<Grid key={key} item xs={12} md={6}>
 					<Card
