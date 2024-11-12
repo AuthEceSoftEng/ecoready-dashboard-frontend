@@ -49,6 +49,7 @@ import "./i18n.js";
 import AgroLab from "./screens lls/AgroLab.js";
 import HiveLab from "./screens lls/HiveLab.js";
 import EcoVitaLl from "./screens lls/EcoVitaLl.js";
+import SecoCollab from "./screens lls/SecoCollab.js";
 import Plots from "./examples/Plots.js";
 // import VertiLab from "./screens/VertiLab.js";
 
@@ -129,6 +130,7 @@ const App = () => {
 								<Route path="agrolab" element={<Protected c={<AgroLab />} />} />
 								<Route path="hivelab" element={<Protected c={<HiveLab />} />} />
 								<Route path="ecovitall" element={<Protected c={<EcoVitaLl />} />} />
+								<Route path="seco_collab" element={<Protected c={<SecoCollab />} />} />
 								<Route path="plots" element={<Protected c={<Plots />} />} />
 								{/* <Route path="vertilab" element={<Protected c={<VertiLab />} />} /> */}
 								{/* EXAMPLES */}

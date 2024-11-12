@@ -145,6 +145,7 @@ const Sidebar = ({ isSmall: sidebarIsSmall, onToggleSidebar }) => {
 				{ title: "AgroLab", handler: () => navigate("/agrolab") },
 				{ title: "HiveLab", handler: () => navigate("/hivelab") },
 				{ title: "EcoVitaLL", handler: () => navigate("/ecovitall") },
+				{ title: "SecoCollab", handler: () => navigate("/seco_collab") },
 			],
 		},
 
