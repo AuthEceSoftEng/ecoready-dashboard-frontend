@@ -134,23 +134,68 @@ const EcoVItaLl = () => {
 					yaxis: { title: "Humidity (%)" },
 					subtitle: monthNames[month].text,
 				},
-			].map((plot, index) => (
-				<Grid key={index} item xs={12} sm={12} md={12} lg={12} xl={12} mt={2}>
-					<Card title={plot.title} footer={cardFooter({ minutesAgo: state.minutesAgo })}>
+			].map((card, index) => (
+				<Grid key={index} item xs={12} sm={12} md={12} mt={2}>
+					<Card title={card.title} footer={cardFooter({ minutesAgo: state.minutesAgo })}>
 						<Plot
 							scrollZoom
 							displayBar
-							data={plot.data}
-							title={plot.subtitle}
+							data={card.data}
+							title={card.subtitle}
 							showLegend={false}
-							xaxis={plot.xaxis}
-							yaxis={plot.yaxis}
+							xaxis={card.xaxis}
+							yaxis={card.yaxis}
+						/>
+					</Card>
+				</Grid>
+			))}
+			{[
+				{
+					min: 0,
+					max: 14,
+					value: state.dataSets.ph_avg && state.dataSets.ph_avg.length > 0 ? state.dataSets.ph_avg[0].avg_ph : null,
+					symbol: "",
+					title: "pH Target",
+				},
+				{
+					min: 0,
+					max: 5,
+					value: state.dataSets.ec_avg && state.dataSets.ec_avg.length > 0 ? state.dataSets.ec_avg[0].avg_ec : null,
+					symbol: "",
+					title: "EC Target",
+				},
+			].map((card, index) => (
+				<Grid key={index} item xs={12} md={6}>
+					<Card
+						title={card.title}
+						footer={cardFooter({ minutesAgo: state.minutesAgo })}
+					>
+						<Plot
+							showLegend
+							scrollZoom
+							width="700px"
+							height="120px"
+							data={[
+								{
+									type: "indicator",
+									mode: "gauge+number",
+									value: card.value,
+									range: [card.min, card.max], // Gauge range
+									color: "third", // Color of gauge bar
+									shape: "bullet", // "angular" or "bullet"
+									indicator: "primary", // Color of gauge indicator/value-line
+									textColor: "primary", // Color of gauge value
+									suffix: card.symbol, // Suffix of gauge value
+								},
+							]}
+							displayBar={false}
+							title="Month's Average"
 						/>
 					</Card>
 				</Grid>
 			))}
 			{Object.keys(randomDataGauge).map((key) => (
-				<Grid key={key} item xs={12} md={6}>
+				<Grid key={key} item xs={12} md={4}>
 					<Card
 						title={randomDataGauge[key].title}
 						footer={cardFooter({ minutesAgo: state.minutesAgo })}
@@ -158,7 +203,7 @@ const EcoVItaLl = () => {
 						<Plot
 							showLegend
 							scrollZoom
-							height={randomDataGauge[key]?.value ? "100px" : "100%"}
+							height="250px"
 							data={[
 								{
 									type: "indicator",
@@ -168,7 +213,7 @@ const EcoVItaLl = () => {
 										|| Math.random() * (randomDataGauge[key].max - randomDataGauge[key].min) + randomDataGauge[key].min,
 									range: [randomDataGauge[key].min, randomDataGauge[key].max], // Gauge range
 									color: "third", // Color of gauge bar
-									shape: randomDataGauge[key]?.value ? "bullet" : "angular", // "angular" or "bullet"
+									shape: "angular", // "angular" or "bullet"
 									indicator: "primary", // Color of gauge indicator/value-line
 									textColor: "primary", // Color of gauge value
 									suffix: randomDataGauge[key].symbol, // Suffix of gauge value
@@ -179,7 +224,7 @@ const EcoVItaLl = () => {
 					</Card>
 				</Grid>
 			))}
-			<Grid item xs={12} md={12} mt={4}>
+			<Grid item xs={12} md={12} mt={2}>
 				<Card
 					title="Sensory Analysis of Leafy Greens"
 					footer={cardFooter({ minutesAgo: state.minutesAgo })}

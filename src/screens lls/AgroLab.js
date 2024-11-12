@@ -23,6 +23,7 @@ const AgroLab = () => {
 		() => agroConfigs(formattedBeginningOfMonth, currentDate),
 		[formattedBeginningOfMonth, currentDate],
 	);
+
 	// Use refs for stable references
 	const successRef = useRef(success);
 	const errorRef = useRef(error);
@@ -35,7 +36,7 @@ const AgroLab = () => {
 	// Function to fetch and update data
 	const updateData = useCallback(async () => {
 		try {
-			await fetchAllData(dispatch, organization, fetchConfigs); // accessKey,
+			await fetchAllData(dispatch, organization, fetchConfigs);
 			successRef.current("All data fetched successfully");
 		} catch (error_) {
 			errorRef.current(`Error fetching data: ${error_.message}`);
@@ -59,7 +60,7 @@ const AgroLab = () => {
 	}, [updateData]);
 
 	// Form Parameters
-	const monthNames = [
+	const monthNames = useMemo(() => [
 		{ value: "January", text: "January" },
 		{ value: "February", text: "February" },
 		{ value: "March", text: "March" },
@@ -72,12 +73,12 @@ const AgroLab = () => {
 		{ value: "October", text: "October" },
 		{ value: "November", text: "November" },
 		{ value: "December", text: "December" },
-	];
+	], []);
 
 	const formRef = useRef();
-	const formContent = [
-
-		{ customType: "dropdown",
+	const formContent = useMemo(() => [
+		{
+			customType: "dropdown",
 			id: "time period sort",
 			label: "Sort By:",
 			items: [
@@ -85,7 +86,6 @@ const AgroLab = () => {
 				{ value: "Month", text: "Month" },
 				{ value: "Year", text: "Year" },
 			],
-			// value,
 			defaultValue: "Month",
 			onChange: (event) => {
 				console.log(`Status changed to ${event.target.value}`);
@@ -105,10 +105,13 @@ const AgroLab = () => {
 			label: "To:",
 			background: "grey",
 		},
-	];
+	], []);
 
 	// Calculate annual yield if dataSets['cropYield'] exists
-	const annualYield = state.dataSets.cropYield ? state.dataSets.cropYield.reduce((sum, item) => sum + item.crop_yield, 0).toFixed(2) : "N/A";
+	const annualYield = useMemo(() => (
+		state.dataSets.cropYield ? state.dataSets.cropYield.reduce((sum, item) => sum + item.crop_yield, 0).toFixed(2) : "N/A"
+	), [state.dataSets.cropYield]);
+
 	const sumsByField = useMemo(() => (
 		state.dataSets.cropYield ? sumByKey(state.dataSets.cropYield, "key", "crop_yield") : {}
 	), [state.dataSets.cropYield]);
@@ -140,9 +143,7 @@ const AgroLab = () => {
 	const sumYieldDistribution = useMemo(() => (
 		getSumValuesByProperty(groupedYieldDistribution, "sum_crop_yield")
 	), [groupedYieldDistribution]);
-	console.log("Grouped Distribution:", Object.keys(sumYieldDistribution));
 
-	// Calculate percentages
 	const percentages = useMemo(() => {
 		if (annualYield === "N/A") return [];
 
@@ -152,9 +153,13 @@ const AgroLab = () => {
 		}));
 	}, [annualYield, sumsByField]);
 
-	const monthIrrigation = state.dataSets.irrigation ? state.dataSets.irrigation.reduce((sum, item) => sum + item.irrigation, 0).toFixed(2) : "N/A";
+	const monthIrrigation = useMemo(() => (
+		state.dataSets.irrigation ? state.dataSets.irrigation.reduce((sum, item) => sum + item.irrigation, 0).toFixed(2) : "N/A"
+	), [state.dataSets.irrigation]);
 
-	const meanTemp = state.dataSets.temperature_now ? (state.dataSets.temperature_now.reduce((sum, item) => sum + item.temperature, 0) / state.dataSets.temperature_now.length).toFixed(2) : "N/A";
+	const meanTemp = useMemo(() => (
+		state.dataSets.temperature_now ? (state.dataSets.temperature_now.reduce((sum, item) => sum + item.temperature, 0) / state.dataSets.temperature_now.length).toFixed(2) : "N/A"
+	), [state.dataSets.temperature_now]);
 
 	const generate2024Months = useMemo(() => {
 		const months = [];

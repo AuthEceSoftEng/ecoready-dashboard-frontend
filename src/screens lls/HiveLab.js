@@ -14,16 +14,14 @@ import { cardFooter } from "../utils/card-footer.js";
 const HiveLab = () => {
 	const { success, error } = useSnackbar();
 	const [state, dispatch] = useReducer(reducer, initialState);
-	// Memoize the date calculations and fetchConfigs to reduce re-calculations
+
 	const { year, month, currentDate, formattedBeginningOfMonth } = useMemo(calculateDates, []);
 
 	const fetchConfigs = useMemo(
 		() => hiveConfigs(formattedBeginningOfMonth, currentDate),
 		[formattedBeginningOfMonth, currentDate],
 	);
-	console.log("currentDate", currentDate);
-	console.log("formattedBeginningOfMonth", formattedBeginningOfMonth);
-	// Use refs for stable references
+
 	const successRef = useRef(success);
 	const errorRef = useRef(error);
 
@@ -32,7 +30,6 @@ const HiveLab = () => {
 		errorRef.current = error;
 	}, [success, error]);
 
-	// Function to fetch and update data
 	const updateData = useCallback(async () => {
 		try {
 			await fetchAllData(dispatch, organization, fetchConfigs);
@@ -43,12 +40,10 @@ const HiveLab = () => {
 	}, [fetchConfigs]);
 
 	useEffect(() => {
-		// Set interval for updating "minutesAgo"
 		const minutesAgoInterval = setInterval(() => {
 			dispatch({ type: "UPDATE_MINUTES_AGO" });
 		}, 60 * 1000);
 
-		// Fetch data immediately and set fetch interval
 		updateData();
 		const fetchInterval = setInterval(updateData, 30 * 60 * 1000);
 
@@ -58,12 +53,14 @@ const HiveLab = () => {
 		};
 	}, [updateData]);
 
-	const annualYield = state.dataSets.honeyYield ? state.dataSets.honeyYield.reduce((sum, item) => sum + item.honey_yield, 0).toFixed(2) : "N/A";
+	const annualYield = useMemo(() => (
+		state.dataSets.honeyYield ? state.dataSets.honeyYield.reduce((sum, item) => sum + item.honey_yield, 0).toFixed(2) : "N/A"
+	), [state.dataSets.honeyYield]);
+
 	const sumsByHive = useMemo(() => (
 		state.dataSets.honeyYield ? sumByKey(state.dataSets.honeyYield, "key", "honey_yield") : {}
 	), [state.dataSets.honeyYield]);
 
-	// Calculate percentages
 	const percentages = useMemo(() => {
 		if (annualYield === "N/A") return [];
 
@@ -73,10 +70,11 @@ const HiveLab = () => {
 		}));
 	}, [annualYield, sumsByHive]);
 
-	const bees = state.dataSets.beeCount ? state.dataSets.beeCount.reduce((sum, item) => sum + item.avg_bee_count, 0).toFixed(2) : "N/A";
+	const bees = useMemo(() => (
+		state.dataSets.beeCount ? state.dataSets.beeCount.reduce((sum, item) => sum + item.avg_bee_count, 0).toFixed(2) : "N/A"
+	), [state.dataSets.beeCount]);
 
-	// Form Parameters
-	const monthNames = [
+	const monthNames = useMemo(() => [
 		{ value: "January", text: "January" },
 		{ value: "February", text: "February" },
 		{ value: "March", text: "March" },
@@ -89,7 +87,7 @@ const HiveLab = () => {
 		{ value: "October", text: "October" },
 		{ value: "November", text: "November" },
 		{ value: "December", text: "December" },
-	];
+	], []);
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around">
@@ -191,10 +189,11 @@ const HiveLab = () => {
 									? state.dataSets.coverage
 										.map((item) => item.sum_area_coverage) : [],
 								type: "bar",
+								color: "goldenrod",
+								showLegend: false,
 							},
 						],
 						yaxisTitle: "Area * 1000 (ha)",
-						color: "goldenrod",
 					},
 					{
 						title: "Activity Levels",
