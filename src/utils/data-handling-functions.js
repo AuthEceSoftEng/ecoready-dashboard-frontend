@@ -117,3 +117,14 @@ export const getCustomDateTime = (year, month) => {
 
 	return date;
 };
+
+export const calculateDifferenceBetweenDates = (startDate, endDate) => {
+	const start = new Date(startDate);
+	const end = new Date(endDate);
+
+	// Calculate the difference in days
+	const differenceInTime = end - start; // Difference in milliseconds
+	const differenceInDays = Math.ceil(differenceInTime / (1000 * 3600 * 24)); // Convert milliseconds to days
+
+	return differenceInDays;
+};
