@@ -105,7 +105,7 @@ const ButtonSimple = ({ text, icon, handler, ind }) => (
 	</Button>
 );
 
-const Sidebar = ({ isSmall: sidebarIsSmall }) => {
+const Sidebar = ({ isSmall: sidebarIsSmall, onToggleSidebar }) => {
 	const [isSmall, setIsSmall] = useState(false);
 	const [anchorElServices, setAnchorElServices] = useState(null);
 	const navigate = useNavigate();
@@ -169,7 +169,9 @@ const Sidebar = ({ isSmall: sidebarIsSmall }) => {
 
 	const toggleSidebar = () => {
 		if (window.innerWidth >= 900) {
-			setIsSmall(!isSmall);
+			const newIsSmall = !isSmall;
+			setIsSmall(newIsSmall);
+			onToggleSidebar(newIsSmall);
 		}
 	};
 

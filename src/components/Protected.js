@@ -44,10 +44,14 @@ const Protected = ({ c }) => {
 		return () => window.removeEventListener("resize", onResize);
 	}, []);
 
+	const handleToggleSidebar = (newIsSmall) => {
+		setIsSmall(newIsSmall);
+	};
+
 	return jwt.isAuthenticated()
 		? (
 			<div className={classes.main}>
-				<Sidebar isSmall={isSmall} />
+				<Sidebar isSmall={isSmall} onToggleSidebar={handleToggleSidebar} />
 				<div
 					className={classes.mainBox}
 					style={{
