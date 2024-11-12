@@ -83,7 +83,7 @@ const EcoVItaLl = () => {
 	}, [updateData]);
 
 	return (
-		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
+		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2} sx={{ flexGrow: 1, flexBasis: "100%", flexShrink: 0 }}>
 			{[
 				{
 					title: "Temperature Evolution Per Day",
@@ -135,7 +135,7 @@ const EcoVItaLl = () => {
 					subtitle: monthNames[month].text,
 				},
 			].map((plot, index) => (
-				<Grid key={index} item xs={12} sm={12} md={12} mt={2}>
+				<Grid key={index} item xs={12} sm={12} md={12} lg={12} xl={12} mt={2}>
 					<Card title={plot.title} footer={cardFooter({ minutesAgo: state.minutesAgo })}>
 						<Plot
 							scrollZoom
