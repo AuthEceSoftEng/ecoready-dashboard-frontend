@@ -8,7 +8,7 @@ import { useSnackbar } from "../utils/index.js";
 import fetchAllData from "../api/fetch-data.js";
 import hiveConfigs, { organization } from "../config/HiveConfig.js";
 import colors from "../_colors.scss";
-import { initialState, reducer, sumByKey, calculateDates } from "../utils/data-handling-functions.js";
+import { initialState, reducer, sumByKey, calculateDates, monthNames } from "../utils/data-handling-functions.js";
 import { cardFooter } from "../utils/card-footer.js";
 
 const HiveLab = () => {
@@ -74,21 +74,6 @@ const HiveLab = () => {
 		state.dataSets.beeCount ? state.dataSets.beeCount.reduce((sum, item) => sum + item.avg_bee_count, 0).toFixed(2) : "N/A"
 	), [state.dataSets.beeCount]);
 
-	const monthNames = useMemo(() => [
-		{ value: "January", text: "January" },
-		{ value: "February", text: "February" },
-		{ value: "March", text: "March" },
-		{ value: "April", text: "April" },
-		{ value: "May", text: "May" },
-		{ value: "June", text: "June" },
-		{ value: "July", text: "July" },
-		{ value: "August", text: "August" },
-		{ value: "September", text: "September" },
-		{ value: "October", text: "October" },
-		{ value: "November", text: "November" },
-		{ value: "December", text: "December" },
-	], []);
-
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around">
 			<Grid item xs={12}>
@@ -110,7 +95,7 @@ const HiveLab = () => {
 					/>
 				</Card>
 			</Grid>
-			<Grid container width="100%" mt={4} display="flex" direction="row" spacing={2} justifyContent="space-around">
+			<Grid container width="100%" mt={2} display="flex" direction="row" spacing={1} justifyContent="space-around">
 				{[
 					{
 						title: "Annual Honey Production",
@@ -151,7 +136,7 @@ const HiveLab = () => {
 					</Grid>
 				))}
 			</Grid>
-			<Grid item xs={12} mt={4}>
+			<Grid item xs={12} mt={2}>
 				<Card title="Honey Yield per Harvest" footer={cardFooter({ minutesAgo: state.minutesAgo })}>
 					<Plot
 						scrollZoom
@@ -177,7 +162,7 @@ const HiveLab = () => {
 					/>
 				</Card>
 			</Grid>
-			<Grid container xs={12} mt={4} display="flex" spacing={2} justifyContent="space-between">
+			<Grid container xs={12} mt={2} display="flex" spacing={1} justifyContent="space-between">
 				{[
 					{
 						title: "Average Area Coverage",

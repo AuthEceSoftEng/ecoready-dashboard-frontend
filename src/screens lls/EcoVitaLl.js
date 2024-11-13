@@ -173,7 +173,7 @@ const EcoVItaLl = () => {
 						<Plot
 							showLegend
 							scrollZoom
-							width="700px"
+							width="100%"
 							height="120px"
 							data={[
 								{
