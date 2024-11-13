@@ -44,7 +44,7 @@ const Plot = ({
 				shape: d.shape,
 				...(d.indicator && {
 					threshold: {
-						line: { color: colors?.[d?.indicator] || d?.indicator, width: 5 },
+						line: { color: colors?.[d?.indicator] || d?.indicator, width: 3 },
 						thickness: 1,
 						value: d.value,
 					},

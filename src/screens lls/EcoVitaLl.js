@@ -6,8 +6,9 @@ import Plot from "../components/Plot.js";
 // import Form from "../components/Form.js";
 import { useSnackbar } from "../utils/index.js";
 import fetchAllData from "../api/fetch-data.js";
-import randomDataGauge, { ecoVitallConfigs, randomDataRadial, organization } from "../config/EcoVitallConfig.js";
-import { initialState, reducer, calculateDates, getCustomDateTime } from "../utils/data-handling-functions.js";
+import { ecoVitallConfigs, randomDataRadial, organization } from "../config/EcoVitallConfig.js";
+import { initialState, reducer, calculateDates,
+	getCustomDateTime, monthNames } from "../utils/data-handling-functions.js";
 import { cardFooter } from "../utils/card-footer.js";
 
 const EcoVItaLl = () => {
@@ -19,30 +20,8 @@ const EcoVItaLl = () => {
 	// Memoize the date calculations and fetchConfigs to reduce re-calculations
 	const { month, currentDate, formattedBeginningOfMonth, formattedBeginningOfHour } = useMemo(() => calculateDates(customDate),
 		[customDate]);
-	console.log("Beginning of set Month", formattedBeginningOfMonth);
-	console.log("Beginning of set Hour", formattedBeginningOfHour);
-
-	const monthNames = [
-		{ value: "January", text: "January" },
-		{ value: "February", text: "February" },
-		{ value: "March", text: "March" },
-		{ value: "April", text: "April" },
-		{ value: "May", text: "May" },
-		{ value: "June", text: "June" },
-		{ value: "July", text: "July" },
-		{ value: "August", text: "August" },
-		{ value: "September", text: "September" },
-		{ value: "October", text: "October" },
-		{ value: "November", text: "November" },
-		{ value: "December", text: "December" },
-	];
-	// // Add one hour to formattedBeginningOfHour
-	// const oneHourLater = useMemo(() => {
-	// 	const date = new Date(formattedBeginningOfHour);
-	// 	date.setHours(date.getHours() + 1);
-	// 	return date.toISOString().slice(0, 19);
-	// }, [formattedBeginningOfHour]);
-
+	console.log("currentDate", currentDate);
+	console.log("formattedBeginningOfHour", formattedBeginningOfHour);
 	const fetchConfigs = useMemo(
 		() => ecoVitallConfigs(formattedBeginningOfMonth, currentDate, formattedBeginningOfHour),
 		[formattedBeginningOfMonth, currentDate, formattedBeginningOfHour],
@@ -102,7 +81,6 @@ const EcoVItaLl = () => {
 					],
 					xaxis: { title: "Days" },
 					yaxis: { title: "Temperature (°C)" },
-					subtitle: monthNames[month].text,
 				},
 				{
 					title: "Humidity Range Per Day",
@@ -132,7 +110,6 @@ const EcoVItaLl = () => {
 					],
 					xaxis: { title: "Days" },
 					yaxis: { title: "Humidity (%)" },
-					subtitle: monthNames[month].text,
 				},
 			].map((card, index) => (
 				<Grid key={index} item xs={12} sm={12} md={12} mt={2}>
@@ -141,8 +118,8 @@ const EcoVItaLl = () => {
 							scrollZoom
 							displayBar
 							data={card.data}
-							title={card.subtitle}
-							showLegend={false}
+							title={monthNames[month].text}
+							showLegend={index === 1}
 							xaxis={card.xaxis}
 							yaxis={card.yaxis}
 						/>
@@ -173,7 +150,7 @@ const EcoVItaLl = () => {
 						<Plot
 							showLegend
 							scrollZoom
-							width="100%"
+							// width="113%"
 							height="120px"
 							data={[
 								{
@@ -189,38 +166,87 @@ const EcoVItaLl = () => {
 								},
 							]}
 							displayBar={false}
-							title="Month's Average"
+							title={`${monthNames[month].text}'s Average`}
+							margin={{ r: 0 }}
 						/>
 					</Card>
 				</Grid>
 			))}
-			{Object.keys(randomDataGauge).map((key) => (
-				<Grid key={key} item xs={12} md={4}>
+			{[
+				{
+					title: "Tank Monitoring",
+					data: [
+						{
+							subtitle: "Tank Level",
+							min: 0,
+							max: 100,
+							value: state.dataSets.gauges && state.dataSets.gauges.length > 0
+								? state.dataSets.gauges.at(-1).nutrienttanklevel
+								: null,
+							symbol: "%",
+						},
+						{
+							subtitle: "Pump Pressure",
+							min: 0,
+							max: 1.5,
+							value: state.dataSets.gauges && state.dataSets.gauges.length > 0
+								? state.dataSets.gauges.at(-1).pumppressure
+								: null,
+							symbol: "psi",
+						},
+					],
+					color: "third",
+				},
+				{
+					title: "Nutrient Monitoring",
+					data: [
+						{
+							min: 0,
+							max: 3.5,
+							value: state.dataSets.gauges && state.dataSets.gauges.length > 0 ? state.dataSets.gauges.at(-1).ec : null,
+							symbol: "mS",
+							subtitle: "EC",
+						},
+						{
+							min: 0,
+							max: 10,
+							value: state.dataSets.gauges && state.dataSets.gauges.length > 0 ? state.dataSets.gauges.at(-1).ph : null,
+							symbol: "",
+							subtitle: "Ph",
+						},
+					],
+					color: "secondary",
+				},
+			].map((card, index) => (
+				<Grid key={index} item xs={12} md={6} justifyContent="center">
 					<Card
-						title={randomDataGauge[key].title}
+						title={card.title}
 						footer={cardFooter({ minutesAgo: state.minutesAgo })}
 					>
-						<Plot
-							showLegend
-							scrollZoom
-							height="250px"
-							data={[
-								{
-									type: "indicator",
-									mode: "gauge+number",
-									value: // If no value exists, generate a random value between min and max
-										randomDataGauge[key].value
-										|| Math.random() * (randomDataGauge[key].max - randomDataGauge[key].min) + randomDataGauge[key].min,
-									range: [randomDataGauge[key].min, randomDataGauge[key].max], // Gauge range
-									color: "third", // Color of gauge bar
-									shape: "angular", // "angular" or "bullet"
-									indicator: "primary", // Color of gauge indicator/value-line
-									textColor: "primary", // Color of gauge value
-									suffix: randomDataGauge[key].symbol, // Suffix of gauge value
-								},
-							]}
-							displayBar={false}
-						/>
+						{card.data.map((plotData, plotIndex) => (
+							<Plot
+								key={plotIndex}
+								showLegend
+								scrollZoom
+								height="400px"
+								// width="113%"
+								data={[
+									{
+										type: "indicator",
+										mode: "gauge+number",
+										value: plotData.value,
+										range: [plotData.min, plotData.max], // Gauge range
+										color: card.color, // Color of gauge bar
+										shape: "angular", // "angular" or "bullet"
+										indicator: "primary", // Color of gauge indicator/value-line
+										textColor: "primary", // Color of gauge value
+										suffix: plotData.symbol, // Suffix of gauge value
+									},
+								]}
+								displayBar={false}
+								title={plotData.subtitle}
+							/>
+						))}
 					</Card>
 				</Grid>
 			))}
