@@ -48,6 +48,7 @@ import { adjustColors, jwt, colorSuggestions } from "./utils/index.js";
 import "./i18n.js";
 import AgroLab from "./screens lls/AgroLab.js";
 import HiveLab from "./screens lls/HiveLab.js";
+import EcoReadyMasuria from "./screens lls/EcoReadyMasuria.js";
 import EcoVitaLl from "./screens lls/EcoVitaLl.js";
 import SecoCollab from "./screens lls/SecoCollab.js";
 import Plots from "./examples/Plots.js";
@@ -129,6 +130,7 @@ const App = () => {
 								<Route path="users" element={<Protected c={<Users />} />} />
 								<Route path="agrolab" element={<Protected c={<AgroLab />} />} />
 								<Route path="hivelab" element={<Protected c={<HiveLab />} />} />
+								<Route path="ecoreadymasuria" element={<Protected c={<EcoReadyMasuria />} />} />
 								<Route path="ecovitall" element={<Protected c={<EcoVitaLl />} />} />
 								<Route path="seco_collab" element={<Protected c={<SecoCollab />} />} />
 								<Route path="plots" element={<Protected c={<Plots />} />} />
