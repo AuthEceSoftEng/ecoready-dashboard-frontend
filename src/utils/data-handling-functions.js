@@ -86,19 +86,17 @@ export const getSumValuesByProperty = (groupedObject, property) => {
 	return sumValues;
 };
 
-export const calculateDates = (now) => {
+export const calculateDates = (now, offsetHours = 3) => {
 	now = now || new Date();
 	const year = now.getFullYear();
 	const month = now.getMonth();
-	const currentDate = now.toISOString().slice(0, 19);
-
+	const currentDate = new Date(now.getTime() + offsetHours * 60 * 60 * 1000).toISOString().slice(0, 19);
 	const beginningOfMonth = new Date(year, month, 1, 3);
 	const formattedBeginningOfMonth = beginningOfMonth.toISOString().slice(0, 19);
 
 	const beginningOfHour = new Date(now);
 	beginningOfHour.setMinutes(180, 0, 0);
 	const formattedBeginningOfHour = beginningOfHour.toISOString().slice(0, 19);
-	console.log("formattedBeginningOfHour", formattedBeginningOfHour);
 
 	return { year, month, currentDate, formattedBeginningOfMonth, formattedBeginningOfHour };
 };

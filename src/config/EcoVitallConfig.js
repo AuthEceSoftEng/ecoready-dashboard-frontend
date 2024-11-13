@@ -71,46 +71,32 @@ export const ecoVitallConfigs = (formattedBeginningOfMonth, currentDate, formatt
 			}),
 			plotId: "ec_avg",
 		},
+		{
+			type: "data",
+			project: "ecovitall_project",
+			collection: "environmental_data",
+			params: JSON.stringify({
+				attributes: ["timestamp", "nutrienttanklevel", "pumppressure", "ph", "ec"],
+				filters: [
+					{
+						property_name: "timestamp",
+						operator: "gte",
+						property_value: `${formattedBeginningOfHour}`,
+					},
+					{
+						property_name: "timestamp",
+						operator: "lt",
+						property_value: `${currentDate}`,
+					},
+				],
+				order_by: {
+					field: "timestamp",
+					order: "asc",
+				},
+			}),
+			plotId: "gauges",
+		},
 	];
-};
-
-const randomDataGauge = {
-	nutrientPH: {
-		min: 0,
-		max: 14,
-		symbol: "pH",
-		title: "Nutrient pH",
-	},
-	nutrientEC: {
-		min: 0,
-		max: 5,
-		symbol: "mS",
-		title: "Nutrient EC",
-	},
-	nutrientTank: {
-		min: 0,
-		max: 100,
-		symbol: "%",
-		title: "Nutrient Tank",
-	},
-	nutrientTemperature: {
-		min: 0,
-		max: 40,
-		symbol: "°C",
-		title: "Nutrient Temperature",
-	},
-	roomTemperature1: {
-		min: 0,
-		max: 40,
-		symbol: "°C",
-		title: "Room Temperature 1",
-	},
-	roomTemperature2: {
-		min: 0,
-		max: 40,
-		symbol: "°C",
-		title: "Room Temperature 2",
-	},
 };
 
 export const randomDataRadial = {
@@ -149,4 +135,4 @@ export const randomDataRadial = {
 	},
 };
 
-export default randomDataGauge;
+export default randomDataRadial;
