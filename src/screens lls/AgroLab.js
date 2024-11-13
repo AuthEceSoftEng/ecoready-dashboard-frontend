@@ -9,7 +9,8 @@ import fetchAllData from "../api/fetch-data.js";
 import agroConfigs, { organization } from "../config/AgroConfig.js";
 import colors from "../_colors.scss";
 import { initialState, reducer, sumByKey, groupByKey,
-	getMaxValuesByProperty, getSumValuesByProperty, calculateDates } from "../utils/data-handling-functions.js";
+	getMaxValuesByProperty, getSumValuesByProperty,
+	calculateDates, monthNames } from "../utils/data-handling-functions.js";
 import { cardFooter } from "../utils/card-footer.js";
 
 const AgroLab = () => {
@@ -58,22 +59,6 @@ const AgroLab = () => {
 			clearInterval(fetchInterval);
 		};
 	}, [updateData]);
-
-	// Form Parameters
-	const monthNames = useMemo(() => [
-		{ value: "January", text: "January" },
-		{ value: "February", text: "February" },
-		{ value: "March", text: "March" },
-		{ value: "April", text: "April" },
-		{ value: "May", text: "May" },
-		{ value: "June", text: "June" },
-		{ value: "July", text: "July" },
-		{ value: "August", text: "August" },
-		{ value: "September", text: "September" },
-		{ value: "October", text: "October" },
-		{ value: "November", text: "November" },
-		{ value: "December", text: "December" },
-	], []);
 
 	const formRef = useRef();
 	const formContent = useMemo(() => [
