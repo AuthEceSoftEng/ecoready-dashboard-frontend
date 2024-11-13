@@ -144,8 +144,9 @@ const Sidebar = ({ isSmall: sidebarIsSmall, onToggleSidebar }) => {
 			more: [
 				{ title: "AgroLab", handler: () => navigate("/agrolab") },
 				{ title: "HiveLab", handler: () => navigate("/hivelab") },
+				{ title: "EcoReadyMasuria", handler: () => navigate("/ecoreadymasuria") },
 				{ title: "EcoVitaLL", handler: () => navigate("/ecovitall") },
-				{ title: "SecoCollab", handler: () => navigate("/seco_collab") },
+				// { title: "SecoCollab", handler: () => navigate("/seco_collab") },
 			],
 		},
 
