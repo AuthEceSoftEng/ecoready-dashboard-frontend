@@ -1,21 +1,17 @@
 import { Grid, Typography } from "@mui/material";
-import { memo, useEffect, useReducer, useRef, useCallback, useMemo } from "react";
+import { memo, useMemo } from "react";
 
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
 // import Form from "../components/Form.js";
-import { useSnackbar } from "../utils/index.js";
-import fetchAllData from "../api/fetch-data.js";
+import { useInit } from "../utils/index.js";
 import hiveConfigs, { organization } from "../config/HiveConfig.js";
 import colors from "../_colors.scss";
-import { initialState, reducer, sumByKey, calculateDates } from "../utils/data-handling-functions.js";
+import { sumByKey, calculateDates } from "../utils/data-handling-functions.js";
 import { monthNames } from "../utils/useful-constants.js";
 import { cardFooter } from "../utils/card-footer.js";
 
 const HiveLab = () => {
-	const { success, error } = useSnackbar();
-	const [state, dispatch] = useReducer(reducer, initialState);
-
 	const { year, month, currentDate, formattedBeginningOfMonth } = useMemo(calculateDates, []);
 
 	const fetchConfigs = useMemo(
@@ -23,36 +19,7 @@ const HiveLab = () => {
 		[formattedBeginningOfMonth, currentDate],
 	);
 
-	const successRef = useRef(success);
-	const errorRef = useRef(error);
-
-	useEffect(() => {
-		successRef.current = success;
-		errorRef.current = error;
-	}, [success, error]);
-
-	const updateData = useCallback(async () => {
-		try {
-			await fetchAllData(dispatch, organization, fetchConfigs);
-			successRef.current("All data fetched successfully");
-		} catch (error_) {
-			errorRef.current(`Error fetching data: ${error_.message}`);
-		}
-	}, [fetchConfigs]);
-
-	useEffect(() => {
-		const minutesAgoInterval = setInterval(() => {
-			dispatch({ type: "UPDATE_MINUTES_AGO" });
-		}, 60 * 1000);
-
-		updateData();
-		const fetchInterval = setInterval(updateData, 30 * 60 * 1000);
-
-		return () => {
-			clearInterval(minutesAgoInterval);
-			clearInterval(fetchInterval);
-		};
-	}, [updateData]);
+	const { state } = useInit(organization, fetchConfigs);
 
 	const annualYield = useMemo(() => (
 		state.dataSets.honeyYield ? state.dataSets.honeyYield.reduce((sum, item) => sum + item.honey_yield, 0).toFixed(2) : "N/A"
