@@ -1,66 +1,28 @@
 import { Grid } from "@mui/material";
-import { memo, useEffect, useReducer, useRef, useCallback, useMemo } from "react";
+import { memo, useMemo } from "react";
 
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
 // import Form from "../components/Form.js";
-import { useSnackbar } from "../utils/index.js";
-import fetchAllData from "../api/fetch-data.js";
 import { ecoVitallConfigs, randomDataRadial, organization } from "../config/EcoVitallConfig.js";
-import { initialState, reducer, calculateDates,
-	getCustomDateTime } from "../utils/data-handling-functions.js";
+import { calculateDates, getCustomDateTime } from "../utils/data-handling-functions.js";
 import { monthNames } from "../utils/useful-constants.js";
 import { cardFooter } from "../utils/card-footer.js";
+import useInit from "../utils/screen-init.js";
 
 const EcoVItaLl = () => {
-	const { success, error } = useSnackbar();
-	const [state, dispatch] = useReducer(reducer, initialState);
 	const customDate = useMemo(() => getCustomDateTime(2024, 9), []);
 	console.log("Custom Date", customDate);
 
 	// Memoize the date calculations and fetchConfigs to reduce re-calculations
 	const { month, currentDate, formattedBeginningOfMonth, formattedBeginningOfHour } = useMemo(() => calculateDates(customDate),
 		[customDate]);
-	console.log("currentDate", currentDate);
-	console.log("formattedBeginningOfHour", formattedBeginningOfHour);
+
 	const fetchConfigs = useMemo(
 		() => ecoVitallConfigs(formattedBeginningOfMonth, currentDate, formattedBeginningOfHour),
 		[formattedBeginningOfMonth, currentDate, formattedBeginningOfHour],
 	);
-	// Use refs for stable references
-	const successRef = useRef(success);
-	const errorRef = useRef(error);
-
-	useEffect(() => {
-		successRef.current = success;
-		errorRef.current = error;
-	}, [success, error]);
-
-	// Function to fetch and update data
-	const updateData = useCallback(async () => {
-		try {
-			await fetchAllData(dispatch, organization, fetchConfigs);
-			successRef.current("All data fetched successfully");
-		} catch (error_) {
-			errorRef.current(`Error fetching data: ${error_.message}`);
-		}
-	}, [fetchConfigs]);
-
-	useEffect(() => {
-		// Set interval for updating "minutesAgo"
-		const minutesAgoInterval = setInterval(() => {
-			dispatch({ type: "UPDATE_MINUTES_AGO" });
-		}, 60 * 1000);
-
-		// Fetch data immediately and set fetch interval
-		updateData();
-		const fetchInterval = setInterval(updateData, 30 * 60 * 1000);
-
-		return () => {
-			clearInterval(minutesAgoInterval);
-			clearInterval(fetchInterval);
-		};
-	}, [updateData]);
+	const { state } = useInit(organization, fetchConfigs);
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2} sx={{ flexGrow: 1, flexBasis: "100%", flexShrink: 0 }}>
