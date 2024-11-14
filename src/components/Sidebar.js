@@ -5,6 +5,8 @@ import { Button, Grid, Menu, MenuItem, Typography } from "@mui/material";
 import Image from "mui-image";
 import { ExpandMore } from "@mui/icons-material";
 
+import { labs } from "../utils/useful-constants.js";
+
 // // eslint-disable-next-line import/no-duplicates
 // import inspectionIcon from "../assets/icons/inspection.png";
 // // eslint-disable-next-line import/no-duplicates
@@ -141,13 +143,10 @@ const Sidebar = ({ isSmall: sidebarIsSmall, onToggleSidebar }) => {
 				handleServicesMenuClose();
 				handleServicesMenuOpen(event);
 			},
-			more: [
-				{ title: "AgroLab", handler: () => navigate("/agrolab") },
-				{ title: "HiveLab", handler: () => navigate("/hivelab") },
-				{ title: "EcoReadyMasuria", handler: () => navigate("/ecoreadymasuria") },
-				{ title: "EcoVitaLL", handler: () => navigate("/ecovitall") },
-				// { title: "SecoCollab", handler: () => navigate("/seco_collab") },
-			],
+			more: labs.map((lab) => ({
+				title: lab.title,
+				handler: () => navigate(lab.path),
+			})),
 		},
 
 	];

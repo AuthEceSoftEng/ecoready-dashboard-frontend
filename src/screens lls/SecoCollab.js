@@ -1,4 +1,4 @@
-import { Grid, Typography } from "@mui/material";
+import { Grid } from "@mui/material";
 import { memo, useEffect, useReducer, useRef, useCallback, useMemo } from "react";
 
 import Card from "../components/Card.js";
@@ -6,10 +6,10 @@ import Plot from "../components/Plot.js";
 import Form from "../components/Form.js";
 import { useSnackbar } from "../utils/index.js";
 import fetchAllData from "../api/fetch-data.js";
-import agroConfigs, { organization } from "../config/SecoConfig.js";
-import colors from "../_colors.scss";
+import secoConfigs, { organization } from "../config/SecoConfig.js";
 import { initialState, reducer, sumByKey, groupByKey,
 	getMaxValuesByProperty, getSumValuesByProperty, calculateDates } from "../utils/data-handling-functions.js";
+import monthNames from "../utils/useful-constants.js";
 import { cardFooter } from "../utils/card-footer.js";
 
 const SecoCollab = () => {
@@ -20,7 +20,7 @@ const SecoCollab = () => {
 	const { year, month, currentDate, formattedBeginningOfMonth } = useMemo(calculateDates, []);
 
 	const fetchConfigs = useMemo(
-		() => agroConfigs(formattedBeginningOfMonth, currentDate),
+		() => secoConfigs(formattedBeginningOfMonth, currentDate),
 		[formattedBeginningOfMonth, currentDate],
 	);
 	// Use refs for stable references
@@ -57,22 +57,6 @@ const SecoCollab = () => {
 			clearInterval(fetchInterval);
 		};
 	}, [updateData]);
-
-	// Form Parameters
-	const monthNames = [
-		{ value: "January", text: "January" },
-		{ value: "February", text: "February" },
-		{ value: "March", text: "March" },
-		{ value: "April", text: "April" },
-		{ value: "May", text: "May" },
-		{ value: "June", text: "June" },
-		{ value: "July", text: "July" },
-		{ value: "August", text: "August" },
-		{ value: "September", text: "September" },
-		{ value: "October", text: "October" },
-		{ value: "November", text: "November" },
-		{ value: "December", text: "December" },
-	];
 
 	const formRef = useRef();
 	const formContent = [
@@ -152,10 +136,6 @@ const SecoCollab = () => {
 		}));
 	}, [annualYield, sumsByField]);
 
-	const monthIrrigation = state.dataSets.irrigation ? state.dataSets.irrigation.reduce((sum, item) => sum + item.irrigation, 0).toFixed(2) : "N/A";
-
-	const meanTemp = state.dataSets.temperature_now ? (state.dataSets.temperature_now.reduce((sum, item) => sum + item.temperature, 0) / state.dataSets.temperature_now.length).toFixed(2) : "N/A";
-
 	const generate2024Months = useMemo(() => {
 		const months = [];
 		for (let mnth = 0; mnth < 12; mnth++) {
@@ -170,238 +150,110 @@ const SecoCollab = () => {
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
-			{[
-				{
-					title: "Annual Crop Yield",
-					value: `${annualYield} T`,
-					subtitle: `${year - 1}`,
-					percentage: "6%",
-					color: colors.secondary,
-					footer: cardFooter({ minutesAgo: state.minutesAgo }),
-				},
-				{
-					title: "Current Month's Irrigation",
-					value: `${monthIrrigation} Litres`,
-					subtitle: monthNames[month - 1].text,
-					percentage: "10%",
-					color: colors.error,
-					footer: cardFooter({ minutesAgo: state.minutesAgo }),
-				},
-				{
-					title: "Temperature",
-					value: `${meanTemp}°C`,
-					subtitle: "Sunny skies in your area",
-					color: colors.warning,
-					footer: cardFooter({ minutesAgo: state.minutesAgo }),
-				},
-			].map((card, index) => (
-				<Grid key={index} item xs={12} md={4} alignItems="center" flexDirection="column">
-					<Card title={card.title} footer={card.footer}>
-						<Typography variant="h4" component="h4" align="center" sx={{ fontWeight: "bold" }}>
-							{card.value}
-							<Typography variant="body2" component="p" sx={{ fontSize: "0.6em" }}>
-								<span style={{ color: card.color }}>{card.percentage}</span>
-								{" "}
-								{card.subtitle}
-							</Typography>
-						</Typography>
-					</Card>
-				</Grid>
-			))}
-			{[
-				{
-					title: "Harvest's Crop Yield Distribution",
-					data: [
+			<Grid item xs={12} md={12} alignItems="center" flexDirection="column" mt={2}>
+				<Card title="Overview" footer={cardFooter({ minutesAgo: state.minutesAgo })}>
+					{[
 						{
-							x: Object.keys(groupedYieldDistribution),
-							y: Object.values(sumYieldDistribution),
-							type: "bar",
-							color: "secondary",
+							data: [
+								{
+									x: state.dataSets.overview ? state.dataSets.overview.map((item) => item.timestamp) : [],
+									y: state.dataSets.overview ? state.dataSets.overview.map((item) => item.m_temp01) : [],
+									type: "scatter",
+									mode: "lines",
+									color: "gold",
+									title: "Temperature",
+								},
+							],
+							yaxis: { title: "Temperature (°C)" },
 						},
-					],
-					xaxis: { tickvals: Object.keys(groupedYieldDistribution), tickangle: 15 },
-					yaxis: { title: "Tonnes" },
-				},
-				{
-					title: "Month's Soil Moisture",
-					data: [
 						{
-							x: Object.keys(maxSoilMoistureByDate),
-							y: Object.values(maxSoilMoistureByDate),
-							type: "scatter",
-							mode: "lines+markers",
-							color: "secondary",
+							data: [
+								{
+									x: state.dataSets.overview ? state.dataSets.overview.map((item) => item.timestamp) : [],
+									y: state.dataSets.overview ? state.dataSets.overview.map((item) => item.m_hum01) : [],
+									type: "scatter",
+									mode: "lines",
+									color: "secondary",
+									title: "Humidity",
+								},
+							],
+							yaxis: { title: "Humidity (%)" },
 						},
-					],
-					xaxis: { tickangle: 15 },
-					yaxis: { title: "Soil Moisture (%)", tickangle: -30 },
-				},
-				{
-					title: "Month's Humidity",
-					data: [
 						{
-							x: Object.keys(maxHumidityByDate),
-							y: Object.values(maxHumidityByDate),
-							type: "scatter",
-							mode: "lines+markers",
-							color: "secondary",
+							data: [
+								{
+									x: state.dataSets.overview ? state.dataSets.overview.map((item) => item.timestamp) : [],
+									y: state.dataSets.overview ? state.dataSets.overview.map((item) => item.a_co2) : [],
+									type: "scatter",
+									mode: "markers",
+									color: "primary",
+									title: "Co2",
+								},
+							],
+							yaxis: { title: "Co2" },
 						},
-					],
-					xaxis: { tickangle: 15 },
-					yaxis: { title: "Humidity (%)", tickangle: -30 },
-				},
-			].map((plot, index) => (
-				<Grid key={index} item xs={12} md={4} alignItems="center" flexDirection="column" mt={2}>
-					<Card title={plot.title} footer={cardFooter({ minutesAgo: state.minutesAgo })}>
+					].map((plotData, index) => (
 						<Plot
+							key={index}
 							scrollZoom
-							data={plot.data}
-							showLegend={false}
+							data={plotData.data}
 							displayBar={false}
-							height="400px"
-							xaxis={plot.xaxis}
-							yaxis={plot.yaxis}
+							yaxis={plotData.yaxis}
 						/>
-					</Card>
-				</Grid>
-			))}
-			<Grid item xs={12} md={12} mt={2}>
-				<Card title="Annual Yield Per Field" footer={cardFooter({ minutesAgo: state.minutesAgo })}>
-					<Plot
-						showLegend
-						scrollZoom
-						data={[
-							{
-								labels: percentages.map((item) => item.key),
-								values: percentages.map((item) => item.percentage),
-								type: "pie",
-							},
-						]}
-						displayBar={false}
-					/>
+					))}
 				</Card>
 			</Grid>
-			{[
-				{
-					title: "Seasonal Temperature Distribution",
-					data: [
+			<Grid item xs={12} md={12} alignItems="center" flexDirection="row" mt={2}>
+				<Card title="Today's Overview" footer={cardFooter({ minutesAgo: state.minutesAgo })}>
+					{[
 						{
-							y: state.dataSets.temperature_june ? state.dataSets.temperature_june.map((item) => item.temperature) : [],
-							type: "box",
-							title: "June",
-							color: "secondary",
+							data: [
+								{
+									x: state.dataSets.overview ? state.dataSets.overview.map((item) => item.timestamp) : [],
+									y: state.dataSets.overview ? state.dataSets.overview.map((item) => item.m_temp01) : [],
+									type: "scatter",
+									mode: "lines",
+									color: "gold",
+									title: "Temperature",
+								},
+							],
+							yaxis: { title: "Temperature (°C)" },
 						},
 						{
-							y: state.dataSets.temperature_july ? state.dataSets.temperature_july.map((item) => item.temperature) : [],
-							type: "box",
-							title: "July",
-							color: "secondary",
+							data: [
+								{
+									x: state.dataSets.overview ? state.dataSets.overview.map((item) => item.timestamp) : [],
+									y: state.dataSets.overview ? state.dataSets.overview.map((item) => item.m_hum01) : [],
+									type: "scatter",
+									mode: "lines",
+									color: "secondary",
+									title: "Humidity",
+								},
+							],
+							yaxis: { title: "Humidity (%)" },
 						},
 						{
-							y: state.dataSets.temperature_august ? state.dataSets.temperature_august.map((item) => item.temperature) : [],
-							type: "box",
-							title: "August",
-							color: "secondary",
+							data: [
+								{
+									x: state.dataSets.overview ? state.dataSets.overview.map((item) => item.timestamp) : [],
+									y: state.dataSets.overview ? state.dataSets.overview.map((item) => item.a_co2) : [],
+									type: "scatter",
+									mode: "markers",
+									color: "primary",
+									title: "Co2",
+								},
+							],
+							yaxis: { title: "Co2" },
 						},
-					],
-					yaxis: { title: "Temperature (°C)" },
-					formContent: formContent.slice(1),
-					formConfig: {
-						position: "absolute",
-						top: 0,
-						right: -85,
-						width: "54%",
-						height: "50%",
-						zIndex: 10,
-					},
-				},
-				{
-					title: "Precipitation",
-					data: [
-						{
-							x: Array.from({ length: 4 }, (_, i) => `week ${i + 1}`),
-							y: state.dataSets.precipitation ? state.dataSets.precipitation.filter((item) => item.key === "field1").map((item) => item.avg_precipitation) : [],
-							type: "bar",
-							title: "Field 1",
-							color: "primary",
-						},
-						{
-							x: Array.from({ length: 4 }, (_, i) => `week ${i + 1}`),
-							y: state.dataSets.precipitation ? state.dataSets.precipitation.filter((item) => item.key === "field2").map((item) => item.avg_precipitation) : [],
-							type: "bar",
-							title: "Field 2",
-							color: "secondary",
-						},
-						{
-							x: Array.from({ length: 4 }, (_, i) => `week ${i + 1}`),
-							y: state.dataSets.precipitation ? state.dataSets.precipitation.filter((item) => item.key === "field3").map((item) => item.avg_precipitation) : [],
-							type: "bar",
-							title: "Field 3",
-							color: "third",
-						},
-						{
-							x: Array.from({ length: 4 }, (_, i) => `week ${i + 1}`),
-							y: state.dataSets.precipitation ? state.dataSets.precipitation.filter((item) => item.key === "field4").map((item) => item.avg_precipitation) : [],
-							type: "bar",
-							title: "Field 4",
-							color: "green",
-						},
-					],
-					yaxis: { title: "Precipitation (mm)" },
-					formContent,
-					formConfig: {
-						position: "absolute",
-						bottom: 0,
-						right: -70,
-						width: "54%",
-						height: "50%",
-						zIndex: 20,
-						display: "grid",
-					},
-				},
-			].map((plot, index) => (
-				<Grid key={index} item xs={12} sm={12} md={6} mt={2}>
-					<Card title={plot.title} footer={cardFooter({ minutesAgo: state.minutesAgo })}>
-						<Grid container flexDirection="row" sx={{ position: "relative", width: "100%" }}>
-							<Grid item sx={{ position: "relative", width: "75%", zIndex: 1 }}>
-								<Plot
-									scrollZoom
-									data={plot.data}
-									showLegend={false}
-									yaxis={plot.yaxis}
-								/>
-							</Grid>
-							<Grid
-								item
-								md={7}
-								sx={plot.formConfig}
-							>
-								<Form ref={formRef} content={plot.formContent} />
-							</Grid>
-						</Grid>
-					</Card>
-				</Grid>
-			))}
-			<Grid item width="100%" mt={2}>
-				<Card title="Soil Quality" footer={cardFooter({ minutesAgo: state.minutesAgo })}>
-					{groupedSoilQuality?.field1 && (
+					].map((plotData, index) => (
 						<Plot
+							key={index}
 							scrollZoom
-							data={Object.keys(groupedSoilQuality).map((field, index) => ({
-								x: groupedSoilQuality[field].map((item) => item.interval_start),
-								y: groupedSoilQuality[field].map((item) => item.avg_soil_quality),
-								type: "scatter",
-								mode: "lines",
-								color: ["primary", "secondary", "third", "green"][index],
-							}))}
-							title="Average Soil Quality per Month"
-							xaxis={{
-								tickvals,
-								ticktext: tickvals.map((date) => new Date(date).toLocaleString("default", { month: "long" })),
-							}}
-							yaxis={{ title: "Soil Quality" }}
+							data={plotData.data}
+							displayBar={false}
+							yaxis={plotData.yaxis}
 						/>
-					)}
+					))}
 				</Card>
 			</Grid>
 		</Grid>
