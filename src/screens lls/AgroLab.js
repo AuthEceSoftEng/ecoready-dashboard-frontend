@@ -4,7 +4,7 @@ import { memo, useRef, useMemo } from "react";
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
 import Form from "../components/Form.js";
-import { useInit } from "../utils/index.js";
+import useInit from "../utils/screen-init.js";
 import agroConfigs, { organization } from "../config/AgroConfig.js";
 import colors from "../_colors.scss";
 import { sumByKey, groupByKey, getMaxValuesByProperty, getSumValuesByProperty, calculateDates } from "../utils/data-handling-functions.js";

@@ -20,7 +20,7 @@ const secoConfigs = (formattedBeginningOfDay, currentDate) => [
 		collection: "environmental_data",
 		params: JSON.stringify({
 			attribute: ["m_temp01"],
-			stat: "sum",
+			stat: "avg",
 			interval: "every_1_days",
 			start_time: `${formattedBeginningOfDay}`,
 			end_time: `${currentDate}`,
@@ -33,7 +33,7 @@ const secoConfigs = (formattedBeginningOfDay, currentDate) => [
 		collection: "environmental_data",
 		params: JSON.stringify({
 			attribute: ["m_hum01"],
-			stat: "sum",
+			stat: "avg",
 			interval: "every_1_days",
 			start_time: `${formattedBeginningOfDay}`,
 			end_time: `${currentDate}`,
@@ -46,7 +46,7 @@ const secoConfigs = (formattedBeginningOfDay, currentDate) => [
 		collection: "environmental_data",
 		params: JSON.stringify({
 			attribute: ["a_co2"],
-			stat: "sum",
+			stat: "avg",
 			interval: "every_1_days",
 			start_time: `${formattedBeginningOfDay}`,
 			end_time: `${currentDate}`,
