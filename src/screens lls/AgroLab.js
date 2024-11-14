@@ -10,7 +10,8 @@ import agroConfigs, { organization } from "../config/AgroConfig.js";
 import colors from "../_colors.scss";
 import { initialState, reducer, sumByKey, groupByKey,
 	getMaxValuesByProperty, getSumValuesByProperty,
-	calculateDates, monthNames } from "../utils/data-handling-functions.js";
+	calculateDates } from "../utils/data-handling-functions.js";
+import { monthNames } from "../utils/useful-constants.js";
 import { cardFooter } from "../utils/card-footer.js";
 
 const AgroLab = () => {

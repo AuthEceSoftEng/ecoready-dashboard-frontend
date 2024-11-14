@@ -8,7 +8,8 @@ import { useSnackbar } from "../utils/index.js";
 import fetchAllData from "../api/fetch-data.js";
 import hiveConfigs, { organization } from "../config/HiveConfig.js";
 import colors from "../_colors.scss";
-import { initialState, reducer, sumByKey, calculateDates, monthNames } from "../utils/data-handling-functions.js";
+import { initialState, reducer, sumByKey, calculateDates } from "../utils/data-handling-functions.js";
+import { monthNames } from "../utils/useful-constants.js";
 import { cardFooter } from "../utils/card-footer.js";
 
 const HiveLab = () => {

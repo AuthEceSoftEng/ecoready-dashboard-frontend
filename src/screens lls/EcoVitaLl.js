@@ -8,7 +8,8 @@ import { useSnackbar } from "../utils/index.js";
 import fetchAllData from "../api/fetch-data.js";
 import { ecoVitallConfigs, randomDataRadial, organization } from "../config/EcoVitallConfig.js";
 import { initialState, reducer, calculateDates,
-	getCustomDateTime, monthNames } from "../utils/data-handling-functions.js";
+	getCustomDateTime } from "../utils/data-handling-functions.js";
+import { monthNames } from "../utils/useful-constants.js";
 import { cardFooter } from "../utils/card-footer.js";
 
 const EcoVItaLl = () => {

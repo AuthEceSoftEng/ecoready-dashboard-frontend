@@ -3,17 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { memo } from "react";
 
 import { SecondaryBackgroundButton } from "../components/Buttons.js";
+import { labs } from "../utils/useful-constants.js";
 
 const Home = () => {
 	const navigate = useNavigate();
-
-	const labs = [
-		{ title: "AgroLab", path: "../agrolab" },
-		{ title: "HiveLab", path: "../hivelab" },
-		{ title: "EcoVitaLL", path: "../ecovitall" },
-		{ title: "EcoReadyMasuria", path: "../ecoreadymasuria" },
-		{ title: "Seco Collab", path: "../seco_collab" },
-	];
 
 	return (
 		<Grid container direction="column" alignItems="center" justifyContent="center" sx={{ textAlign: "center" }}>

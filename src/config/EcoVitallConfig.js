@@ -4,7 +4,7 @@ export	const organization = "ecovitall";
 
 export const ecoVitallConfigs = (formattedBeginningOfMonth, currentDate, formattedBeginningOfHour) => {
 	const daysBetween = calculateDifferenceBetweenDates(formattedBeginningOfMonth, formattedBeginningOfHour);
-	console.log("Days between", daysBetween);
+
 	return [
 		{
 			type: "stats",
