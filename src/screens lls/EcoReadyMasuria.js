@@ -4,7 +4,7 @@ import { memo, useMemo } from "react";
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
 // import Form from "../components/Form.js";
-import { useInit } from "../utils/index.js";
+import useInit from "../utils/screen-init.js";
 import { ecoVitallConfigs, randomDataRadial, organization } from "../config/EcoVitallConfig.js";
 import { calculateDates, getCustomDateTime } from "../utils/data-handling-functions.js";
 import { monthNames } from "../utils/useful-constants.js";
