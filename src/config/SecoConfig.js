@@ -1,6 +1,6 @@
 export	const organization = "seco_collab";
 
-const secoConfigs = (formattedBeginningOfMonth, currentDate) => [
+const secoConfigs = (formattedBeginningOfDay, currentDate) => [
 	{
 		type: "data",
 		project: "seco_collab_project",
@@ -14,56 +14,45 @@ const secoConfigs = (formattedBeginningOfMonth, currentDate) => [
 		}),
 		plotId: "overview",
 	},
-// 	{
-// 		type: "data",
-// 		project: "seco_collab_project",
-// 		collection: "environmental_data",
-// 		params: JSON.stringify({
-// 			attributes: ["timestamp", "irrigation"],
-// 			filters: [
-// 				{
-// 					property_name: "timestamp",
-// 					operator: "gte",
-// 					property_value: `${formattedBeginningOfMonth}`,
-// 				},
-// 				{
-// 					property_name: "timestamp",
-// 					operator: "lte",
-// 					property_value: `${currentDate}`,
-// 				},
-// 			],
-// 		}),
-// 		plotId: "irrigation",
-// 	},
-// 	{
-// 		type: "data",
-// 		project: "seco_collab_project",
-// 		collection: "environmental_data",
-// 		params: JSON.stringify({
-// 			attributes: ["timestamp", "temperature"],
-// 			filters: [
-// 				{
-// 					property_name: "timestamp",
-// 					operator: "eq",
-// 					property_value: "2024-01-01",
-// 				},
-// 			],
-// 		}),
-// 		plotId: "temperature_now",
-// 	},
-// 	{
-// 		type: "stats",
-// 		project: "seco_collab_project",
-// 		collection: "environmental_data",
-// 		params: JSON.stringify({
-// 			attribute: ["crop_yield"],
-// 			stat: "sum",
-// 			interval: "every_7_days",
-// 			start_time: "2024-09-01",
-// 			end_time: "2024-10-01",
-// 		}),
-// 		plotId: "yieldDistribution",
-// 	},
+	{
+		type: "stats",
+		project: "seco_collab_project",
+		collection: "environmental_data",
+		params: JSON.stringify({
+			attribute: ["m_temp01"],
+			stat: "sum",
+			interval: "every_1_days",
+			start_time: `${formattedBeginningOfDay}`,
+			end_time: `${currentDate}`,
+		}),
+		plotId: "todayTemperature",
+	},
+	{
+		type: "stats",
+		project: "seco_collab_project",
+		collection: "environmental_data",
+		params: JSON.stringify({
+			attribute: ["m_hum01"],
+			stat: "sum",
+			interval: "every_1_days",
+			start_time: `${formattedBeginningOfDay}`,
+			end_time: `${currentDate}`,
+		}),
+		plotId: "todayHumidity",
+	},
+	{
+		type: "stats",
+		project: "seco_collab_project",
+		collection: "environmental_data",
+		params: JSON.stringify({
+			attribute: ["a_co2"],
+			stat: "sum",
+			interval: "every_1_days",
+			start_time: `${formattedBeginningOfDay}`,
+			end_time: `${currentDate}`,
+		}),
+		plotId: "todayCo2",
+	},
 // 	{
 // 		type: "data",
 // 		project: "seco_collab_project",
