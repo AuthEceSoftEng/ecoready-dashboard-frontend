@@ -146,7 +146,7 @@ const SecoCollab = () => {
 								symbol: "",
 							},
 						].map((plot, index) => (
-							<Grid key={index} item xs={12} md={12} justifyContent="center" sx={{ height: "600px" }}>
+							<Grid key={index} item xs={12} md={4} justifyContent="center" sx={{ height: "300px" }}>
 								<Plot
 									scrollZoom
 									// width="30%"
