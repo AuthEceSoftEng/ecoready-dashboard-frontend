@@ -7,18 +7,19 @@ import Form from "../components/Form.js";
 import useInit from "../utils/screen-init.js";
 import secoConfigs, { organization } from "../config/SecoConfig.js";
 import { getCustomDateTime, calculateDates } from "../utils/data-handling-functions.js";
+import { monthNames } from "../utils/useful-constants.js";
 import { cardFooter } from "../utils/card-footer.js";
 
 const SecoCollab = () => {
 	const customDate = useMemo(() => getCustomDateTime(2024, 9), []);
 	// Memoize the date calculations and fetchConfigs to reduce re-calculations
-	const { currentDate, formattedBeginningOfMonth, formattedBeginningOfDay } =	useMemo(
+	const { month, currentDate, formattedBeginningOfMonth, formattedBeginningOfDay } =	useMemo(
 		() => calculateDates(customDate), [customDate],
 	);
 
 	const fetchConfigs = useMemo(
-		() => secoConfigs(formattedBeginningOfMonth, formattedBeginningOfDay, currentDate),
-		[formattedBeginningOfMonth, formattedBeginningOfDay, currentDate],
+		() => secoConfigs(currentDate, formattedBeginningOfMonth, formattedBeginningOfDay),
+		[currentDate, formattedBeginningOfMonth, formattedBeginningOfDay],
 	);
 	const { state } = useInit(organization, fetchConfigs);
 
@@ -62,12 +63,10 @@ const SecoCollab = () => {
 					<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
 						{[
 							{
-								subtitle: "Avg Temperture",
+								subtitle: "Avg Temperature",
 								min: 0,
 								max: 40,
-								value: state.dataSets.todayTemperature && state.dataSets.todayTemperature.length > 0
-									? state.dataSets.todayTemperature.at(-1).avg_m_temp01
-									: null,
+								value: state.dataSets.todayTemperature?.at(-1)?.avg_m_temp01 ?? null,
 								color: "goldenrod",
 								symbol: "°C",
 							},
@@ -75,9 +74,7 @@ const SecoCollab = () => {
 								subtitle: "Avg Humidity",
 								min: 0,
 								max: 100,
-								value: state.dataSets.todayHumidity && state.dataSets.todayHumidity.length > 0
-									? state.dataSets.todayHumidity.at(-1).avg_m_hum01
-									: null,
+								value: state.dataSets.todayHumidity?.at(-1)?.avg_m_hum01 ?? null,
 								color: "third",
 								symbol: "%",
 							},
@@ -85,10 +82,7 @@ const SecoCollab = () => {
 								subtitle: "Avg Co2",
 								min: 100,
 								max: 1600,
-								value: state.dataSets.todayCo2 && state.dataSets.todayCo2.length > 0
-									? state.dataSets.todayCo2.at(-1).avg_a_co2
-									: null,
-
+								value: state.dataSets.todayCo2?.at(-1)?.avg_a_co2 ?? null,
 								color: "secondary",
 								symbol: "",
 							},
@@ -96,18 +90,17 @@ const SecoCollab = () => {
 							<Grid key={index} item xs={12} md={4} justifyContent="center" sx={{ height: "300px" }}>
 								<Plot
 									scrollZoom
-									// width="30%"
 									data={[
 										{
 											type: "indicator",
 											mode: "gauge+number",
 											value: plot.value,
-											range: [plot.min, plot.max], // Gauge range
-											color: plot.color, // Color of gauge bar
-											shape: "angular", // "angular" or "bullet"
-											indicator: "primary", // Color of gauge indicator/value-line
-											textColor: "primary", // Color of gauge value
-											suffix: plot.symbol, // Suffix of gauge value
+											range: [plot.min, plot.max],
+											color: plot.color,
+											shape: "angular",
+											indicator: "primary",
+											textColor: "primary",
+											suffix: plot.symbol,
 										},
 									]}
 									displayBar={false}
@@ -119,25 +112,21 @@ const SecoCollab = () => {
 				</Card>
 			</Grid>
 			<Grid item xs={12} md={12} alignItems="center" flexDirection="column" mt={2}>
-				<Card title="Month's Overview" footer={cardFooter({ minutesAgo: state.minutesAgo })}>
+				<Card title={`${monthNames[month].text}'s Max vs Min Values`} footer={cardFooter({ minutesAgo: state.minutesAgo })}>
 					<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
 						{[
 							{
 								data: [
 									{
-										x: state.dataSets.monthMaxTemperature
-											? state.dataSets.monthMaxTemperature.map((item) => item.interval_start) : [],
-										y: state.dataSets.monthMaxTemperature
-											? state.dataSets.monthMaxTemperature.map((item) => item.max_m_temp01) : [],
+										x: state.dataSets.monthMaxTemperature?.map((item) => item.interval_start) ?? [],
+										y: state.dataSets.monthMaxTemperature?.map((item) => item.max_m_temp01) ?? [],
 										type: "bar",
 										color: "goldenrod",
 										title: "maxTemperature",
 									},
 									{
-										x: state.dataSets.monthMaxTemperature
-											? state.dataSets.monthMaxTemperature.map((item) => item.interval_start) : [],
-										y: state.dataSets.monthMinTemperature
-											? state.dataSets.monthMinTemperature.map((item) => item.min_m_temp01) : [],
+										x: state.dataSets.monthMaxTemperature?.map((item) => item.interval_start) ?? [],
+										y: state.dataSets.monthMinTemperature?.map((item) => item.min_m_temp01) ?? [],
 										type: "bar",
 										color: "gold",
 										title: "minTemperature",
@@ -146,22 +135,17 @@ const SecoCollab = () => {
 								yaxis: { title: "Temperature (°C)" },
 							},
 							{
-
 								data: [
 									{
-										x: state.dataSets.monthMaxHumidity
-											? state.dataSets.monthMaxHumidity.map((item) => item.interval_start) : [],
-										y: state.dataSets.monthMaxHumidity
-											? state.dataSets.monthMaxHumidity.map((item) => item.max_m_hum01) : [],
+										x: state.dataSets.monthMaxHumidity?.map((item) => item.interval_start) ?? [],
+										y: state.dataSets.monthMaxHumidity?.map((item) => item.max_m_hum01) ?? [],
 										type: "bar",
 										color: "primary",
 										title: "maxHumidity",
 									},
 									{
-										x: state.dataSets.monthMaxHumidity
-											? state.dataSets.monthMaxHumidity.map((item) => item.interval_start) : [],
-										y: state.dataSets.monthMinHumidity
-											? state.dataSets.monthMinHumidity.map((item) => item.min_m_hum01) : [],
+										x: state.dataSets.monthMaxHumidity?.map((item) => item.interval_start) ?? [],
+										y: state.dataSets.monthMinHumidity?.map((item) => item.min_m_hum01) ?? [],
 										type: "bar",
 										color: "third",
 										title: "minHumidity",
@@ -170,22 +154,17 @@ const SecoCollab = () => {
 								yaxis: { title: "Humidity (%)" },
 							},
 							{
-
 								data: [
 									{
-										x: state.dataSets.monthMaxCo2
-											? state.dataSets.monthMaxCo2.map((item) => item.interval_start) : [],
-										y: state.dataSets.monthMaxCo2
-											? state.dataSets.monthMaxCo2.map((item) => item.max_a_co2) : [],
+										x: state.dataSets.monthMaxCo2?.map((item) => item.interval_start) ?? [],
+										y: state.dataSets.monthMaxCo2?.map((item) => item.max_a_co2) ?? [],
 										type: "bar",
 										color: "green",
 										title: "maxCo2",
 									},
 									{
-										x: state.dataSets.monthMaxCo2
-											? state.dataSets.monthMaxCo2.map((item) => item.interval_start) : [],
-										y: state.dataSets.monthMinCo2
-											? state.dataSets.monthMinCo2.map((item) => item.min_a_co2) : [],
+										x: state.dataSets.monthMaxCo2?.map((item) => item.interval_start) ?? [],
+										y: state.dataSets.monthMinCo2?.map((item) => item.min_a_co2) ?? [],
 										type: "bar",
 										color: "secondary",
 										title: "minCo2",
@@ -214,8 +193,8 @@ const SecoCollab = () => {
 						{
 							data: [
 								{
-									x: state.dataSets.overview ? state.dataSets.overview.map((item) => item.timestamp) : [],
-									y: state.dataSets.overview ? state.dataSets.overview.map((item) => item.m_temp01) : [],
+									x: state.dataSets.overview?.map((item) => item.timestamp) ?? [],
+									y: state.dataSets.overview?.map((item) => item.m_temp01) ?? [],
 									type: "scatter",
 									mode: "lines",
 									color: "goldenrod",
@@ -227,8 +206,8 @@ const SecoCollab = () => {
 						{
 							data: [
 								{
-									x: state.dataSets.overview ? state.dataSets.overview.map((item) => item.timestamp) : [],
-									y: state.dataSets.overview ? state.dataSets.overview.map((item) => item.m_hum01) : [],
+									x: state.dataSets.overview?.map((item) => item.timestamp) ?? [],
+									y: state.dataSets.overview?.map((item) => item.m_hum01) ?? [],
 									type: "scatter",
 									mode: "lines",
 									color: "third",
@@ -240,8 +219,8 @@ const SecoCollab = () => {
 						{
 							data: [
 								{
-									x: state.dataSets.overview ? state.dataSets.overview.map((item) => item.timestamp) : [],
-									y: state.dataSets.overview ? state.dataSets.overview.map((item) => item.a_co2) : [],
+									x: state.dataSets.overview?.map((item) => item.timestamp) ?? [],
+									y: state.dataSets.overview?.map((item) => item.a_co2) ?? [],
 									type: "scatter",
 									mode: "markers",
 									color: "secondary",
