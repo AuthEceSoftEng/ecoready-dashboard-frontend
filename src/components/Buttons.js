@@ -9,6 +9,7 @@ export const PrimaryBackgroundButton = ({
 	titleColor = "white",
 	size = "",
 	width = "200px",
+	height = null,
 	title = "Button",
 	onClick,
 }) => (
@@ -21,7 +22,7 @@ export const PrimaryBackgroundButton = ({
 		variant="contained"
 		color="primary"
 		size={(size || "")}
-		style={{ ...(width && { width }) }}
+		style={{ ...(width && { width }), ...(height && { height }) }}
 		onClick={onClick}
 	>
 		<Typography className={titleClassName} sx={{ color: `${titleColor}!important` }} style={{ textTransform: "none" }}>
