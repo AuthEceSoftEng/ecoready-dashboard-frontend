@@ -91,16 +91,13 @@ export const calculateDates = (now, offsetHours = 3) => {
 	const year = now.getFullYear();
 	const month = now.getMonth();
 	const day = now.getDate();
-	const currentDate = new Date(now.getTime() + offsetHours * 60 * 60 * 1000).toISOString().slice(0, 19);
-	const beginningOfMonth = new Date(year, month, 1, 3);
-	const formattedBeginningOfMonth = beginningOfMonth.toISOString().slice(0, 19);
+	const offsetTime = now.getTime() + offsetHours * 60 * 60 * 1000;
 
-	const beginningOfHour = new Date(now);
-	beginningOfHour.setMinutes(180, 0, 0);
-	const formattedBeginningOfHour = beginningOfHour.toISOString().slice(0, 19);
-
-	const beginningOfDay = new Date(year, month, day, 0, 0, 0);
-	const formattedBeginningOfDay = beginningOfDay.toISOString().slice(0, 19);
+	const currentDate = new Date(offsetTime).toISOString().slice(0, 19);
+	const formattedBeginningOfMonth = new Date(year, month, 1, offsetHours).toISOString().slice(0, 19);
+	const beginningOfHour = new Date(offsetTime).setMinutes(180, 0, 0);
+	const formattedBeginningOfHour = new Date(beginningOfHour).toISOString().slice(0, 19);
+	const formattedBeginningOfDay = new Date(year, month, day, offsetHours).toISOString().slice(0, 19);
 
 	return { year, month, currentDate, formattedBeginningOfMonth, formattedBeginningOfDay, formattedBeginningOfHour };
 };
