@@ -2,7 +2,7 @@ import { calculateDifferenceBetweenDates } from "../utils/data-handling-function
 
 export	const organization = "ecovitall";
 
-export const ecoVitallConfigs = (formattedBeginningOfMonth, currentDate, formattedBeginningOfHour) => {
+export const ecoVitallConfigs = (currentDate, formattedBeginningOfMonth, formattedBeginningOfHour) => {
 	const daysBetween = calculateDifferenceBetweenDates(formattedBeginningOfMonth, formattedBeginningOfHour);
 
 	return [

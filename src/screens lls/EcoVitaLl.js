@@ -15,17 +15,99 @@ const EcoVItaLl = () => {
 	console.log("Custom Date", customDate);
 
 	// Memoize the date calculations and fetchConfigs to reduce re-calculations
-	const { month, currentDate, formattedBeginningOfMonth, formattedBeginningOfHour } = useMemo(() => calculateDates(customDate),
-		[customDate]);
+	const { month, currentDate, formattedBeginningOfMonth, formattedBeginningOfHour } = useMemo(
+		() => calculateDates(customDate),
+		[customDate],
+	);
+	console.log("date", currentDate);
+	console.log("formattedBeginningOfMonth", formattedBeginningOfMonth);
+	console.log("formattedBeginningOfHour", formattedBeginningOfHour);
 
 	const fetchConfigs = useMemo(
-		() => ecoVitallConfigs(formattedBeginningOfMonth, currentDate, formattedBeginningOfHour),
-		[formattedBeginningOfMonth, currentDate, formattedBeginningOfHour],
+		() => ecoVitallConfigs(currentDate, formattedBeginningOfMonth, formattedBeginningOfHour),
+		[currentDate, formattedBeginningOfMonth, formattedBeginningOfHour],
 	);
 	const { state } = useInit(organization, fetchConfigs);
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2} sx={{ flexGrow: 1, flexBasis: "100%", flexShrink: 0 }}>
+			{[
+				{
+					title: "Tank Monitoring",
+					data: [
+						{
+							subtitle: "Tank Level",
+							min: 0,
+							max: 100,
+							value: state.dataSets.gauges && state.dataSets.gauges.length > 0
+								? state.dataSets.gauges.at(-1).nutrienttanklevel
+								: null,
+							symbol: "%",
+						},
+						{
+							subtitle: "Pump Pressure",
+							min: 0,
+							max: 1.5,
+							value: state.dataSets.gauges && state.dataSets.gauges.length > 0
+								? state.dataSets.gauges.at(-1).pumppressure
+								: null,
+							symbol: "psi",
+						},
+					],
+					color: "third",
+				},
+				{
+					title: "Nutrient Monitoring",
+					data: [
+						{
+							min: 0,
+							max: 3.5,
+							value: state.dataSets.gauges && state.dataSets.gauges.length > 0 ? state.dataSets.gauges.at(-1).ec : null,
+							symbol: "mS",
+							subtitle: "EC",
+						},
+						{
+							min: 0,
+							max: 10,
+							value: state.dataSets.gauges && state.dataSets.gauges.length > 0 ? state.dataSets.gauges.at(-1).ph : null,
+							symbol: "",
+							subtitle: "Ph",
+						},
+					],
+					color: "secondary",
+				},
+			].map((card, index) => (
+				<Grid key={index} item xs={12} md={6} alignItems="center" flexDirection="column" mt={2}>
+					<Card title={card.title} footer={cardFooter({ minutesAgo: state.minutesAgo })}>
+						<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
+							{card.data.map((plotData, plotIndex) => (
+								<Grid key={plotIndex} item xs={12} md={6} justifyContent="center">
+									<Plot
+										showLegend
+										scrollZoom
+										height="180px"
+										data={[
+											{
+												type: "indicator",
+												mode: "gauge+number",
+												value: plotData.value,
+												range: [plotData.min, plotData.max], // Gauge range
+												color: card.color, // Color of gauge bar
+												shape: "angular", // "angular" or "bullet"
+												indicator: "primary", // Color of gauge indicator/value-line
+												textColor: "primary", // Color of gauge value
+												suffix: plotData.symbol, // Suffix of gauge value
+											},
+										]}
+										displayBar={false}
+										title={plotData.subtitle}
+									/>
+								</Grid>
+							))}
+						</Grid>
+					</Card>
+				</Grid>
+			))}
 			{[
 				{
 					title: "Temperature Evolution Per Day",
@@ -75,11 +157,12 @@ const EcoVItaLl = () => {
 					yaxis: { title: "Humidity (%)" },
 				},
 			].map((card, index) => (
-				<Grid key={index} item xs={12} sm={12} md={12} mt={2}>
+				<Grid key={index} item xs={12} sm={12} md={6} mt={2}>
 					<Card title={card.title} footer={cardFooter({ minutesAgo: state.minutesAgo })}>
 						<Plot
 							scrollZoom
 							displayBar
+							height="250px"
 							data={card.data}
 							title={monthNames[month].text}
 							showLegend={index === 1}
@@ -89,28 +172,29 @@ const EcoVItaLl = () => {
 					</Card>
 				</Grid>
 			))}
-			{[
-				{
-					min: 0,
-					max: 14,
-					value: state.dataSets.ph_avg && state.dataSets.ph_avg.length > 0 ? state.dataSets.ph_avg[0].avg_ph : null,
-					symbol: "",
-					title: "pH Target",
-				},
-				{
-					min: 0,
-					max: 5,
-					value: state.dataSets.ec_avg && state.dataSets.ec_avg.length > 0 ? state.dataSets.ec_avg[0].avg_ec : null,
-					symbol: "",
-					title: "EC Target",
-				},
-			].map((card, index) => (
-				<Grid key={index} item xs={12} md={6}>
-					<Card
-						title={card.title}
-						footer={cardFooter({ minutesAgo: state.minutesAgo })}
-					>
+			<Grid item xs={12} md={12} mt={2}>
+				<Card
+					title={`${monthNames[month].text}'s Targets`}
+					footer={cardFooter({ minutesAgo: state.minutesAgo })}
+				>
+					{[
+						{
+							min: 0,
+							max: 14,
+							value: state.dataSets.ph_avg && state.dataSets.ph_avg.length > 0 ? state.dataSets.ph_avg[0].avg_ph : null,
+							symbol: "",
+							title: "pH",
+						},
+						{
+							min: 0,
+							max: 5,
+							value: state.dataSets.ec_avg && state.dataSets.ec_avg.length > 0 ? state.dataSets.ec_avg[0].avg_ec : null,
+							symbol: "",
+							title: "EC",
+						},
+					].map((plot, index) => (
 						<Plot
+							key={index}
 							showLegend
 							scrollZoom
 							// width="113%"
@@ -119,100 +203,22 @@ const EcoVItaLl = () => {
 								{
 									type: "indicator",
 									mode: "gauge+number",
-									value: card.value,
-									range: [card.min, card.max], // Gauge range
+									value: plot.value,
+									range: [plot.min, plot.max], // Gauge range
 									color: "third", // Color of gauge bar
 									shape: "bullet", // "angular" or "bullet"
 									indicator: "primary", // Color of gauge indicator/value-line
 									textColor: "primary", // Color of gauge value
-									suffix: card.symbol, // Suffix of gauge value
+									suffix: plot.symbol, // Suffix of gauge value
 								},
 							]}
 							displayBar={false}
-							title={`${monthNames[month].text}'s Average`}
+							title={plot.title}
 							margin={{ r: 0 }}
 						/>
-					</Card>
-				</Grid>
-			))}
-			{[
-				{
-					title: "Tank Monitoring",
-					data: [
-						{
-							subtitle: "Tank Level",
-							min: 0,
-							max: 100,
-							value: state.dataSets.gauges && state.dataSets.gauges.length > 0
-								? state.dataSets.gauges.at(-1).nutrienttanklevel
-								: null,
-							symbol: "%",
-						},
-						{
-							subtitle: "Pump Pressure",
-							min: 0,
-							max: 1.5,
-							value: state.dataSets.gauges && state.dataSets.gauges.length > 0
-								? state.dataSets.gauges.at(-1).pumppressure
-								: null,
-							symbol: "psi",
-						},
-					],
-					color: "third",
-				},
-				{
-					title: "Nutrient Monitoring",
-					data: [
-						{
-							min: 0,
-							max: 3.5,
-							value: state.dataSets.gauges && state.dataSets.gauges.length > 0 ? state.dataSets.gauges.at(-1).ec : null,
-							symbol: "mS",
-							subtitle: "EC",
-						},
-						{
-							min: 0,
-							max: 10,
-							value: state.dataSets.gauges && state.dataSets.gauges.length > 0 ? state.dataSets.gauges.at(-1).ph : null,
-							symbol: "",
-							subtitle: "Ph",
-						},
-					],
-					color: "secondary",
-				},
-			].map((card, index) => (
-				<Grid key={index} item xs={12} md={6} justifyContent="center">
-					<Card
-						title={card.title}
-						footer={cardFooter({ minutesAgo: state.minutesAgo })}
-					>
-						{card.data.map((plotData, plotIndex) => (
-							<Plot
-								key={plotIndex}
-								showLegend
-								scrollZoom
-								height="400px"
-								// width="113%"
-								data={[
-									{
-										type: "indicator",
-										mode: "gauge+number",
-										value: plotData.value,
-										range: [plotData.min, plotData.max], // Gauge range
-										color: card.color, // Color of gauge bar
-										shape: "angular", // "angular" or "bullet"
-										indicator: "primary", // Color of gauge indicator/value-line
-										textColor: "primary", // Color of gauge value
-										suffix: plotData.symbol, // Suffix of gauge value
-									},
-								]}
-								displayBar={false}
-								title={plotData.subtitle}
-							/>
-						))}
-					</Card>
-				</Grid>
-			))}
+					))}
+				</Card>
+			</Grid>
 			<Grid item xs={12} md={12} mt={2}>
 				<Card
 					title="Sensory Analysis of Leafy Greens"

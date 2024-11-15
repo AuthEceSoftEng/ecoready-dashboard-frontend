@@ -95,7 +95,7 @@ export const calculateDates = (now, offsetHours = 3) => {
 
 	const currentDate = new Date(offsetTime).toISOString().slice(0, 19);
 	const formattedBeginningOfMonth = new Date(year, month, 1, offsetHours).toISOString().slice(0, 19);
-	const beginningOfHour = new Date(offsetTime).setMinutes(180, 0, 0);
+	const beginningOfHour = new Date(now).setMinutes(180, 0, 0);
 	const formattedBeginningOfHour = new Date(beginningOfHour).toISOString().slice(0, 19);
 	const formattedBeginningOfDay = new Date(year, month, day, offsetHours).toISOString().slice(0, 19);
 

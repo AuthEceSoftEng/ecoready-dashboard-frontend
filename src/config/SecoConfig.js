@@ -1,6 +1,6 @@
 export	const organization = "seco_collab";
 
-const secoConfigs = (formattedBeginningOfMonth, formattedBeginningOfDay, currentDate) => [
+const secoConfigs = (currentDate, formattedBeginningOfMonth, formattedBeginningOfDay) => [
 	{
 		type: "data",
 		project: "seco_collab_project",

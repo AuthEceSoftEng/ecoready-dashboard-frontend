@@ -120,6 +120,37 @@ const AgroLab = () => {
 
 	const tickvals = generate2024Months;
 
+	const renderCard = (card, index) => (
+		<Grid key={index} item xs={12} md={4} alignItems="center" flexDirection="column">
+			<Card title={card.title} footer={cardFooter({ minutesAgo: state.minutesAgo })}>
+				<Typography variant="h4" component="h4" align="center" sx={{ fontWeight: "bold" }}>
+					{card.value}
+					<Typography variant="body2" component="p" sx={{ fontSize: "0.6em" }}>
+						<span style={{ color: card.color }}>{card.percentage}</span>
+						{" "}
+						{card.subtitle}
+					</Typography>
+				</Typography>
+			</Card>
+		</Grid>
+	);
+
+	const renderPlot = (plot, index) => (
+		<Grid key={index} item xs={12} md={4} alignItems="center" flexDirection="column" mt={2}>
+			<Card title={plot.title} footer={cardFooter({ minutesAgo: state.minutesAgo })}>
+				<Plot
+					scrollZoom
+					data={plot.data}
+					showLegend={false}
+					displayBar={false}
+					height="400px"
+					xaxis={plot.xaxis}
+					yaxis={plot.yaxis}
+				/>
+			</Card>
+		</Grid>
+	);
+
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
 			{[
@@ -129,7 +160,6 @@ const AgroLab = () => {
 					subtitle: `${year - 1}`,
 					percentage: "6%",
 					color: colors.secondary,
-					footer: cardFooter({ minutesAgo: state.minutesAgo }),
 				},
 				{
 					title: "Current Month's Irrigation",
@@ -137,29 +167,14 @@ const AgroLab = () => {
 					subtitle: monthNames[month - 1].text,
 					percentage: "10%",
 					color: colors.error,
-					footer: cardFooter({ minutesAgo: state.minutesAgo }),
 				},
 				{
 					title: "Temperature",
 					value: `${meanTemp}°C`,
 					subtitle: "Sunny skies in your area",
 					color: colors.warning,
-					footer: cardFooter({ minutesAgo: state.minutesAgo }),
 				},
-			].map((card, index) => (
-				<Grid key={index} item xs={12} md={4} alignItems="center" flexDirection="column">
-					<Card title={card.title} footer={card.footer}>
-						<Typography variant="h4" component="h4" align="center" sx={{ fontWeight: "bold" }}>
-							{card.value}
-							<Typography variant="body2" component="p" sx={{ fontSize: "0.6em" }}>
-								<span style={{ color: card.color }}>{card.percentage}</span>
-								{" "}
-								{card.subtitle}
-							</Typography>
-						</Typography>
-					</Card>
-				</Grid>
-			))}
+			].map(renderCard)}
 			{[
 				{
 					title: "Harvest's Crop Yield Distribution",
@@ -202,21 +217,7 @@ const AgroLab = () => {
 					xaxis: { tickangle: 15 },
 					yaxis: { title: "Humidity (%)", tickangle: -30 },
 				},
-			].map((plot, index) => (
-				<Grid key={index} item xs={12} md={4} alignItems="center" flexDirection="column" mt={2}>
-					<Card title={plot.title} footer={cardFooter({ minutesAgo: state.minutesAgo })}>
-						<Plot
-							scrollZoom
-							data={plot.data}
-							showLegend={false}
-							displayBar={false}
-							height="400px"
-							xaxis={plot.xaxis}
-							yaxis={plot.yaxis}
-						/>
-					</Card>
-				</Grid>
-			))}
+			].map(renderPlot)}
 			<Grid item xs={12} md={12} mt={2}>
 				<Card title="Annual Yield Per Field" footer={cardFooter({ minutesAgo: state.minutesAgo })}>
 					<Plot
