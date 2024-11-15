@@ -263,8 +263,8 @@ const AgroLab = () => {
 						position: "absolute",
 						top: 0,
 						right: -85,
-						width: "54%",
-						height: "50%",
+						// width: "54%",
+						// height: "50%",
 						zIndex: 10,
 					},
 				},
@@ -306,8 +306,8 @@ const AgroLab = () => {
 						position: "absolute",
 						bottom: 0,
 						right: -70,
-						width: "54%",
-						height: "50%",
+						// width: "54%",
+						// height: "50%",
 						zIndex: 20,
 						display: "grid",
 					},
@@ -335,7 +335,7 @@ const AgroLab = () => {
 					</Card>
 				</Grid>
 			))}
-			<Grid item width="100%" mt={2}>
+			<Grid item xs={12} md={12} mt={2}>
 				<Card title="Soil Quality" footer={cardFooter({ minutesAgo: state.minutesAgo })}>
 					{groupedSoilQuality?.field1 && (
 						<Plot

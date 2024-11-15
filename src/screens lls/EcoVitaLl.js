@@ -79,13 +79,13 @@ const EcoVItaLl = () => {
 			].map((card, index) => (
 				<Grid key={index} item xs={12} md={6} alignItems="center" flexDirection="column" mt={2}>
 					<Card title={card.title} footer={cardFooter({ minutesAgo: state.minutesAgo })}>
-						<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
+						<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
 							{card.data.map((plotData, plotIndex) => (
-								<Grid key={plotIndex} item xs={12} md={6} justifyContent="center">
+								<Grid key={plotIndex} item xs={12} md={6} justifyContent="center" sx={{ height: "200px" }}>
 									<Plot
 										showLegend
 										scrollZoom
-										height="180px"
+										width="200px"
 										data={[
 											{
 												type: "indicator",
