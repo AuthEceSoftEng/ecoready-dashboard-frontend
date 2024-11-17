@@ -20,29 +20,23 @@ const Map = () => (
 					defaultChecked: true,
 					name: "Default Map",
 				},
-				simple: {
+				topographical: {
 					show: true,
 					hiddable: true,
 					defaultChecked: true,
-					name: "Simple Map",
+					name: "Topographical Map",
 				},
-				dark: {
+				humanitarian: {
 					show: true,
 					hiddable: true,
 					defaultChecked: true,
-					name: "Dark Map",
+					name: "Humanitarian Map",
 				},
-				terrain: {
+				cycling: {
 					show: true,
 					hiddable: true,
 					defaultChecked: true,
-					name: "Terrain Map",
-				},
-				satellite: {
-					show: true,
-					hiddable: true,
-					defaultChecked: true,
-					name: "Satellite Map",
+					name: "Cycling Map",
 				},
 			}}
 			markers={[
