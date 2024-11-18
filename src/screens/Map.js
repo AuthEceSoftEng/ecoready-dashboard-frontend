@@ -11,8 +11,8 @@ const Map = () => (
 		<MapComponent
 			// eslint-disable-next-line react/jsx-boolean-value
 			scrollWheelZoom={true} // Whether the map can be zoomed using the mouse wheel
-			zoom={12} // Initial zoom level of the map
-			center={[40.627, 22.96]} // Initial center of the map (latitude and longitude - currently set to Thessaloniki)
+			zoom={4} // Initial zoom level of the map
+			center={[55.499_383, 28.527_665]} // Initial center of the map (set so that the whole of Europe is visible)
 			layers={{ // Layers to display on the map
 				normal: {
 					show: true,
