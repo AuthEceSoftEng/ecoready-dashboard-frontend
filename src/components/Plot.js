@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useEffect, useState } from "react";
 import Plotly from "react-plotly.js";
 
 import colors from "../_colors.scss";
@@ -23,14 +23,31 @@ const Plot = ({
 	yaxis = {},
 }) => {
 	// Calculate the font size dynamically based on the width and height of the plot if not provided
-	const calculatedTitleFontSize = useMemo(
-		() => titleFontSize || Math.min(Number.parseInt(width, 10), Number.parseInt(height, 10)) * 0.15,
-		[titleFontSize, width, height],
+	const [calculatedTitleFontSize, setCalculatedTitleFontSize] = useState(
+		titleFontSize || Math.min(Number.parseInt(width, 10), Number.parseInt(height, 10)) * 0.023,
 	);
-	const calculatedLegendFontSize = useMemo(
-		() => legendFontSize || Math.min(Number.parseInt(width, 10), Number.parseInt(height, 10)) * 0.1,
-		[legendFontSize, width, height],
+	const [calculatedLegendFontSize, setCalculatedLegendFontSize] = useState(
+		legendFontSize || Math.min(Number.parseInt(width, 10), Number.parseInt(height, 10)) * 0.014,
 	);
+
+	useEffect(() => {
+		const handleResize = () => {
+			setCalculatedTitleFontSize(
+				titleFontSize || Math.min(window.innerWidth, window.innerHeight) * 0.023,
+			);
+			setCalculatedLegendFontSize(
+				legendFontSize || Math.min(window.innerWidth, window.innerHeight) * 0.014,
+			);
+		};
+
+		window.addEventListener("resize", handleResize);
+
+		// Initial calculation
+		handleResize();
+
+		// Cleanup event listener on component unmount
+		return () => window.removeEventListener("resize", handleResize);
+	}, [titleFontSize, legendFontSize]);
 
 	return (
 		<Plotly
