@@ -77,11 +77,11 @@ const EcoVItaLl = () => {
 					color: "secondary",
 				},
 			].map((card, index) => (
-				<Grid key={index} item xs={12} md={6} alignItems="center" flexDirection="column" mt={2}>
+				<Grid key={index} item xs={12} md={6} alignItems="center" flexDirection="column" mt={2} padding={0}>
 					<Card title={card.title} footer={cardFooter({ minutesAgo: state.minutesAgo })}>
-						<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
+						<Grid container display="flex" direction="row" justifyContent="space-evenly" padding={0} spacing={1}>
 							{card.data.map((plotData, plotIndex) => (
-								<Grid key={plotIndex} item xs={12} md={6} justifyContent="center" sx={{ height: "200px" }}>
+								<Grid key={plotIndex} item xs={12} md={6} justifyContent="center" alignItems="center" sx={{ height: "200px" }}>
 									<Plot
 										showLegend
 										scrollZoom
@@ -161,7 +161,6 @@ const EcoVItaLl = () => {
 					<Card title={card.title} footer={cardFooter({ minutesAgo: state.minutesAgo })}>
 						<Plot
 							scrollZoom
-							displayBar
 							height="250px"
 							data={card.data}
 							title={monthNames[month].text}
