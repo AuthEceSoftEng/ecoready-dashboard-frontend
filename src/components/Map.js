@@ -6,10 +6,9 @@ import colors from "../_colors.scss";
 
 const urls = {
 	normal: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-	simple: "https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png",
-	dark: "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png",
-	terrain: "https://tiles.stadiamaps.com/tiles/stamen_terrain_background/{z}/{x}/{y}{r}.png",
-	satellite: "https://tiles.stadiamaps.com/tiles/alidade_satellite/{z}/{x}/{y}{r}.png",
+	topographical: "https://a.tile.opentopomap.org/{z}/{x}/{y}.png",
+	humanitarian: "https://a.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png",
+	cycling: "https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png",
 };
 
 const Plot = ({
@@ -41,7 +40,11 @@ const Plot = ({
 			scrollWheelZoom={scrollWheelZoom}
 		>
 			{Object.keys(layers).filter((layer) => layers[layer].show && !layers[layer].hiddable).map((layer, index) => (
-				<TileLayer key={index} url={urls[layer]} />
+				<TileLayer
+					key={index}
+					url={urls[layer]}
+					attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+				/>
 			))}
 			{markers.filter((marker) => !marker.hiddable).map((marker, index) => (
 				<Marker
@@ -138,7 +141,11 @@ const Plot = ({
 			<LayersControl position="topright">
 				{Object.keys(layers).filter((layer) => layers[layer].show && layers[layer].hiddable).map((layer, index) => (
 					<LayersControl.Overlay key={index} name={layers[layer].name} checked={layers[layer].defaultChecked}>
-						<TileLayer key={index} url={urls[layer]} />
+						<TileLayer
+							key={index}
+							url={urls[layer]}
+							attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+						/>
 					</LayersControl.Overlay>
 				))}
 				{markers.filter((marker) => marker.hiddable).map((marker, index) => (
