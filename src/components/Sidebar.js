@@ -128,14 +128,6 @@ const Sidebar = ({ isSmall: sidebarIsSmall, onToggleSidebar }) => {
 				navigate("/home");
 			},
 		},
-		// {
-		// 	icon: inspectionIcon,
-		// 	text: "Buttons",
-		// 	handler: () => {
-		// 		handleServicesMenuClose();
-		// 		navigate("/buttons");
-		// 	},
-
 		{
 			// icon: isselServicesIcon,
 			text: "Living Labs",
@@ -147,6 +139,14 @@ const Sidebar = ({ isSmall: sidebarIsSmall, onToggleSidebar }) => {
 				title: lab.title,
 				handler: () => navigate(lab.path),
 			})),
+		},
+		{
+			// icon: inspectionIcon,
+			text: "Map",
+			handler: () => {
+				handleServicesMenuClose();
+				navigate("/Map");
+			},
 		},
 
 	];
