@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
 import Plotly from "react-plotly.js";
 
 import colors from "../_colors.scss";
+
 
 const Plot = ({
 	data, // An array of objects. Each one describes a specific subplot
@@ -22,32 +22,6 @@ const Plot = ({
 	xaxis = {},
 	yaxis = {},
 }) => {
-	// Calculate the font size dynamically based on the width and height of the plot if not provided
-	const [calculatedTitleFontSize, setCalculatedTitleFontSize] = useState(
-		titleFontSize || Math.min(Number.parseInt(width, 10), Number.parseInt(height, 10)) * 0.023,
-	);
-	const [calculatedLegendFontSize, setCalculatedLegendFontSize] = useState(
-		legendFontSize || Math.min(Number.parseInt(width, 10), Number.parseInt(height, 10)) * 0.014,
-	);
-
-	useEffect(() => {
-		const handleResize = () => {
-			setCalculatedTitleFontSize(
-				titleFontSize || Math.min(window.innerWidth, window.innerHeight) * 0.023,
-			);
-			setCalculatedLegendFontSize(
-				legendFontSize || Math.min(window.innerWidth, window.innerHeight) * 0.014,
-			);
-		};
-
-		window.addEventListener("resize", handleResize);
-
-		// Initial calculation
-		handleResize();
-
-		// Cleanup event listener on component unmount
-		return () => window.removeEventListener("resize", handleResize);
-	}, [titleFontSize, legendFontSize]);
 
 	return (
 		<Plotly
@@ -86,11 +60,11 @@ const Plot = ({
 			layout={{
 				title: {
 					text: title,
-					font: { color: colors?.[titleColor] || titleColor, size: calculatedTitleFontSize },
+					font: { color: colors?.[titleColor] || titleColor, size: titleFontSize },
 				},
 				showlegend: showLegend,
 				legend: {
-					font: { color: colors?.[titleColor] || titleColor, size: calculatedLegendFontSize },
+					font: { color: colors?.[titleColor] || titleColor, size: legendFontSize },
 				},
 				xaxis: {
 					...xaxis,
