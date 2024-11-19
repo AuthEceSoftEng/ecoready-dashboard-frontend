@@ -43,7 +43,7 @@ const DatePicker = ({
 					views={views}
 					disabled={disabled}
 					label={label}
-					inputFormat="DD/MM/YYYY"
+					inputFormat={label === "Year Picker" ? "YYYY" : "DD/MM/YYYY"}
 					value={customValue}
 					renderInput={(params) => <TextField {...params} />}
 					onChange={handleChange}
@@ -55,7 +55,7 @@ const DatePicker = ({
 					views={views}
 					disabled={disabled}
 					label={label}
-					inputFormat="DD/MM/YYYY"
+					inputFormat={label === "Year Picker" ? "YYYY" : "DD/MM/YYYY"}
 					value={customValue}
 					renderInput={(params) => <TextField {...params} />}
 					onChange={handleChange}

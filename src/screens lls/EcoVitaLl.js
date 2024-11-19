@@ -81,11 +81,11 @@ const EcoVItaLl = () => {
 					<Card title={card.title} footer={cardFooter({ minutesAgo: state.minutesAgo })}>
 						<Grid container display="flex" direction="row" justifyContent="space-evenly" padding={0} spacing={1}>
 							{card.data.map((plotData, plotIndex) => (
-								<Grid key={plotIndex} item xs={12} md={6} justifyContent="flex-end" alignItems="center" sx={{ height: "200px" }}>
+								<Grid key={plotIndex} item xs={12} sm={12} md={6} justifyContent="flex-end" alignItems="center" sx={{ height: "200px" }}>
 									<Plot
 										showLegend
 										scrollZoom
-										width="220px"
+										// width="220px"
 										data={[
 											{
 												type: "indicator",
@@ -131,17 +131,6 @@ const EcoVItaLl = () => {
 					title: "Humidity Range Per Day",
 					data: [
 						{
-							x: state.dataSets.humidity_min
-								? state.dataSets.humidity_min.map((item) => item.interval_start)
-								: [],
-							y: state.dataSets.humidity_min
-								? state.dataSets.humidity_min
-									.map((item) => item.min_humidity) : [],
-							type: "line",
-							title: "Min",
-							color: "third",
-						},
-						{
 							x: state.dataSets.humidity_max
 								? state.dataSets.humidity_max.map((item) => item.interval_start)
 								: [],
@@ -151,6 +140,17 @@ const EcoVItaLl = () => {
 							type: "line",
 							title: "Max",
 							color: "primary",
+						},
+						{
+							x: state.dataSets.humidity_min
+								? state.dataSets.humidity_min.map((item) => item.interval_start)
+								: [],
+							y: state.dataSets.humidity_min
+								? state.dataSets.humidity_min
+									.map((item) => item.min_humidity) : [],
+							type: "line",
+							title: "Min",
+							color: "third",
 						},
 					],
 					xaxis: { title: "Days" },
