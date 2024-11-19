@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Plotly from "react-plotly.js";
 
 import colors from "../_colors.scss";
