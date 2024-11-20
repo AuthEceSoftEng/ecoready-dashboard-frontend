@@ -66,6 +66,8 @@
 		"@mui/x-date-pickers": "^5.0.19",
 		"@sentry/react": "^8.33.1",
 		"@types/leaflet": "^1.9.14",
+		"ajv": "^6.12.6",
+		"ajv-keywords": "^3.5.2",
 		"bulma": "^0.9.4",
 		"clsx": "^1.2.1",
 		"color-harmony": "^0.3.0",
