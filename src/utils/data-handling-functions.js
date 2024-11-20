@@ -63,7 +63,7 @@ export const getMaxValuesByProperty = (groupedObject, property) => {
 
 	for (const key of Object.keys(groupedObject)) {
 		const maxValue = groupedObject[key].reduce(
-			(max, item) => (item[property] > max ? item[property] : max),
+			(max, item) => (Math.max(item[property], max)),
 			Number.NEGATIVE_INFINITY,
 		);
 		maxValues[key] = maxValue;

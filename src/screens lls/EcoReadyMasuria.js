@@ -1,5 +1,5 @@
 import { Grid } from "@mui/material";
-import { memo, useMemo, useState, useCallback, useRef, useEffect } from "react";
+import { memo, useMemo, useState, useCallback } from "react";
 
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
@@ -61,8 +61,8 @@ const EcoReadyMasuria = () => {
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
 			<Grid container display="flex" direction="row" justifyContent="flex-end" alignItems="center" spacing={2} mt={2}>
-				<Grid item sx={{ display: 'flex', justifyContent: 'flex-end' }} md={3}>
-					<Dropdown 
+				<Grid item sx={{ display: "flex", justifyContent: "flex-end" }} md={3}>
+					<Dropdown
 						id={dropdownContent[0].id}
 						placeholder={dropdownContent[0].label}
 						items={dropdownContent[0].items}
@@ -73,13 +73,13 @@ const EcoReadyMasuria = () => {
 						onChange={dropdownContent[0].onChange}
 					/>
 				</Grid>
-				<Grid item sx={{ display: 'flex', justifyContent: 'flex-end' }} md={2}>
+				<Grid item sx={{ display: "flex", justifyContent: "flex-end" }} md={2}>
 					{/* Select only the year */}
-					<DatePicker 
-						type="desktop" 
-						label="Year Picker" 
-						views={["year"]} 
-						value={`${year}`} 
+					<DatePicker
+						type="desktop"
+						label="Year Picker"
+						views={["year"]}
+						value={`${year}`}
 						onChange={handleYearChange}
 					/>
 				</Grid>

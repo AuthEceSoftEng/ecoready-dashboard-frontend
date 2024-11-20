@@ -34,7 +34,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const ResetPassword = () => {
-	const queryString = window.location.search;
+	const queryString = globalThis.location.search;
 	const urlParams = new URLSearchParams(queryString);
 	const token = urlParams.get("token");
 	const [isSubmitting, setIsSubmitting] = useState(false);

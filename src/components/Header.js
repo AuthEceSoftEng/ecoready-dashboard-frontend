@@ -9,10 +9,10 @@ import {
 import { makeStyles } from "@mui/styles";
 import { Image } from "mui-image";
 
-import { jwt, capitalize, isFuzzyMatch } from "../utils/index.js";
+import { jwt, capitalize } from "../utils/index.js"; // , isFuzzyMatch
 import logo from "../assets/images/logo.png";
-import inspectionIcon from "../assets/icons/inspection.png";
-import servicesIcon from "../assets/icons/services.png";
+// import inspectionIcon from "../assets/icons/inspection.png";
+// import servicesIcon from "../assets/icons/services.png";
 import logoutIcon from "../assets/icons/logout.png";
 
 import Search from "./Search.js";
@@ -84,19 +84,19 @@ const Header = ({ isAuthenticated }) => {
 
 	const location = useLocation();
 	const navigate = useNavigate();
-	const [anchorElServices, setAnchorElServices] = useState(null);
+	// const [anchorElServices, setAnchorElServices] = useState(null);
 	const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = useState(null);
 	const [searchFilter, setSearchFilter] = useState("");
 
-	const isMenuOpenServices = Boolean(anchorElServices);
+	// const isMenuOpenServices = Boolean(anchorElServices);
 	const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
 
-	const handleServicesMenuOpen = (event) => setAnchorElServices(event.currentTarget);
+	// const handleServicesMenuOpen = (event) => setAnchorElServices(event.currentTarget);
 	const handleMobileMenuClose = () => setMobileMoreAnchorEl(null);
-	const handleServicesMenuClose = () => { setAnchorElServices(null); handleMobileMenuClose(); };
+	// const handleServicesMenuClose = () => { setAnchorElServices(null); handleMobileMenuClose(); };
 	const handleMobileMenuOpen = (event) => setMobileMoreAnchorEl(event.currentTarget);
 	const closeAll = () => {
-		handleServicesMenuClose();
+		// handleServicesMenuClose();
 		handleMobileMenuClose();
 	};
 

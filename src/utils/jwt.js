@@ -16,7 +16,7 @@ const jwt = {
 		const token = cookie.get("_mycookie");
 		if (token) return decode(token);
 		cookie.remove("_mycookie");
-		window.location.href = "/";
+		globalThis.location.href = "/";
 		return null;
 	},
 };

@@ -6,103 +6,103 @@ import { makeStyles } from "@mui/styles";
 import colors from "../_colors.scss";
 
 const useStyles = makeStyles(() => ({
-  date_picker: {
-    color: (props) => colors[props.color] || props.color,
-    backgroundColor: (props) => colors[props.background] || props.background,
-    borderRadius: (props) => props.borderRadius,
-    outline: "none",
-    width: (props) => props.width,
-    "& .MuiInputBase-root": {
-      height: (props) => props.height,
-    },
-    "& .MuiInputLabel-root": {
-      // Default position
-      transform: "translate(14px, 8px) scale(1)",
-    },
-    "& .MuiInputLabel-root.MuiInputLabel-shrink": {
-      // Shrunk position
-      transform: "translate(14px, -3px) scale(0.7)",
-    },
-    "& .MuiInputLabel-outlined.MuiInputLabel-shrink": {
-      // Additional specificity for outlined variant
-      transform: "translate(14px, -3px) scale(0.7)",
-    },
-    "& .MuiInputBase-input": {
-      padding: (props) => props.height === "auto" ? undefined : "0 14px",
-    }
-  },
+	date_picker: {
+		color: (props) => colors[props.color] || props.color,
+		backgroundColor: (props) => colors[props.background] || props.background,
+		borderRadius: (props) => props.borderRadius,
+		outline: "none",
+		width: (props) => props.width,
+		"& .MuiInputBase-root": {
+			height: (props) => props.height,
+		},
+		"& .MuiInputLabel-root": {
+			// Default position
+			transform: "translate(14px, 8px) scale(1)",
+		},
+		"& .MuiInputLabel-root.MuiInputLabel-shrink": {
+			// Shrunk position
+			transform: "translate(14px, -3px) scale(0.7)",
+		},
+		"& .MuiInputLabel-outlined.MuiInputLabel-shrink": {
+			// Additional specificity for outlined variant
+			transform: "translate(14px, -3px) scale(0.7)",
+		},
+		"& .MuiInputBase-input": {
+			padding: (props) => (props.height === "auto" ? undefined : "0 14px"),
+		},
+	},
 }));
 
 const DatePicker = ({
-  type = "desktop",
-  value = null,
-  onChange,
-  disabled = false,
-  label = "Date",
-  views = ["day", "month", "year"],
-  background = "primary",
-  color = "white",
-  borderRadius = "10px",
-  width = "100%",
-  height = "40px", // Add height prop with default value
+	type = "desktop",
+	value = null,
+	onChange,
+	disabled = false,
+	label = "Date",
+	views = ["day", "month", "year"],
+	background = "primary",
+	color = "white",
+	borderRadius = "10px",
+	width = "100%",
+	height = "40px", // Add height prop with default value
 }) => {
-  const classes = useStyles({ background, color, borderRadius, width, height });
-  const [customValue, setCustomValue] = useState(value);
+	const classes = useStyles({ background, color, borderRadius, width, height });
+	const [customValue, setCustomValue] = useState(value);
 
-  const handleChange = (newValue) => {
-    setCustomValue(newValue);
-    if (onChange) onChange(newValue);
-  };
+	const handleChange = (newValue) => {
+		setCustomValue(newValue);
+		if (onChange) onChange(newValue);
+	};
 
-  return (
-    <>
-      {type === "desktop" && (
-        <DesktopDatePicker
-          className={classes.date_picker}
-          views={views}
-          disabled={disabled}
-          label={label}
-          inputFormat={label === "Year Picker" ? "YYYY" : "DD/MM/YYYY"}
-          value={customValue}
-          onChange={handleChange}
-          renderInput={(params) => <TextField {...params} />}
-        />
-      )}
-      {type === "mobile" && (
-        <MobileDatePicker
-          className={classes.date_picker}
-          views={views}
-          disabled={disabled}
-          label={label}
-          inputFormat={label === "Year Picker" ? "YYYY" : "DD/MM/YYYY"}
-          value={customValue}
-          renderInput={(params) => <TextField {...params} />}
-          onChange={handleChange}
-        />
-      )}
-      {type === "time" && (
-        <TimePicker
-          className={classes.date_picker}
-          disabled={disabled}
-          label={label}
-          value={customValue}
-          renderInput={(params) => <TextField {...params} />}
-          onChange={handleChange}
-        />
-      )}
-      {type === "datetime" && (
-        <DateTimePicker
-          className={classes.date_picker}
-          views={views}
-          disabled={disabled}
-          label={label}
-          value={customValue}
-          renderInput={(params) => <TextField {...params} />}
-          onChange={handleChange}
-        />
-      )}
-    </>
-  );
+	return (
+		<>
+			{type === "desktop" && (
+				<DesktopDatePicker
+					className={classes.date_picker}
+					views={views}
+					disabled={disabled}
+					label={label}
+					inputFormat={label === "Year Picker" ? "YYYY" : "DD/MM/YYYY"}
+					value={customValue}
+					renderInput={(params) => <TextField {...params} />}
+					onChange={handleChange}
+				/>
+			)}
+			{type === "mobile" && (
+				<MobileDatePicker
+					className={classes.date_picker}
+					views={views}
+					disabled={disabled}
+					label={label}
+					inputFormat={label === "Year Picker" ? "YYYY" : "DD/MM/YYYY"}
+					value={customValue}
+					renderInput={(params) => <TextField {...params} />}
+					onChange={handleChange}
+				/>
+			)}
+			{type === "time" && (
+				<TimePicker
+					className={classes.date_picker}
+					disabled={disabled}
+					label={label}
+					value={customValue}
+					renderInput={(params) => <TextField {...params} />}
+					onChange={handleChange}
+				/>
+			)}
+			{type === "datetime" && (
+				<DateTimePicker
+					className={classes.date_picker}
+					views={views}
+					disabled={disabled}
+					label={label}
+					value={customValue}
+					renderInput={(params) => <TextField {...params} />}
+					onChange={handleChange}
+				/>
+			)}
+		</>
+	);
 };
 
 export default DatePicker;
