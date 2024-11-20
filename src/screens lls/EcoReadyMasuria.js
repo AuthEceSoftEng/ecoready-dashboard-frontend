@@ -3,7 +3,7 @@ import { memo, useMemo, useState, useCallback, useRef, useEffect } from "react";
 
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
-// import Form from "../components/Form.js";
+import Form from "../components/Form.js";
 import useInit from "../utils/screen-init.js";
 import DatePicker from "../components/DatePicker.js";
 import ecoReadyMasuriaConfigs, { organization } from "../config/EcoReadyMasuriaConfig.js";
@@ -28,38 +28,39 @@ const EcoReadyMasuria = () => {
 	);
 	console.log("currentDate", currentDate);
 
-	const stationName = "TOMASZÓW LUBELSKI";
+	const [stationName, setStationName] = useState("BEZEK");
 	const fetchConfigs = useMemo(
 		() => ecoReadyMasuriaConfigs(stationName, year),
-		[year],
+		[stationName, year],
 	);
 
 	const { state } = useInit(organization, fetchConfigs);
 
-	const cardRef = useRef(null);
-	const [cardDimensions, setCardDimensions] = useState({ width: 0, height: 0 });
-
-	useEffect(() => {
-		const handleResize = () => {
-			if (cardRef.current) {
-				setCardDimensions({
-					width: cardRef.current.offsetWidth,
-					height: cardRef.current.offsetHeight,
-				});
-			}
-		};
-
-		window.addEventListener("resize", handleResize);
-		handleResize();
-
-		return () => window.removeEventListener("resize", handleResize);
-	}, []);
+	const formRef = useRef();
+	const formContent = useMemo(() => [
+		{
+			customType: "dropdown",
+			id: "station name",
+			label: "Pick Weather Station:",
+			items: [
+				{ value: "BEZEK", text: "Bezek" },
+				{ value: "GRABIK", text: "Grabik" },
+				{ value: "PRABUTY", text: "Prabuty" },
+			],
+			defaultValue: "BEZEK",
+			onChange: (event) => {
+				setStationName(event.target.value);
+				console.log("event", event.target.value);
+				console.log("stationName", stationName);
+			},
+		},
+	], []);
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
 			<Grid container display="flex" direction="row" justifyContent="flex-end" alignItems="center" spacing={2} mt={2}>
-				<Grid item >
-					{/* Other content can go here */}
+				<Grid item sx={{ display: 'flex', justifyContent: 'flex-end' }} md={2}>
+					<Form ref={formRef} content={formContent} />
 				</Grid>
 				<Grid item sx={{ display: 'flex', justifyContent: 'flex-end' }} md={2}>
 					{/* Select only the year */}
@@ -116,8 +117,25 @@ const EcoReadyMasuria = () => {
 					xaxis: { title: "Days" },
 					yaxis: { title: "Temperature (°C)" },
 				},
+				{
+					title: "Minimum Ground Temperature Per Day",
+					data: [
+						{
+							x: state.dataSets.metrics
+								? state.dataSets.metrics.map((item) => item.timestamp)
+								: [],
+							y: state.dataSets.metrics
+								? state.dataSets.metrics
+									.map((item) => item.minimum_ground_temperature) : [],
+							type: "bar",
+							color: "third",
+						},
+					],
+					xaxis: { title: "Days" },
+					yaxis: { title: "Temperature (°C)" },
+				},
 			].map((card, index) => (
-				<Grid key={index} ref={cardRef} item xs={12} sm={12} md={12}>
+				<Grid key={index} item xs={12} sm={12} md={6}>
 					<Card title={card.title} footer={cardFooter({ minutesAgo: state.minutesAgo })}>
 						<Plot
 							scrollZoom
