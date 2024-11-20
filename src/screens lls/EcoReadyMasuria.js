@@ -3,7 +3,7 @@ import { memo, useMemo, useState, useCallback, useRef, useEffect } from "react";
 
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
-import Form from "../components/Form.js";
+import Dropdown from "../components/Dropdown.js";
 import useInit from "../utils/screen-init.js";
 import DatePicker from "../components/DatePicker.js";
 import ecoReadyMasuriaConfigs, { organization } from "../config/EcoReadyMasuriaConfig.js";
@@ -12,7 +12,7 @@ import { monthNames } from "../utils/useful-constants.js";
 import { cardFooter } from "../utils/card-footer.js";
 
 const EcoReadyMasuria = () => {
-	const customDate = useMemo(() => getCustomDateTime(2016, 1), []);
+	const customDate = useMemo(() => getCustomDateTime(2006, 1), []);
 	console.log("Custom Date", customDate);
 
 	const [year, setYear] = useState(customDate.getFullYear());
@@ -36,31 +36,42 @@ const EcoReadyMasuria = () => {
 
 	const { state } = useInit(organization, fetchConfigs);
 
-	const formRef = useRef();
-	const formContent = useMemo(() => [
+	const dropdownContent = useMemo(() => [
 		{
-			customType: "dropdown",
 			id: "station name",
-			label: "Pick Weather Station:",
+			size: "small",
+			width: "200px",
+			height: "40px",
+			color: "primary",
+			label: "Weather Station",
 			items: [
 				{ value: "BEZEK", text: "Bezek" },
 				{ value: "GRABIK", text: "Grabik" },
 				{ value: "PRABUTY", text: "Prabuty" },
+				{ value: "WARSZAWA-FILTRY", text: "Warszawa-Filtry" },
 			],
 			defaultValue: "BEZEK",
 			onChange: (event) => {
 				setStationName(event.target.value);
-				console.log("event", event.target.value);
-				console.log("stationName", stationName);
 			},
+
 		},
 	], []);
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
 			<Grid container display="flex" direction="row" justifyContent="flex-end" alignItems="center" spacing={2} mt={2}>
-				<Grid item sx={{ display: 'flex', justifyContent: 'flex-end' }} md={2}>
-					<Form ref={formRef} content={formContent} />
+				<Grid item sx={{ display: 'flex', justifyContent: 'flex-end' }} md={3}>
+					<Dropdown 
+						id={dropdownContent[0].id}
+						placeholder={dropdownContent[0].label}
+						items={dropdownContent[0].items}
+						size={dropdownContent[0].size}
+						width={dropdownContent[0].width}
+						height={dropdownContent[0].height}
+						background={dropdownContent[0].color}
+						onChange={dropdownContent[0].onChange}
+					/>
 				</Grid>
 				<Grid item sx={{ display: 'flex', justifyContent: 'flex-end' }} md={2}>
 					{/* Select only the year */}
@@ -133,6 +144,40 @@ const EcoReadyMasuria = () => {
 					],
 					xaxis: { title: "Days" },
 					yaxis: { title: "Temperature (°C)" },
+				},
+				{
+					title: "Daily Precipitation Sum",
+					data: [
+						{
+							x: state.dataSets.metrics
+								? state.dataSets.metrics.map((item) => item.timestamp)
+								: [],
+							y: state.dataSets.metrics
+								? state.dataSets.metrics
+									.map((item) => item.daily_precipitation_sum) : [],
+							type: "bar",
+							color: "primary",
+						},
+					],
+					xaxis: { title: "Days" },
+					yaxis: { title: "Precipitation (mm)" },
+				},
+				{
+					title: "Daily Snow Cover Height",
+					data: [
+						{
+							x: state.dataSets.metrics
+								? state.dataSets.metrics.map((item) => item.timestamp)
+								: [],
+							y: state.dataSets.metrics
+								? state.dataSets.metrics
+									.map((item) => item.snow_cover_height) : [],
+							type: "bar",
+							color: "blue",
+						},
+					],
+					xaxis: { title: "Days" },
+					yaxis: { title: "Snow Height (cm)" },
 				},
 			].map((card, index) => (
 				<Grid key={index} item xs={12} sm={12} md={6}>

@@ -133,6 +133,7 @@ const Dropdown = ({
 	background = "secondary",
 	showPlaceholder = true,
 	width = "",
+	height = "",
 	items = [],
 	value,
 	onChange,
