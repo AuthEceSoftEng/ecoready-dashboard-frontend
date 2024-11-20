@@ -23,7 +23,7 @@ const rootApi = ky.extend({
 					const res = await rootApi.extend({ throwHttpErrors: false, retry: 0 }).get("api/refresh");
 					if (res.status === 401) {
 						jwt.destroyToken();
-						window.location.href = "/";
+						globalThis.location.href = "/";
 					} else {
 						const { token } = await res.json();
 						jwt.setToken(token);
@@ -41,7 +41,7 @@ const rootApi = ky.extend({
 				}
 
 				if (status === 404) {
-					window.location.href = "/";
+					globalThis.location.href = "/";
 				}
 
 				return res;

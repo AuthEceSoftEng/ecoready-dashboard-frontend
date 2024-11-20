@@ -148,7 +148,7 @@ const Dropdown = ({
 			className={classes[`${background}_${(filled ? "filled" : "outlined")}`]}
 			color={background}
 			size={size}
-			style={{ color, width, height: "100%" }}
+			style={{ color, width, height }}
 			autoWidth={!width}
 			classes={{
 				filled: classes[`${background}_${(filled ? "filled" : "outlined")}`],

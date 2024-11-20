@@ -5,7 +5,7 @@ import { Image } from "mui-image";
 
 import logo from "../assets/images/logo.png";
 
-const ErrorFallback = ({ message = "Something went wrong! Please try again!", refetch = () => window.location.reload() }) => (
+const ErrorFallback = ({ message = "Something went wrong! Please try again!", refetch = () => globalThis.location.reload() }) => (
 	<Grid
 		container
 		direction="column"
@@ -28,7 +28,7 @@ const ErrorFallback = ({ message = "Something went wrong! Please try again!", re
 				<Grid item xs={12}>
 					<Grid container spacing={2} justifyContent="center">
 						<Grid item>
-							<Button size="small" startIcon={<ArrowBack />} variant="outlined" onClick={() => { window.location.href = "/"; }}>
+							<Button size="small" startIcon={<ArrowBack />} variant="outlined" onClick={() => { globalThis.location.href = "/"; }}>
 								{"Go Back"}
 							</Button>
 						</Grid>

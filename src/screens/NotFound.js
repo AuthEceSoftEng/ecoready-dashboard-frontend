@@ -8,7 +8,7 @@ const NotFound = () => (
 			<Typography gutterBottom variant="h6" component="p">
 				{"The page you requested was not found. If you believe something is wrong please contact us."}
 			</Typography>
-			<Button size="small" startIcon={<ArrowBack />} variant="outlined" onClick={() => { window.location.href = "/"; }}>
+			<Button size="small" startIcon={<ArrowBack />} variant="outlined" onClick={() => { globalThis.location.href = "/"; }}>
 				{"Go Back"}
 			</Button>
 		</div>

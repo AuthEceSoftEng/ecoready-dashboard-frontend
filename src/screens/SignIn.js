@@ -93,15 +93,15 @@ const SignIn = () => {
 
 	useEffect(() => {
 		try {
-			window.google.accounts.id.initialize({
+			globalThis.google.accounts.id.initialize({
 				client_id: REACT_APP_GOOGLE_CLIENT_ID,
 				callback: handleGoogleSuccess,
 			});
-			window.google.accounts.id.renderButton(
+			globalThis.google.accounts.id.renderButton(
 				document.querySelector("#googleLoginButton"),
 				{ theme: "outline", size: "large" },
 			);
-			window.google.accounts.id.prompt();
+			globalThis.google.accounts.id.prompt();
 		} catch { /** */ }
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
