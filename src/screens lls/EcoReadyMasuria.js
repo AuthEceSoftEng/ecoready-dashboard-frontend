@@ -57,13 +57,19 @@ const EcoReadyMasuria = () => {
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
-			<Grid container display="flex" direction="row" justifyContent="space-between" alignItems="center" spacing={2} mt={2}>
-				<Grid item>
+			<Grid container display="flex" direction="row" justifyContent="flex-end" alignItems="center" spacing={2} mt={2}>
+				<Grid item >
 					{/* Other content can go here */}
 				</Grid>
-				<Grid item xs={6} sm={6} md={6}>
+				<Grid item sx={{ display: 'flex', justifyContent: 'flex-end' }} md={2}>
 					{/* Select only the year */}
-					<DatePicker type="desktop" label="Year Picker" views={["year"]} width="45%" labelHeight="30px" value={`${year}`} onChange={handleYearChange} />
+					<DatePicker 
+						type="desktop" 
+						label="Year Picker" 
+						views={["year"]} 
+						value={`${year}`} 
+						onChange={handleYearChange}
+					/>
 				</Grid>
 			</Grid>
 			{[
