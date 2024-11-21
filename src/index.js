@@ -133,7 +133,7 @@ const App = () => {
 								<Route path="hivelab" element={<Protected c={<HiveLab />} />} />
 								<Route path="ecoreadymasuria" element={<Protected c={<EcoReadyMasuria />} />} />
 								<Route path="ecovitall" element={<Protected c={<EcoVitaLl />} />} />
-								<Route path="seco_collab" element={<Protected c={<SecoCollab />} />} />
+								<Route path="secocollab" element={<Protected c={<SecoCollab />} />} />
 								<Route path="plots" element={<Protected c={<Plots />} />} />
 								<Route path="map" element={<Protected c={<Map />} />} />
 								{/* <Route path="vertilab" element={<Protected c={<VertiLab />} />} /> */}

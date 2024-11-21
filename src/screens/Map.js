@@ -26,16 +26,16 @@ const Map = () => (
 					defaultChecked: true,
 					name: "Topographical Map",
 				},
-				humanitarian: {
-					show: true,
-					hiddable: true,
-					defaultChecked: true,
-					name: "Humanitarian Map",
-				},
+				// humanitarian: {
+				// 	show: true,
+				// 	hiddable: true,
+				// 	defaultChecked: true,
+				// 	name: "Humanitarian Map",
+				// },
 				cycling: {
 					show: true,
 					hiddable: true,
-					defaultChecked: true,
+					defaultChecked: false,
 					name: "Cycling Map",
 				},
 			}}
