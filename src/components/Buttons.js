@@ -75,6 +75,7 @@ export const SecondaryBackgroundButton = ({
 	titleColor = "white",
 	size = "",
 	width = "200px",
+	height = null,
 	title = "Button",
 	onClick,
 }) => (
@@ -87,7 +88,7 @@ export const SecondaryBackgroundButton = ({
 		variant="contained"
 		color="secondary"
 		size={(size || "")}
-		style={{ ...(width && { width }) }}
+		style={{ ...(width && { width }), ...(height && { height }) }}
 		onClick={onClick}
 	>
 		<Typography className={titleClassName} sx={{ color: `${titleColor}!important` }} style={{ textTransform: "none" }}>
