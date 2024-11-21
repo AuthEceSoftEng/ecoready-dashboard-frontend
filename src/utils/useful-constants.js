@@ -18,5 +18,5 @@ export const labs = [
 	{ title: "HiveLab", path: "../hivelab" },
 	{ title: "EcoVitaLL", path: "../ecovitall" },
 	// { title: "EcoReadyMasuria", path: "../ecoreadymasuria" },
-	{ title: "Seco Collab", path: "../seco_collab" },
+	{ title: "Seco Collab", path: "../secocollab" },
 ];
