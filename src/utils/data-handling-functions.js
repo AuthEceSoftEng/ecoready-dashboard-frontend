@@ -124,7 +124,8 @@ export const calculateDifferenceBetweenDates = (startDate, endDate) => {
 	// Calculate the difference in days
 	const differenceInTime = end - start; // Difference in milliseconds
 	const differenceInDays = Math.ceil(differenceInTime / (1000 * 3600 * 24)); // Convert milliseconds to days
+	const differenceInHours = Math.ceil(differenceInTime / (1000 * 3600)); // Convert milliseconds to hours
 
-	return differenceInDays;
+	return { differenceInDays, differenceInHours };
 };
 
