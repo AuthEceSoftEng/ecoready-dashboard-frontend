@@ -11,7 +11,7 @@ import { monthNames } from "../utils/useful-constants.js";
 import { cardFooter } from "../utils/card-footer.js";
 
 const SecoCollab = () => {
-	const customDate = useMemo(() => getCustomDateTime(2024, 9), []);
+	const customDate = useMemo(() => getCustomDateTime(2024, 8), []);
 	// Memoize the date calculations and fetchConfigs to reduce re-calculations
 	const { month, currentDate, formattedBeginningOfMonth, formattedBeginningOfDay } =	useMemo(
 		() => calculateDates(customDate), [customDate],
