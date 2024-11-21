@@ -17,6 +17,6 @@ export const labs = [
 	{ title: "AgroLab", path: "../agrolab" },
 	{ title: "HiveLab", path: "../hivelab" },
 	{ title: "EcoVitaLL", path: "../ecovitall" },
-	// { title: "EcoReadyMasuria", path: "../ecoreadymasuria" },
+	{ title: "EcoReadyMasuria", path: "../ecoreadymasuria" },
 	{ title: "Seco Collab", path: "../secocollab" },
 ];
