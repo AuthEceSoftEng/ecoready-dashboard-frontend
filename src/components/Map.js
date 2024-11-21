@@ -140,27 +140,13 @@ const Plot = ({
 			))}
 			<LayersControl position="topright">
 				{Object.keys(layers).filter((layer) => layers[layer].show && layers[layer].hiddable).map((layer, index) => (
-					<LayersControl.Overlay key={index} name={layers[layer].name} checked={layers[layer].defaultChecked}>
+					<LayersControl.BaseLayer key={index} name={layers[layer].name} checked={layers[layer].defaultChecked}>
 						<TileLayer
 							key={index}
 							url={urls[layer]}
 							attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 						/>
-					</LayersControl.Overlay>
-				))}
-				{markers.filter((marker) => marker.hiddable).map((marker, index) => (
-					<LayersControl.Overlay key={index} name={marker.name} checked={marker.defaultChecked}>
-						<Marker
-							position={marker.position}
-							{...(marker.icon && { icon: marker.icon })}
-						>
-							{marker.popup && (
-								<Popup>
-									{marker.popup}
-								</Popup>
-							)}
-						</Marker>
-					</LayersControl.Overlay>
+					</LayersControl.BaseLayer>
 				))}
 				{circles.filter((circle) => circle.hiddable).map((circle, index) => (
 					<LayersControl.Overlay key={index} name={circle.name} checked={circle.defaultChecked}>
@@ -247,6 +233,22 @@ const Plot = ({
 								/>
 							))}
 						</LayerGroup>
+					</LayersControl.Overlay>
+				))}
+			</LayersControl>
+			<LayersControl position="topright">
+				{markers.filter((marker) => marker.hiddable).map((marker, index) => (
+					<LayersControl.Overlay key={index} name={marker.name} checked={marker.defaultChecked}>
+						<Marker
+							position={marker.position}
+							{...(marker.icon && { icon: marker.icon })}
+						>
+							{marker.popup && (
+								<Popup>
+									{marker.popup}
+								</Popup>
+							)}
+						</Marker>
 					</LayersControl.Overlay>
 				))}
 			</LayersControl>
