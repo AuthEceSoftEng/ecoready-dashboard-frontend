@@ -53,7 +53,7 @@ import EcoVitaLl from "./screens lls/EcoVitaLl.js";
 import SecoCollab from "./screens lls/SecoCollab.js";
 import Plots from "./examples/Plots.js";
 import Map from "./screens/Map.js";
-// import VertiLab from "./screens/VertiLab.js";
+import Mapexamp from "./examples/Map.js";
 
 const {
 	NODE_ENV,
@@ -136,6 +136,7 @@ const App = () => {
 								<Route path="secocollab" element={<Protected c={<SecoCollab />} />} />
 								<Route path="plots" element={<Protected c={<Plots />} />} />
 								<Route path="map" element={<Protected c={<Map />} />} />
+								<Route path="mapexamp" element={<Protected c={<Mapexamp />} />} />
 								{/* <Route path="vertilab" element={<Protected c={<VertiLab />} />} /> */}
 								{/* EXAMPLES */}
 								<Route path="buttons" element={<Protected c={<ButtonsExample />} />} />
