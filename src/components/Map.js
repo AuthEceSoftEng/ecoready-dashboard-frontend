@@ -38,6 +38,11 @@ const Plot = ({
 			center={center}
 			zoom={zoom}
 			scrollWheelZoom={scrollWheelZoom}
+			minZoom={2.37}
+			boundsOptions={{
+				padding: [50, 50],
+				animate: true,
+			}}
 		>
 			{Object.keys(layers).filter((layer) => layers[layer].show && !layers[layer].hiddable).map((layer, index) => (
 				<TileLayer
