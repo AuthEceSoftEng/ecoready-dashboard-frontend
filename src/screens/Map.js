@@ -62,15 +62,23 @@ const Map = () => {
 								position: lab.coordinates,
 								popup: (
 									<div>
-										<h2>{lab.title}</h2>
-										<p />
-										<SecondaryBackgroundButton
-											title="EXPLORE"
-											height="30px"
-											onClick={() => {
-												navigate(lab.path);
-											}}
-										/>
+										<div style={{
+											display: "flex",
+											justifyContent: "center",
+											marginBottom: "8px",
+											height: "40px",
+											width: "100%",
+										}}
+										>
+											<SecondaryBackgroundButton
+												title={lab.title}
+												size="small"
+												onClick={() => {
+													navigate(lab.path);
+												}}
+											/>
+										</div>
+										<p>{"A description of the Living Lab will probably go here"}</p>
 									</div>
 								),
 								hiddable: true,
