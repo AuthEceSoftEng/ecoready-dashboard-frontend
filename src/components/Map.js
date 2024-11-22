@@ -39,6 +39,8 @@ const Plot = ({
 			zoom={zoom}
 			scrollWheelZoom={scrollWheelZoom}
 			minZoom={2.37}
+			maxBounds={[[-90, -180], [90, 180]]} // Latitude/longitude bounds for whole world
+			maxBoundsViscosity={1} // Makes bounds completely rigid
 			boundsOptions={{
 				padding: [50, 50],
 				animate: true,
