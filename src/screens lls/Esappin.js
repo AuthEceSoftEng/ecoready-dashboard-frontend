@@ -6,65 +6,61 @@ import Plot from "../components/Plot.js";
 import Dropdown from "../components/Dropdown.js";
 import useInit from "../utils/screen-init.js";
 import DatePicker from "../components/DatePicker.js";
-import ecoReadyMasuriaConfigs, { organization } from "../config/EcoReadyMasuriaConfig.js";
-import { calculateDates, getCustomDateTime } from "../utils/data-handling-functions.js";
+import esappinConfigs, { organization } from "../config/EsappinConfig.js";
+import { getCustomDateTime } from "../utils/data-handling-functions.js";
 import { monthNames } from "../utils/useful-constants.js";
 import { cardFooter } from "../utils/card-footer.js";
 
-const EcoReadyMasuria = () => {
-	const customDate = useMemo(() => getCustomDateTime(2006, 1), []);
-	console.log("Custom Date", customDate);
+const Esappin = () => {
+	const customDate = useMemo(() => getCustomDateTime(2024, 11), []);
 
-	const [year, setYear] = useState(customDate.getFullYear());
+	const [month, setMonth] = useState(customDate.getMonth());
 
-	const handleYearChange = useCallback((newValue) => {
-		setYear(newValue.$y); // Select only the year from the resulting object
+	const handleMonthChange = useCallback((newValue) => {
+		setMonth(newValue.$M); // Select only the month from the resulting object
 	}, []);
 
-	// Memoize the date calculations and fetchConfigs to reduce re-calculations
-	const { month, currentDate } = useMemo(
-		() => calculateDates(new Date(year, 0, 2)),
-		[year],
-	);
-	console.log("currentDate", currentDate);
+	const year = customDate.getFullYear();
 
-	const [stationName, setStationName] = useState("BEZEK");
+	const [product, setProduct] = useState("Rapsfeld B1");
 	const fetchConfigs = useMemo(
-		() => ecoReadyMasuriaConfigs(stationName, year),
-		[stationName, year],
+		() => esappinConfigs(product, monthNames[month].no),
+		[product, month],
 	);
-
-	const { state } = useInit(organization, fetchConfigs);
 
 	const dropdownContent = useMemo(() => [
 		{
-			id: "station name",
+			id: "product",
 			size: "small",
 			width: "200px",
 			height: "40px",
 			color: "primary",
-			label: "Weather Station",
+			label: "Product",
 			items: [
-				{ value: "BEZEK", text: "Bezek" },
-				{ value: "GRABIK", text: "Grabik" },
-				{ value: "PRABUTY", text: "Prabuty" },
-				{ value: "WARSZAWA-FILTRY", text: "Warszawa-Filtry" },
+				{ value: "Rapsfeld B1", text: "Rapsfeld B1" },
+				{ value: "Rapsfeld B2", text: "Rapsfeld B2" },
+				{ value: "Rapsfeld H1", text: "Rapsfeld H1" },
+				{ value: "Rapsfeld H2", text: "Rapsfeld H2" },
+				{ value: "Erdbeeren", text: "Erdbeeren" },
+				{ value: "Gerstefeld G1", text: "Gerstefeld G1" },
 			],
-			defaultValue: "BEZEK",
+			defaultValue: "Rapsfeld B1",
 			onChange: (event) => {
-				setStationName(event.target.value);
+				setProduct(event.target.value);
 			},
 
 		},
 	], []);
 
+	const { state } = useInit(organization, fetchConfigs);
+
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
 			<Grid container display="flex" direction="row" justifyContent="flex-end" alignItems="center" spacing={2} mt={2}>
-				<Grid item sx={{ display: "flex", justifyContent: "flex-end" }} md={3}>
+				<Grid item sx={{ display: "flex", justifyContent: "flex-end" }} xs={6} md={3}>
 					<Dropdown
 						id={dropdownContent[0].id}
-						value={stationName}
+						value={product}
 						placeholder={dropdownContent[0].label}
 						items={dropdownContent[0].items}
 						size={dropdownContent[0].size}
@@ -74,14 +70,15 @@ const EcoReadyMasuria = () => {
 						onChange={dropdownContent[0].onChange}
 					/>
 				</Grid>
-				<Grid item sx={{ display: "flex", justifyContent: "flex-end" }} md={2}>
+				<Grid item sx={{ display: "flex", justifyContent: "flex-end" }} md={3}>
 					{/* Select only the year */}
 					<DatePicker
 						type="desktop"
-						label="Year Picker"
-						views={["year"]}
-						value={`${year}`}
-						onChange={handleYearChange}
+						label="Month Picker"
+						width="180px"
+						views={["month"]}
+						value={`${monthNames[month].text} ${year}`}
+						onChange={handleMonthChange}
 					/>
 				</Grid>
 			</Grid>
@@ -95,7 +92,7 @@ const EcoReadyMasuria = () => {
 								: [],
 							y: state.dataSets.metrics
 								? state.dataSets.metrics
-									.map((item) => item.maximum_daily_temperature) : [],
+									.map((item) => item.max_temperature) : [],
 							type: "scatter",
 							mode: "lines+markers",
 							title: "Max",
@@ -107,39 +104,10 @@ const EcoReadyMasuria = () => {
 								: [],
 							y: state.dataSets.metrics
 								? state.dataSets.metrics
-									.map((item) => item.average_daily_temperature) : [],
-							type: "scatter",
-							mode: "lines+markers",
-							title: "Avg",
-							color: "secondary",
-						},
-						{
-							x: state.dataSets.metrics
-								? state.dataSets.metrics.map((item) => item.timestamp)
-								: [],
-							y: state.dataSets.metrics
-								? state.dataSets.metrics
-									.map((item) => item.minimum_daily_temperature) : [],
+									.map((item) => item.min_temperature) : [],
 							type: "scatter",
 							mode: "lines+markers",
 							title: "Min",
-							color: "third",
-						},
-					],
-					xaxis: { title: "Days" },
-					yaxis: { title: "Temperature (°C)" },
-				},
-				{
-					title: "Minimum Ground Temperature Per Day",
-					data: [
-						{
-							x: state.dataSets.metrics
-								? state.dataSets.metrics.map((item) => item.timestamp)
-								: [],
-							y: state.dataSets.metrics
-								? state.dataSets.metrics
-									.map((item) => item.minimum_ground_temperature) : [],
-							type: "bar",
 							color: "third",
 						},
 					],
@@ -155,7 +123,7 @@ const EcoReadyMasuria = () => {
 								: [],
 							y: state.dataSets.metrics
 								? state.dataSets.metrics
-									.map((item) => item.daily_precipitation_sum) : [],
+									.map((item) => item.precipitation_sum) : [],
 							type: "bar",
 							color: "primary",
 						},
@@ -164,7 +132,7 @@ const EcoReadyMasuria = () => {
 					yaxis: { title: "Precipitation (mm)" },
 				},
 				{
-					title: "Daily Snow Cover Height",
+					title: "Shortwave Radiation Sum",
 					data: [
 						{
 							x: state.dataSets.metrics
@@ -172,13 +140,13 @@ const EcoReadyMasuria = () => {
 								: [],
 							y: state.dataSets.metrics
 								? state.dataSets.metrics
-									.map((item) => item.snow_cover_height) : [],
+									.map((item) => item.shortwave_radiation_sum) : [],
 							type: "bar",
-							color: "blue",
+							color: "goldenrod",
 						},
 					],
 					xaxis: { title: "Days" },
-					yaxis: { title: "Snow Height (cm)" },
+					yaxis: { title: "Radiation Metric" },
 				},
 			].map((card, index) => (
 				<Grid key={index} item xs={12} sm={12} md={6}>
@@ -199,4 +167,4 @@ const EcoReadyMasuria = () => {
 	);
 };
 
-export default memo(EcoReadyMasuria);
+export default memo(Esappin);

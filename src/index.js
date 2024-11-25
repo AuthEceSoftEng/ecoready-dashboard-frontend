@@ -48,9 +48,16 @@ import { adjustColors, jwt, colorSuggestions } from "./utils/index.js";
 import "./i18n.js";
 import AgroLab from "./screens lls/AgroLab.js";
 import HiveLab from "./screens lls/HiveLab.js";
+// import AIDEMEC from "./screens lls/Aidemec.js";
+// import CONCATLL from "./screens lls/Concatll.js";
 import EcoReadyMasuria from "./screens lls/EcoReadyMasuria.js";
 import EcoVitaLl from "./screens lls/EcoVitaLl.js";
+import Esappin from "./screens lls/Esappin.js";
+// import LivOrganic from "./screens lls/LivOrganic.js";
+// import LOFS from "./screens lls/LOFS.js";
+// import Probio from "./screens lls/Probio.js";
 import SecoCollab from "./screens lls/SecoCollab.js";
+// import THALLA from "./screens lls/Thalla.js";
 import Plots from "./examples/Plots.js";
 import Map from "./screens/Map.js";
 import Mapexamp from "./examples/Map.js";
@@ -129,15 +136,22 @@ const App = () => {
 								<Route path="home" element={<Protected c={<Home />} />} />
 								<Route path="examples" element={<Protected c={<Examples />} />} />
 								<Route path="users" element={<Protected c={<Users />} />} />
-								<Route path="agrolab" element={<Protected c={<AgroLab />} />} />
-								<Route path="hivelab" element={<Protected c={<HiveLab />} />} />
-								<Route path="ecoreadymasuria" element={<Protected c={<EcoReadyMasuria />} />} />
-								<Route path="ecovitall" element={<Protected c={<EcoVitaLl />} />} />
-								<Route path="secocollab" element={<Protected c={<SecoCollab />} />} />
 								<Route path="plots" element={<Protected c={<Plots />} />} />
 								<Route path="map" element={<Protected c={<Map />} />} />
 								<Route path="mapexamp" element={<Protected c={<Mapexamp />} />} />
-								{/* <Route path="vertilab" element={<Protected c={<VertiLab />} />} /> */}
+								{/* Living Labs */}
+								<Route path="agrolab" element={<Protected c={<AgroLab />} />} />
+								<Route path="hivelab" element={<Protected c={<HiveLab />} />} />
+								{/* <Route path="aidemec" element={<Protected c={<AIDEMEC />} />} /> */}
+								{/* <Route path="concatll" element={<Protected c={<CONCATLL />} />} /> */}
+								<Route path="ecoreadymasuria" element={<Protected c={<EcoReadyMasuria />} />} />
+								<Route path="ecovitall" element={<Protected c={<EcoVitaLl />} />} />
+								<Route path="esappin" element={<Protected c={<Esappin />} />} />
+								{/* <Route path="livorganic" element={<Protected c={<LivOrganic />} />} /> */}
+								{/* <Route path="lofs" element={<Protected c={<LOFS />} />} /> */}
+								{/* <Route path="probio" element={<Protected c={<Probio />} />} /> */}
+								<Route path="secocollab" element={<Protected c={<SecoCollab />} />} />
+								{/* <Route path="thalla" element={<Protected c={<THALLA />} />} /> */}
 								{/* EXAMPLES */}
 								<Route path="buttons" element={<Protected c={<ButtonsExample />} />} />
 								<Route path="card" element={<Protected c={<CardExample />} />} />
