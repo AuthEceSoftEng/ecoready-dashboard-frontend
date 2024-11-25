@@ -12,7 +12,7 @@ import { monthNames } from "../utils/useful-constants.js";
 import { cardFooter } from "../utils/card-footer.js";
 
 const Esappin = () => {
-	const customDate = useMemo(() => getCustomDateTime(2024, 11), []);
+	const customDate = useMemo(() => getCustomDateTime(2024, 10), []);
 
 	const [month, setMonth] = useState(customDate.getMonth());
 
@@ -57,7 +57,7 @@ const Esappin = () => {
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
 			<Grid container display="flex" direction="row" justifyContent="flex-end" alignItems="center" spacing={2} mt={2}>
-				<Grid item sx={{ display: "flex", justifyContent: "flex-end" }} xs={6} md={2}>
+				<Grid item sx={{ display: "flex", justifyContent: "flex-end" }} xs={12} md={3}>
 					<Dropdown
 						id={dropdownContent[0].id}
 						value={product}
@@ -70,7 +70,7 @@ const Esappin = () => {
 						onChange={dropdownContent[0].onChange}
 					/>
 				</Grid>
-				<Grid item sx={{ display: "flex", justifyContent: "flex-end" }} xs={6} md={2}>
+				<Grid item sx={{ display: "flex", justifyContent: "flex-end" }} xs={12} md={3}>
 					{/* Select only the month */}
 					<DatePicker
 						type="desktop"
@@ -81,6 +81,56 @@ const Esappin = () => {
 						onChange={handleMonthChange}
 					/>
 				</Grid>
+			</Grid>
+
+			<Grid item xs={12} md={12} alignItems="center" flexDirection="column" mt={2} padding={0}>
+				<Card title="Month's Overview" footer={cardFooter({ minutesAgo: state.minutesAgo })}>
+					<Grid container display="flex" direction="row" justifyContent="space-evenly" padding={0} spacing={1}>
+						{[
+							{
+								data: {
+									value: state.dataSets.maxMaxTemperature && state.dataSets.maxMaxTemperature.length > 0
+										? state.dataSets.maxMaxTemperature[0].max_max_temperature
+										: null,
+									subtitle: "Max Temperature",
+								},
+								color: "goldenrod",
+							},
+							{
+								data: {
+									value: state.dataSets.minMinTemperature && state.dataSets.minMinTemperature.length > 0
+										? state.dataSets.minMinTemperature[0].min_min_temperature
+										: null,
+									subtitle: "Min Temperature",
+								},
+								color: "third",
+							},
+						].map((plotData, index) => (
+							<Grid key={index} item xs={12} sm={12} md={6} justifyContent="flex-end" alignItems="center" sx={{ height: "200px" }}>
+								<Plot
+									showLegend
+									scrollZoom
+									// width="220px"
+									data={[
+										{
+											type: "indicator",
+											mode: "gauge+number",
+											value: plotData.data.value,
+											range: [-35, 45], // Gauge range
+											color: plotData.color, // Color of gauge bar
+											shape: "angular", // "angular" or "bullet"
+											indicator: "primary", // Color of gauge indicator/value-line
+											textColor: "primary", // Color of gauge value
+											suffix: "°C", // Suffix of gauge value
+										},
+									]}
+									displayBar={false}
+									title={plotData.data.subtitle}
+								/>
+							</Grid>
+						))}
+					</Grid>
+				</Card>
 			</Grid>
 			{[
 				{
@@ -115,6 +165,23 @@ const Esappin = () => {
 					yaxis: { title: "Temperature (°C)" },
 				},
 				{
+					title: "Shortwave Radiation Sum",
+					data: [
+						{
+							x: state.dataSets.metrics
+								? state.dataSets.metrics.map((item) => item.timestamp)
+								: [],
+							y: state.dataSets.metrics
+								? state.dataSets.metrics
+									.map((item) => item.shortwave_radiation_sum) : [],
+							type: "bar",
+							color: "goldenrod",
+						},
+					],
+					xaxis: { title: "Days" },
+					yaxis: { title: "Radiation Metric" },
+				},
+				{
 					title: "Daily Precipitation Sum",
 					data: [
 						{
@@ -132,21 +199,18 @@ const Esappin = () => {
 					yaxis: { title: "Precipitation (mm)" },
 				},
 				{
-					title: "Shortwave Radiation Sum",
+					title: "Total Precipitation",
 					data: [
 						{
-							x: state.dataSets.metrics
-								? state.dataSets.metrics.map((item) => item.timestamp)
+							labels: state.dataSets.precipitationSum
+								? state.dataSets.precipitationSum.map((item) => item.key)
 								: [],
-							y: state.dataSets.metrics
-								? state.dataSets.metrics
-									.map((item) => item.shortwave_radiation_sum) : [],
-							type: "bar",
-							color: "goldenrod",
+							values: state.dataSets.precipitationSum
+								? state.dataSets.precipitationSum.map((item) => item.sum_precipitation_sum)
+								: [],
+							type: "pie",
 						},
 					],
-					xaxis: { title: "Days" },
-					yaxis: { title: "Radiation Metric" },
 				},
 			].map((card, index) => (
 				<Grid key={index} item xs={12} sm={12} md={6}>
@@ -155,10 +219,10 @@ const Esappin = () => {
 							scrollZoom
 							data={card.data}
 							title={`${monthNames[month].text} ${year}`}
-							showLegend={index === 0}
+							showLegend={index === 0 || 3}
 							height="300px"
-							xaxis={card.xaxis}
-							yaxis={card.yaxis}
+							xaxis={card?.xaxis}
+							yaxis={card?.yaxis}
 						/>
 					</Card>
 				</Grid>
