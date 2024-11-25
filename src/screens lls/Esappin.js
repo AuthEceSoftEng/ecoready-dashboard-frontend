@@ -57,7 +57,7 @@ const Esappin = () => {
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
 			<Grid container display="flex" direction="row" justifyContent="flex-end" alignItems="center" spacing={2} mt={2}>
-				<Grid item sx={{ display: "flex", justifyContent: "flex-end" }} xs={6} md={3}>
+				<Grid item sx={{ display: "flex", justifyContent: "flex-end" }} xs={6} md={2}>
 					<Dropdown
 						id={dropdownContent[0].id}
 						value={product}
@@ -70,8 +70,8 @@ const Esappin = () => {
 						onChange={dropdownContent[0].onChange}
 					/>
 				</Grid>
-				<Grid item sx={{ display: "flex", justifyContent: "flex-end" }} md={3}>
-					{/* Select only the year */}
+				<Grid item sx={{ display: "flex", justifyContent: "flex-end" }} xs={6} md={2}>
+					{/* Select only the month */}
 					<DatePicker
 						type="desktop"
 						label="Month Picker"
@@ -125,7 +125,7 @@ const Esappin = () => {
 								? state.dataSets.metrics
 									.map((item) => item.precipitation_sum) : [],
 							type: "bar",
-							color: "primary",
+							color: "third",
 						},
 					],
 					xaxis: { title: "Days" },
