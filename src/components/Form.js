@@ -75,9 +75,9 @@ const useStyles = makeStyles((theme) => ({
 		color: "black",
 	},
 	datepickerBox: {
-		width: "50%",
+		width: "60%",
 		maxWidth: "300px",
-		marginBottom: "5px",
+		marginBottom: "1px",
 		display: "flex",
 		flexDirection: "column",
 		color: "black",
@@ -345,41 +345,64 @@ const Form = forwardRef(({ disabled: dsb, content, validationSchema, onSubmit, o
 									)}
 								</Grid>
 							)}
-							{comp.customType === "date-picker"
-							&& (
+							{comp.customType === "date-picker" && (
 								<Grid key={comp.id} container item className={classes.datepickerBox}>
-									<Typography textAlign="left">{comp.label}</Typography>
-									<DatePicker
-										type={comp.type || "desktop"} // desktop, mobile, time, datetime
-										value={formikProps.values[comp.id]}
-										disabled={disabled || comp.disabled}
-										label={comp.sublabel || ""}
-										views={comp.views || ["day", "month", "year"]}
-										background={comp.background || "secondary"}
-										color="black"
-										sx={{
-											width: {
-												xs: "100%", // Full width on extra-small screens
-												sm: "75%", // 75% width on small screens
-												md: "50%", // 50% width on medium screens
-												lg: "25%", // 25% width on large screens
-											},
-										}}
-										onChange={(value) => {
-											formikProps.handleChange({
-												target: {
-													name: comp.id,
-													value,
-												},
-											});
-											if (comp.onChange) {
-												comp.onChange(event);
-											}
-										}}
-									/>
-									{Boolean(formikProps.errors[comp.id])
-									&& (
-										<Typography textAlign="left" color="error" fontSize="small">{formikProps.errors[comp.id]}</Typography>
+									{comp.labelPosition === "side" ? (
+										<Grid container spacing={1} alignItems="center">
+											<Grid item xs={2}>
+												<Typography style={{ fontSize: comp.labelSize || "inherit" }}>
+													{comp.label}
+												</Typography>
+											</Grid>
+											<Grid item sx={{ display: "flex", justifyContent: "flex-end" }} xs={10}>
+												<DatePicker
+													type={comp.type || "desktop"} // desktop, mobile, time, datetime
+													value={formikProps.values[comp.id]}
+													disabled={disabled || comp.disabled}
+													label={comp.sublabel || ""}
+													views={comp.views || ["day", "month", "year"]}
+													background={comp.background || "secondary"}
+													color="white"
+													sx={{
+														width: {
+															xs: "100%", // Full width on extra-small screens
+															sm: "75%", // 75% width on small screens
+															md: "50%", // 50% width on medium screens
+															lg: "25%", // 25% width on large screens
+														},
+													}}
+													onChange={(value) => {
+														formikProps.setFieldValue(comp.id, value);
+													}}
+												/>
+											</Grid>
+										</Grid>
+									) : (
+										<>
+											<Typography textAlign="left" style={{ fontSize: comp.labelSize || "inherit" }}>
+												{comp.label}
+											</Typography>
+											<DatePicker
+												type={comp.type || "desktop"} // desktop, mobile, time, datetime
+												value={formikProps.values[comp.id]}
+												disabled={disabled || comp.disabled}
+												label={comp.sublabel || ""}
+												views={comp.views || ["day", "month", "year"]}
+												background={comp.background || "secondary"}
+												color="white"
+												sx={{
+													width: {
+														xs: "100%", // Full width on extra-small screens
+														sm: "75%", // 75% width on small screens
+														md: "50%", // 50% width on medium screens
+														lg: "25%", // 25% width on large screens
+													},
+												}}
+												onChange={(value) => {
+													formikProps.setFieldValue(comp.id, value);
+												}}
+											/>
+										</>
 									)}
 								</Grid>
 							)}
