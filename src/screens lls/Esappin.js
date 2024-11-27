@@ -56,7 +56,7 @@ const Esappin = () => {
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
-			<Grid container display="flex" direction="row" justifyContent="flex-end" alignItems="center" spacing={2} mt={2}>
+			<Grid container display="flex" direction="row" justifyContent="flex-end" alignItems="center" mt={1} spacing={2}>
 				<Grid item sx={{ display: "flex", justifyContent: "flex-end" }} xs={12} md={3}>
 					<Dropdown
 						id={dropdownContent[0].id}
@@ -83,7 +83,7 @@ const Esappin = () => {
 				</Grid>
 			</Grid>
 
-			<Grid item xs={12} md={12} alignItems="center" flexDirection="column" mt={2} padding={0}>
+			<Grid item xs={12} md={12} alignItems="center" flexDirection="column" padding={0}>
 				<Card title="Month's Overview" footer={cardFooter({ minutesAgo: state.minutesAgo })}>
 					<Grid container display="flex" direction="row" justifyContent="space-evenly" padding={0} spacing={1}>
 						{[
@@ -134,7 +134,7 @@ const Esappin = () => {
 			</Grid>
 			{[
 				{
-					title: "Temperature Evolution Per Day",
+					title: "Daily Temperature Evolution",
 					data: [
 						{
 							x: state.dataSets.metrics
@@ -199,7 +199,7 @@ const Esappin = () => {
 					yaxis: { title: "Precipitation (mm)" },
 				},
 				{
-					title: "Total Precipitation",
+					title: "Monthly Precipitation Per Field",
 					data: [
 						{
 							labels: state.dataSets.precipitationSum

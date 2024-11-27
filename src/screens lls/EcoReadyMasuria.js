@@ -60,7 +60,7 @@ const EcoReadyMasuria = () => {
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
-			<Grid container display="flex" direction="row" justifyContent="flex-end" alignItems="center" spacing={2} mt={2}>
+			<Grid container display="flex" direction="row" justifyContent="flex-end" alignItems="center" spacing={2} mt={1}>
 				<Grid item sx={{ display: "flex", justifyContent: "flex-end" }} md={3}>
 					<Dropdown
 						id={dropdownContent[0].id}
@@ -87,7 +87,7 @@ const EcoReadyMasuria = () => {
 			</Grid>
 			{[
 				{
-					title: "Temperature Evolution Per Day",
+					title: "Daily Temperature Evolution",
 					data: [
 						{
 							x: state.dataSets.metrics
@@ -130,7 +130,7 @@ const EcoReadyMasuria = () => {
 					yaxis: { title: "Temperature (°C)" },
 				},
 				{
-					title: "Minimum Ground Temperature Per Day",
+					title: "Daily Minimum Ground Temperature",
 					data: [
 						{
 							x: state.dataSets.metrics
