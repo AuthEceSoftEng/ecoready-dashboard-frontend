@@ -1,3 +1,4 @@
+/* eslint-disable consistent-return */
 import { useEffect, useReducer, useRef, useCallback } from "react";
 
 import fetchAllData from "../api/fetch-data.js";
@@ -22,20 +23,33 @@ const useInit = (organization, fetchConfigs) => {
 	const updateData = useCallback(async () => {
 		try {
 			dispatch({ type: "FETCH_START" });
-			const data = await fetchAllData(dispatch, organization, fetchConfigs); // Capture the returned data
-			if (data) { // Add null check
-				dispatch({ type: "FETCH_SUCCESS", payload: data });
-				successRef.current("All data fetched successfully");
+			const data = await fetchAllData(dispatch, organization, fetchConfigs);
+
+			if (!data) {
+				dispatch({ type: "FETCH_ERROR" });
+				errorRef.current("No data received");
+				return;
 			}
+
+			if (Array.isArray(data) && (data.every((item) => item === undefined))) {
+				dispatch({ type: "FETCH_ERROR" });
+				errorRef.current("Fetched data is empty");
+				return;
+			}
+
+			dispatch({ type: "FETCH_SUCCESS", payload: data });
+			successRef.current("All data fetched successfully");
 		} catch (error_) {
-			dispatch({ type: "FETCH_ERROR" }); // Add error state
+			dispatch({ type: "FETCH_ERROR" });
 			errorRef.current(`Error fetching data: ${error_.message}`);
 		}
-	}, [fetchConfigs, organization]);
+	}, [organization, fetchConfigs]);
 
 	useEffect(() => {
-		if (!fetchConfigs) return;
-		// Set interval for updating "minutesAgo"
+		if (!fetchConfigs) {
+			return;
+		}
+
 		const minutesAgoInterval = setInterval(() => {
 			dispatch({ type: "UPDATE_MINUTES_AGO" });
 		}, 60 * 1000);
@@ -44,8 +58,10 @@ const useInit = (organization, fetchConfigs) => {
 		updateData();
 		const fetchInterval = setInterval(updateData, 30 * 60 * 1000);
 
-		clearInterval(minutesAgoInterval);
-		clearInterval(fetchInterval);
+		return () => {
+			clearInterval(minutesAgoInterval);
+			clearInterval(fetchInterval);
+		};
 	}, [updateData, fetchConfigs]);
 
 	return { state };
