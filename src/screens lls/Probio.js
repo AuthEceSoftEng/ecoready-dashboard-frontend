@@ -7,19 +7,9 @@ import Plot from "../components/Plot.js";
 import useInit from "../utils/screen-init.js";
 import Form from "../components/Form.js";
 import { probioConfigs, organization } from "../config/ProbioConfig.js";
-import { monthNames } from "../utils/useful-constants.js";
-import { calculateDates } from "../utils/data-handling-functions.js";
+// import { monthNames } from "../utils/useful-constants.js";
+import { calculateDates, debounce } from "../utils/data-handling-functions.js";
 import { cardFooter } from "../utils/card-footer.js";
-
-const debounce = (func, delay) => {
-	let timer;
-	return (...args) => {
-		clearTimeout(timer);
-		timer = setTimeout(() => {
-			func(...args);
-		}, delay);
-	};
-};
 
 const Probio = () => {
 	const [startDate, setStartDate] = useState(null);
@@ -30,7 +20,7 @@ const Probio = () => {
 			const { currentDate } = calculateDates(date);
 			setter(currentDate);
 			console.log(setter === setStartDate ? "Start Date" : "End Date", currentDate);
-		}, 3000),
+		}, 2000),
 		[],
 	);
 
@@ -94,7 +84,7 @@ const Probio = () => {
 						onChange={dropdownContent[0].onChange}
 					/>
 				</Grid> */}
-				<Grid item sx={{ display: "flex", justifyContent: "flex-end" }} md={5}>
+				<Grid item sx={{ display: "flex", justifyContent: "flex-end" }} md={4}>
 					<Form ref={formRef} content={formContent} />
 				</Grid>
 			</Grid>
