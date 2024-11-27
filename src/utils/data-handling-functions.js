@@ -25,6 +25,7 @@ export const reducer = (state, action) => {
 			return {
 				...state,
 				minutesAgo: Math.floor((Date.now() - state.pageRefreshTime) / 60_000),
+				dataSets: state.dataSets,
 			};
 		}
 
