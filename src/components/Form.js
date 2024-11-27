@@ -373,6 +373,9 @@ const Form = forwardRef(({ disabled: dsb, content, validationSchema, onSubmit, o
 													}}
 													onChange={(value) => {
 														formikProps.setFieldValue(comp.id, value);
+														if (comp.onChange) {
+															comp.onChange(value);
+														}
 													}}
 												/>
 											</Grid>
@@ -400,9 +403,16 @@ const Form = forwardRef(({ disabled: dsb, content, validationSchema, onSubmit, o
 												}}
 												onChange={(value) => {
 													formikProps.setFieldValue(comp.id, value);
+													if (comp.onChange) {
+														comp.onChange(value);
+													}
 												}}
 											/>
 										</>
+									)}
+									{Boolean(formikProps.errors[comp.id])
+									&& (
+										<Typography textAlign="left" color="error" fontSize="small">{formikProps.errors[comp.id]}</Typography>
 									)}
 								</Grid>
 							)}
