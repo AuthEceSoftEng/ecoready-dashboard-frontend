@@ -35,6 +35,16 @@ export const reducer = (state, action) => {
 	}
 };
 
+export const debounce = (func, delay) => {
+	let timer;
+	return (...args) => {
+		clearTimeout(timer);
+		timer = setTimeout(() => {
+			func(...args);
+		}, delay);
+	};
+};
+
 export const sumByKey = (array, key, valueKey) => {
 	const sums = {};
 
