@@ -44,10 +44,8 @@ const useInit = (organization, fetchConfigs) => {
 		updateData();
 		const fetchInterval = setInterval(updateData, 30 * 60 * 1000);
 
-		return () => {
-			clearInterval(minutesAgoInterval);
-			clearInterval(fetchInterval);
-		};
+		clearInterval(minutesAgoInterval);
+		clearInterval(fetchInterval);
 	}, [updateData, fetchConfigs]);
 
 	return { state };

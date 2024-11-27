@@ -55,7 +55,7 @@ import EcoVitaLl from "./screens lls/EcoVitaLl.js";
 import Esappin from "./screens lls/Esappin.js";
 // import LivOrganic from "./screens lls/LivOrganic.js";
 // import LOFS from "./screens lls/LOFS.js";
-// import Probio from "./screens lls/Probio.js";
+import Probio from "./screens lls/Probio.js";
 import SecoCollab from "./screens lls/SecoCollab.js";
 // import THALLA from "./screens lls/Thalla.js";
 import Plots from "./examples/Plots.js";
@@ -149,7 +149,7 @@ const App = () => {
 								<Route path="esappin" element={<Protected c={<Esappin />} />} />
 								{/* <Route path="livorganic" element={<Protected c={<LivOrganic />} />} /> */}
 								{/* <Route path="lofs" element={<Protected c={<LOFS />} />} /> */}
-								{/* <Route path="probio" element={<Protected c={<Probio />} />} /> */}
+								<Route path="probio" element={<Protected c={<Probio />} />} />
 								<Route path="secocollab" element={<Protected c={<SecoCollab />} />} />
 								{/* <Route path="thalla" element={<Protected c={<THALLA />} />} /> */}
 								{/* EXAMPLES */}
