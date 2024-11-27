@@ -21,14 +21,20 @@ const useInit = (organization, fetchConfigs) => {
 	// Function to fetch and update data
 	const updateData = useCallback(async () => {
 		try {
-			await fetchAllData(dispatch, organization, fetchConfigs);
-			successRef.current("All data fetched successfully");
+			dispatch({ type: "FETCH_START" });
+			const data = await fetchAllData(dispatch, organization, fetchConfigs); // Capture the returned data
+			if (data) { // Add null check
+				dispatch({ type: "FETCH_SUCCESS", payload: data });
+				successRef.current("All data fetched successfully");
+			}
 		} catch (error_) {
+			dispatch({ type: "FETCH_ERROR" }); // Add error state
 			errorRef.current(`Error fetching data: ${error_.message}`);
 		}
 	}, [fetchConfigs, organization]);
 
 	useEffect(() => {
+		if (!fetchConfigs) return;
 		// Set interval for updating "minutesAgo"
 		const minutesAgoInterval = setInterval(() => {
 			dispatch({ type: "UPDATE_MINUTES_AGO" });
@@ -42,7 +48,7 @@ const useInit = (organization, fetchConfigs) => {
 			clearInterval(minutesAgoInterval);
 			clearInterval(fetchInterval);
 		};
-	}, [updateData]);
+	}, [updateData, fetchConfigs]);
 
 	return { state };
 };
