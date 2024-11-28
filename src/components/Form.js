@@ -75,8 +75,8 @@ const useStyles = makeStyles((theme) => ({
 		color: "black",
 	},
 	datepickerBox: {
-		width: "60%",
-		maxWidth: "300px",
+		width: "200px",
+		maxWidth: "200px",
 		marginBottom: "1px",
 		display: "flex",
 		flexDirection: "column",
