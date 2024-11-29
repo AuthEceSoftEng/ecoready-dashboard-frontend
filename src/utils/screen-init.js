@@ -1,4 +1,4 @@
-/* eslint-disable no-unused-expressions */
+
 /* eslint-disable consistent-return */
 import { useEffect, useReducer, useRef, useCallback, useMemo } from "react";
 
@@ -34,34 +34,27 @@ const useInit = (organization, fetchConfigs) => {
 		refs.current = snackbarCallbacks;
 	}, [snackbarCallbacks]);
 
+	const handleFetchResponse = useCallback((promiseStatus) => {
+		const hasIssues = promiseStatus.some(
+			(item) => item?.response?.success === false
+            || (Array.isArray(item?.response) && item.response.length === 0),
+		);
+
+		if (hasIssues) {
+			dispatch({ type: "FETCH_WARNING", payload: promiseStatus });
+			refs.current.warning("Some plots may be empty due to no matching data");
+		} else {
+			dispatch({ type: "FETCH_SUCCESS", payload: promiseStatus });
+			refs.current.success("All data fetched successfully");
+		}
+	}, []);
+
 	const updateData = useCallback(async () => {
 		try {
 			dispatch({ type: "FETCH_START" });
-
 			const promiseStatus = await fetchAllData(dispatch, organization, fetchConfigs);
 			console.log("Promise status:", promiseStatus);
-			const hasFailedSuccessResponse = promiseStatus.some((item) => item?.response?.success === false);
-			const hasEmptyArray = promiseStatus.some((item) => Array.isArray(item?.response) && item.response.length === 0);
-
-			if (hasFailedSuccessResponse || hasEmptyArray) {
-				dispatch({ type: "FETCH_WARNING", payload: promiseStatus });
-				refs.current.warning("Some plots may be empty due to no matching data");
-			} else {
-				dispatch({ type: "FETCH_SUCCESS", payload: promiseStatus });
-				refs.current.success("All data fetched successfully");
-			}
-
-			// if (hasEmptyArray) {
-			// 	dispatch({
-			// 		type: "FETCH_WARNING",
-			// 		payload: {
-			// 			promiseStatus,
-			// 			error: "Some data sets returned empty results",
-			// 		},
-			// 	});
-			// 	refs.current.warning("Some plots may be empty due to no matching data");
-			// } else {
-			// }
+			handleFetchResponse(promiseStatus);
 		} catch (error_) {
 			dispatch({
 				type: "FETCH_ERROR",
@@ -73,29 +66,22 @@ const useInit = (organization, fetchConfigs) => {
 			console.error("Error fetching data:", error_);
 			refs.current.error(`Error fetching data: ${error_.message}`);
 		}
-	}, [organization, fetchConfigs]);
+	}, [organization, fetchConfigs, handleFetchResponse]);
 
 	useEffect(() => {
 		if (!fetchConfigs) return;
 
-		const timeouts = {
-			minutes: null,
-			fetch: null,
-		};
-
-		const cleanup = () => {
-			for (const timeout of Object.values(timeouts)) timeout && clearInterval(timeout);
-		};
-
-		// Set up intervals
-		timeouts.minutes = setInterval(() => {
+		const minutesInterval = setInterval(() => {
 			dispatch({ type: "UPDATE_MINUTES_AGO" });
 		}, MINUTES_UPDATE_INTERVAL);
 
+		const fetchInterval = setInterval(updateData, FETCH_INTERVAL);
 		updateData();
-		timeouts.fetch = setInterval(updateData, FETCH_INTERVAL);
 
-		return cleanup;
+		return () => {
+			clearInterval(minutesInterval);
+			clearInterval(fetchInterval);
+		};
 	}, [updateData, fetchConfigs]);
 
 	return { state };

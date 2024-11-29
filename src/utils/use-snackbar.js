@@ -42,9 +42,16 @@ const useSnackbar = () => {
 		setOpen(true);
 	}, [setAutoHideDuration, setMessage, setOpen, setSeverity]);
 
+	const warning = useCallback((msg = "Done.", autoHideDuration = 3000) => {
+		setMessage(msg);
+		setSeverity("warning");
+		setAutoHideDuration(autoHideDuration);
+		setOpen(true);
+	}, [setAutoHideDuration, setMessage, setOpen, setSeverity]);
+
 	const close = useCallback(() => setOpen(false), [setOpen]);
 
-	return { success, error, info, close };
+	return { success, error, info, warning, close };
 };
 
 export default useSnackbar;
