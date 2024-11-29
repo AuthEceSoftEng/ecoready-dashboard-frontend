@@ -8,7 +8,7 @@ import useInit from "../utils/screen-init.js";
 import secoConfigs, { organization } from "../config/SecoConfig.js";
 import { getCustomDateTime, calculateDates } from "../utils/data-handling-functions.js";
 import { monthNames } from "../utils/useful-constants.js";
-import { cardFooter } from "../utils/card-footer.js";
+import { cardFooter } from "../utils/rendering-items.js";
 
 const SecoCollab = () => {
 	const customDate = useMemo(() => getCustomDateTime(2024, 8), []);

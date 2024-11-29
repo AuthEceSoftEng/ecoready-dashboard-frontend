@@ -9,7 +9,7 @@ import DatePicker from "../components/DatePicker.js";
 import ecoReadyMasuriaConfigs, { organization } from "../config/EcoReadyMasuriaConfig.js";
 import { calculateDates, getCustomDateTime } from "../utils/data-handling-functions.js";
 import { monthNames } from "../utils/useful-constants.js";
-import { cardFooter } from "../utils/card-footer.js";
+import { cardFooter } from "../utils/rendering-items.js";
 
 const EcoReadyMasuria = () => {
 	const customDate = useMemo(() => getCustomDateTime(2006, 1), []);
