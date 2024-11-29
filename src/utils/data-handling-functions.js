@@ -4,20 +4,57 @@ export const initialState = {
 	dataSets: {},
 	minutesAgo: 0,
 	pageRefreshTime: new Date(),
+	isLoading: false,
+	warning: null,
+	error: null,
 };
 
 export const reducer = (state, action) => {
 	switch (action.type) {
+		case "FETCH_START": {
+			return {
+				...state,
+				isLoading: true,
+				warning: null,
+				error: null,
+			};
+		}
+
 		case "FETCH_SUCCESS": {
 			const { plotId, response } = action.payload;
 			return {
 				...state,
+				isLoading: false,
+				error: null,
 				dataSets: {
 					...state.dataSets,
 					[plotId]: response,
 				},
 				pageRefreshTime: new Date(),
-				minutesAgo: 0, // Reset minutes ago to 0 on new data fetch
+				minutesAgo: 0,
+			};
+		}
+
+		case "FETCH_WARNING": {
+			const { plotId, response } = action.payload;
+			return {
+				...state,
+				isLoading: false,
+				warning: action.payload?.warning || "Some values may be missing",
+				dataSets: {
+					...state.dataSets,
+					[plotId]: response,
+				},
+				pageRefreshTime: new Date(),
+				minutesAgo: 0,
+			};
+		}
+
+		case "FETCH_ERROR": {
+			return {
+				...state,
+				isLoading: false,
+				error: action.payload?.error || "An error occurred",
 			};
 		}
 
@@ -25,7 +62,6 @@ export const reducer = (state, action) => {
 			return {
 				...state,
 				minutesAgo: Math.floor((Date.now() - state.pageRefreshTime) / 60_000),
-				dataSets: state.dataSets,
 			};
 		}
 
