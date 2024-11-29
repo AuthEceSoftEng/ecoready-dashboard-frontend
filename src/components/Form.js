@@ -75,8 +75,7 @@ const useStyles = makeStyles((theme) => ({
 		color: "black",
 	},
 	datepickerBox: {
-		width: "200px",
-		maxWidth: "200px",
+		maxWidth: "250px",
 		marginBottom: "1px",
 		display: "flex",
 		flexDirection: "column",
@@ -346,7 +345,7 @@ const Form = forwardRef(({ disabled: dsb, content, validationSchema, onSubmit, o
 								</Grid>
 							)}
 							{comp.customType === "date-picker" && (
-								<Grid key={comp.id} container item className={classes.datepickerBox}>
+								<Grid key={comp.id} container item className={classes.datepickerBox} width={comp.width}>
 									{comp.labelPosition === "side" ? (
 										<Grid container spacing={1} alignItems="center">
 											<Grid item xs={2}>
@@ -362,7 +361,7 @@ const Form = forwardRef(({ disabled: dsb, content, validationSchema, onSubmit, o
 													label={comp.sublabel || ""}
 													views={comp.views || ["day", "month", "year"]}
 													background={comp.background || "secondary"}
-													color="white"
+													color={comp.background === "grey" ? "black" : "white"}
 													sx={{
 														width: {
 															xs: "100%", // Full width on extra-small screens
