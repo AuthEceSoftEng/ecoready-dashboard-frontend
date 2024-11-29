@@ -9,7 +9,7 @@ import agroConfigs, { organization } from "../config/AgroConfig.js";
 import colors from "../_colors.scss";
 import { sumByKey, groupByKey, getMaxValuesByProperty, getSumValuesByProperty, calculateDates } from "../utils/data-handling-functions.js";
 import { monthNames } from "../utils/useful-constants.js";
-import { cardFooter } from "../utils/card-footer.js";
+import { cardFooter, LoadingIndicator } from "../utils/rendering-items.js";
 
 const AgroLab = () => {
 	// Memoize the date calculations and fetchConfigs to reduce re-calculations
@@ -21,6 +21,7 @@ const AgroLab = () => {
 	);
 
 	const { state } = useInit(organization, fetchConfigs);
+	const { isLoading, dataSets } = state;
 
 	const formRef = useRef();
 	const formContent = useMemo(() => [
@@ -41,51 +42,55 @@ const AgroLab = () => {
 		{
 			customType: "date-picker",
 			id: "from",
+			width: "130px",
 			type: "desktop",
 			label: "From:",
+			sublabel: "Start date",
 			background: "grey",
 		},
 		{
 			customType: "date-picker",
 			id: "to",
+			width: "130px",
 			type: "desktop",
 			label: "To:",
+			sublabel: "End date",
 			background: "grey",
 		},
 	], []);
 
 	// Calculate annual yield if dataSets['cropYield'] exists
 	const annualYield = useMemo(() => (
-		state.dataSets.cropYield ? state.dataSets.cropYield.reduce((sum, item) => sum + item.crop_yield, 0).toFixed(2) : "N/A"
-	), [state.dataSets.cropYield]);
+		dataSets.cropYield ? dataSets.cropYield.reduce((sum, item) => sum + item.crop_yield, 0).toFixed(2) : "N/A"
+	), [dataSets.cropYield]);
 
 	const sumsByField = useMemo(() => (
-		state.dataSets.cropYield ? sumByKey(state.dataSets.cropYield, "key", "crop_yield") : {}
-	), [state.dataSets.cropYield]);
+		dataSets.cropYield ? sumByKey(dataSets.cropYield, "key", "crop_yield") : {}
+	), [dataSets.cropYield]);
 
 	const groupedSoilQuality = useMemo(() => (
-		state.dataSets.soilQuality ? groupByKey(state.dataSets.soilQuality, "key") : {}
-	), [state.dataSets.soilQuality]);
+		dataSets.soilQuality ? groupByKey(dataSets.soilQuality, "key") : {}
+	), [dataSets.soilQuality]);
 
 	const groupedSoilMoisture = useMemo(() => (
-		state.dataSets.soilMoisture ? groupByKey(state.dataSets.soilMoisture, "interval_start") : {}
-	), [state.dataSets.soilMoisture]);
+		dataSets.soilMoisture ? groupByKey(dataSets.soilMoisture, "interval_start") : {}
+	), [dataSets.soilMoisture]);
 
 	const maxSoilMoistureByDate = useMemo(() => (
 		getMaxValuesByProperty(groupedSoilMoisture, "max_soil_moisture")
 	), [groupedSoilMoisture]);
 
 	const groupedHumidity = useMemo(() => (
-		state.dataSets.humidity ? groupByKey(state.dataSets.humidity, "interval_start") : {}
-	), [state.dataSets.humidity]);
+		dataSets.humidity ? groupByKey(dataSets.humidity, "interval_start") : {}
+	), [dataSets.humidity]);
 
 	const maxHumidityByDate = useMemo(() => (
 		getMaxValuesByProperty(groupedHumidity, "max_humidity")
 	), [groupedHumidity]);
 
 	const groupedYieldDistribution = useMemo(() => (
-		state.dataSets.yieldDistribution ? groupByKey(state.dataSets.yieldDistribution, "interval_start") : {}
-	), [state.dataSets.yieldDistribution]);
+		dataSets.yieldDistribution ? groupByKey(dataSets.yieldDistribution, "interval_start") : {}
+	), [dataSets.yieldDistribution]);
 
 	const sumYieldDistribution = useMemo(() => (
 		getSumValuesByProperty(groupedYieldDistribution, "sum_crop_yield")
@@ -101,12 +106,12 @@ const AgroLab = () => {
 	}, [annualYield, sumsByField]);
 
 	const monthIrrigation = useMemo(() => (
-		state.dataSets.irrigation ? state.dataSets.irrigation.reduce((sum, item) => sum + item.irrigation, 0).toFixed(2) : "N/A"
-	), [state.dataSets.irrigation]);
+		dataSets.irrigation ? dataSets.irrigation.reduce((sum, item) => sum + item.irrigation, 0).toFixed(2) : "N/A"
+	), [dataSets.irrigation]);
 
 	const meanTemp = useMemo(() => (
-		state.dataSets.temperature_now ? (state.dataSets.temperature_now.reduce((sum, item) => sum + item.temperature, 0) / state.dataSets.temperature_now.length).toFixed(2) : "N/A"
-	), [state.dataSets.temperature_now]);
+		dataSets.temperature_now ? (dataSets.temperature_now.reduce((sum, item) => sum + item.temperature, 0) / dataSets.temperature_now.length).toFixed(2) : "N/A"
+	), [dataSets.temperature_now]);
 
 	const generate2024Months = useMemo(() => {
 		const months = [];
@@ -153,210 +158,223 @@ const AgroLab = () => {
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
-			{[
-				{
-					title: "Annual Crop Yield",
-					value: `${annualYield} T`,
-					subtitle: `${year - 1}`,
-					percentage: "6%",
-					color: colors.secondary,
-				},
-				{
-					title: "Current Month's Irrigation",
-					value: `${monthIrrigation} Litres`,
-					subtitle: monthNames[month - 1].text,
-					percentage: "10%",
-					color: colors.error,
-				},
-				{
-					title: "Temperature",
-					value: `${meanTemp}°C`,
-					subtitle: "Sunny skies in your area",
-					color: colors.warning,
-				},
-			].map(renderCard)}
-			{[
-				{
-					title: "Harvest's Crop Yield Distribution",
-					data: [
-						{
-							x: Object.keys(groupedYieldDistribution),
-							y: Object.values(sumYieldDistribution),
-							type: "bar",
-							color: "secondary",
-						},
-					],
-					xaxis: { tickvals: Object.keys(groupedYieldDistribution), tickangle: 15 },
-					yaxis: { title: "Tonnes" },
-				},
-				{
-					title: "Month's Soil Moisture",
-					data: [
-						{
-							x: Object.keys(maxSoilMoistureByDate),
-							y: Object.values(maxSoilMoistureByDate),
-							type: "scatter",
-							mode: "lines+markers",
-							color: "secondary",
-						},
-					],
-					xaxis: { tickangle: 15 },
-					yaxis: { title: "Soil Moisture (%)", tickangle: -30 },
-				},
-				{
-					title: "Month's Humidity",
-					data: [
-						{
-							x: Object.keys(maxHumidityByDate),
-							y: Object.values(maxHumidityByDate),
-							type: "scatter",
-							mode: "lines+markers",
-							color: "secondary",
-						},
-					],
-					xaxis: { tickangle: 15 },
-					yaxis: { title: "Humidity (%)", tickangle: -30 },
-				},
-			].map(renderPlot)}
-			<Grid item xs={12} md={12} mt={2}>
-				<Card title="Annual Yield Per Field" footer={cardFooter({ minutesAgo: state.minutesAgo })}>
-					<Plot
-						showLegend
-						scrollZoom
-						data={[
+			{isLoading ? (<LoadingIndicator />
+			) : (
+				[
+					{
+						title: "Annual Crop Yield",
+						value: `${annualYield} T`,
+						subtitle: `${year - 1}`,
+						percentage: "6%",
+						color: colors.secondary,
+					},
+					{
+						title: "Current Month's Irrigation",
+						value: `${monthIrrigation} Litres`,
+						subtitle: monthNames[month - 1].text,
+						percentage: "10%",
+						color: colors.error,
+					},
+					{
+						title: "Temperature",
+						value: `${meanTemp}°C`,
+						subtitle: "Sunny skies in your area",
+						color: colors.warning,
+					},
+				].map(renderCard)
+			)}
+			{isLoading ? (<LoadingIndicator />
+			) : (
+				[
+					{
+						title: "Harvest's Crop Yield Distribution",
+						data: [
 							{
-								labels: percentages.map((item) => item.key),
-								values: percentages.map((item) => item.percentage),
-								type: "pie",
+								x: Object.keys(groupedYieldDistribution),
+								y: Object.values(sumYieldDistribution),
+								type: "bar",
+								color: "secondary",
 							},
-						]}
-						displayBar={false}
-					/>
-				</Card>
-			</Grid>
-			{[
-				{
-					title: "Seasonal Temperature Distribution",
-					data: [
-						{
-							y: state.dataSets.temperature_june ? state.dataSets.temperature_june.map((item) => item.temperature) : [],
-							type: "box",
-							title: "June",
-							color: "secondary",
-						},
-						{
-							y: state.dataSets.temperature_july ? state.dataSets.temperature_july.map((item) => item.temperature) : [],
-							type: "box",
-							title: "July",
-							color: "secondary",
-						},
-						{
-							y: state.dataSets.temperature_august ? state.dataSets.temperature_august.map((item) => item.temperature) : [],
-							type: "box",
-							title: "August",
-							color: "secondary",
-						},
-					],
-					yaxis: { title: "Temperature (°C)" },
-					formContent: formContent.slice(1),
-					formConfig: {
-						position: "absolute",
-						top: 0,
-						right: -85,
-						// width: "54%",
-						// height: "50%",
-						zIndex: 10,
+						],
+						xaxis: { tickvals: Object.keys(groupedYieldDistribution), tickangle: 15 },
+						yaxis: { title: "Tonnes" },
 					},
-				},
-				{
-					title: "Precipitation",
-					data: [
-						{
-							x: Array.from({ length: 4 }, (_, i) => `week ${i + 1}`),
-							y: state.dataSets.precipitation ? state.dataSets.precipitation.filter((item) => item.key === "field1").map((item) => item.avg_precipitation) : [],
-							type: "bar",
-							title: "Field 1",
-							color: "primary",
-						},
-						{
-							x: Array.from({ length: 4 }, (_, i) => `week ${i + 1}`),
-							y: state.dataSets.precipitation ? state.dataSets.precipitation.filter((item) => item.key === "field2").map((item) => item.avg_precipitation) : [],
-							type: "bar",
-							title: "Field 2",
-							color: "secondary",
-						},
-						{
-							x: Array.from({ length: 4 }, (_, i) => `week ${i + 1}`),
-							y: state.dataSets.precipitation ? state.dataSets.precipitation.filter((item) => item.key === "field3").map((item) => item.avg_precipitation) : [],
-							type: "bar",
-							title: "Field 3",
-							color: "third",
-						},
-						{
-							x: Array.from({ length: 4 }, (_, i) => `week ${i + 1}`),
-							y: state.dataSets.precipitation ? state.dataSets.precipitation.filter((item) => item.key === "field4").map((item) => item.avg_precipitation) : [],
-							type: "bar",
-							title: "Field 4",
-							color: "green",
-						},
-					],
-					yaxis: { title: "Precipitation (mm)" },
-					formContent,
-					formConfig: {
-						position: "absolute",
-						bottom: 0,
-						right: -70,
-						// width: "54%",
-						// height: "50%",
-						zIndex: 20,
-						display: "grid",
+					{
+						title: "Month's Soil Moisture",
+						data: [
+							{
+								x: Object.keys(maxSoilMoistureByDate),
+								y: Object.values(maxSoilMoistureByDate),
+								type: "scatter",
+								mode: "lines+markers",
+								color: "secondary",
+							},
+						],
+						xaxis: { tickangle: 15 },
+						yaxis: { title: "Soil Moisture (%)", tickangle: -30 },
 					},
-				},
-			].map((plot, index) => (
-				<Grid key={index} item xs={12} sm={12} md={6} mt={2}>
-					<Card title={plot.title} footer={cardFooter({ minutesAgo: state.minutesAgo })}>
-						<Grid container flexDirection="row" sx={{ position: "relative", width: "100%" }}>
-							<Grid item sx={{ position: "relative", width: "75%", zIndex: 1 }}>
-								<Plot
-									scrollZoom
-									data={plot.data}
-									showLegend={false}
-									yaxis={plot.yaxis}
-								/>
-							</Grid>
-							<Grid
-								item
-								md={7}
-								sx={plot.formConfig}
-							>
-								<Form ref={formRef} content={plot.formContent} />
-							</Grid>
-						</Grid>
+					{
+						title: "Month's Humidity",
+						data: [
+							{
+								x: Object.keys(maxHumidityByDate),
+								y: Object.values(maxHumidityByDate),
+								type: "scatter",
+								mode: "lines+markers",
+								color: "secondary",
+							},
+						],
+						xaxis: { tickangle: 15 },
+						yaxis: { title: "Humidity (%)", tickangle: -30 },
+					},
+				].map(renderPlot)
+			)}
+			{isLoading ? (<LoadingIndicator />
+			) : (
+				<Grid item xs={12} md={12} mt={2}>
+					<Card title="Annual Yield Per Field" footer={cardFooter({ minutesAgo: state.minutesAgo })}>
+						<Plot
+							showLegend
+							scrollZoom
+							data={[
+								{
+									labels: percentages.map((item) => item.key),
+									values: percentages.map((item) => item.percentage),
+									type: "pie",
+								},
+							]}
+							displayBar={false}
+						/>
 					</Card>
 				</Grid>
-			))}
-			<Grid item xs={12} md={12} mt={2}>
-				<Card title="Soil Quality" footer={cardFooter({ minutesAgo: state.minutesAgo })}>
-					{groupedSoilQuality?.field1 && (
-						<Plot
-							scrollZoom
-							data={Object.keys(groupedSoilQuality).map((field, index) => ({
-								x: groupedSoilQuality[field].map((item) => item.interval_start),
-								y: groupedSoilQuality[field].map((item) => item.avg_soil_quality),
-								type: "scatter",
-								mode: "lines",
-								color: ["primary", "secondary", "third", "green"][index],
-							}))}
-							title="Average Soil Quality per Month"
-							xaxis={{
-								tickvals,
-								ticktext: tickvals.map((date) => new Date(date).toLocaleString("default", { month: "long" })),
-							}}
-							yaxis={{ title: "Soil Quality" }}
-						/>
-					)}
-				</Card>
-			</Grid>
+			)}
+			{isLoading ? (<LoadingIndicator />
+			) : (
+				[
+					{
+						title: "Seasonal Temperature Distribution",
+						data: [
+							{
+								y: dataSets.temperature_june ? dataSets.temperature_june.map((item) => item.temperature) : [],
+								type: "box",
+								title: "June",
+								color: "secondary",
+							},
+							{
+								y: dataSets.temperature_july ? dataSets.temperature_july.map((item) => item.temperature) : [],
+								type: "box",
+								title: "July",
+								color: "secondary",
+							},
+							{
+								y: dataSets.temperature_august ? dataSets.temperature_august.map((item) => item.temperature) : [],
+								type: "box",
+								title: "August",
+								color: "secondary",
+							},
+						],
+						yaxis: { title: "Temperature (°C)" },
+						formContent: formContent.slice(1),
+						formConfig: {
+							position: "absolute",
+							top: 0,
+							right: -15,
+							zIndex: 10,
+						},
+					},
+					{
+						title: "Precipitation",
+						data: [
+							{
+								x: Array.from({ length: 4 }, (_, i) => `week ${i + 1}`),
+								y: dataSets.precipitation ? dataSets.precipitation.filter((item) => item.key === "field1").map((item) => item.avg_precipitation) : [],
+								type: "bar",
+								title: "Field 1",
+								color: "primary",
+							},
+							{
+								x: Array.from({ length: 4 }, (_, i) => `week ${i + 1}`),
+								y: dataSets.precipitation ? dataSets.precipitation.filter((item) => item.key === "field2").map((item) => item.avg_precipitation) : [],
+								type: "bar",
+								title: "Field 2",
+								color: "secondary",
+							},
+							{
+								x: Array.from({ length: 4 }, (_, i) => `week ${i + 1}`),
+								y: dataSets.precipitation ? dataSets.precipitation.filter((item) => item.key === "field3").map((item) => item.avg_precipitation) : [],
+								type: "bar",
+								title: "Field 3",
+								color: "third",
+							},
+							{
+								x: Array.from({ length: 4 }, (_, i) => `week ${i + 1}`),
+								y: dataSets.precipitation ? dataSets.precipitation.filter((item) => item.key === "field4").map((item) => item.avg_precipitation) : [],
+								type: "bar",
+								title: "Field 4",
+								color: "green",
+							},
+						],
+						yaxis: { title: "Precipitation (mm)" },
+						formContent,
+						formConfig: {
+							position: "absolute",
+							bottom: 0,
+							right: -70,
+							// width: "54%",
+							// height: "50%",
+							zIndex: 20,
+							display: "grid",
+						},
+					},
+				].map((plot, index) => (
+					<Grid key={index} item xs={12} sm={12} md={6} mt={2}>
+						<Card title={plot.title} footer={cardFooter({ minutesAgo: state.minutesAgo })}>
+							<Grid container flexDirection="row" sx={{ position: "relative", width: "100%" }}>
+								<Grid item sx={{ position: "relative", width: "75%", zIndex: 1 }}>
+									<Plot
+										scrollZoom
+										data={plot.data}
+										showLegend={false}
+										yaxis={plot.yaxis}
+									/>
+								</Grid>
+								<Grid
+									item
+									md={7}
+									sx={plot.formConfig}
+								>
+									<Form ref={formRef} content={plot.formContent} />
+								</Grid>
+							</Grid>
+						</Card>
+					</Grid>
+				))
+			)}
+			{isLoading ? (<LoadingIndicator />
+			) : (
+				<Grid item xs={12} md={12} mt={2}>
+					<Card title="Soil Quality" footer={cardFooter({ minutesAgo: state.minutesAgo })}>
+						{groupedSoilQuality?.field1 && (
+							<Plot
+								scrollZoom
+								data={Object.keys(groupedSoilQuality).map((field, index) => ({
+									x: groupedSoilQuality[field].map((item) => item.interval_start),
+									y: groupedSoilQuality[field].map((item) => item.avg_soil_quality),
+									type: "scatter",
+									mode: "lines",
+									color: ["primary", "secondary", "third", "green"][index],
+								}))}
+								title="Average Soil Quality per Month"
+								xaxis={{
+									tickvals,
+									ticktext: tickvals.map((date) => new Date(date).toLocaleString("default", { month: "long" })),
+								}}
+								yaxis={{ title: "Soil Quality" }}
+							/>
+						)}
+					</Card>
+				</Grid>
+			)}
 		</Grid>
 	);
 };

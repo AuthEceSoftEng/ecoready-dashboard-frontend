@@ -9,7 +9,7 @@ import hiveConfigs, { organization } from "../config/HiveConfig.js";
 import colors from "../_colors.scss";
 import { sumByKey, calculateDates } from "../utils/data-handling-functions.js";
 import { monthNames } from "../utils/useful-constants.js";
-import { cardFooter } from "../utils/card-footer.js";
+import { cardFooter } from "../utils/rendering-items.js";
 
 const HiveLab = () => {
 	const { year, month, currentDate, formattedBeginningOfMonth } = useMemo(calculateDates, []);

@@ -71,14 +71,29 @@ export const reducer = (state, action) => {
 	}
 };
 
-export const debounce = (func, delay) => {
-	let timer;
-	return (...args) => {
-		clearTimeout(timer);
-		timer = setTimeout(() => {
+export const debounce = (func, wait) => {
+	let timeoutId;
+
+	const debounced = (...args) => {
+		// Clear any existing timeout
+		if (timeoutId) {
+			clearTimeout(timeoutId);
+		}
+
+		// Set new timeout
+		timeoutId = setTimeout(() => {
 			func(...args);
-		}, delay);
+		}, wait);
 	};
+
+	// Add cancel method to clear timeout
+	debounced.cancel = () => {
+		if (timeoutId) {
+			clearTimeout(timeoutId);
+		}
+	};
+
+	return debounced;
 };
 
 export const sumByKey = (array, key, valueKey) => {

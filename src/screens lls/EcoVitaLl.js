@@ -8,20 +8,16 @@ import useInit from "../utils/screen-init.js";
 import { ecoVitallConfigs, randomDataRadial, organization } from "../config/EcoVitallConfig.js";
 import { calculateDates, getCustomDateTime } from "../utils/data-handling-functions.js";
 import { monthNames } from "../utils/useful-constants.js";
-import { cardFooter } from "../utils/card-footer.js";
+import { cardFooter } from "../utils/rendering-items.js";
 
 const EcoVItaLl = () => {
 	const customDate = useMemo(() => getCustomDateTime(2024, 9), []);
-	console.log("Custom Date", customDate);
 
 	// Memoize the date calculations and fetchConfigs to reduce re-calculations
 	const { month, currentDate, formattedBeginningOfMonth, formattedBeginningOfHour } = useMemo(
 		() => calculateDates(customDate),
 		[customDate],
 	);
-	console.log("date", currentDate);
-	console.log("formattedBeginningOfMonth", formattedBeginningOfMonth);
-	console.log("formattedBeginningOfHour", formattedBeginningOfHour);
 
 	const fetchConfigs = useMemo(
 		() => ecoVitallConfigs(currentDate, formattedBeginningOfMonth, formattedBeginningOfHour),

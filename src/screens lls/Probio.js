@@ -9,7 +9,7 @@ import Form from "../components/Form.js";
 import { probioConfigs, organization } from "../config/ProbioConfig.js";
 // import { monthNames } from "../utils/useful-constants.js";
 import { calculateDates, debounce } from "../utils/data-handling-functions.js";
-import { cardFooter } from "../utils/card-footer.js";
+import { cardFooter, LoadingIndicator } from "../utils/rendering-items.js";
 
 const Probio = () => {
 	const [startDate, setStartDate] = useState(null);
@@ -19,12 +19,15 @@ const Probio = () => {
 		() => debounce((date, setter) => {
 			const { currentDate } = calculateDates(date);
 			setter(currentDate);
-			console.log(setter === setStartDate ? "Start Date" : "End Date", currentDate);
-		}, 2000),
+		}, 3000), // Reduced from 2700ms to 800ms
 		[],
 	);
 
 	const handleDateChange = useCallback((newValue, setter) => {
+		if (!newValue?.$d) return;
+
+		// Immediate visual feedback
+		setter(newValue.$d);
 		debouncedSetDate(newValue.$d, setter);
 	}, [debouncedSetDate]);
 
@@ -34,6 +37,7 @@ const Probio = () => {
 		{
 			customType: "date-picker",
 			id: "start",
+			width: "210px",
 			type: "desktop",
 			label: "From:",
 			sublabel: "Start date",
@@ -46,6 +50,7 @@ const Probio = () => {
 		{
 			customType: "date-picker",
 			id: "end",
+			width: "210px",
 			type: "desktop",
 			label: "To:",
 			sublabel: "End date",
@@ -65,8 +70,9 @@ const Probio = () => {
 	);
 
 	const { state } = useInit(organization, fetchConfigs);
-	const metrics = state?.dataSets?.metrics || [];
-	const isValidData = Array.isArray(metrics) && metrics.length > 0;
+	const { isLoading, dataSets } = state;
+	const metrics = useMemo(() => dataSets?.metrics || [], [dataSets]);
+	const isValidData = useMemo(() => metrics.length > 0, [metrics]);
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
@@ -88,100 +94,152 @@ const Probio = () => {
 					<Form ref={formRef} content={formContent} />
 				</Grid>
 			</Grid>
-			{[
-				{
-					title: "Temperature Evolution Per Day",
-					data: [
-						{
-							x: isValidData ? metrics.map((item) => item.timestamp) : [],
-							y: isValidData ? metrics.map((item) => item.air_temperature_max) : [],
-							type: "bar",
-							title: "Max",
-							color: "primary",
-						},
-						{
-							x: isValidData ? metrics.map((item) => item.timestamp) : [],
-							y: isValidData ? metrics.map((item) => item.air_temperature_avg) : [],
-							type: "bar",
-							title: "Avg",
-							color: "secondary",
-						},
-						{
-							x: isValidData ? metrics.map((item) => item.timestamp) : [],
-							y: isValidData ? metrics.map((item) => item.air_temperature_min) : [],
-							type: "bar",
-							title: "Min",
-							color: "third",
-						},
-					],
-					xaxis: { title: "Days" },
-					yaxis: { title: "Temperature (°C)" },
-				},
-				// {
-				// 	title: "Minimum Ground Temperature Per Day",
-				// 	data: [
-				// 		{
-				// 			x: state.dataSets.metrics
-				// 				? state.dataSets.metrics.map((item) => item.timestamp)
-				// 				: [],
-				// 			y: state.dataSets.metrics
-				// 				? state.dataSets.metrics
-				// 					.map((item) => item.minimum_ground_temperature) : [],
-				// 			type: "bar",
-				// 			color: "third",
-				// 		},
-				// 	],
-				// 	xaxis: { title: "Days" },
-				// 	yaxis: { title: "Temperature (°C)" },
-				// },
-				// {
-				// 	title: "Daily Precipitation Sum",
-				// 	data: [
-				// 		{
-				// 			x: state.dataSets.metrics
-				// 				? state.dataSets.metrics.map((item) => item.timestamp)
-				// 				: [],
-				// 			y: state.dataSets.metrics
-				// 				? state.dataSets.metrics
-				// 					.map((item) => item.daily_precipitation_sum) : [],
-				// 			type: "bar",
-				// 			color: "primary",
-				// 		},
-				// 	],
-				// 	xaxis: { title: "Days" },
-				// 	yaxis: { title: "Precipitation (mm)" },
-				// },
-				// {
-				// 	title: "Daily Snow Cover Height",
-				// 	data: [
-				// 		{
-				// 			x: state.dataSets.metrics
-				// 				? state.dataSets.metrics.map((item) => item.timestamp)
-				// 				: [],
-				// 			y: state.dataSets.metrics
-				// 				? state.dataSets.metrics
-				// 					.map((item) => item.snow_cover_height) : [],
-				// 			type: "bar",
-				// 			color: "blue",
-				// 		},
-				// 	],
-				// 	xaxis: { title: "Days" },
-				// 	yaxis: { title: "Snow Height (cm)" },
-				// },
-			].map((card, index) => (
-				<Grid key={index} item xs={12} sm={12} md={6}>
-					<Card title={card.title} footer={cardFooter({ minutesAgo: state.minutesAgo })}>
-						<Plot
-							scrollZoom
-							data={card.data}
-							showLegend={index === 0}
-							height="300px"
-							xaxis={card.xaxis}
-							yaxis={card.yaxis}
-						/>
-					</Card>
-				</Grid>
-			))}
+
+			{isLoading ? (<LoadingIndicator />
+			) : (
+				[
+					{
+						title: "Temperature Evolution Per Day",
+						data: [
+							{
+								x: isValidData ? metrics.map((item) => item.timestamp) : [],
+								y: isValidData ? metrics.map((item) => item.air_temperature_max) : [],
+								type: "bar",
+								title: "Max",
+								color: "primary",
+							},
+							{
+								x: isValidData ? metrics.map((item) => item.timestamp) : [],
+								y: isValidData ? metrics.map((item) => item.air_temperature_avg) : [],
+								type: "bar",
+								title: "Avg",
+								color: "secondary",
+							},
+							{
+								x: isValidData ? metrics.map((item) => item.timestamp) : [],
+								y: isValidData ? metrics.map((item) => item.air_temperature_min) : [],
+								type: "bar",
+								title: "Min",
+								color: "third",
+							},
+						],
+						xaxis: { title: "Days" },
+						yaxis: { title: "Temperature (°C)" },
+					},
+					{
+						title: "Air Temperature Vs Pressure Correlation",
+						data: [
+							{
+								x: isValidData ? metrics.map((item) => item.timestamp) : [],
+								y: isValidData ? metrics.map((item) => item.air_temperature_avg * 100) : [],
+								type: "scatter",
+								mode: "lines",
+								title: "Avg Temperature / 100",
+								color: "secondary",
+							},
+							{
+								x: isValidData ? metrics.map((item) => item.timestamp) : [],
+								y: isValidData ? metrics.map((item) => item.air_pressure) : [],
+								type: "scatter",
+								mode: "lines",
+								title: "Air Pressure",
+								color: "third",
+							},
+						],
+						xaxis: { title: "Days" },
+						// yaxis: { title: "Temperature (°C)" },
+					},
+					{
+						title: "Air Temperature Vs Humidity Correlation",
+						data: [
+							{
+								x: isValidData ? metrics.map((item) => item.timestamp) : [],
+								y: isValidData ? metrics.map((item) => item.air_temperature_avg * 10) : [],
+								type: "scatter",
+								mode: "lines",
+								title: "Avg Temperature / 10",
+								color: "secondary",
+							},
+							{
+								x: isValidData ? metrics.map((item) => item.timestamp) : [],
+								y: isValidData ? metrics.map((item) => item.air_humidity) : [],
+								type: "scatter",
+								mode: "lines",
+								title: "Air Pressure",
+								color: "third",
+							},
+						],
+						xaxis: { title: "Days" },
+						// yaxis: { title: "Temperature (°C)" },
+					},
+					{
+						title: "Air Pressure Vs Humidity Correlation",
+						data: [
+							{
+								x: isValidData ? metrics.map((item) => item.timestamp) : [],
+								y: isValidData ? metrics.map((item) => item.air_pressure) : [],
+								type: "scatter",
+								mode: "lines",
+								title: "Air Pressure",
+								color: "primary",
+							},
+							{
+								x: isValidData ? metrics.map((item) => item.timestamp) : [],
+								y: isValidData ? metrics.map((item) => item.air_humidity * 10) : [],
+								type: "scatter",
+								mode: "lines",
+								title: "Air Pressure / 10",
+								color: "third",
+							},
+						],
+						xaxis: { title: "Days" },
+						// yaxis: { title: "Temperature (°C)" },
+					},
+					{
+						title: "Complete Overview",
+						data: [
+							{
+								x: isValidData ? metrics.map((item) => item.timestamp) : [],
+								y: isValidData ? metrics.map((item) => item.air_temperature_max * 100) : [],
+								type: "bar",
+								title: "Max Temperature / 100",
+								color: "secondary",
+							},
+							{
+								x: isValidData ? metrics.map((item) => item.timestamp) : [],
+								y: isValidData ? metrics.map((item) => item.air_pressure) : [],
+								type: "scatter",
+								mode: "lines",
+								title: "Air Pressure",
+								color: "primary",
+							},
+							{
+								x: isValidData ? metrics.map((item) => item.timestamp) : [],
+								y: isValidData ? metrics.map((item) => item.air_humidity * 10) : [],
+								type: "scatter",
+								mode: "lines",
+								title: "Air Pressure / 10",
+								color: "third",
+							},
+						],
+						xaxis: { title: "Days" },
+						// yaxis: { title: "Temperature (°C)" },
+					},
+				].map((card, index) => (
+					<Grid key={index} item xs={12} sm={12} md={6}>
+						<Card title={card.title} footer={cardFooter({ minutesAgo: state.minutesAgo })}>
+							<Plot
+								scrollZoom
+								data={card.data}
+								// showLegend={index === 0}
+								height="300px"
+								xaxis={card.xaxis}
+								yaxis={card.yaxis}
+							/>
+						</Card>
+					</Grid>
+				))
+			)}
 		</Grid>
 	);
 };
