@@ -3,7 +3,7 @@ import { calculateDifferenceBetweenDates } from "../utils/data-handling-function
 export	const organization = "ecovitall";
 
 export const ecoVitallConfigs = (currentDate, formattedBeginningOfMonth, formattedBeginningOfHour) => {
-	const daysBetween = calculateDifferenceBetweenDates(formattedBeginningOfMonth, formattedBeginningOfHour);
+	const { differenceInDays } = calculateDifferenceBetweenDates(formattedBeginningOfMonth, formattedBeginningOfHour);
 
 	return [
 		{
@@ -52,7 +52,7 @@ export const ecoVitallConfigs = (currentDate, formattedBeginningOfMonth, formatt
 			params: JSON.stringify({
 				attribute: ["ph"],
 				stat: "avg",
-				interval: `every_${Math.max(daysBetween, 1)}_days`,
+				interval: `every_${Math.max(differenceInDays, 1)}_days`,
 				start_time: `${formattedBeginningOfMonth}`,
 				end_time: `${formattedBeginningOfHour}`,
 			}),
@@ -65,7 +65,7 @@ export const ecoVitallConfigs = (currentDate, formattedBeginningOfMonth, formatt
 			params: JSON.stringify({
 				attribute: ["ec"],
 				stat: "avg",
-				interval: `every_${Math.max(daysBetween, 1)}_days`,
+				interval: `every_${Math.max(differenceInDays, 1)}_days`,
 				start_time: `${formattedBeginningOfMonth}`,
 				end_time: `${formattedBeginningOfHour}`,
 			}),
