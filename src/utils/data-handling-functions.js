@@ -1,4 +1,4 @@
-// src/utils.js
+import { timeUtils } from "./timer-manager.js";
 
 export const initialState = {
 	dataSets: {},
@@ -7,6 +7,8 @@ export const initialState = {
 	isLoading: false,
 	warning: null,
 	error: null,
+	lastFetchTime: null,
+	nextFetchTime: null,
 };
 
 export const reducer = (state, action) => {
@@ -22,6 +24,7 @@ export const reducer = (state, action) => {
 
 		case "FETCH_SUCCESS": {
 			const { plotId, response } = action.payload;
+			const now = new Date();
 			return {
 				...state,
 				isLoading: false,
@@ -30,13 +33,16 @@ export const reducer = (state, action) => {
 					...state.dataSets,
 					[plotId]: response,
 				},
-				pageRefreshTime: new Date(),
+				pageRefreshTime: now,
+				lastFetchTime: now,
+				nextFetchTime: new Date(now.getTime() + Number(timeUtils.getTimeUntilNextFetch(now))),
 				minutesAgo: 0,
 			};
 		}
 
 		case "FETCH_WARNING": {
 			const { plotId, response } = action.payload;
+			const now = new Date();
 			return {
 				...state,
 				isLoading: false,
@@ -46,6 +52,7 @@ export const reducer = (state, action) => {
 					[plotId]: response,
 				},
 				pageRefreshTime: new Date(),
+				nextFetchTime: new Date(now.getTime() + timeUtils.getTimeUntilNextFetch(now)),
 				minutesAgo: 0,
 			};
 		}
@@ -59,9 +66,15 @@ export const reducer = (state, action) => {
 		}
 
 		case "UPDATE_MINUTES_AGO": {
+			if (!state.pageRefreshTime) return state;
+
+			const minutesAgo = Math.floor((Date.now() - state.pageRefreshTime) / 60_000);
+			const shouldFetch = timeUtils.shouldFetch(state.lastFetchTime);
+
 			return {
 				...state,
-				minutesAgo: Math.floor((Date.now() - state.pageRefreshTime) / 60_000),
+				minutesAgo,
+				shouldRefetch: shouldFetch,
 			};
 		}
 
