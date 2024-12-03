@@ -5,26 +5,38 @@ import { useEffect, useReducer, useRef, useCallback, useMemo } from "react";
 import fetchAllData from "../api/fetch-data.js";
 
 import { initialState, reducer } from "./data-handling-functions.js";
-import { TimerManager, timeUtils } from "./timer-manager.js";
+import { TimerManager } from "./timer-manager.js";
 
 import { useSnackbar } from "./index.js";
+
+// const FETCH_INTERVAL = 30 * 60 * 1000; // 30 minutes
+// const MINUTES_UPDATE_INTERVAL = 60 * 1000; // 1 minute
 
 const useInit = (organization, fetchConfigs) => {
 	const { success, warning, error } = useSnackbar();
 	const [state, dispatch] = useReducer(reducer, initialState);
-	const timerManagerRef = useRef(null);
 
+	// Memoize snackbar callbacks
 	const snackbarCallbacks = useMemo(() => ({
-		success, warning, error,
+		success,
+		warning,
+		error,
 	}), [success, warning, error]);
 
-	const refs = useRef(snackbarCallbacks);
+	// Single ref object instead of multiple refs
+	const refs = useRef({
+		success: snackbarCallbacks.success,
+		warning: snackbarCallbacks.warning,
+		error: snackbarCallbacks.error,
+	});
 
+	// Update refs when callbacks change
 	useEffect(() => {
 		refs.current = snackbarCallbacks;
 	}, [snackbarCallbacks]);
 
 	const handleFetchResponse = useCallback((promiseStatus) => {
+		// ensure that there are no 500 errors or empty responses
 		const hasIssues = promiseStatus.some(
 			(item) => item?.response?.success === false
             || (Array.isArray(item?.response) && item.response.length === 0),
@@ -40,10 +52,6 @@ const useInit = (organization, fetchConfigs) => {
 	}, []);
 
 	const updateData = useCallback(async () => {
-		if (!timeUtils.shouldFetch(state.lastFetchTime)) {
-			return;
-		}
-
 		try {
 			dispatch({ type: "FETCH_START" });
 			const promiseStatus = await fetchAllData(dispatch, organization, fetchConfigs);
@@ -52,59 +60,31 @@ const useInit = (organization, fetchConfigs) => {
 		} catch (error_) {
 			dispatch({
 				type: "FETCH_ERROR",
-				payload: { error: error_.message, type: "error" },
+				payload: {
+					error: error_.message,
+					type: "error",
+				},
 			});
 			console.error("Error fetching data:", error_);
 			refs.current.error(`Error fetching data: ${error_.message}`);
 		}
-	}, [organization, fetchConfigs, handleFetchResponse, state.lastFetchTime]);
-
-	const updateMinutes = useCallback(() => {
-		dispatch({ type: "UPDATE_MINUTES_AGO" });
-	}, []);
+	}, [organization, fetchConfigs, handleFetchResponse]);
 
 	useEffect(() => {
 		if (!fetchConfigs) return;
 
-		timerManagerRef.current = new TimerManager(
-			updateData,
-			updateMinutes,
-		);
+		const timerManager = new TimerManager(updateData, () => {
+			dispatch({ type: "UPDATE_MINUTES_AGO" });
+		});
 
-		timerManagerRef.current.start();
-
-		return () => {
-			if (timerManagerRef.current) {
-				timerManagerRef.current.stop();
-			}
-		};
-	}, [updateData, updateMinutes, fetchConfigs]);
-
-	useEffect(() => {
-		if (!fetchConfigs) return;
-
-		timerManagerRef.current = new TimerManager(
-			updateData,
-			updateMinutes,
-		);
-
-		timerManagerRef.current.start();
+		timerManager.start();
 
 		return () => {
-			if (timerManagerRef.current) {
-				timerManagerRef.current.stop();
-			}
+			timerManager.stop();
 		};
-	}, [updateData, updateMinutes, fetchConfigs]);
+	}, [updateData, fetchConfigs]);
 
-	return {
-		state,
-		forceUpdate: () => {
-			if (timerManagerRef.current) {
-				timerManagerRef.current.reset();
-			}
-		},
-	};
+	return { state };
 };
 
 export default useInit;

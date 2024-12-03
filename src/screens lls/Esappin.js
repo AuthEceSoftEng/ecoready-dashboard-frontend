@@ -70,12 +70,11 @@ const Esappin = () => {
 						onChange={dropdownContent[0].onChange}
 					/>
 				</Grid>
-				<Grid item sx={{ display: "flex", justifyContent: "flex-end" }} xs={12} md={3}>
+				<Grid item sx={{ display: "flex", justifyContent: "flex-end" }} xs={12} md={2}>
 					{/* Select only the month */}
 					<DatePicker
 						type="desktop"
 						label="Month Picker"
-						width="180px"
 						views={["month"]}
 						value={`${monthNames[month].text} ${year}`}
 						onChange={handleMonthChange}

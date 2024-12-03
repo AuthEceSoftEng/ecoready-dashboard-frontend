@@ -53,7 +53,7 @@ const Card = ({
 		)}
 		<Grid
 			width="100%"
-			padding="10px 20px"
+			padding="10px 5px"
 			justifyContent="center"
 			alignItems="center"
 			boxSizing="border-box" // Ensure padding is included in the width

@@ -54,10 +54,10 @@ import EcoReadyMasuria from "./screens lls/EcoReadyMasuria.js";
 import EcoVitaLl from "./screens lls/EcoVitaLl.js";
 import Esappin from "./screens lls/Esappin.js";
 // import LivOrganic from "./screens lls/LivOrganic.js";
-// import LOFS from "./screens lls/LOFS.js";
+// import LOFS from "./screens lls/Lofs.js";
 import Probio from "./screens lls/Probio.js";
 import SecoCollab from "./screens lls/SecoCollab.js";
-// import THALLA from "./screens lls/Thalla.js";
+import THALLA from "./screens lls/Thalla.js";
 import Plots from "./examples/Plots.js";
 import Map from "./screens/Map.js";
 import Mapexamp from "./examples/Map.js";
@@ -151,7 +151,7 @@ const App = () => {
 								{/* <Route path="lofs" element={<Protected c={<LOFS />} />} /> */}
 								<Route path="probio" element={<Protected c={<Probio />} />} />
 								<Route path="secocollab" element={<Protected c={<SecoCollab />} />} />
-								{/* <Route path="thalla" element={<Protected c={<THALLA />} />} /> */}
+								<Route path="thalla" element={<Protected c={<THALLA />} />} />
 								{/* EXAMPLES */}
 								<Route path="buttons" element={<Protected c={<ButtonsExample />} />} />
 								<Route path="card" element={<Protected c={<CardExample />} />} />
