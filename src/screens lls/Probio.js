@@ -19,7 +19,7 @@ const Probio = () => {
 		() => debounce((date, setter) => {
 			const { currentDate } = calculateDates(date);
 			setter(currentDate);
-		}, 3000), // Reduced from 2700ms to 800ms
+		}, 1800), // Reduced from 2700ms to 800ms
 		[],
 	);
 
@@ -76,7 +76,7 @@ const Probio = () => {
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
-			<Grid container display="flex" direction="row" justifyContent="flex-end" alignItems="center" spacing={2} mt={1}>
+			<Grid container display="flex" direction="row" justifyContent="flex-end" alignItems="center" spacing={2}>
 				{/* <Grid item sx={{ display: "flex", justifyContent: "flex-end" }} md={3}>
 					<Dropdown
 						id={dropdownContent[0].id}
@@ -90,7 +90,7 @@ const Probio = () => {
 						onChange={dropdownContent[0].onChange}
 					/>
 				</Grid> */}
-				<Grid item sx={{ display: "flex", justifyContent: "flex-end" }} md={4}>
+				<Grid item sx={{ display: "flex", justifyContent: "flex-end" }} xs={6} md={3} mt={1}>
 					<Form ref={formRef} content={formContent} />
 				</Grid>
 			</Grid>
