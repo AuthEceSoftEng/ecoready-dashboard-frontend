@@ -42,6 +42,9 @@ const Plot = ({
 				axis: { range: d.range },
 				bar: { color: colors?.[d?.color] || d?.color, thickness: 1 },
 				shape: d.shape,
+				...(d.shape === "bullet" && {
+					orientation: d.orientation || "h", // default to horizontal if not specified
+				}),
 				...(d.indicator && {
 					threshold: {
 						line: { color: colors?.[d?.indicator] || d?.indicator, width: 3 },
