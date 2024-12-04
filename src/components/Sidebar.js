@@ -87,8 +87,8 @@ const ButtonWithText = ({ text, icon, more, handler }) => (
 				content={(
 					<Grid container flexDirection="column" width="100%">
 						{more.map((el) => (
-							<Button key={el.title} color="white" onClick={el.handler}>
-								<Typography sx={{ textTransform: "capitalize" }}>{el.title}</Typography>
+							<Button key={el.title} color="white" sx={{ justifyContent: "flex-start", marginLeft: "30px" }} onClick={el.handler}>
+								<Typography sx={{ textTransform: "capitalize", textAlign: "left" }}>{el.title}</Typography>
 							</Button>
 						))}
 					</Grid>
