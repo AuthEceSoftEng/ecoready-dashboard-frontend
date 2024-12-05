@@ -81,6 +81,13 @@ const useStyles = makeStyles((theme) => ({
 		flexDirection: "column",
 		color: "black",
 	},
+	daterangeBox: {
+		maxWidth: "250px",
+		marginBottom: "1px",
+		display: "flex",
+		flexDirection: "column",
+		color: "white",
+	},
 	switchBox: {
 		width: "100%",
 		maxWidth: "300px",
@@ -413,6 +420,67 @@ const Form = forwardRef(({ disabled: dsb, content, validationSchema, onSubmit, o
 									&& (
 										<Typography textAlign="left" color="error" fontSize="small">{formikProps.errors[comp.id]}</Typography>
 									)}
+								</Grid>
+							)}
+							{comp.customType === "date-range" && (
+								<Grid key={comp.id} container item className={classes.daterangeBox} width={comp.width}>
+									<Grid container direction="column">
+										<Grid item xs={12}>
+											<Typography textAlign="left" style={{ fontSize: comp.labelSize || "inherit" }}>
+												{comp.label}
+											</Typography>
+										</Grid>
+										<Grid item style={{ marginBottom: "2px" }}>
+											<DatePicker
+												type={comp.type || "desktop"}
+												value={formikProps.values[`${comp.id}_start`]}
+												disabled={disabled || comp.disabled}
+												label={comp.startLabel || "Start date"}
+												views={comp.views || ["day", "month", "year"]}
+												background={comp.background || "secondary"}
+												color="white"
+												sx={{
+													width: {
+														xs: "100%", // Full width on extra-small screens
+														sm: "75%", // 75% width on small screens
+														md: "50%", // 50% width on medium screens
+														lg: "25%", // 25% width on large screens
+													},
+												}}
+												onChange={(value) => {
+													formikProps.setFieldValue(`${comp.id}_start`, value);
+													if (comp.onStartChange) {
+														comp.onStartChange(value);
+													}
+												}}
+											/>
+										</Grid>
+										<Grid item>
+											<DatePicker
+												type={comp.type || "desktop"}
+												value={formikProps.values[`${comp.id}_end`]}
+												disabled={disabled || comp.disabled}
+												label={comp.endLabel || "End date"}
+												views={comp.views || ["day", "month", "year"]}
+												background={comp.background || "secondary"}
+												color="white"
+												sx={{
+													width: {
+														xs: "100%", // Full width on extra-small screens
+														sm: "75%", // 75% width on small screens
+														md: "50%", // 50% width on medium screens
+														lg: "25%", // 25% width on large screens
+													},
+												}}
+												onChange={(value) => {
+													formikProps.setFieldValue(`${comp.id}_end`, value);
+													if (comp.onEndChange) {
+														comp.onEndChange(value);
+													}
+												}}
+											/>
+										</Grid>
+									</Grid>
 								</Grid>
 							)}
 							{comp.customType === "button"
