@@ -21,7 +21,7 @@ export const labs = [
 	{ title: "EcoReadyMasuria", path: "../ecoreadymasuria", coordinates: [53.619_53, 20.366_513] },
 	{ title: "EcoVitaLL", path: "../ecovitall", coordinates: [47.492_367, 19.044_356] },
 	{ title: "Esappin", path: "../esappin", coordinates: [51.443_657, 7.657_856] },
-	// { title: "LivOrganic", path: "../livorganic" },
+	{ title: "LivOrganic", path: "../livorganic" },
 	// { title: "LOFS", path: "../lofs", coordinates: { location1: [47.710_385, 1.727_322], location2: [47.769_127, -0.327_92] } },
 	{ title: "Probio", path: "../probio", coordinates: [49.039_97, 16.864_949] },
 	{ title: "Seco Collab", path: "../secocollab" },
