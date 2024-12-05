@@ -30,10 +30,6 @@ const THALLA = () => {
 		[],
 	);
 
-	// const handleRegionChange = useCallback((newValue) => {
-	// 	setRegion(newValue);
-	// }, []);
-
 	const handleDateChange = useCallback((newValue, setter) => {
 		if (!newValue?.$d) return;
 
@@ -49,7 +45,6 @@ const THALLA = () => {
 			customType: "dropdown",
 			id: "region",
 			size: "small",
-			width: "200px",
 			height: "40px",
 			filled: true,
 			background: "primary",
@@ -67,32 +62,18 @@ const THALLA = () => {
 
 	const formContentDate = useMemo(() => [
 		{
-			customType: "date-picker",
-			id: "start",
-			width: "210px",
+			customType: "date-range",
+			id: "dateRange",
 			type: "desktop",
 			label: "",
-			sublabel: "Start date",
+			startLabel: "Start date",
+			endLabel: "End date",
 			background: "primary",
-			value: startDate,
-			labelPosition: "side",
 			labelSize: 12,
-			onChange: (newValue) => handleDateChange(newValue, setStartDate),
+			onStartChange: (newValue) => handleDateChange(newValue, setStartDate),
+			onEndChange: (newValue) => handleDateChange(newValue, setEndDate),
 		},
-		{
-			customType: "date-picker",
-			id: "end",
-			width: "210px",
-			type: "desktop",
-			label: "",
-			sublabel: "End date",
-			background: "primary",
-			value: endDate,
-			labelPosition: "side",
-			labelSize: 12,
-			onChange: (newValue) => handleDateChange(newValue, setEndDate),
-		},
-	], [startDate, endDate, handleDateChange]);
+	], [handleDateChange]);
 
 	const isValidDateRange = useMemo(() => startDate && endDate && new Date(startDate) <= new Date(endDate), [startDate, endDate]);
 
@@ -124,11 +105,21 @@ const THALLA = () => {
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
-			<Grid container display="flex" direction="row" justifyContent="flex-end" alignItems="center" spacing={2}>
-				<Grid item sx={{ display: "flex", justifyContent: "flex-end" }} xs={6} md={2} mt={1}>
+			<Grid
+				container
+				display="flex"
+				direction="row"
+				justifyContent="flex-end"
+				alignItems="center"
+				sx={{
+					gap: "16px",
+					flexWrap: "wrap",
+				}}
+			>
+				<Grid item xs={12} sm={6} md={2} mt={1} flexShrink={0}>
 					<Form ref={formRefRegion} content={formContentRegion} />
 				</Grid>
-				<Grid item sx={{ display: "flex", justifyContent: "flex-end" }} xs={6} md={2} mt={1}>
+				<Grid item xs={12} sm={6} md={2} mt={1} flexShrink={0}>
 					<Form ref={formRefDate} content={formContentDate} />
 				</Grid>
 			</Grid>

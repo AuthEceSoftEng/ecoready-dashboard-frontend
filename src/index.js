@@ -53,7 +53,7 @@ import HiveLab from "./screens lls/HiveLab.js";
 import EcoReadyMasuria from "./screens lls/EcoReadyMasuria.js";
 import EcoVitaLl from "./screens lls/EcoVitaLl.js";
 import Esappin from "./screens lls/Esappin.js";
-// import LivOrganic from "./screens lls/LivOrganic.js";
+import LivOrganic from "./screens lls/LivOrganic.js";
 // import LOFS from "./screens lls/Lofs.js";
 import Probio from "./screens lls/Probio.js";
 import SecoCollab from "./screens lls/SecoCollab.js";
@@ -147,7 +147,7 @@ const App = () => {
 								<Route path="ecoreadymasuria" element={<Protected c={<EcoReadyMasuria />} />} />
 								<Route path="ecovitall" element={<Protected c={<EcoVitaLl />} />} />
 								<Route path="esappin" element={<Protected c={<Esappin />} />} />
-								{/* <Route path="livorganic" element={<Protected c={<LivOrganic />} />} /> */}
+								<Route path="livorganic" element={<Protected c={<LivOrganic />} />} />
 								{/* <Route path="lofs" element={<Protected c={<LOFS />} />} /> */}
 								<Route path="probio" element={<Protected c={<Probio />} />} />
 								<Route path="secocollab" element={<Protected c={<SecoCollab />} />} />

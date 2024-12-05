@@ -39,7 +39,7 @@ const useStyles = makeStyles((theme) => ({
 	dropdown: {
 		width: "50%",
 		maxWidth: "300px",
-		marginBottom: "5px",
+		marginBottom: "1px",
 		display: "flex",
 		justifyContent: "space-between",
 		alignItems: "center",
@@ -83,6 +83,8 @@ const useStyles = makeStyles((theme) => ({
 	},
 	daterangeBox: {
 		maxWidth: "250px",
+		width: "50%",
+		minWidth: "150px",
 		marginBottom: "1px",
 		display: "flex",
 		flexDirection: "column",
@@ -164,7 +166,7 @@ const Form = forwardRef(({ disabled: dsb, content, validationSchema, onSubmit, o
 					{formContent.map((comp) => (
 						<div
 							key={comp.id}
-							style={{ width: "100%", display: "flex", justifyContent: "center" }}
+							style={{ width: "100%", display: "flex", justifyContent: "flex-end" }}
 						>
 							{comp.customType === "input"
 							&& (
@@ -212,7 +214,6 @@ const Form = forwardRef(({ disabled: dsb, content, validationSchema, onSubmit, o
 													value: event.target.value,
 												},
 											});
-											console.log("Dropdown value:", formikProps.values[comp.id]);
 											if (comp.onChange) {
 												comp.onChange(event);
 											}
