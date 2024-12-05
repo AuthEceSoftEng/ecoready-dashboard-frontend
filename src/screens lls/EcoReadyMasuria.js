@@ -11,6 +11,13 @@ import { calculateDates, getCustomDateTime } from "../utils/data-handling-functi
 import { monthNames } from "../utils/useful-constants.js";
 import { cardFooter } from "../utils/rendering-items.js";
 
+const REGIONS = [
+	{ value: "BEZEK", text: "Bezek" },
+	{ value: "GRABIK", text: "Grabik" },
+	{ value: "PRABUTY", text: "Prabuty" },
+	{ value: "WARSZAWA-FILTRY", text: "Warszawa-Filtry" },
+];
+
 const EcoReadyMasuria = () => {
 	const customDate = useMemo(() => getCustomDateTime(2006, 1), []);
 	console.log("Custom Date", customDate);
@@ -44,12 +51,7 @@ const EcoReadyMasuria = () => {
 			height: "40px",
 			color: "primary",
 			label: "Weather Station",
-			items: [
-				{ value: "BEZEK", text: "Bezek" },
-				{ value: "GRABIK", text: "Grabik" },
-				{ value: "PRABUTY", text: "Prabuty" },
-				{ value: "WARSZAWA-FILTRY", text: "Warszawa-Filtry" },
-			],
+			items: REGIONS,
 			defaultValue: "BEZEK",
 			onChange: (event) => {
 				setStationName(event.target.value);
