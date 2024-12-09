@@ -11,6 +11,15 @@ import { getCustomDateTime } from "../utils/data-handling-functions.js";
 import { monthNames } from "../utils/useful-constants.js";
 import { cardFooter } from "../utils/rendering-items.js";
 
+const PRODUCTS = [
+	{ value: "Rapsfeld B1", text: "Rapsfeld B1" },
+	{ value: "Rapsfeld B2", text: "Rapsfeld B2" },
+	{ value: "Rapsfeld H1", text: "Rapsfeld H1" },
+	{ value: "Rapsfeld H2", text: "Rapsfeld H2" },
+	{ value: "Erdbeeren", text: "Erdbeeren" },
+	{ value: "Gerstefeld G1", text: "Gerstefeld G1" },
+];
+
 const Esappin = () => {
 	const customDate = useMemo(() => getCustomDateTime(2024, 10), []);
 
@@ -36,14 +45,7 @@ const Esappin = () => {
 			height: "40px",
 			color: "primary",
 			label: "Product",
-			items: [
-				{ value: "Rapsfeld B1", text: "Rapsfeld B1" },
-				{ value: "Rapsfeld B2", text: "Rapsfeld B2" },
-				{ value: "Rapsfeld H1", text: "Rapsfeld H1" },
-				{ value: "Rapsfeld H2", text: "Rapsfeld H2" },
-				{ value: "Erdbeeren", text: "Erdbeeren" },
-				{ value: "Gerstefeld G1", text: "Gerstefeld G1" },
-			],
+			items: PRODUCTS,
 			defaultValue: "Rapsfeld B1",
 			onChange: (event) => {
 				setProduct(event.target.value);
@@ -57,7 +59,7 @@ const Esappin = () => {
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
 			<Grid container display="flex" direction="row" justifyContent="flex-end" alignItems="center" mt={1} spacing={2}>
-				<Grid item sx={{ display: "flex", justifyContent: "flex-end" }} xs={12} md={3}>
+				<Grid item sx={{ display: "flex", justifyContent: "flex-end" }} xs={6} md={3}>
 					<Dropdown
 						id={dropdownContent[0].id}
 						value={product}
@@ -70,7 +72,7 @@ const Esappin = () => {
 						onChange={dropdownContent[0].onChange}
 					/>
 				</Grid>
-				<Grid item sx={{ display: "flex", justifyContent: "flex-end" }} xs={12} md={2}>
+				<Grid item sx={{ display: "flex", justifyContent: "flex-end" }} xs={6} sm={3} md={2}>
 					{/* Select only the month */}
 					<DatePicker
 						type="desktop"
