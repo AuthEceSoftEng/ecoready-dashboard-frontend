@@ -41,7 +41,7 @@ const useStyles = makeStyles((theme) => ({
 		maxWidth: "300px",
 		marginBottom: "1px",
 		display: "flex",
-		justifyContent: "space-between",
+		justifyContent: "center",
 		alignItems: "center",
 		color: "black",
 	},
@@ -83,10 +83,12 @@ const useStyles = makeStyles((theme) => ({
 	},
 	daterangeBox: {
 		maxWidth: "250px",
-		width: "50%",
+		width: "100%",
 		minWidth: "150px",
 		marginBottom: "1px",
 		display: "flex",
+		justifyContent: "center",
+		alignItems: "flex-end",
 		flexDirection: "column",
 		color: "white",
 	},
@@ -424,8 +426,8 @@ const Form = forwardRef(({ disabled: dsb, content, validationSchema, onSubmit, o
 								</Grid>
 							)}
 							{comp.customType === "date-range" && (
-								<Grid key={comp.id} container item className={classes.daterangeBox} width={comp.width}>
-									<Grid container direction="column">
+								<Grid key={comp.id} container item className={classes.daterangeBox}>
+									<Grid container direction="column" width={comp.width}>
 										<Grid item xs={12}>
 											<Typography textAlign="left" style={{ fontSize: comp.labelSize || "inherit" }}>
 												{comp.label}

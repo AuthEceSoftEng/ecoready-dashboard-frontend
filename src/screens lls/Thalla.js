@@ -3,11 +3,10 @@ import { memo, useMemo, useState, useCallback, useRef } from "react";
 
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
-import Form from "../components/Form.js";
 import useInit from "../utils/screen-init.js";
 import { thallaConfigs, organization } from "../config/ThallaConfig.js";
 import { calculateDates, calculateDifferenceBetweenDates, debounce } from "../utils/data-handling-functions.js";
-import { cardFooter, LoadingIndicator } from "../utils/rendering-items.js";
+import { cardFooter, LoadingIndicator, StickyBand } from "../utils/rendering-items.js";
 
 const REGIONS = [
 	{ value: "Amfissa", text: "Amfissa" },
@@ -26,36 +25,31 @@ const THALLA = () => {
 		() => debounce((date, setter) => {
 			const { currentDate } = calculateDates(date);
 			setter(currentDate);
-		}, 0), // Reduced from 2700ms to 800ms
+		}, 0),
 		[],
 	);
 
 	const handleDateChange = useCallback((newValue, setter) => {
 		if (!newValue?.$d) return;
-
-		// Immediate visual feedback
 		setter(newValue.$d);
 		debouncedSetDate(newValue.$d, setter);
 	}, [debouncedSetDate]);
 
-	const formRefRegion = useRef();
-
-	const formContentRegion = useMemo(() => [
+	const dropdownContent = useMemo(() => [
 		{
-			customType: "dropdown",
 			id: "region",
 			size: "small",
+			width: "170px",
 			height: "40px",
-			filled: true,
-			background: "primary",
-			label: "Region:",
+			color: "primary",
+			label: "Regions",
 			items: REGIONS,
-			defaultValue: "Select Region",
+			defaultValue: "",
 			onChange: (event) => {
 				setRegion(event.target.value);
 			},
-		},
 
+		},
 	], []);
 
 	const formRefDate = useRef();
@@ -64,6 +58,7 @@ const THALLA = () => {
 		{
 			customType: "date-range",
 			id: "dateRange",
+			width: "170px",
 			type: "desktop",
 			label: "",
 			startLabel: "Start date",
@@ -104,85 +99,68 @@ const THALLA = () => {
 	}, [metrics, isValidData]);
 
 	return (
-		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
-			<Grid
-				container
-				display="flex"
-				direction="row"
-				justifyContent="flex-end"
-				alignItems="center"
-				sx={{
-					gap: "16px",
-					flexWrap: "wrap",
-				}}
-			>
-				<Grid item xs={12} sm={6} md={2} mt={1} flexShrink={0}>
-					<Form ref={formRefRegion} content={formContentRegion} />
-				</Grid>
-				<Grid item xs={12} sm={6} md={2} mt={1} flexShrink={0}>
-					<Form ref={formRefDate} content={formContentDate} />
-				</Grid>
-			</Grid>
-			<Grid item xs={12} md={12} alignItems="center" flexDirection="column" padding={0}>
+		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
+			<StickyBand dropdownContent={dropdownContent} value={region} formRef={formRefDate} formContent={formContentDate} />
+			<Grid item xs={12} md={12} alignItems="center" flexDirection="column">
 				<Card title={`${differenceInDays}-day Overview`} footer={cardFooter({ minutesAgo })}>
-					<Grid container display="flex" direction="row" justifyContent="space-evenly" padding={0} spacing={1}>
-						{[
-							{
-								data: {
-									value: dataSets?.maxMaxTemperature?.[0]
-										? dataSets.maxMaxTemperature[0].max_max_temperature
-										: null,
-									subtitle: "Max Temperature",
+					{isLoading ? (<LoadingIndicator />
+					) : (
+						<Grid container display="flex" direction="row" justifyContent="space-evenly" padding={0} spacing={1}>
+							{[
+								{
+									data: {
+										value: dataSets?.maxMaxTemperature?.[0]
+											? dataSets.maxMaxTemperature[0].max_max_temperature
+											: null,
+										subtitle: "Max Temperature",
+									},
+									color: "goldenrod",
 								},
-								color: "goldenrod",
-							},
-							{
-								data: {
-									value: dataSets?.meanMeanTemperature?.[0]
-										? dataSets.meanMeanTemperature[0].avg_mean_temperature
-										: null,
-									subtitle: "Average Temperature",
+								{
+									data: {
+										value: dataSets?.meanMeanTemperature?.[0]
+											? dataSets.meanMeanTemperature[0].avg_mean_temperature
+											: null,
+										subtitle: "Average Temperature",
+									},
+									color: "primary",
 								},
-								color: "primary",
-							},
-							{
-								data: {
-									value: dataSets?.minMinTemperature?.[0]
-										? dataSets.minMinTemperature[0].min_min_temperature
-										: null,
-									subtitle: "Min Temperature",
+								{
+									data: {
+										value: dataSets?.minMinTemperature?.[0]
+											? dataSets.minMinTemperature[0].min_min_temperature
+											: null,
+										subtitle: "Min Temperature",
+									},
+									color: "third",
 								},
-								color: "third",
-							},
-							{
-								data: {
-									value: dataSets?.rainSum?.[0]
-										? dataSets.rainSum[0].sum_rain
-										: null,
-									subtitle: "Rain Sum",
+								{
+									data: {
+										value: dataSets?.rainSum?.[0]
+											? dataSets.rainSum[0].sum_rain
+											: null,
+										subtitle: "Rain Sum",
+									},
+									range: [0, 100],
+									color: "third",
+									orientation: "h",
+									suffix: "mm",
 								},
-								range: [0, 100],
-								color: "third",
-								orientation: "h",
-								suffix: "mm",
-							},
-							{
-								data: {
-									value: dataSets?.meanWindSpeed?.[0]
-										? dataSets.meanWindSpeed[0].avg_wind_speed
-										: null,
-									subtitle: "Average Wind Speed",
+								{
+									data: {
+										value: dataSets?.meanWindSpeed?.[0]
+											? dataSets.meanWindSpeed[0].avg_wind_speed
+											: null,
+										subtitle: "Average Wind Speed",
+									},
+									range: [0, 10],
+									color: "primary",
+									orientation: "h",
+									suffix: "Beaufort",
 								},
-								range: [0, 10],
-								color: "primary",
-								orientation: "h",
-								suffix: "Beaufort",
-							},
-						].map((plotData, index) => (
-							<Grid key={index} item xs={12} sm={12} md={plotData.orientation ? 6 : 3} justifyContent="flex-end" alignItems="center" sx={{ height: "200px" }}>
-								{isLoading ? (<LoadingIndicator />
-								) : (
-									plotData.orientation ? (
+							].map((plotData, index) => (
+								<Grid key={index} item xs={12} sm={12} md={plotData.orientation ? 6 : 3} justifyContent="flex-end" alignItems="center" sx={{ height: "200px" }}>
+									{plotData.orientation ? (
 										<Plot
 											showLegend
 											scrollZoom
@@ -224,11 +202,11 @@ const THALLA = () => {
 											displayBar={false}
 											title={plotData.data.subtitle}
 										/>
-									)
-								)}
-							</Grid>
-						))}
-					</Grid>
+									)}
+								</Grid>
+							))}
+						</Grid>
+					)}
 				</Card>
 			</Grid>
 			{[
