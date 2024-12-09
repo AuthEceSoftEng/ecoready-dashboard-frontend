@@ -3,13 +3,11 @@ import { memo, useMemo, useState, useCallback, useRef } from "react";
 
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
-// import Dropdown from "../components/Dropdown.js";
 import useInit from "../utils/screen-init.js";
-import Form from "../components/Form.js";
 import { organization, livOrganicConfigs } from "../config/LivOrganicConfig.js";
 import { debounce, calculateDates, calculateDifferenceBetweenDates } from "../utils/data-handling-functions.js";
 import { monthNames } from "../utils/useful-constants.js";
-import { cardFooter, LoadingIndicator } from "../utils/rendering-items.js";
+import { cardFooter, LoadingIndicator, StickyBand } from "../utils/rendering-items.js";
 
 const LivOrganic = () => {
 	const [startDate, setStartDate] = useState(null);
@@ -80,11 +78,7 @@ const LivOrganic = () => {
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
-			<Grid container display="flex" direction="row" justifyContent="flex-end" alignItems="center" mt={1} spacing={2}>
-				<Grid item sx={{ display: "flex", justifyContent: "flex-end" }} md={2}>
-					<Form ref={formRefDate} content={formContentDate} />
-				</Grid>
-			</Grid>
+			<StickyBand formRef={formRefDate} formContent={formContentDate} />
 
 			{/* <Grid item xs={12} md={12} alignItems="center" flexDirection="column" padding={0}>
 				<Card title="Month's Overview" footer={cardFooter({ minutesAgo: state.minutesAgo })}>
