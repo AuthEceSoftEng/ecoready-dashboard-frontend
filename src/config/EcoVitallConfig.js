@@ -52,7 +52,7 @@ export const ecoVitallConfigs = (currentDate, formattedBeginningOfMonth, formatt
 			params: JSON.stringify({
 				attribute: ["ph"],
 				stat: "avg",
-				interval: `every_${Math.max(differenceInDays, 1)}_days`,
+				interval: differenceInDays ? `every_${Math.max(differenceInDays, 1)}_days` : "every_1_days",
 				start_time: `${formattedBeginningOfMonth}`,
 				end_time: `${formattedBeginningOfHour}`,
 			}),
@@ -65,7 +65,7 @@ export const ecoVitallConfigs = (currentDate, formattedBeginningOfMonth, formatt
 			params: JSON.stringify({
 				attribute: ["ec"],
 				stat: "avg",
-				interval: `every_${Math.max(differenceInDays, 1)}_days`,
+				interval: differenceInDays ? `every_${Math.max(differenceInDays, 1)}_days` : "every_1_days",
 				start_time: `${formattedBeginningOfMonth}`,
 				end_time: `${formattedBeginningOfHour}`,
 			}),
