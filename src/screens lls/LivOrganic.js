@@ -6,7 +6,7 @@ import Plot from "../components/Plot.js";
 import useInit from "../utils/screen-init.js";
 import { organization, livOrganicConfigs } from "../config/LivOrganicConfig.js";
 import { debounce, calculateDates, calculateDifferenceBetweenDates } from "../utils/data-handling-functions.js";
-import { monthNames } from "../utils/useful-constants.js";
+// import { monthNames } from "../utils/useful-constants.js";
 import { cardFooter, LoadingIndicator, StickyBand } from "../utils/rendering-items.js";
 
 const LivOrganic = () => {
@@ -69,91 +69,30 @@ const LivOrganic = () => {
 		return {
 			timestamps,
 			maxTemp: metrics.map((item) => item.max_temperature),
-			meanTemp: metrics.map((item) => item.mean_temperature),
 			minTemp: metrics.map((item) => item.min_temperature),
-			windSpeed: metrics.map((item) => item.wind_speed),
-			rain: metrics.map((item) => item.rain),
+			solarRadiation: metrics.map((item) => item.solar_radiation),
+			precipitation: metrics.map((item) => item.precipitation),
 		};
 	}, [metrics, isValidData]);
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
 			<StickyBand formRef={formRefDate} formContent={formContentDate} />
-
-			{/* <Grid item xs={12} md={12} alignItems="center" flexDirection="column" padding={0}>
-				<Card title="Month's Overview" footer={cardFooter({ minutesAgo: state.minutesAgo })}>
-					<Grid container display="flex" direction="row" justifyContent="space-evenly" padding={0} spacing={1}>
-						{[
-							{
-								data: {
-									value: state.dataSets.maxMaxTemperature && state.dataSets.maxMaxTemperature.length > 0
-										? state.dataSets.maxMaxTemperature[0].max_max_temperature
-										: null,
-									subtitle: "Max Temperature",
-								},
-								color: "goldenrod",
-							},
-							{
-								data: {
-									value: state.dataSets.minMinTemperature && state.dataSets.minMinTemperature.length > 0
-										? state.dataSets.minMinTemperature[0].min_min_temperature
-										: null,
-									subtitle: "Min Temperature",
-								},
-								color: "third",
-							},
-						].map((plotData, index) => (
-							<Grid key={index} item xs={12} sm={12} md={6} justifyContent="flex-end" alignItems="center" sx={{ height: "200px" }}>
-								<Plot
-									showLegend
-									scrollZoom
-									// width="220px"
-									data={[
-										{
-											type: "indicator",
-											mode: "gauge+number",
-											value: plotData.data.value,
-											range: [-35, 45], // Gauge range
-											color: plotData.color, // Color of gauge bar
-											shape: "angular", // "angular" or "bullet"
-											indicator: "primary", // Color of gauge indicator/value-line
-											textColor: "primary", // Color of gauge value
-											suffix: "°C", // Suffix of gauge value
-										},
-									]}
-									displayBar={false}
-									title={plotData.data.subtitle}
-								/>
-							</Grid>
-						))}
-					</Grid>
-				</Card>
-			</Grid>
 			{[
 				{
-					title: "Daily Temperature Evolution",
+					title: "Temperature Evolution Per Day",
 					data: [
 						{
-							x: state.dataSets.metrics
-								? state.dataSets.metrics.map((item) => item.timestamp)
-								: [],
-							y: state.dataSets.metrics
-								? state.dataSets.metrics
-									.map((item) => item.max_temperature) : [],
-							type: "scatter",
-							mode: "lines+markers",
+							x: isValidData ? chartData.timestamps : [],
+							y: isValidData ? chartData.maxTemp : [],
+							type: "bar",
 							title: "Max",
-							color: "primary",
+							color: "secondary",
 						},
 						{
-							x: state.dataSets.metrics
-								? state.dataSets.metrics.map((item) => item.timestamp)
-								: [],
-							y: state.dataSets.metrics
-								? state.dataSets.metrics
-									.map((item) => item.min_temperature) : [],
-							type: "scatter",
-							mode: "lines+markers",
+							x: isValidData ? chartData.timestamps : [],
+							y: isValidData ? chartData.minTemp : [],
+							type: "bar",
 							title: "Min",
 							color: "third",
 						},
@@ -162,68 +101,76 @@ const LivOrganic = () => {
 					yaxis: { title: "Temperature (°C)" },
 				},
 				{
-					title: "Shortwave Radiation Sum",
+					title: `${differenceInDays}-day Temperature Distribution`,
 					data: [
 						{
-							x: state.dataSets.metrics
-								? state.dataSets.metrics.map((item) => item.timestamp)
-								: [],
-							y: state.dataSets.metrics
-								? state.dataSets.metrics
-									.map((item) => item.shortwave_radiation_sum) : [],
-							type: "bar",
-							color: "goldenrod",
+							y: isValidData ? chartData.maxTemp : [],
+							type: "box",
+							title: "Max	Temperature",
+							color: "primary",
 						},
-					],
-					xaxis: { title: "Days" },
-					yaxis: { title: "Radiation Metric" },
-				},
-				{
-					title: "Daily Precipitation Sum",
-					data: [
 						{
-							x: state.dataSets.metrics
-								? state.dataSets.metrics.map((item) => item.timestamp)
-								: [],
-							y: state.dataSets.metrics
-								? state.dataSets.metrics
-									.map((item) => item.precipitation_sum) : [],
-							type: "bar",
+							y: isValidData ? chartData.meanTemp : [],
+							type: "box",
+							title: "Mean Temperature",
+							color: "secondary",
+						},
+						{
+							y: isValidData ? chartData.minTemp : [],
+							type: "box",
+							title: "Min Temperature",
 							color: "third",
 						},
 					],
 					xaxis: { title: "Days" },
-					yaxis: { title: "Precipitation (mm)" },
+					yaxis: { title: "Temperature (°C)" },
 				},
 				{
-					title: "Monthly Precipitation Per Field",
+					title: "Wind Speed",
 					data: [
 						{
-							labels: state.dataSets.precipitationSum
-								? state.dataSets.precipitationSum.map((item) => item.key)
-								: [],
-							values: state.dataSets.precipitationSum
-								? state.dataSets.precipitationSum.map((item) => item.sum_precipitation_sum)
-								: [],
-							type: "pie",
+							x: isValidData ? chartData.timestamps : [],
+							y: isValidData ? chartData.solarRadiation : [],
+							type: "scatter",
+							mode: "lines+markers",
+							title: "Wind Speed",
+							color: "primary",
 						},
 					],
+					xaxis: { title: "Days" },
+				// yaxis: { title: "Temperature (°C)" },
+				},
+				{
+					title: "Daily Rain Sum",
+					data: [
+						{
+							x: isValidData ? chartData.timestamps : [],
+							y: isValidData ? chartData.precipitation : [],
+							type: "bar",
+							title: "Rain",
+							color: "third",
+						},
+					],
+					xaxis: { title: "Days" },
+				// yaxis: { title: "Temperature (°C)" },
 				},
 			].map((card, index) => (
 				<Grid key={index} item xs={12} sm={12} md={6}>
-					<Card title={card.title} footer={cardFooter({ minutesAgo: state.minutesAgo })}>
-						<Plot
-							scrollZoom
-							data={card.data}
-							title={`${monthNames[month].text} ${year}`}
-							showLegend={index === 0 || 3}
-							height="300px"
-							xaxis={card?.xaxis}
-							yaxis={card?.yaxis}
-						/>
+					<Card title={card.title} footer={cardFooter({ minutesAgo })}>
+						{isLoading ? (<LoadingIndicator />
+						) : (
+							<Plot
+								scrollZoom
+								data={card.data}
+								showLegend={index === 0}
+								height="300px"
+								xaxis={card.xaxis}
+								yaxis={card.yaxis}
+							/>
+						)}
 					</Card>
 				</Grid>
-			))} */}
+			))}
 		</Grid>
 	);
 };
