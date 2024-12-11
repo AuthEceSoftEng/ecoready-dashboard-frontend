@@ -25,7 +25,7 @@ const THALLA = () => {
 		() => debounce((date, setter) => {
 			const { currentDate } = calculateDates(date);
 			setter(currentDate);
-		}, 1000),
+		}, 0),
 		[],
 	);
 
@@ -214,22 +214,22 @@ const THALLA = () => {
 					title: "Temperature Evolution Per Day",
 					data: [
 						{
-							x: isValidData ? chartData.timestamps : [],
-							y: isValidData ? chartData.maxTemp : [],
+							x: chartData.timestamps,
+							y: chartData.maxTemp,
 							type: "bar",
 							title: "Max",
 							color: "primary",
 						},
 						{
-							x: isValidData ? chartData.timestamps : [],
-							y: isValidData ? chartData.meanTemp : [],
+							x: chartData.timestamps,
+							y: chartData.meanTemp,
 							type: "bar",
 							title: "Avg",
 							color: "secondary",
 						},
 						{
-							x: isValidData ? chartData.timestamps : [],
-							y: isValidData ? chartData.minTemp : [],
+							x: chartData.timestamps,
+							y: chartData.minTemp,
 							type: "bar",
 							title: "Min",
 							color: "third",
@@ -242,19 +242,19 @@ const THALLA = () => {
 					title: `${differenceInDays}-day Temperature Distribution`,
 					data: [
 						{
-							y: isValidData ? chartData.maxTemp : [],
+							y: chartData.maxTemp,
 							type: "box",
 							title: "Max	Temperature",
 							color: "primary",
 						},
 						{
-							y: isValidData ? chartData.meanTemp : [],
+							y: chartData.meanTemp,
 							type: "box",
 							title: "Mean Temperature",
 							color: "secondary",
 						},
 						{
-							y: isValidData ? chartData.minTemp : [],
+							y: chartData.minTemp,
 							type: "box",
 							title: "Min Temperature",
 							color: "third",
@@ -267,8 +267,8 @@ const THALLA = () => {
 					title: "Wind Speed",
 					data: [
 						{
-							x: isValidData ? chartData.timestamps : [],
-							y: isValidData ? chartData.windSpeed : [],
+							x: chartData.timestamps,
+							y: chartData.windSpeed,
 							type: "scatter",
 							mode: "lines+markers",
 							title: "Wind Speed",
@@ -282,8 +282,8 @@ const THALLA = () => {
 					title: "Daily Rain Sum",
 					data: [
 						{
-							x: isValidData ? chartData.timestamps : [],
-							y: isValidData ? chartData.rain : [],
+							x: chartData.timestamps,
+							y: chartData.rain,
 							type: "bar",
 							title: "Rain",
 							color: "third",

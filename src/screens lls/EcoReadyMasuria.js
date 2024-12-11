@@ -9,7 +9,7 @@ import DatePicker from "../components/DatePicker.js";
 import ecoReadyMasuriaConfigs, { organization } from "../config/EcoReadyMasuriaConfig.js";
 import { calculateDates, getCustomDateTime } from "../utils/data-handling-functions.js";
 import { monthNames } from "../utils/useful-constants.js";
-import { cardFooter } from "../utils/rendering-items.js";
+import { cardFooter, LoadingIndicator } from "../utils/rendering-items.js";
 
 const REGIONS = [
 	{ value: "BEZEK", text: "Bezek" },
@@ -19,10 +19,11 @@ const REGIONS = [
 ];
 
 const EcoReadyMasuria = () => {
+	const [year, setYear] = useState(null);
+	const [stationName, setStationName] = useState(null);
+
 	const customDate = useMemo(() => getCustomDateTime(2006, 1), []);
 	console.log("Custom Date", customDate);
-
-	const [year, setYear] = useState(customDate.getFullYear());
 
 	const handleYearChange = useCallback((newValue) => {
 		setYear(newValue.$y); // Select only the year from the resulting object
@@ -35,13 +36,30 @@ const EcoReadyMasuria = () => {
 	);
 	console.log("currentDate", currentDate);
 
-	const [stationName, setStationName] = useState("BEZEK");
 	const fetchConfigs = useMemo(
-		() => ecoReadyMasuriaConfigs(stationName, year),
+		() => (stationName && year ? ecoReadyMasuriaConfigs(stationName, year) : null),
 		[stationName, year],
 	);
 
 	const { state } = useInit(organization, fetchConfigs);
+	const { isLoading, dataSets, minutesAgo } = state;
+	const metrics = useMemo(() => dataSets?.metrics || [], [dataSets]);
+	const isValidData = useMemo(() => metrics.length > 0, [metrics]);
+
+	// Pre-compute data transformations
+	const chartData = useMemo(() => {
+		if (!isValidData) return [];
+		const timestamps = metrics.map((item) => item.timestamp);
+		return {
+			timestamps,
+			maxTemp: metrics.map((item) => item.maximum_daily_temperature),
+			meanTemp: metrics.map((item) => item.average_daily_temperature),
+			minTemp: metrics.map((item) => item.minimum_daily_temperature),
+			groundTemp: metrics.map((item) => item.minimum_ground_temperature),
+			precipitation: metrics.map((item) => item.daily_precipitation_sum),
+			snowHeight: metrics.map((item) => item.snow_cover_height),
+		};
+	}, [metrics, isValidData]);
 
 	const dropdownContent = useMemo(() => [
 		{
@@ -52,7 +70,7 @@ const EcoReadyMasuria = () => {
 			color: "primary",
 			label: "Weather Station",
 			items: REGIONS,
-			defaultValue: "BEZEK",
+			defaultValue: "",
 			onChange: (event) => {
 				setStationName(event.target.value);
 			},
@@ -92,36 +110,24 @@ const EcoReadyMasuria = () => {
 					title: "Daily Temperature Evolution",
 					data: [
 						{
-							x: state.dataSets.metrics
-								? state.dataSets.metrics.map((item) => item.timestamp)
-								: [],
-							y: state.dataSets.metrics
-								? state.dataSets.metrics
-									.map((item) => item.maximum_daily_temperature) : [],
+							x: chartData.timestamps,
+							y: chartData.maxTemp,
 							type: "scatter",
 							mode: "lines+markers",
 							title: "Max",
 							color: "primary",
 						},
 						{
-							x: state.dataSets.metrics
-								? state.dataSets.metrics.map((item) => item.timestamp)
-								: [],
-							y: state.dataSets.metrics
-								? state.dataSets.metrics
-									.map((item) => item.average_daily_temperature) : [],
+							x: chartData.timestamps,
+							y: chartData.meanTemp,
 							type: "scatter",
 							mode: "lines+markers",
 							title: "Avg",
 							color: "secondary",
 						},
 						{
-							x: state.dataSets.metrics
-								? state.dataSets.metrics.map((item) => item.timestamp)
-								: [],
-							y: state.dataSets.metrics
-								? state.dataSets.metrics
-									.map((item) => item.minimum_daily_temperature) : [],
+							x: chartData.timestamps,
+							y: chartData.minTemp,
 							type: "scatter",
 							mode: "lines+markers",
 							title: "Min",
@@ -135,12 +141,8 @@ const EcoReadyMasuria = () => {
 					title: "Daily Minimum Ground Temperature",
 					data: [
 						{
-							x: state.dataSets.metrics
-								? state.dataSets.metrics.map((item) => item.timestamp)
-								: [],
-							y: state.dataSets.metrics
-								? state.dataSets.metrics
-									.map((item) => item.minimum_ground_temperature) : [],
+							x: chartData.timestamps,
+							y: chartData.groundTemp,
 							type: "bar",
 							color: "third",
 						},
@@ -152,12 +154,8 @@ const EcoReadyMasuria = () => {
 					title: "Daily Precipitation Sum",
 					data: [
 						{
-							x: state.dataSets.metrics
-								? state.dataSets.metrics.map((item) => item.timestamp)
-								: [],
-							y: state.dataSets.metrics
-								? state.dataSets.metrics
-									.map((item) => item.daily_precipitation_sum) : [],
+							x: chartData.timestamps,
+							y: chartData.precipitation,
 							type: "bar",
 							color: "primary",
 						},
@@ -169,12 +167,8 @@ const EcoReadyMasuria = () => {
 					title: "Daily Snow Cover Height",
 					data: [
 						{
-							x: state.dataSets.metrics
-								? state.dataSets.metrics.map((item) => item.timestamp)
-								: [],
-							y: state.dataSets.metrics
-								? state.dataSets.metrics
-									.map((item) => item.snow_cover_height) : [],
+							x: chartData.timestamps,
+							y: chartData.snowHeight,
 							type: "bar",
 							color: "blue",
 						},
@@ -184,16 +178,19 @@ const EcoReadyMasuria = () => {
 				},
 			].map((card, index) => (
 				<Grid key={index} item xs={12} sm={12} md={6}>
-					<Card title={card.title} footer={cardFooter({ minutesAgo: state.minutesAgo })}>
-						<Plot
-							scrollZoom
-							data={card.data}
-							title={`${monthNames[month].text} ${year}`}
-							showLegend={index === 0}
-							height="300px"
-							xaxis={card.xaxis}
-							yaxis={card.yaxis}
-						/>
+					<Card title={card.title} footer={cardFooter({ minutesAgo })}>
+						{isLoading ? (<LoadingIndicator />
+						) : (
+							<Plot
+								scrollZoom
+								data={card.data}
+								title={`${monthNames[month].text} ${year}`}
+								showLegend={index === 0}
+								height="300px"
+								xaxis={card.xaxis}
+								yaxis={card.yaxis}
+							/>
+						)}
 					</Card>
 				</Grid>
 			))}
