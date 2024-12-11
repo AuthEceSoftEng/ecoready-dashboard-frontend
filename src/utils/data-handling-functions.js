@@ -207,7 +207,7 @@ export const calculateDifferenceBetweenDates = (startDate, endDate) => {
 
 	// Calculate the difference in days
 	const differenceInTime = end - start; // Difference in milliseconds
-	const differenceInDays = Math.ceil(differenceInTime / (1000 * 3600 * 24)); // Convert milliseconds to days
+	const differenceInDays = Math.ceil(differenceInTime / (1000 * 3600 * 24) + 1); // Convert ms to days, add 1 to include end date
 	const differenceInHours = Math.ceil(differenceInTime / (1000 * 3600)); // Convert milliseconds to hours
 
 	return { differenceInDays, differenceInHours };

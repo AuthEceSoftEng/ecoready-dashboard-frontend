@@ -25,7 +25,7 @@ const THALLA = () => {
 		() => debounce((date, setter) => {
 			const { currentDate } = calculateDates(date);
 			setter(currentDate);
-		}, 0),
+		}, 1000),
 		[],
 	);
 
