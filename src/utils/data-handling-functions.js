@@ -156,20 +156,34 @@ export const getSumValuesByProperty = (groupedObject, property) => {
 	return sumValues;
 };
 
-export const calculateDates = (now, offsetHours = 3) => {
-	now = now || new Date();
+export const calculateDates = (now = new Date(), offsetHours = null) => {
+	// Use provided offset or timezone offset (negative because getTimezoneOffset returns opposite sign)
+	const offset = offsetHours ?? -(now.getTimezoneOffset() / 60);
+	const offsetMs = offset * 3_600_000; // Convert hours to milliseconds (60 * 60 * 1000)
+
 	const year = now.getFullYear();
 	const month = now.getMonth();
 	const day = now.getDate();
-	const offsetTime = now.getTime() + offsetHours * 60 * 60 * 1000;
 
-	const currentDate = new Date(offsetTime).toISOString().slice(0, 19);
-	const formattedBeginningOfMonth = new Date(year, month, 1, offsetHours).toISOString().slice(0, 19);
-	const beginningOfHour = new Date(now).setMinutes(180, 0, 0);
-	const formattedBeginningOfHour = new Date(beginningOfHour).toISOString().slice(0, 19);
-	const formattedBeginningOfDay = new Date(year, month, day, offsetHours).toISOString().slice(0, 19);
+	// Create dates with offset
+	const currentDateTime = new Date(now.getTime() + offsetMs);
+	const monthStart = new Date(year, month, 1);
+	monthStart.setTime(monthStart.getTime() + offsetMs);
 
-	return { year, month, currentDate, formattedBeginningOfMonth, formattedBeginningOfDay, formattedBeginningOfHour };
+	const hourStart = new Date(now);
+	hourStart.setMinutes(180, 0, 0);
+
+	const dayStart = new Date(year, month, day);
+	dayStart.setTime(dayStart.getTime() + offsetMs);
+
+	return {
+		year,
+		month,
+		currentDate: currentDateTime.toISOString().slice(0, 19),
+		formattedBeginningOfMonth: monthStart.toISOString().slice(0, 19),
+		formattedBeginningOfDay: dayStart.toISOString().slice(0, 19),
+		formattedBeginningOfHour: hourStart.toISOString().slice(0, 19),
+	};
 };
 
 export const getCustomDateTime = (year, month) => {
