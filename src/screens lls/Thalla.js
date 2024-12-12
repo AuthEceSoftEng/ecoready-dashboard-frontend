@@ -115,6 +115,7 @@ const THALLA = () => {
 										subtitle: "Max Temperature",
 									},
 									color: "goldenrod",
+
 								},
 								{
 									data: {
@@ -143,7 +144,7 @@ const THALLA = () => {
 									},
 									range: [0, 100],
 									color: "third",
-									orientation: "h",
+									shape: "bullet",
 									suffix: "mm",
 								},
 								{
@@ -155,54 +156,39 @@ const THALLA = () => {
 									},
 									range: [0, 10],
 									color: "primary",
-									orientation: "h",
+									shape: "bullet",
 									suffix: "Beaufort",
 								},
 							].map((plotData, index) => (
-								<Grid key={index} item xs={12} sm={12} md={plotData.orientation ? 6 : 3} justifyContent="flex-end" alignItems="center" sx={{ height: "200px" }}>
-									{plotData.orientation ? (
-										<Plot
-											showLegend
-											scrollZoom
-											height="120px"
-											data={[
-												{
-													type: "indicator",
-													mode: "gauge+number",
-													value: plotData.data.value,
-													range: plotData.range, // Gauge range
-													color: plotData.color, // Color of gauge bar
-													shape: "bullet", // "angular" or "bullet"
-													orientation: plotData.orientation,
-													indicator: "primary", // Color of gauge indicator/value-line
-													textColor: "primary", // Color of gauge value
-													suffix: plotData.suffix, // Suffix of gauge value
-												},
-											]}
-											displayBar={false}
-											title={plotData.data.subtitle}
-										/>
-									) : (
-										<Plot
-											showLegend
-											scrollZoom
-											data={[
-												{
-													type: "indicator",
-													mode: "gauge+number",
-													value: plotData.data.value,
-													range: [-35, 45], // Gauge range
-													color: plotData.color, // Color of gauge bar
-													shape: "angular", // "angular" or "bullet"
-													indicator: "primary", // Color of gauge indicator/value-line
-													textColor: "primary", // Color of gauge value
-													suffix: "°C", // Suffix of gauge value
-												},
-											]}
-											displayBar={false}
-											title={plotData.data.subtitle}
-										/>
-									)}
+								<Grid
+									key={index}
+									item
+									xs={12}
+									sm={12}
+									md={plotData.shape === "bullet" ? 6 : 4}
+									justifyContent="flex-end"
+									alignItems="center"
+								>
+									<Plot
+										showLegend
+										scrollZoom
+										height={plotData.shape === "bullet" ? "120px" : "200px"}
+										data={[
+											{
+												type: "indicator",
+												mode: "gauge+number",
+												value: plotData.data.value,
+												range: plotData.range ?? [-35, 45],
+												color: plotData.color,
+												shape: plotData.shape,
+												indicator: "primary",
+												textColor: "primary",
+												suffix: plotData.suffix,
+											},
+										]}
+										displayBar={false}
+										title={plotData.data.subtitle}
+									/>
 								</Grid>
 							))}
 						</Grid>
