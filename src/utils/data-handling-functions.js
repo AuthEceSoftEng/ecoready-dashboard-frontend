@@ -38,7 +38,6 @@ export const reducer = (state, action) => {
 
 		case "FETCH_WARNING": {
 			const { plotId, response } = action.payload;
-			// const now = new Date();
 			return {
 				...state,
 				isLoading: false,
