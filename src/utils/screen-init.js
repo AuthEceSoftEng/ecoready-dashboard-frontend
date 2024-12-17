@@ -1,4 +1,3 @@
-
 /* eslint-disable consistent-return */
 import { useEffect, useReducer, useRef, useCallback, useMemo } from "react";
 
@@ -8,9 +7,6 @@ import { initialState, reducer } from "./data-handling-functions.js";
 import { TimerManager } from "./timer-manager.js";
 
 import { useSnackbar } from "./index.js";
-
-// const FETCH_INTERVAL = 30 * 60 * 1000; // 30 minutes
-// const MINUTES_UPDATE_INTERVAL = 60 * 1000; // 1 minute
 
 const useInit = (organization, fetchConfigs) => {
 	const { success, warning, error } = useSnackbar();
@@ -41,6 +37,7 @@ const useInit = (organization, fetchConfigs) => {
 			(item) => item?.response?.success === false
             || (Array.isArray(item?.response) && item.response.length === 0),
 		);
+		console.log("Has issues:", hasIssues);
 
 		if (hasIssues) {
 			dispatch({ type: "FETCH_WARNING", payload: promiseStatus });

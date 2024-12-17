@@ -1,4 +1,3 @@
-
 import { Grid } from "@mui/material";
 import { Circle, LayerGroup, LayersControl, MapContainer, Marker, Polygon, Popup, Rectangle, TileLayer } from "react-leaflet";
 
@@ -29,6 +28,29 @@ const Plot = ({
 	rectangles = [],
 	polygons = [],
 	groups = [],
+	onGroupToggle = (groupName, checked) => {
+		// Find all markers associated with this group's labs
+		const markersInGroup = groups
+			.find((group) => group.name === groupName)
+			?.shapes.markers || [];
+
+		// Get all marker positions in this group
+		const groupPositions = new Set(markersInGroup.map((marker) => JSON.stringify(marker.position)));
+
+		// Update the checked state of all matching markers
+		const updatedMarkers = markers.map((marker) => {
+			if (groupPositions.has(JSON.stringify(marker.position))) {
+				return {
+					...marker,
+					defaultChecked: checked,
+				};
+			}
+
+			return marker;
+		});
+
+		return updatedMarkers;
+	},
 }) => (
 	<Grid
 		item
@@ -192,73 +214,84 @@ const Plot = ({
 						/>
 					</LayersControl.Overlay>
 				))}
-				{groups.filter((group) => group.hiddable).map((group, index) => (
-					<LayersControl.Overlay key={index} name={group.name} checked={group.defaultChecked}>
-						<LayerGroup key={index}>
-							{group.shapes.markers.filter((marker) => !marker.hiddable).map((marker, index2) => (
-								<Marker
-									key={index2}
-									position={marker.position}
-									{...(marker.icon && { icon: marker.icon })}
-								>
-									{marker.popup && (
-										<Popup>
-											{marker.popup}
-										</Popup>
-									)}
-								</Marker>
-							))}
-							{group.shapes.circles.filter((circle) => !circle.hiddable).map((circle, index2) => (
-								<Circle
-									key={index2}
-									center={circle.center}
-									pathOptions={{
-										fillColor: colors?.[circle?.fillColor] || circle?.fillColor,
-										color: colors?.[circle?.color] || circle?.color,
-									}}
-									radius={circle.radius}
-								/>
-							))}
-							{group.shapes.rectangles.filter((rectangle) => !rectangle.hiddable).map((rectangle, index2) => (
-								<Rectangle
-									key={index2}
-									bounds={rectangle.bounds}
-									pathOptions={{
-										fillColor: colors?.[rectangle?.fillColor] || rectangle?.fillColor,
-										color: colors?.[rectangle?.color] || rectangle?.color,
-									}}
-								/>
-							))}
-							{group.shapes.polygons.filter((polygon) => !polygon.hiddable).map((polygon, index2) => (
-								<Polygon
-									key={index2}
-									positions={polygon.positions}
-									pathOptions={{
-										fillColor: colors?.[polygon?.fillColor] || polygon?.fillColor,
-										color: colors?.[polygon?.color] || polygon?.color,
-									}}
-								/>
-							))}
-						</LayerGroup>
-					</LayersControl.Overlay>
-				))}
 			</LayersControl>
-			<LayersControl position="topright">
-				{markers.filter((marker) => marker.hiddable).map((marker, index) => (
-					<LayersControl.Overlay key={index} name={marker.name} checked={marker.defaultChecked}>
-						<Marker
-							position={marker.position}
-							{...(marker.icon && { icon: marker.icon })}
+			{groups.length > 0 && (
+				<LayersControl position="topright">
+					{groups.filter((group) => group.hiddable).map((group, index) => (
+						<LayersControl.Overlay
+							key={index}
+							name={group.name}
+							checked={group.defaultChecked}
+							onChange={(e) => onGroupToggle(group.name, e.target.checked)}
 						>
-							{marker.popup && (
-								<Popup>
-									{marker.popup}
-								</Popup>
-							)}
-						</Marker>
-					</LayersControl.Overlay>
-				))}
-			</LayersControl>
+							<LayerGroup key={index}>
+								{group.shapes.markers.filter((marker) => !marker.hiddable).map((marker, index2) => (
+									<Marker
+										key={index2}
+										position={marker.position}
+										{...(marker.icon && { icon: marker.icon })}
+									>
+										{marker.popup && (
+											<Popup>
+												{marker.popup}
+											</Popup>
+										)}
+									</Marker>
+								))}
+								{group.shapes.circles.filter((circle) => !circle.hiddable).map((circle, index2) => (
+									<Circle
+										key={index2}
+										center={circle.center}
+										pathOptions={{
+											fillColor: colors?.[circle?.fillColor] || circle?.fillColor,
+											color: colors?.[circle?.color] || circle?.color,
+										}}
+										radius={circle.radius}
+									/>
+								))}
+								{group.shapes.rectangles.filter((rectangle) => !rectangle.hiddable).map((rectangle, index2) => (
+									<Rectangle
+										key={index2}
+										bounds={rectangle.bounds}
+										pathOptions={{
+											fillColor: colors?.[rectangle?.fillColor] || rectangle?.fillColor,
+											color: colors?.[rectangle?.color] || rectangle?.color,
+										}}
+									/>
+								))}
+								{group.shapes.polygons.filter((polygon) => !polygon.hiddable).map((polygon, index2) => (
+									<Polygon
+										key={index2}
+										positions={polygon.positions}
+										pathOptions={{
+											fillColor: colors?.[polygon?.fillColor] || polygon?.fillColor,
+											color: colors?.[polygon?.color] || polygon?.color,
+										}}
+									/>
+								))}
+							</LayerGroup>
+						</LayersControl.Overlay>
+					))}
+				</LayersControl>
+			)}
+			{markers.length > 0 && (
+				<LayersControl position="topright">
+					{markers.filter((marker) => marker.hiddable).map((marker, index) => (
+						<LayersControl.Overlay key={index} name={marker.name} checked={marker.defaultChecked}>
+							<Marker
+								position={marker.position}
+								{...(marker.icon && { icon: marker.icon })}
+							>
+								{marker.popup && (
+									<Popup>
+										{marker.popup}
+									</Popup>
+								)}
+							</Marker>
+						</LayersControl.Overlay>
+					))}
+				</LayersControl>
+			)}
 		</MapContainer>
 	</Grid>
 );
