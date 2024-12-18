@@ -1,5 +1,5 @@
-import { Grid } from "@mui/material";
-import { memo, useMemo, useState, useCallback } from "react";
+import { Grid, Typography } from "@mui/material";
+import { memo, useMemo, useState, useCallback, useEffect } from "react";
 
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
@@ -7,9 +7,9 @@ import Dropdown from "../components/Dropdown.js";
 import useInit from "../utils/screen-init.js";
 import DatePicker from "../components/DatePicker.js";
 import esappinConfigs, { organization } from "../config/EsappinConfig.js";
-import { getCustomDateTime } from "../utils/data-handling-functions.js";
+import { getCustomDateTime, debounce } from "../utils/data-handling-functions.js";
 import { monthNames } from "../utils/useful-constants.js";
-import { cardFooter } from "../utils/rendering-items.js";
+import { cardFooter, LoadingIndicator } from "../utils/rendering-items.js";
 
 const PRODUCTS = [
 	{ value: "Rapsfeld B1", text: "Rapsfeld B1" },
@@ -22,26 +22,65 @@ const PRODUCTS = [
 
 const Esappin = () => {
 	const customDate = useMemo(() => getCustomDateTime(2024, 10), []);
+	const [dateRange, setDateRange] = useState(() => {
+		const initialMonth = customDate.getMonth();
+		const paddedMonth = String(initialMonth).padStart(2, "0");
+		const lastDay = new Date(2024, initialMonth, 0).getDate();
+		return {
+			month: initialMonth,
+			startDate: `2024-${paddedMonth}-01`,
+			endDate: `2024-${paddedMonth}-${lastDay}`,
+		};
+	});
 
-	const [month, setMonth] = useState(customDate.getMonth());
+	// const debouncedSetMonth = useMemo(
+	// 	() => debounce((date, setter) => {
+	// 		setter(date);
+	// 	}, 0),
+	// 	[],
+	// );
 
 	const handleMonthChange = useCallback((newValue) => {
-		setMonth(newValue.$M); // Select only the month from the resulting object
+		if (!newValue?.$d) return;
+
+		const newMonth = newValue.$d.getMonth();
+		const paddedMonth = String(monthNames[newMonth].no).padStart(2, "0");
+		const lastDay = new Date(2024, monthNames[newMonth].no, 0).getDate();
+
+		setDateRange({
+			month: newMonth,
+			startDate: `2024-${paddedMonth}-01`,
+			endDate: `2024-${paddedMonth}-${lastDay}`,
+		});
 	}, []);
+
+	useEffect(() => {
+		const paddedMonth = String(monthNames[dateRange.month].no).padStart(2, "0");
+		setDateRange((prev) => ({
+			...prev,
+			startDate: `2024-${paddedMonth}-01`,
+			endDate: `2024-${paddedMonth}-${new Date(2024, monthNames[dateRange.month].no, 0).getDate()}`,
+		}));
+	}, [dateRange.month]);
 
 	const year = customDate.getFullYear();
 
 	const [product, setProduct] = useState("Rapsfeld B1");
+	const isValidDateRange = useMemo(
+		() => dateRange.startDate && dateRange.endDate && new Date(dateRange.startDate) <= new Date(dateRange.endDate),
+		[dateRange.startDate, dateRange.endDate],
+	);
+	console.log("isValidDateRange", isValidDateRange);
 	const fetchConfigs = useMemo(
-		() => esappinConfigs(product, monthNames[month].no),
-		[product, month],
+		() => (isValidDateRange && product ? esappinConfigs(product, dateRange.startDate, dateRange.endDate) : null),
+		[isValidDateRange, product, dateRange.startDate, dateRange.endDate],
 	);
 
 	const dropdownContent = useMemo(() => [
 		{
 			id: "product",
 			size: "small",
-			width: "200px",
+			width: "170px",
 			height: "40px",
 			color: "primary",
 			label: "Product",
@@ -55,6 +94,22 @@ const Esappin = () => {
 	], []);
 
 	const { state } = useInit(organization, fetchConfigs);
+	const { isLoading, dataSets, minutesAgo } = state;
+	const metrics = useMemo(() => dataSets?.metrics || [], [dataSets]);
+	const isValidData = useMemo(() => metrics.length > 0, [metrics]);
+
+	// Pre-compute data transformations
+	const chartData = useMemo(() => {
+		if (!isValidData) return [];
+		const timestamps = metrics.map((item) => item.timestamp);
+		return {
+			timestamps,
+			maxTemp: metrics.map((item) => item.max_temperature),
+			minTemp: metrics.map((item) => item.min_temperature),
+			precipitation: metrics.map((item) => item.precipitation_sum),
+			radiationSum: metrics.map((item) => item.shortwave_radiation_sum),
+		};
+	}, [metrics, isValidData]);
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
@@ -77,60 +132,91 @@ const Esappin = () => {
 					<DatePicker
 						type="desktop"
 						label="Month Picker"
+						width="170px"
 						views={["month"]}
-						value={`${monthNames[month].text} ${year}`}
 						onChange={handleMonthChange}
 					/>
 				</Grid>
 			</Grid>
 
 			<Grid item xs={12} md={12} alignItems="center" flexDirection="column" padding={0}>
-				<Card title="Month's Overview" footer={cardFooter({ minutesAgo: state.minutesAgo })}>
-					<Grid container display="flex" direction="row" justifyContent="space-evenly" padding={0} spacing={1}>
-						{[
-							{
-								data: {
-									value: state.dataSets.maxMaxTemperature && state.dataSets.maxMaxTemperature.length > 0
-										? state.dataSets.maxMaxTemperature[0].max_max_temperature
-										: null,
-									subtitle: "Max Temperature",
+				<Card title={`${monthNames[dateRange.month].text}'s Overview`} footer={cardFooter({ minutesAgo })}>
+					{isLoading ? (<LoadingIndicator />
+					)	: (
+						<Grid container display="flex" direction="row" justifyContent="space-evenly" padding={0} spacing={1}>
+							{[
+								{
+									data: {
+										value: dataSets.maxMaxTemperature && dataSets.maxMaxTemperature.length > 0
+											? dataSets.maxMaxTemperature[0].max_max_temperature
+											: null,
+										subtitle: "Max Temperature",
+									},
+
+									range: [-35, 45],
+									color: "goldenrod",
+									shape: "angular",
+									suffix: "°C",
+
 								},
-								color: "goldenrod",
-							},
-							{
-								data: {
-									value: state.dataSets.minMinTemperature && state.dataSets.minMinTemperature.length > 0
-										? state.dataSets.minMinTemperature[0].min_min_temperature
-										: null,
-									subtitle: "Min Temperature",
+								{
+									data: {
+										value: dataSets.minMinTemperature && dataSets.minMinTemperature.length > 0
+											? dataSets.minMinTemperature[0].min_min_temperature
+											: null,
+										subtitle: "Min Temperature",
+									},
+									range: [-35, 45],
+									color: "third",
+									shape: "angular",
+									suffix: "°C",
 								},
-								color: "third",
-							},
-						].map((plotData, index) => (
-							<Grid key={index} item xs={12} sm={12} md={6} justifyContent="flex-end" alignItems="center" sx={{ height: "200px" }}>
-								<Plot
-									showLegend
-									scrollZoom
-									// width="220px"
-									data={[
-										{
-											type: "indicator",
-											mode: "gauge+number",
-											value: plotData.data.value,
-											range: [-35, 45], // Gauge range
-											color: plotData.color, // Color of gauge bar
-											shape: "angular", // "angular" or "bullet"
-											indicator: "primary", // Color of gauge indicator/value-line
-											textColor: "primary", // Color of gauge value
-											suffix: "°C", // Suffix of gauge value
-										},
-									]}
-									displayBar={false}
-									title={plotData.data.subtitle}
-								/>
-							</Grid>
-						))}
-					</Grid>
+								{
+									data: {
+										value: dataSets.precipitationSum && dataSets.precipitationSum?.length > 0
+											? dataSets.precipitationSum.find((item) => item.key === product)?.sum_precipitation_sum
+											: null,
+										subtitle: "Precipitation Sum",
+									},
+									range: [0, 500],
+									color: "third",
+									shape: "bullet",
+									suffix: "mm",
+								},
+							].map((plotData, index) => (
+								<Grid
+									key={index}
+									item
+									xs={12}
+									sm={12}
+									md={plotData.shape === "bullet" ? 6 : 4}
+									justifyContent="center"
+									alignItems="center"
+								>
+									<Plot
+										showLegend
+										scrollZoom
+										height={plotData.shape === "bullet" ? "120px" : "200px"}
+										data={[
+											{
+												type: "indicator",
+												mode: "gauge+number",
+												value: plotData.data.value,
+												range: plotData.range,
+												color: plotData.color,
+												shape: plotData.shape,
+												indicator: "primary",
+												textColor: "primary",
+												suffix: plotData.suffix,
+											},
+										]}
+										displayBar={false}
+										title={plotData.data.subtitle}
+									/>
+								</Grid>
+							))}
+						</Grid>
+					)}
 				</Card>
 			</Grid>
 			{[
@@ -138,24 +224,16 @@ const Esappin = () => {
 					title: "Daily Temperature Evolution",
 					data: [
 						{
-							x: state.dataSets.metrics
-								? state.dataSets.metrics.map((item) => item.timestamp)
-								: [],
-							y: state.dataSets.metrics
-								? state.dataSets.metrics
-									.map((item) => item.max_temperature) : [],
+							x: chartData.timestamps,
+							y: chartData.maxTemp,
 							type: "scatter",
 							mode: "lines+markers",
 							title: "Max",
 							color: "primary",
 						},
 						{
-							x: state.dataSets.metrics
-								? state.dataSets.metrics.map((item) => item.timestamp)
-								: [],
-							y: state.dataSets.metrics
-								? state.dataSets.metrics
-									.map((item) => item.min_temperature) : [],
+							x: chartData.timestamps,
+							y: chartData.minTemp,
 							type: "scatter",
 							mode: "lines+markers",
 							title: "Min",
@@ -169,12 +247,8 @@ const Esappin = () => {
 					title: "Shortwave Radiation Sum",
 					data: [
 						{
-							x: state.dataSets.metrics
-								? state.dataSets.metrics.map((item) => item.timestamp)
-								: [],
-							y: state.dataSets.metrics
-								? state.dataSets.metrics
-									.map((item) => item.shortwave_radiation_sum) : [],
+							x: chartData.timestamps,
+							y: chartData.radiationSum,
 							type: "bar",
 							color: "goldenrod",
 						},
@@ -186,12 +260,8 @@ const Esappin = () => {
 					title: "Daily Precipitation Sum",
 					data: [
 						{
-							x: state.dataSets.metrics
-								? state.dataSets.metrics.map((item) => item.timestamp)
-								: [],
-							y: state.dataSets.metrics
-								? state.dataSets.metrics
-									.map((item) => item.precipitation_sum) : [],
+							x: chartData.timestamps,
+							y: chartData.precipitation,
 							type: "bar",
 							color: "third",
 						},
@@ -203,28 +273,31 @@ const Esappin = () => {
 					title: "Monthly Precipitation Per Field",
 					data: [
 						{
-							labels: state.dataSets.precipitationSum
-								? state.dataSets.precipitationSum.map((item) => item.key)
-								: [],
-							values: state.dataSets.precipitationSum
-								? state.dataSets.precipitationSum.map((item) => item.sum_precipitation_sum)
-								: [],
+							labels: Array.isArray(dataSets.precipitationSum) && dataSets.precipitationSum.length > 0
+								? dataSets.precipitationSum.map((item) => item.key)
+								: <Typography>{"No precipitation data available"}</Typography>,
+							values: Array.isArray(dataSets.precipitationSum) && dataSets.precipitationSum.length > 0
+								? dataSets.precipitationSum.map((item) => item.sum_precipitation_sum)
+								: <Typography>{"No precipitation data available"}</Typography>,
 							type: "pie",
 						},
 					],
 				},
 			].map((card, index) => (
 				<Grid key={index} item xs={12} sm={12} md={6}>
-					<Card title={card.title} footer={cardFooter({ minutesAgo: state.minutesAgo })}>
-						<Plot
-							scrollZoom
-							data={card.data}
-							title={`${monthNames[month].text} ${year}`}
-							showLegend={index === 0 || 3}
-							height="300px"
-							xaxis={card?.xaxis}
-							yaxis={card?.yaxis}
-						/>
+					<Card title={card.title} footer={cardFooter({ minutesAgo })}>
+						{isLoading ? (<LoadingIndicator />
+						) : (
+							<Plot
+								scrollZoom
+								data={card.data}
+								title={dateRange.month ? `${monthNames[dateRange.month].text} ${year}` : ""}
+								showLegend={index === 0 || 3}
+								height="300px"
+								xaxis={card?.xaxis}
+								yaxis={card?.yaxis}
+							/>
+						)}
 					</Card>
 				</Grid>
 			))}

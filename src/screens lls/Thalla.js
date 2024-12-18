@@ -17,9 +17,9 @@ const REGIONS = [
 ];
 
 const THALLA = () => {
-	const [startDate, setStartDate] = useState(null);
-	const [endDate, setEndDate] = useState(null);
-	const [region, setRegion] = useState(null);
+	const [startDate, setStartDate] = useState("2024-06-01");
+	const [endDate, setEndDate] = useState("2024-06-30");
+	const [region, setRegion] = useState("Amfissa");
 
 	const debouncedSetDate = useMemo(
 		() => debounce((date, setter) => {
@@ -31,7 +31,6 @@ const THALLA = () => {
 
 	const handleDateChange = useCallback((newValue, setter) => {
 		if (!newValue?.$d) return;
-		setter(newValue.$d);
 		debouncedSetDate(newValue.$d, setter);
 	}, [debouncedSetDate]);
 
@@ -44,7 +43,7 @@ const THALLA = () => {
 			color: "primary",
 			label: "Regions",
 			items: REGIONS,
-			defaultValue: "",
+			defaultValue: "Amfissa",
 			onChange: (event) => {
 				setRegion(event.target.value);
 			},
@@ -137,27 +136,27 @@ const THALLA = () => {
 								},
 								{
 									data: {
-										value: dataSets?.rainSum?.[0]
-											? dataSets.rainSum[0].sum_rain
-											: null,
-										subtitle: "Rain Sum",
-									},
-									range: [0, 100],
-									color: "third",
-									shape: "bullet",
-									suffix: "mm",
-								},
-								{
-									data: {
 										value: dataSets?.meanWindSpeed?.[0]
 											? dataSets.meanWindSpeed[0].avg_wind_speed
 											: null,
 										subtitle: "Average Wind Speed",
 									},
-									range: [0, 10],
+									range: [0, 21],
 									color: "primary",
 									shape: "bullet",
-									suffix: "Beaufort",
+									suffix: "Bft",
+								},
+								{
+									data: {
+										value: dataSets?.rainSum?.[0]
+											? dataSets.rainSum[0].sum_rain
+											: null,
+										subtitle: "Rain Sum",
+									},
+									range: [0, 2000],
+									color: "third",
+									shape: "bullet",
+									suffix: "mm",
 								},
 							].map((plotData, index) => (
 								<Grid
