@@ -19,8 +19,8 @@ const REGIONS = [
 ];
 
 const EcoReadyMasuria = () => {
-	const [year, setYear] = useState(null);
-	const [stationName, setStationName] = useState(null);
+	const [year, setYear] = useState("2014");
+	const [stationName, setStationName] = useState(REGIONS[0].value);
 
 	const customDate = useMemo(() => getCustomDateTime(2006, 1), []);
 	console.log("Custom Date", customDate);
