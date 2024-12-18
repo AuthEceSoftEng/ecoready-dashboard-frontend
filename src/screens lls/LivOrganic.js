@@ -10,8 +10,8 @@ import { debounce, calculateDates, calculateDifferenceBetweenDates } from "../ut
 import { cardFooter, LoadingIndicator, StickyBand } from "../utils/rendering-items.js";
 
 const LivOrganic = () => {
-	const [startDate, setStartDate] = useState(null);
-	const [endDate, setEndDate] = useState(null);
+	const [startDate, setStartDate] = useState("2024-06-01");
+	const [endDate, setEndDate] = useState("2024-06-30");
 	// const [region, setRegion] = useState(null);
 
 	const debouncedSetDate = useMemo(
