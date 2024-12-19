@@ -12,8 +12,8 @@ import { calculateDates, debounce } from "../utils/data-handling-functions.js";
 import { cardFooter, LoadingIndicator } from "../utils/rendering-items.js";
 
 const Probio = () => {
-	const [startDate, setStartDate] = useState("2024-06-01");
-	const [endDate, setEndDate] = useState("2024-06-30");
+	const [startDate, setStartDate] = useState("2023-06-01");
+	const [endDate, setEndDate] = useState("2023-06-30");
 
 	const debouncedSetDate = useMemo(
 		() => debounce((date, setter) => {

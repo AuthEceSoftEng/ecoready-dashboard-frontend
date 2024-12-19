@@ -28,29 +28,6 @@ const Plot = ({
 	rectangles = [],
 	polygons = [],
 	groups = [],
-	onGroupToggle = (groupName, checked) => {
-		// Find all markers associated with this group's labs
-		const markersInGroup = groups
-			.find((group) => group.name === groupName)
-			?.shapes.markers || [];
-
-		// Get all marker positions in this group
-		const groupPositions = new Set(markersInGroup.map((marker) => JSON.stringify(marker.position)));
-
-		// Update the checked state of all matching markers
-		const updatedMarkers = markers.map((marker) => {
-			if (groupPositions.has(JSON.stringify(marker.position))) {
-				return {
-					...marker,
-					defaultChecked: checked,
-				};
-			}
-
-			return marker;
-		});
-
-		return updatedMarkers;
-	},
 }) => (
 	<Grid
 		item
@@ -218,14 +195,13 @@ const Plot = ({
 			{groups.length > 0 && (
 				<LayersControl position="topright">
 					{groups.filter((group) => group.hiddable).map((group, index) => (
-						<LayersControl.Overlay
+						<LayersControl.BaseLayer
 							key={index}
 							name={group.name}
 							checked={group.defaultChecked}
-							onChange={(e) => onGroupToggle(group.name, e.target.checked)}
 						>
 							<LayerGroup key={index}>
-								{group.shapes.markers.filter((marker) => !marker.hiddable).map((marker, index2) => (
+								{group.shapes.markers.map((marker, index2) => (
 									<Marker
 										key={index2}
 										position={marker.position}
@@ -270,7 +246,7 @@ const Plot = ({
 									/>
 								))}
 							</LayerGroup>
-						</LayersControl.Overlay>
+						</LayersControl.BaseLayer>
 					))}
 				</LayersControl>
 			)}

@@ -4,8 +4,9 @@ import { useNavigate } from "react-router-dom";
 
 import MapComponent from "../components/Map.js";
 import { SecondaryBackgroundButton } from "../components/Buttons.js";
-import { labs } from "../utils/useful-constants.js";
+import { labs, regions } from "../utils/useful-constants.js";
 
+// Extract popup component
 const PopupContent = memo(({ title, onClick }) => (
 	<div>
 		<div style={{
@@ -26,74 +27,90 @@ const PopupContent = memo(({ title, onClick }) => (
 	</div>
 ));
 
+// Extract marker creation logic
+const createMarker = (lab, locationKey, index, onClick) => ({
+	position: locationKey ? lab.coordinates[locationKey] : lab.coordinates,
+	popup: <PopupContent
+		title={locationKey ? `${lab.title} - ${locationKey}` : lab.title}
+		onClick={onClick}
+	/>,
+	name: locationKey ? `${lab.title} - ${index + 1}` : lab.title,
+	hiddable: true,
+	defaultChecked: false,
+});
+
 const Map = () => {
 	const navigate = useNavigate();
 
-	// Memoize markers creation
+	// Create markers for labs with coordinates
 	const markers = useMemo(() => (
 		labs
 			.filter((lab) => lab.coordinates)
 			.flatMap((lab) => {
+				const onClick = () => navigate(lab.path);
+
 				if (typeof lab.coordinates === "object" && !Array.isArray(lab.coordinates)) {
-					return Object.entries(lab.coordinates).map(([locationKey, coords], index) => ({
-						position: coords,
-						popup: <PopupContent title={`${lab.title} - ${locationKey}`} onClick={() => navigate(lab.path)} />,
-						hiddable: true,
-						name: `${lab.title} - ${index + 1}`,
-						defaultChecked: false,
-					}));
+					return Object.entries(lab.coordinates)
+						.map(([key, index]) => createMarker(lab, key, index, onClick));
 				}
 
-				return [{
-					position: lab.coordinates,
-					popup: <PopupContent title={lab.title} onClick={() => navigate(lab.path)} />,
-					hiddable: true,
-					name: lab.title,
-					defaultChecked: false,
-				}];
+				return [createMarker(lab, null, null, onClick)];
 			})
 	), [navigate]);
 
-	// Memoize groups creation
+	// Group labs by region
 	const groups = useMemo(() => {
 		const labsByRegion = labs.reduce((acc, lab) => {
 			if (lab.region && lab.coordinates) {
-				if (!acc[lab.region]) {
-					acc[lab.region] = [];
-				}
-
+				if (!acc[lab.region]) acc[lab.region] = [];
 				acc[lab.region].push(lab);
 			}
 
 			return acc;
 		}, {});
 
-		return Object.entries(labsByRegion).map(([region, regionLabs]) => ({
+		const createGroup = (name, labsList, defaultChecked = false) => ({
 			hiddable: true,
-			name: region,
-			defaultChecked: true,
+			name,
+			defaultChecked,
 			shapes: {
-				markers: regionLabs.flatMap((lab) => {
+				markers: labsList.flatMap((lab) => {
+					const onClick = () => navigate(lab.path);
+
 					if (typeof lab.coordinates === "object" && !Array.isArray(lab.coordinates)) {
-						return Object.entries(lab.coordinates).map(([locationKey, coords]) => ({
-							position: coords,
-							popup: <PopupContent title={`${lab.title} - ${locationKey}`} onClick={() => navigate(lab.path)} />,
-						}));
+						return Object.entries(lab.coordinates)
+							.map(([key, index]) => createMarker(lab, key, index, onClick));
 					}
 
-					return [{
-						position: lab.coordinates,
-						popup: <PopupContent title={lab.title} onClick={() => navigate(lab.path)} />,
-					}];
+					return [createMarker(lab, null, null, onClick)];
 				}),
-				circles: [],
+				circles: labsList.flatMap((lab) => regions
+					.filter((r) => r.region === lab.region && r.center)
+					.map((region) => ({
+						center: region.center,
+						radius: region.radius,
+						fillColor: "#00426E",
+						color: "transparent",
+					}))),
 				rectangles: [],
-				polygons: [],
+				polygons: labsList.flatMap((lab) => regions
+					.filter((r) => r.region === lab.region && r.positions)
+					.map((region) => ({
+						positions: region.positions,
+						fillColor: "#00426E",
+						color: "transparent",
+					}))),
 			},
-		}));
+		});
+
+		return [
+			createGroup("All Labs", labs.filter((lab) => lab.coordinates), true),
+			...Object.entries(labsByRegion)
+				.map(([region, regionLabs]) => createGroup(region, regionLabs)),
+		];
 	}, [navigate]);
 
-	// Memoize map configuration
+	// Map configuration
 	const mapConfig = useMemo(() => ({
 		scrollWheelZoom: true,
 		zoom: 4,
