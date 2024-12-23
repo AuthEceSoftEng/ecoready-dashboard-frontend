@@ -436,7 +436,7 @@ const Form = forwardRef(({ disabled: dsb, content, validationSchema, onSubmit, o
 										<Grid item style={{ marginBottom: "2px" }}>
 											<DatePicker
 												type={comp.type || "desktop"}
-												value={formikProps.values[`${comp.id}_start`]}
+												value={comp.startValue ?? formikProps.values[`${comp.id}_start`]}
 												disabled={disabled || comp.disabled}
 												label={comp.startLabel || "Start date"}
 												views={comp.views || ["day", "month", "year"]}
@@ -461,7 +461,7 @@ const Form = forwardRef(({ disabled: dsb, content, validationSchema, onSubmit, o
 										<Grid item>
 											<DatePicker
 												type={comp.type || "desktop"}
-												value={formikProps.values[`${comp.id}_end`]}
+												value={comp.endValue ?? formikProps.values[`${comp.id}_end`]}
 												disabled={disabled || comp.disabled}
 												label={comp.endLabel || "End date"}
 												views={comp.views || ["day", "month", "year"]}

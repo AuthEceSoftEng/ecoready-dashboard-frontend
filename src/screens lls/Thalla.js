@@ -60,14 +60,16 @@ const THALLA = () => {
 			width: "170px",
 			type: "desktop",
 			label: "",
+			startValue: startDate,
 			startLabel: "Start date",
+			endValue: endDate,
 			endLabel: "End date",
 			background: "primary",
 			labelSize: 12,
 			onStartChange: (newValue) => handleDateChange(newValue, setStartDate),
 			onEndChange: (newValue) => handleDateChange(newValue, setEndDate),
 		},
-	], [handleDateChange]);
+	], [endDate, handleDateChange, startDate]);
 
 	const isValidDateRange = useMemo(() => startDate && endDate && new Date(startDate) <= new Date(endDate), [startDate, endDate]);
 

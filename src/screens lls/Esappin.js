@@ -1,4 +1,4 @@
-import { Grid, Typography } from "@mui/material";
+import { Grid } from "@mui/material";
 import { memo, useMemo, useState, useCallback, useEffect } from "react";
 
 import Card from "../components/Card.js";
@@ -7,9 +7,9 @@ import Dropdown from "../components/Dropdown.js";
 import useInit from "../utils/screen-init.js";
 import DatePicker from "../components/DatePicker.js";
 import esappinConfigs, { organization } from "../config/EsappinConfig.js";
-import { getCustomDateTime, debounce } from "../utils/data-handling-functions.js";
+import { getCustomDateTime } from "../utils/data-handling-functions.js";
 import { monthNames } from "../utils/useful-constants.js";
-import { cardFooter, LoadingIndicator } from "../utils/rendering-items.js";
+import { cardFooter, LoadingIndicator, DataWarning } from "../utils/rendering-items.js";
 
 const PRODUCTS = [
 	{ value: "Rapsfeld B1", text: "Rapsfeld B1" },
@@ -95,7 +95,9 @@ const Esappin = () => {
 
 	const { state } = useInit(organization, fetchConfigs);
 	const { isLoading, dataSets, minutesAgo } = state;
+	console.log("dataSets", dataSets);
 	const metrics = useMemo(() => dataSets?.metrics || [], [dataSets]);
+	console.log("metrics", metrics);
 	const isValidData = useMemo(() => metrics.length > 0, [metrics]);
 
 	// Pre-compute data transformations
@@ -222,8 +224,8 @@ const Esappin = () => {
 			{[
 				{
 					title: "Daily Temperature Evolution",
-					data: [
-						{
+					data: Array.isArray(chartData) && chartData.length === 0 ? null
+						: [{
 							x: chartData.timestamps,
 							y: chartData.maxTemp,
 							type: "scatter",
@@ -239,33 +241,33 @@ const Esappin = () => {
 							title: "Min",
 							color: "third",
 						},
-					],
+						],
 					xaxis: { title: "Days" },
 					yaxis: { title: "Temperature (°C)" },
 				},
 				{
 					title: "Shortwave Radiation Sum",
-					data: [
-						{
+					data: Array.isArray(chartData) && chartData.length === 0 ? null
+						: [{
 							x: chartData.timestamps,
 							y: chartData.radiationSum,
 							type: "bar",
 							color: "goldenrod",
 						},
-					],
+						],
 					xaxis: { title: "Days" },
 					yaxis: { title: "Radiation Metric" },
 				},
 				{
 					title: "Daily Precipitation Sum",
-					data: [
-						{
+					data: Array.isArray(chartData) && chartData.length === 0 ? null
+						: [{
 							x: chartData.timestamps,
 							y: chartData.precipitation,
 							type: "bar",
 							color: "third",
 						},
-					],
+						],
 					xaxis: { title: "Days" },
 					yaxis: { title: "Precipitation (mm)" },
 				},
@@ -275,10 +277,10 @@ const Esappin = () => {
 						{
 							labels: Array.isArray(dataSets.precipitationSum) && dataSets.precipitationSum.length > 0
 								? dataSets.precipitationSum.map((item) => item.key)
-								: <Typography>{"No precipitation data available"}</Typography>,
+								: [],
 							values: Array.isArray(dataSets.precipitationSum) && dataSets.precipitationSum.length > 0
 								? dataSets.precipitationSum.map((item) => item.sum_precipitation_sum)
-								: <Typography>{"No precipitation data available"}</Typography>,
+								: [],
 							type: "pie",
 						},
 					],
@@ -287,16 +289,19 @@ const Esappin = () => {
 				<Grid key={index} item xs={12} sm={12} md={6}>
 					<Card title={card.title} footer={cardFooter({ minutesAgo })}>
 						{isLoading ? (<LoadingIndicator />
-						) : (
-							<Plot
-								scrollZoom
-								data={card.data}
-								title={dateRange.month ? `${monthNames[dateRange.month].text} ${year}` : ""}
-								showLegend={index === 0 || 3}
-								height="300px"
-								xaxis={card?.xaxis}
-								yaxis={card?.yaxis}
-							/>
+						) : (card.data
+							? (
+								<Plot
+									scrollZoom
+									data={card.data}
+									title={dateRange.month ? `${monthNames[dateRange.month].text} ${year}` : ""}
+									showLegend={index === 0 || 3}
+									height="300px"
+									xaxis={card?.xaxis}
+									yaxis={card?.yaxis}
+								/>
+							)
+							: <DataWarning />
 						)}
 					</Card>
 				</Grid>
