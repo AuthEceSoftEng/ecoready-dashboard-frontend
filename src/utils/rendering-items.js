@@ -94,3 +94,18 @@ export const StickyBand = ({ dropdownContent = [], value = null, formRef, formCo
 		</Grid>
 	</Grid>
 );
+
+export const DataWarning = ({ message = "No Availabe Data for the Specified Time Period..." }) => (
+	<Grid
+		item
+		xs={12}
+		sx={{
+			display: "flex",
+			justifyContent: "center",
+			alignItems: "center",
+			minHeight: "200px",
+		}}
+	>
+		<Typography variant="h6">{message}</Typography>
+	</Grid>
+);
