@@ -36,7 +36,7 @@ const Esappin = () => {
 	const debouncedSetMonth = useMemo(
 		() => debounce((date, setter) => {
 			setter(date);
-		}, 300),
+		}, 100),
 		[],
 	);
 
@@ -76,22 +76,20 @@ const Esappin = () => {
 		[isValidDateRange, product, dateRange.startDate, dateRange.endDate],
 	);
 
-	const dropdownContent = useMemo(() => [
-		{
-			id: "product",
-			size: "small",
-			width: "170px",
-			height: "40px",
-			color: "primary",
-			label: "Product",
-			items: PRODUCTS,
-			defaultValue: "Rapsfeld B1",
-			onChange: (event) => {
-				setProduct(event.target.value);
-			},
-
+	const dropdownContent = [{
+		id: "product",
+		size: "small",
+		width: "170px",
+		height: "40px",
+		color: "primary",
+		label: "Product",
+		items: PRODUCTS,
+		defaultValue: "Rapsfeld B1",
+		onChange: (event) => {
+			setProduct(event.target.value);
 		},
-	], []);
+
+	}];
 
 	const { state } = useInit(organization, fetchConfigs);
 	const { isLoading, dataSets, minutesAgo } = state;
@@ -112,7 +110,6 @@ const Esappin = () => {
 			radiationSum: metrics.map((item) => item.shortwave_radiation_sum),
 		};
 	}, [metrics, isValidData]);
-	console.log("chartData", chartData);
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
@@ -136,7 +133,7 @@ const Esappin = () => {
 						type="desktop"
 						label="Month Picker"
 						width="170px"
-						views={["month"]}
+						views={["month", "year"]}
 						onChange={handleMonthChange}
 					/>
 				</Grid>
@@ -148,8 +145,8 @@ const Esappin = () => {
 							{[
 								{
 									data: {
-										value: dataSets?.maxMaxTemperature && !dataSets.maxMaxTemperature?.success
-											? dataSets.maxMaxTemperature[0].max_max_temperature
+										value: dataSets?.maxMaxTemperature && Array.isArray(dataSets.maxMaxTemperature)
+											? dataSets.maxMaxTemperature[0]?.max_max_temperature
 											: null,
 										subtitle: "Max Temperature",
 									},
@@ -162,8 +159,8 @@ const Esappin = () => {
 								},
 								{
 									data: {
-										value: dataSets?.minMinTemperature && !dataSets.minMinTemperature.success
-											? dataSets.minMinTemperature[0].min_min_temperature
+										value: dataSets?.minMinTemperature && Array.isArray(dataSets.minMinTemperature)
+											? dataSets.minMinTemperature[0]?.min_min_temperature
 											: null,
 										subtitle: "Min Temperature",
 									},
@@ -174,7 +171,7 @@ const Esappin = () => {
 								},
 								{
 									data: {
-										value: dataSets?.precipitationSum && !dataSets.precipitationSum?.success
+										value: dataSets?.precipitationSum && Array.isArray(dataSets.precipitationSum)
 											? dataSets.precipitationSum.find((item) => item.key === product)?.sum_precipitation_sum
 											: null,
 										subtitle: "Precipitation Sum",
@@ -290,7 +287,7 @@ const Esappin = () => {
 					],
 				},
 			].map((card, index) => (
-				<Grid key={index} item xs={12} sm={12} md={6}>
+				<Grid key={index} item xs={12} sm={12} md={6} mb={1}>
 					<Card title={card.title} footer={cardFooter({ minutesAgo })}>
 						{isValidData
 							? isLoading ? (<LoadingIndicator />
