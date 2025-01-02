@@ -3,6 +3,28 @@ import Plotly from "react-plotly.js";
 import { DataWarning } from "../utils/rendering-items.js";
 import colors from "../_colors.scss";
 
+const validatePieData = (data) => {
+	let errorMessage = "";
+
+	const hasError = data.some((d) => {
+		if (d.type !== "pie") return false;
+
+		if (d.values.length === 0) {
+			errorMessage = "No Data Available for the Specified Time Period...";
+			return true;
+		}
+
+		if (d.values.reduce((sum, val) => sum + val, 0) === 0) {
+			errorMessage = "Pie chart Values Sum to Zero";
+			return true;
+		}
+
+		return false;
+	});
+
+	return { hasError, errorMessage };
+};
+
 const Plot = ({
 	data, // An array of objects. Each one describes a specific subplot
 	title = "", // Plot title
@@ -22,24 +44,10 @@ const Plot = ({
 	xaxis = {},
 	yaxis = {},
 }) => {
-	const pieDataCheck = data.some((d) => {
-		if (d.type !== "pie") return false;
+	const { hasError, errorMessage } = validatePieData(data);
 
-		// Check for no data first (more efficient)
-		if (!d.values?.length || d.value === null) {
-			return "No Data Registered for the Specified Time Period";
-		}
-
-		// Only sum if we have values
-		if (d.values.reduce((sum, val) => sum + val, 0) === 0) {
-			return "Pie chart Values Sum to Zero";
-		}
-
-		return false;
-	});
-
-	if (pieDataCheck) {
-		return <DataWarning message={pieDataCheck} />;
+	if (hasError) {
+		return <DataWarning message={errorMessage} />;
 	}
 
 	return (

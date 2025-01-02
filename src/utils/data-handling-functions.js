@@ -22,7 +22,6 @@ export const reducer = (state, action) => {
 
 		case "FETCH_SUCCESS": {
 			const { plotId, response } = action.payload;
-			const now = new Date();
 			return {
 				...state,
 				isLoading: false,
@@ -31,7 +30,7 @@ export const reducer = (state, action) => {
 					...state.dataSets,
 					[plotId]: response,
 				},
-				pageRefreshTime: now,
+				pageRefreshTime: new Date(),
 				minutesAgo: 0,
 			};
 		}
