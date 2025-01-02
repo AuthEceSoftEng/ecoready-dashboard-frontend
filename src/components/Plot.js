@@ -26,7 +26,7 @@ const Plot = ({
 		if (d.type !== "pie") return false;
 
 		// Check for no data first (more efficient)
-		if (!d.values?.length) {
+		if (!d.values?.length || d.value === null) {
 			return "No Data Registered for the Specified Time Period";
 		}
 
