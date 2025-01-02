@@ -38,6 +38,7 @@ const useInit = (organization, fetchConfigs) => {
             || (Array.isArray(item?.response) && item.response.length === 0),
 		);
 		console.log("Has issues:", hasIssues);
+		console.log("Promise status:", promiseStatus);
 
 		if (hasIssues) {
 			dispatch({ type: "FETCH_WARNING", payload: promiseStatus });
