@@ -22,13 +22,24 @@ const Plot = ({
 	xaxis = {},
 	yaxis = {},
 }) => {
-	const isPieWithZeroSum = data.some((d) => d.type === "pie"
-		&& (d.values?.reduce((sum, val) => sum + val, 0) === 0 || !d.values?.length));
+	const pieDataCheck = data.some((d) => {
+		if (d.type !== "pie") return false;
 
-	if (isPieWithZeroSum) {
-		return (
-			<DataWarning message="Pie chart Values Sum to Zero" />
-		);
+		// Check for no data first (more efficient)
+		if (!d.values?.length) {
+			return "No Data Registered for the Specified Time Period";
+		}
+
+		// Only sum if we have values
+		if (d.values.reduce((sum, val) => sum + val, 0) === 0) {
+			return "Pie chart Values Sum to Zero";
+		}
+
+		return false;
+	});
+
+	if (pieDataCheck) {
+		return <DataWarning message={pieDataCheck} />;
 	}
 
 	return (
