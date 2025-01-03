@@ -172,26 +172,28 @@ const THALLA = () => {
 											justifyContent="flex-end"
 											alignItems="center"
 										>
-											<Plot
-												showLegend
-												scrollZoom
-												height={plotData.shape === "bullet" ? "120px" : "200px"}
-												data={[
-													{
-														type: "indicator",
-														mode: "gauge+number",
-														value: plotData.data.value,
-														range: plotData.range ?? [-35, 45],
-														color: plotData.color,
-														shape: plotData.shape,
-														indicator: "primary",
-														textColor: "primary",
-														suffix: plotData.suffix,
-													},
-												]}
-												displayBar={false}
-												title={plotData.data.subtitle}
-											/>
+											{plotData.data.value ? (
+												<Plot
+													showLegend
+													scrollZoom
+													height={plotData.shape === "bullet" ? "120px" : "200px"}
+													data={[
+														{
+															type: "indicator",
+															mode: "gauge+number",
+															value: plotData.data.value,
+															range: plotData.range ?? [-35, 45],
+															color: plotData.color,
+															shape: plotData.shape,
+															indicator: "primary",
+															textColor: "primary",
+															suffix: plotData.suffix,
+														},
+													]}
+													displayBar={false}
+													title={plotData.data.subtitle}
+												/>
+											) : (<DataWarning />)}
 										</Grid>
 									))}
 								</Grid>
@@ -282,17 +284,19 @@ const THALLA = () => {
 					].map((card, index) => (
 						<Grid key={index} item xs={12} sm={12} md={6} mb={1}>
 							<Card title={card.title} footer={cardFooter({ minutesAgo })}>
-								{isLoading ? (<LoadingIndicator />
-								) : (
-									<Plot
-										scrollZoom
-										data={card.data}
-										showLegend={index === 0}
-										height="300px"
-										xaxis={card.xaxis}
-										yaxis={card.yaxis}
-									/>
-								)}
+								{isValidData
+									? isLoading ? (<LoadingIndicator />
+									) : (
+										<Plot
+											scrollZoom
+											data={card.data}
+											showLegend={index === 0}
+											height="300px"
+											xaxis={card.xaxis}
+											yaxis={card.yaxis}
+										/>
+									) : (<DataWarning />
+									)}
 							</Card>
 						</Grid>
 					))}
