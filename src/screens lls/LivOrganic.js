@@ -7,7 +7,7 @@ import useInit from "../utils/screen-init.js";
 import { organization, livOrganicConfigs } from "../config/LivOrganicConfig.js";
 import { debounce, calculateDates, calculateDifferenceBetweenDates } from "../utils/data-handling-functions.js";
 // import { monthNames } from "../utils/useful-constants.js";
-import { cardFooter, LoadingIndicator, StickyBand } from "../utils/rendering-items.js";
+import { cardFooter, DataWarning, LoadingIndicator, StickyBand } from "../utils/rendering-items.js";
 
 const LivOrganic = () => {
 	const [startDate, setStartDate] = useState("2024-06-01");
@@ -80,177 +80,185 @@ const LivOrganic = () => {
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
 			<StickyBand formRef={formRefDate} formContent={formContentDate} />
-			<Grid item xs={12} md={12} alignItems="center" flexDirection="column">
-				<Card title={`${differenceInDays}-day Overview`} footer={cardFooter({ minutesAgo })}>
-					{isLoading ? (
-						<LoadingIndicator />
-					) : (
-						<Grid container display="flex" direction="row" justifyContent="space-evenly" padding={0} spacing={1}>
-							{[
-								{
-									data: {
-										value: dataSets?.maxMaxTemperature?.[0]?.max_max_temperature ?? null,
-										subtitle: "Max Temperature",
-									},
-									color: "primary",
-									shape: "angular",
-								},
-								{
-									data: {
-										value: dataSets?.minMinTemperature?.[0]?.min_min_temperature ?? null,
-										subtitle: "Min Temperature",
-									},
-									color: "third",
-									shape: "angular",
-								},
-								{
-									data: {
-										value: dataSets?.meanPrecipitation?.[0]?.avg_precipitation ?? null,
-										subtitle: "Average Precipitation",
-									},
-									range: [0, 100],
-									color: "third",
-									suffix: "mm",
-									shape: "bullet",
-								},
-								{
-									data: {
-										value: dataSets?.meanSolarRadiation?.[0]?.avg_solar_radiation ?? null,
-										subtitle: "Average Solar Radiation",
-									},
-									range: [0, 20],
-									color: "goldenrod",
-									suffix: "W/m²",
-									shape: "bullet",
-								},
-							].map((plotData, index) => (
-								<Grid
-									key={index}
-									item
-									xs={12}
-									sm={12}
-									md={plotData.shape === "bullet" ? 6 : 4}
-									justifyContent="center"
-									alignItems="center"
-								>
-									<Plot
-										showLegend
-										scrollZoom
-										height={plotData.shape === "bullet" ? "120px" : "200px"}
-										data={[
-											{
-												type: "indicator",
-												mode: "gauge+number",
-												value: plotData.data.value,
-												range: plotData.range ?? [-35, 45],
-												color: plotData.color,
-												shape: plotData.shape,
-												indicator: "primary",
-												textColor: "primary",
-												suffix: plotData.suffix,
+			{isValidDateRange ? (
+				<>
+					<Grid item xs={12} md={12} alignItems="center" flexDirection="column">
+						<Card title={`${differenceInDays}-day Overview`} footer={cardFooter({ minutesAgo })}>
+							{isLoading ? (
+								<LoadingIndicator />
+							) : (
+								<Grid container display="flex" direction="row" justifyContent="space-evenly" padding={0} spacing={1}>
+									{[
+										{
+											data: {
+												value: dataSets?.maxMaxTemperature?.[0]?.max_max_temperature ?? null,
+												subtitle: "Max Temperature",
 											},
-										]}
-										displayBar={false}
-										title={plotData.data.subtitle}
-									/>
+											color: "primary",
+											shape: "angular",
+										},
+										{
+											data: {
+												value: dataSets?.minMinTemperature?.[0]?.min_min_temperature ?? null,
+												subtitle: "Min Temperature",
+											},
+											color: "third",
+											shape: "angular",
+										},
+										{
+											data: {
+												value: dataSets?.meanPrecipitation?.[0]?.avg_precipitation ?? null,
+												subtitle: "Average Precipitation",
+											},
+											range: [0, 100],
+											color: "third",
+											suffix: "mm",
+											shape: "bullet",
+										},
+										{
+											data: {
+												value: dataSets?.meanSolarRadiation?.[0]?.avg_solar_radiation ?? null,
+												subtitle: "Average Solar Radiation",
+											},
+											range: [0, 20],
+											color: "goldenrod",
+											suffix: "W/m²",
+											shape: "bullet",
+										},
+									].map((plotData, index) => (
+										<Grid
+											key={index}
+											item
+											xs={12}
+											sm={12}
+											md={plotData.shape === "bullet" ? 6 : 4}
+											justifyContent="center"
+											alignItems="center"
+										>
+											{plotData.data.value ? (
+												<Plot
+													showLegend
+													scrollZoom
+													height={plotData.shape === "bullet" ? "120px" : "200px"}
+													data={[
+														{
+															type: "indicator",
+															mode: "gauge+number",
+															value: plotData.data.value,
+															range: plotData.range ?? [-35, 45],
+															color: plotData.color,
+															shape: plotData.shape,
+															indicator: "primary",
+															textColor: "primary",
+															suffix: plotData.suffix,
+														},
+													]}
+													displayBar={false}
+													title={plotData.data.subtitle}
+												/>
+											) : (<DataWarning />)}
+										</Grid>
+									))}
 								</Grid>
-							))}
-						</Grid>
-					)}
-				</Card>
-			</Grid>
-			{[
-				{
-					title: "Temperature Evolution Per Day",
-					data: [
+							)}
+						</Card>
+					</Grid>
+					{[
 						{
-							x: isValidData ? chartData.timestamps : [],
-							y: isValidData ? chartData.maxTemp : [],
-							type: "bar",
-							title: "Max",
-							color: "secondary",
+							title: "Temperature Evolution Per Day",
+							data: [
+								{
+									x: chartData.timestamps,
+									y: chartData.maxTemp,
+									type: "bar",
+									title: "Max",
+									color: "secondary",
+								},
+								{
+									x: chartData.timestamps,
+									y: chartData.minTemp,
+									type: "bar",
+									title: "Min",
+									color: "third",
+								},
+							],
+							xaxis: { title: "Days" },
+							yaxis: { title: "Temperature (°C)" },
 						},
 						{
-							x: isValidData ? chartData.timestamps : [],
-							y: isValidData ? chartData.minTemp : [],
-							type: "bar",
-							title: "Min",
-							color: "third",
+							title: `${differenceInDays}-day Temperature Distribution`,
+							data: [
+								{
+									y: chartData.maxTemp,
+									type: "box",
+									title: "Max Temperature",
+									color: "primary",
+								},
+								{
+									y: chartData.meanTemp,
+									type: "box",
+									title: "Mean Temperature",
+									color: "secondary",
+								},
+								{
+									y: chartData.minTemp,
+									type: "box",
+									title: "Min Temperature",
+									color: "third",
+								},
+							],
+							xaxis: { title: "Days" },
+							yaxis: { title: "Temperature (°C)" },
 						},
-					],
-					xaxis: { title: "Days" },
-					yaxis: { title: "Temperature (°C)" },
-				},
-				{
-					title: `${differenceInDays}-day Temperature Distribution`,
-					data: [
 						{
-							y: isValidData ? chartData.maxTemp : [],
-							type: "box",
-							title: "Max Temperature",
-							color: "primary",
-						},
-						{
-							y: isValidData ? chartData.meanTemp : [],
-							type: "box",
-							title: "Mean Temperature",
-							color: "secondary",
-						},
-						{
-							y: isValidData ? chartData.minTemp : [],
-							type: "box",
-							title: "Min Temperature",
-							color: "third",
-						},
-					],
-					xaxis: { title: "Days" },
-					yaxis: { title: "Temperature (°C)" },
-				},
-				{
-					title: "Wind Speed",
-					data: [
-						{
-							x: isValidData ? chartData.timestamps : [],
-							y: isValidData ? chartData.solarRadiation : [],
-							type: "scatter",
-							mode: "lines+markers",
 							title: "Wind Speed",
-							color: "primary",
+							data: [
+								{
+									x: chartData.timestamps,
+									y: chartData.solarRadiation,
+									type: "scatter",
+									mode: "lines+markers",
+									title: "Wind Speed",
+									color: "primary",
+								},
+							],
+							xaxis: { title: "Days" },
 						},
-					],
-					xaxis: { title: "Days" },
-				},
-				{
-					title: "Daily Rain Sum",
-					data: [
 						{
-							x: isValidData ? chartData.timestamps : [],
-							y: isValidData ? chartData.precipitation : [],
-							type: "bar",
-							title: "Rain",
-							color: "third",
+							title: "Daily Rain Sum",
+							data: [
+								{
+									x: chartData.timestamps,
+									y: chartData.precipitation,
+									type: "bar",
+									title: "Rain",
+									color: "third",
+								},
+							],
+							xaxis: { title: "Days" },
 						},
-					],
-					xaxis: { title: "Days" },
-				},
-			].map((card, index) => (
-				<Grid key={index} item xs={12} sm={12} md={6}>
-					<Card title={card.title} footer={cardFooter({ minutesAgo })}>
-						{isLoading ? (
-							<LoadingIndicator />
-						) : (
-							<Plot
-								scrollZoom
-								data={card.data}
-								showLegend={index === 0}
-								height="300px"
-								xaxis={card.xaxis}
-								yaxis={card.yaxis}
-							/>
-						)}
-					</Card>
-				</Grid>
-			))}
+					].map((card, index) => (
+						<Grid key={index} item xs={12} sm={12} md={6}>
+							<Card title={card.title} footer={cardFooter({ minutesAgo })}>
+								{isValidData
+									? isLoading ? (<LoadingIndicator />
+									) : (
+										<Plot
+											scrollZoom
+											data={card.data}
+											showLegend={index === 0}
+											height="300px"
+											xaxis={card.xaxis}
+											yaxis={card.yaxis}
+										/>
+									) : (<DataWarning />
+									)}
+							</Card>
+						</Grid>
+					))}
+				</>
+			) : (<DataWarning message="Please Select a Valid Date Range" />
+			)}
 		</Grid>
 	);
 };
