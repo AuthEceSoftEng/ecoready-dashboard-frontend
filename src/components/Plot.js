@@ -7,9 +7,7 @@ const validatePieData = (data) => {
 	let errorMessage = "";
 
 	const hasError = data.some((d) => {
-		if (d.type !== "pie") return false;
-
-		if (d.values.length === 0) {
+		if (!d.values || !Array.isArray(d.values) || d.values.length === 0) {
 			errorMessage = "No Data Available for the Specified Time Period...";
 			return true;
 		}
@@ -44,10 +42,13 @@ const Plot = ({
 	xaxis = {},
 	yaxis = {},
 }) => {
-	const { hasError, errorMessage } = validatePieData(data);
+	const hasPieChart = data.some((d) => d.type === "pie");
 
-	if (hasError) {
-		return <DataWarning message={errorMessage} />;
+	if (hasPieChart) {
+		const { hasError, errorMessage } = validatePieData(data);
+		if (hasError) {
+			return <DataWarning message={errorMessage} />;
+		}
 	}
 
 	return (
