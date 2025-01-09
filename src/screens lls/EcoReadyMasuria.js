@@ -9,7 +9,7 @@ import DatePicker from "../components/DatePicker.js";
 import ecoReadyMasuriaConfigs, { organization } from "../config/EcoReadyMasuriaConfig.js";
 import { calculateDates, getCustomDateTime } from "../utils/data-handling-functions.js";
 import { monthNames } from "../utils/useful-constants.js";
-import { cardFooter, LoadingIndicator } from "../utils/rendering-items.js";
+import { cardFooter, DataWarning, LoadingIndicator } from "../utils/rendering-items.js";
 
 const REGIONS = [
 	{ value: "BEZEK", text: "Bezek" },
@@ -78,6 +78,79 @@ const EcoReadyMasuria = () => {
 		},
 	], []);
 
+	const charts = useMemo(() => [
+		{
+			title: "Daily Temperature Evolution",
+			data: [
+				{
+					x: chartData.timestamps,
+					y: chartData.maxTemp,
+					type: "scatter",
+					mode: "lines+markers",
+					title: "Max",
+					color: "primary",
+				},
+				{
+					x: chartData.timestamps,
+					y: chartData.meanTemp,
+					type: "scatter",
+					mode: "lines+markers",
+					title: "Avg",
+					color: "secondary",
+				},
+				{
+					x: chartData.timestamps,
+					y: chartData.minTemp,
+					type: "scatter",
+					mode: "lines+markers",
+					title: "Min",
+					color: "third",
+				},
+			],
+			xaxis: { title: "Days" },
+			yaxis: { title: "Temperature (°C)" },
+		},
+		{
+			title: "Daily Minimum Ground Temperature",
+			data: [
+				{
+					x: chartData.timestamps,
+					y: chartData.groundTemp,
+					type: "bar",
+					color: "third",
+				},
+			],
+			xaxis: { title: "Days" },
+			yaxis: { title: "Temperature (°C)" },
+		},
+		{
+			title: "Daily Precipitation Sum",
+			data: [
+				{
+					x: chartData.timestamps,
+					y: chartData.precipitation,
+					type: "bar",
+					color: "primary",
+				},
+			],
+			xaxis: { title: "Days" },
+			yaxis: { title: "Precipitation (mm)" },
+		},
+		{
+			title: "Daily Snow Cover Height",
+			data: [
+				{
+					x: chartData.timestamps,
+					y: chartData.snowHeight,
+					type: "bar",
+					color: "blue",
+				},
+			],
+			xaxis: { title: "Days" },
+			yaxis: { title: "Snow Height (cm)" },
+		},
+	], [chartData]);
+
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
 			<Grid container display="flex" direction="row" justifyContent="flex-end" alignItems="center" spacing={2} mt={1}>
@@ -105,95 +178,29 @@ const EcoReadyMasuria = () => {
 					/>
 				</Grid>
 			</Grid>
-			{[
-				{
-					title: "Daily Temperature Evolution",
-					data: [
-						{
-							x: chartData.timestamps,
-							y: chartData.maxTemp,
-							type: "scatter",
-							mode: "lines+markers",
-							title: "Max",
-							color: "primary",
-						},
-						{
-							x: chartData.timestamps,
-							y: chartData.meanTemp,
-							type: "scatter",
-							mode: "lines+markers",
-							title: "Avg",
-							color: "secondary",
-						},
-						{
-							x: chartData.timestamps,
-							y: chartData.minTemp,
-							type: "scatter",
-							mode: "lines+markers",
-							title: "Min",
-							color: "third",
-						},
-					],
-					xaxis: { title: "Days" },
-					yaxis: { title: "Temperature (°C)" },
-				},
-				{
-					title: "Daily Minimum Ground Temperature",
-					data: [
-						{
-							x: chartData.timestamps,
-							y: chartData.groundTemp,
-							type: "bar",
-							color: "third",
-						},
-					],
-					xaxis: { title: "Days" },
-					yaxis: { title: "Temperature (°C)" },
-				},
-				{
-					title: "Daily Precipitation Sum",
-					data: [
-						{
-							x: chartData.timestamps,
-							y: chartData.precipitation,
-							type: "bar",
-							color: "primary",
-						},
-					],
-					xaxis: { title: "Days" },
-					yaxis: { title: "Precipitation (mm)" },
-				},
-				{
-					title: "Daily Snow Cover Height",
-					data: [
-						{
-							x: chartData.timestamps,
-							y: chartData.snowHeight,
-							type: "bar",
-							color: "blue",
-						},
-					],
-					xaxis: { title: "Days" },
-					yaxis: { title: "Snow Height (cm)" },
-				},
-			].map((card, index) => (
-				<Grid key={index} item xs={12} sm={12} md={6}>
-					<Card title={card.title} footer={cardFooter({ minutesAgo })}>
-						{isLoading ? (<LoadingIndicator />
-						) : (
-							<Plot
-								scrollZoom
-								data={card.data}
-								title={`${monthNames[month].text} ${year}`}
-								showLegend={index === 0}
-								height="300px"
-								xaxis={card.xaxis}
-								yaxis={card.yaxis}
-							/>
-						)}
-					</Card>
-				</Grid>
-			))}
+			{isValidData ? (
+				<>
+					{charts.map((card, index) => (
+						<Grid key={index} item xs={12} sm={12} md={6} mb={index === charts.length - 1 ? 2 : 0}>
+							<Card title={card.title} footer={cardFooter({ minutesAgo })}>
+								{isLoading ? (<LoadingIndicator />
+								) : (
+									<Plot
+										scrollZoom
+										data={card.data}
+										title={`${monthNames[month].text} ${year}`}
+										showLegend={index === 0}
+										height="300px"
+										xaxis={card.xaxis}
+										yaxis={card.yaxis}
+									/>
+								)}
+							</Card>
+						</Grid>
+					))}
+				</>
+			) : (<DataWarning />
+			)}
 		</Grid>
 	);
 };

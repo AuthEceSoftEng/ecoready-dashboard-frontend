@@ -8,11 +8,10 @@ import useInit from "../utils/screen-init.js";
 import secoConfigs, { organization } from "../config/SecoConfig.js";
 import { getCustomDateTime, calculateDates } from "../utils/data-handling-functions.js";
 import { monthNames } from "../utils/useful-constants.js";
-import { cardFooter, LoadingIndicator } from "../utils/rendering-items.js";
+import { cardFooter, LoadingIndicator, StickyBand, DataWarning } from "../utils/rendering-items.js";
 
 const SecoCollab = () => {
 	const customDate = useMemo(() => getCustomDateTime(2024, 8), []);
-	// Memoize the date calculations and fetchConfigs to reduce re-calculations
 	const { month, currentDate, formattedBeginningOfMonth, formattedBeginningOfDay } =	useMemo(
 		() => calculateDates(customDate), [customDate],
 	);
@@ -24,38 +23,134 @@ const SecoCollab = () => {
 	const { state } = useInit(organization, fetchConfigs);
 	const { isLoading, dataSets, minutesAgo } = state;
 
-	// const formRef = useRef();
-	// const formContent = [
+	const dailyOverview = useMemo(() => [
+		{
+			subtitle: "Avg Temperature",
+			min: 0,
+			max: 40,
+			value: dataSets.todayTemperature?.at(-1)?.avg_m_temp01 ?? null,
+			color: "goldenrod",
+			symbol: "°C",
+		},
+		{
+			subtitle: "Avg Humidity",
+			min: 0,
+			max: 100,
+			value: dataSets.todayHumidity?.at(-1)?.avg_m_hum01 ?? null,
+			color: "third",
+			symbol: "%",
+		},
+		{
+			subtitle: "Avg Co2",
+			min: 100,
+			max: 1600,
+			value: dataSets.todayCo2?.at(-1)?.avg_a_co2 ?? null,
+			color: "secondary",
+			symbol: "",
+		},
+	], [dataSets]);
 
-	// 	{ customType: "dropdown",
-	// 		id: "time period sort",
-	// 		label: "Sort By:",
-	// 		items: [
-	// 			{ value: "Week", text: "Week" },
-	// 			{ value: "Month", text: "Month" },
-	// 			{ value: "Year", text: "Year" },
-	// 		],
-	// 		// value,
-	// 		defaultValue: "Month",
-	// 		onChange: (event) => {
-	// 			console.log(`Status changed to ${event.target.value}`);
-	// 		},
-	// 	},
-	// 	{
-	// 		customType: "date-picker",
-	// 		id: "from",
-	// 		type: "desktop",
-	// 		label: "From:",
-	// 		background: "grey",
-	// 	},
-	// 	{
-	// 		customType: "date-picker",
-	// 		id: "to",
-	// 		type: "desktop",
-	// 		label: "To:",
-	// 		background: "grey",
-	// 	},
-	// ];
+	const monthlyOverview = useMemo(() => [
+		{
+			data: [
+				{
+					x: dataSets.monthMaxTemperature?.map((item) => item.interval_start) ?? [],
+					y: dataSets.monthMaxTemperature?.map((item) => item.max_m_temp01) ?? [],
+					type: "bar",
+					color: "goldenrod",
+					title: "maxTemperature",
+				},
+				{
+					x: dataSets.monthMaxTemperature?.map((item) => item.interval_start) ?? [],
+					y: dataSets.monthMinTemperature?.map((item) => item.min_m_temp01) ?? [],
+					type: "bar",
+					color: "gold",
+					title: "minTemperature",
+				},
+			],
+			yaxis: { title: "Temperature (°C)" },
+		},
+		{
+			data: [
+				{
+					x: dataSets.monthMaxHumidity?.map((item) => item.interval_start) ?? [],
+					y: dataSets.monthMaxHumidity?.map((item) => item.max_m_hum01) ?? [],
+					type: "bar",
+					color: "primary",
+					title: "maxHumidity",
+				},
+				{
+					x: dataSets.monthMaxHumidity?.map((item) => item.interval_start) ?? [],
+					y: dataSets.monthMinHumidity?.map((item) => item.min_m_hum01) ?? [],
+					type: "bar",
+					color: "third",
+					title: "minHumidity",
+				},
+			],
+			yaxis: { title: "Humidity (%)" },
+		},
+		{
+			data: [
+				{
+					x: dataSets.monthMaxCo2?.map((item) => item.interval_start) ?? [],
+					y: dataSets.monthMaxCo2?.map((item) => item.max_a_co2) ?? [],
+					type: "bar",
+					color: "green",
+					title: "maxCo2",
+				},
+				{
+					x: dataSets.monthMaxCo2?.map((item) => item.interval_start) ?? [],
+					y: dataSets.monthMinCo2?.map((item) => item.min_a_co2) ?? [],
+					type: "bar",
+					color: "secondary",
+					title: "minCo2",
+				},
+			],
+			yaxis: { title: "Co2" },
+		},
+	], [dataSets]);
+
+	const timelineOverview = useMemo(() => [
+		{
+			data: [
+				{
+					x: dataSets.overview?.map((item) => item.timestamp) ?? [],
+					y: dataSets.overview?.map((item) => item.m_temp01) ?? [],
+					type: "scatter",
+					mode: "lines",
+					color: "goldenrod",
+					title: "Temperature",
+				},
+			],
+			yaxis: { title: "Temperature (°C)" },
+		},
+		{
+			data: [
+				{
+					x: dataSets.overview?.map((item) => item.timestamp) ?? [],
+					y: dataSets.overview?.map((item) => item.m_hum01) ?? [],
+					type: "scatter",
+					mode: "lines",
+					color: "third",
+					title: "Humidity",
+				},
+			],
+			yaxis: { title: "Humidity (%)" },
+		},
+		{
+			data: [
+				{
+					x: dataSets.overview?.map((item) => item.timestamp) ?? [],
+					y: dataSets.overview?.map((item) => item.a_co2) ?? [],
+					type: "scatter",
+					mode: "markers",
+					color: "secondary",
+					title: "Co2",
+				},
+			],
+			yaxis: { title: "Co2" },
+		},
+	], [dataSets]);
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
@@ -64,32 +159,7 @@ const SecoCollab = () => {
 					{isLoading ? (<LoadingIndicator />
 					) : (
 						<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
-							{[
-								{
-									subtitle: "Avg Temperature",
-									min: 0,
-									max: 40,
-									value: dataSets.todayTemperature?.at(-1)?.avg_m_temp01 ?? null,
-									color: "goldenrod",
-									symbol: "°C",
-								},
-								{
-									subtitle: "Avg Humidity",
-									min: 0,
-									max: 100,
-									value: dataSets.todayHumidity?.at(-1)?.avg_m_hum01 ?? null,
-									color: "third",
-									symbol: "%",
-								},
-								{
-									subtitle: "Avg Co2",
-									min: 100,
-									max: 1600,
-									value: dataSets.todayCo2?.at(-1)?.avg_a_co2 ?? null,
-									color: "secondary",
-									symbol: "",
-								},
-							].map((plot, index) => (
+							{dailyOverview.map((plot, index) => (
 								<Grid key={index} item xs={12} md={4} justifyContent="center" sx={{ height: "200px" }}>
 									<Plot
 										scrollZoom
@@ -120,65 +190,7 @@ const SecoCollab = () => {
 					{isLoading ? (<LoadingIndicator />
 					) : (
 						<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
-							{[
-								{
-									data: [
-										{
-											x: dataSets.monthMaxTemperature?.map((item) => item.interval_start) ?? [],
-											y: dataSets.monthMaxTemperature?.map((item) => item.max_m_temp01) ?? [],
-											type: "bar",
-											color: "goldenrod",
-											title: "maxTemperature",
-										},
-										{
-											x: dataSets.monthMaxTemperature?.map((item) => item.interval_start) ?? [],
-											y: dataSets.monthMinTemperature?.map((item) => item.min_m_temp01) ?? [],
-											type: "bar",
-											color: "gold",
-											title: "minTemperature",
-										},
-									],
-									yaxis: { title: "Temperature (°C)" },
-								},
-								{
-									data: [
-										{
-											x: dataSets.monthMaxHumidity?.map((item) => item.interval_start) ?? [],
-											y: dataSets.monthMaxHumidity?.map((item) => item.max_m_hum01) ?? [],
-											type: "bar",
-											color: "primary",
-											title: "maxHumidity",
-										},
-										{
-											x: dataSets.monthMaxHumidity?.map((item) => item.interval_start) ?? [],
-											y: dataSets.monthMinHumidity?.map((item) => item.min_m_hum01) ?? [],
-											type: "bar",
-											color: "third",
-											title: "minHumidity",
-										},
-									],
-									yaxis: { title: "Humidity (%)" },
-								},
-								{
-									data: [
-										{
-											x: dataSets.monthMaxCo2?.map((item) => item.interval_start) ?? [],
-											y: dataSets.monthMaxCo2?.map((item) => item.max_a_co2) ?? [],
-											type: "bar",
-											color: "green",
-											title: "maxCo2",
-										},
-										{
-											x: dataSets.monthMaxCo2?.map((item) => item.interval_start) ?? [],
-											y: dataSets.monthMinCo2?.map((item) => item.min_a_co2) ?? [],
-											type: "bar",
-											color: "secondary",
-											title: "minCo2",
-										},
-									],
-									yaxis: { title: "Co2" },
-								},
-							].map((plot, index) => (
+							{monthlyOverview.map((plot, index) => (
 								<Grid key={index} item xs={12} md={4} justifyContent="center">
 									<Plot
 										key={index}
@@ -195,51 +207,11 @@ const SecoCollab = () => {
 					)}
 				</Card>
 			</Grid>
-			<Grid item xs={12} md={12} alignItems="center" flexDirection="column" mt={2}>
+			<Grid item xs={12} md={12} alignItems="center" flexDirection="column" mt={2} mb={1}>
 				<Card title="Timeline's Overview" footer={cardFooter({ minutesAgo })}>
 					{isLoading ? (<LoadingIndicator />
 					) : (
-						[
-							{
-								data: [
-									{
-										x: dataSets.overview?.map((item) => item.timestamp) ?? [],
-										y: dataSets.overview?.map((item) => item.m_temp01) ?? [],
-										type: "scatter",
-										mode: "lines",
-										color: "goldenrod",
-										title: "Temperature",
-									},
-								],
-								yaxis: { title: "Temperature (°C)" },
-							},
-							{
-								data: [
-									{
-										x: dataSets.overview?.map((item) => item.timestamp) ?? [],
-										y: dataSets.overview?.map((item) => item.m_hum01) ?? [],
-										type: "scatter",
-										mode: "lines",
-										color: "third",
-										title: "Humidity",
-									},
-								],
-								yaxis: { title: "Humidity (%)" },
-							},
-							{
-								data: [
-									{
-										x: dataSets.overview?.map((item) => item.timestamp) ?? [],
-										y: dataSets.overview?.map((item) => item.a_co2) ?? [],
-										type: "scatter",
-										mode: "markers",
-										color: "secondary",
-										title: "Co2",
-									},
-								],
-								yaxis: { title: "Co2" },
-							},
-						].map((plotData, index) => (
+						timelineOverview.map((plotData, index) => (
 							<Plot
 								key={index}
 								scrollZoom
