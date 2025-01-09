@@ -13,7 +13,6 @@ import { cardFooter, LoadingIndicator } from "../utils/rendering-items.js";
 const EcoVItaLl = () => {
 	const customDate = useMemo(() => getCustomDateTime(2024, 9), []);
 
-	// Memoize the date calculations and fetchConfigs to reduce re-calculations
 	const { month, currentDate, formattedBeginningOfMonth, formattedBeginningOfHour } = useMemo(
 		() => calculateDates(customDate),
 		[customDate],
@@ -26,54 +25,119 @@ const EcoVItaLl = () => {
 	const { state } = useInit(organization, fetchConfigs);
 	const { isLoading, dataSets, minutesAgo } = state;
 
-	return (
-		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2} sx={{ flexGrow: 1, flexBasis: "100%", flexShrink: 0 }}>
-			{[
+	const gaugeData = useMemo(() => [
+		{
+			title: "Tank Monitoring",
+			data: [
 				{
-					title: "Tank Monitoring",
-					data: [
-						{
-							subtitle: "Tank Level",
-							min: 0,
-							max: 100,
-							value: dataSets.gauges && dataSets.gauges.length > 0
-								? dataSets.gauges.at(-1).nutrienttanklevel
-								: null,
-							symbol: "%",
-						},
-						{
-							subtitle: "Pump Pressure",
-							min: 0,
-							max: 1.5,
-							value: dataSets.gauges && dataSets.gauges.length > 0
-								? dataSets.gauges.at(-1).pumppressure
-								: null,
-							symbol: "psi",
-						},
-					],
-					color: "third",
+					subtitle: "Tank Level",
+					min: 0,
+					max: 100,
+					value: dataSets.gauges?.at(-1)?.nutrienttanklevel ?? null,
+					symbol: "%",
 				},
 				{
-					title: "Nutrient Monitoring",
-					data: [
-						{
-							min: 0,
-							max: 3.5,
-							value: dataSets.gauges && dataSets.gauges.length > 0 ? dataSets.gauges.at(-1).ec : null,
-							symbol: "mS",
-							subtitle: "EC",
-						},
-						{
-							min: 0,
-							max: 10,
-							value: dataSets.gauges && dataSets.gauges.length > 0 ? dataSets.gauges.at(-1).ph : null,
-							symbol: "",
-							subtitle: "Ph",
-						},
-					],
+					subtitle: "Pump Pressure",
+					min: 0,
+					max: 1.5,
+					value: dataSets.gauges?.at(-1)?.pumppressure ?? null,
+					symbol: "psi",
+				},
+			],
+			color: "third",
+		},
+		{
+			title: "Nutrient Monitoring",
+			data: [
+				{
+					min: 0,
+					max: 3.5,
+					value: dataSets.gauges?.at(-1)?.ec ?? null,
+					symbol: "mS",
+					subtitle: "EC",
+				},
+				{
+					min: 0,
+					max: 10,
+					value: dataSets.gauges?.at(-1)?.ph ?? null,
+					symbol: "",
+					subtitle: "Ph",
+				},
+			],
+			color: "secondary",
+		},
+	], [dataSets.gauges]);
+
+	const dailyData = useMemo(() => [
+		{
+			title: "Temperature Evolution Per Day",
+			data: [
+				{
+					x: dataSets.temperature
+						? dataSets.temperature.map((item) => item.interval_start)
+						: [],
+					y: dataSets.temperature
+						? dataSets.temperature
+							.map((item) => item.avg_envtemp) : [],
+					type: "bar",
+					title: "Temperature",
 					color: "secondary",
 				},
-			].map((card, index) => (
+			],
+			xaxis: { title: "Days" },
+			yaxis: { title: "Temperature (°C)" },
+		},
+		{
+			title: "Humidity Range Per Day",
+			data: [
+				{
+					x: dataSets.humidity_max
+						? dataSets.humidity_max.map((item) => item.interval_start)
+						: [],
+					y: dataSets.humidity_max
+						? dataSets.humidity_max
+							.map((item) => item.max_humidity) : [],
+					type: "line",
+					title: "Max",
+					color: "primary",
+				},
+				{
+					x: dataSets.humidity_min
+						? dataSets.humidity_min.map((item) => item.interval_start)
+						: [],
+					y: dataSets.humidity_min
+						? dataSets.humidity_min
+							.map((item) => item.min_humidity) : [],
+					type: "line",
+					title: "Min",
+					color: "third",
+				},
+			],
+			xaxis: { title: "Days" },
+			yaxis: { title: "Humidity (%)" },
+		},
+	], [dataSets.temperature, dataSets.humidity_max, dataSets.humidity_min]);
+
+	const bulletData = useMemo(() => [
+		{
+			min: 0,
+			max: 14,
+			value: dataSets.ph_avg && dataSets.ph_avg.length > 0 ? dataSets.ph_avg[0].avg_ph : null,
+			symbol: "",
+			title: "pH",
+		},
+		{
+			min: 0,
+			max: 5,
+			value: dataSets.ec_avg && dataSets.ec_avg.length > 0 ? dataSets.ec_avg[0].avg_ec : null,
+			symbol: "",
+			title: "EC",
+		},
+	], [dataSets.ph_avg, dataSets.ec_avg]);
+
+	return (
+		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2} sx={{ flexGrow: 1, flexBasis: "100%", flexShrink: 0 }}>
+			{gaugeData.map((card, index) => (
 				<Grid key={index} item xs={12} md={6} alignItems="center" flexDirection="column" mt={2} padding={0}>
 					<Card title={card.title} footer={cardFooter({ minutesAgo })}>
 						{isLoading ? (<LoadingIndicator />
@@ -81,11 +145,9 @@ const EcoVItaLl = () => {
 							<Grid container display="flex" direction="row" justifyContent="space-evenly" padding={0} spacing={1}>
 								{card.data.map((plotData, plotIndex) => (
 									<Grid key={plotIndex} item xs={12} sm={12} md={6} justifyContent="flex-end" alignItems="center" sx={{ height: "200px" }}>
-
 										<Plot
 											showLegend
 											scrollZoom
-											// width="220px"
 											data={[
 												{
 													type: "indicator",
@@ -109,55 +171,7 @@ const EcoVItaLl = () => {
 					</Card>
 				</Grid>
 			))}
-			{[
-				{
-					title: "Temperature Evolution Per Day",
-					data: [
-						{
-							x: dataSets.temperature
-								? dataSets.temperature.map((item) => item.interval_start)
-								: [],
-							y: dataSets.temperature
-								? dataSets.temperature
-									.map((item) => item.avg_envtemp) : [],
-							type: "bar",
-							title: "Temperature",
-							color: "secondary",
-						},
-					],
-					xaxis: { title: "Days" },
-					yaxis: { title: "Temperature (°C)" },
-				},
-				{
-					title: "Humidity Range Per Day",
-					data: [
-						{
-							x: dataSets.humidity_max
-								? dataSets.humidity_max.map((item) => item.interval_start)
-								: [],
-							y: dataSets.humidity_max
-								? dataSets.humidity_max
-									.map((item) => item.max_humidity) : [],
-							type: "line",
-							title: "Max",
-							color: "primary",
-						},
-						{
-							x: dataSets.humidity_min
-								? dataSets.humidity_min.map((item) => item.interval_start)
-								: [],
-							y: dataSets.humidity_min
-								? dataSets.humidity_min
-									.map((item) => item.min_humidity) : [],
-							type: "line",
-							title: "Min",
-							color: "third",
-						},
-					],
-					xaxis: { title: "Days" },
-					yaxis: { title: "Humidity (%)" },
-				},
-			].map((card, index) => (
+			{dailyData.map((card, index) => (
 				<Grid key={index} item xs={12} sm={12} md={6} mt={2}>
 					<Card title={card.title} footer={cardFooter({ minutesAgo })}>
 						{isLoading ? (<LoadingIndicator />
@@ -182,22 +196,7 @@ const EcoVItaLl = () => {
 				>
 					{isLoading ? (<LoadingIndicator />
 					) : (
-						[
-							{
-								min: 0,
-								max: 14,
-								value: dataSets.ph_avg && dataSets.ph_avg.length > 0 ? dataSets.ph_avg[0].avg_ph : null,
-								symbol: "",
-								title: "pH",
-							},
-							{
-								min: 0,
-								max: 5,
-								value: dataSets.ec_avg && dataSets.ec_avg.length > 0 ? dataSets.ec_avg[0].avg_ec : null,
-								symbol: "",
-								title: "EC",
-							},
-						].map((plot, index) => (
+						bulletData.map((plot, index) => (
 							<Grid key={index} item xs={12} sm={12} md={12} justifyContent="flex-end" alignItems="center" sx={{ height: "200px" }}>
 								<Plot
 									showLegend
