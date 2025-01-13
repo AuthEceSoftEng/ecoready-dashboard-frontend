@@ -1,12 +1,11 @@
 import { Grid } from "@mui/material";
 import { memo, useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { scaleQuantize } from "d3-scale";
 
 import colors from "../_colors.scss";
-import MapComponent from "../components/Map.js";
+import MapComponent, { getColor } from "../components/Map.js";
 import { SecondaryBackgroundButton } from "../components/Buttons.js";
-import { labs, regions } from "../utils/useful-constants.js";
+import { labs } from "../utils/useful-constants.js";
 
 // Extract popup component
 const PopupContent = memo(({ title, onClick }) => (
@@ -41,14 +40,6 @@ const createMarker = (lab, locationKey, index, onClick) => ({
 	defaultChecked: false,
 });
 
-const getColor = (value) => scaleQuantize()
-	.domain([0, 100])
-	.range([
-		colors.light,
-		colors.info,
-		colors.primary,
-	])(value);
-
 const onEachCountry = (feature, layer) => {
 	layer.on({
 		mouseover: (e) => {
@@ -62,7 +53,7 @@ const onEachCountry = (feature, layer) => {
 			const area = e.target;
 			area.setStyle({
 				weight: 1,
-				fillOpacity: 0.3,
+				fillOpacity: 0.5,
 			});
 		},
 		click: (e) => {
@@ -188,24 +179,24 @@ const Map = () => {
 		zoom: 4,
 		center: [55.499_383, 28.527_665],
 		layers: {
-			normal: {
-				show: true,
-				hiddable: true,
-				defaultChecked: false,
-				name: "Physical Map",
-			},
 			topographical: {
 				show: true,
 				hiddable: true,
 				defaultChecked: true,
 				name: "Topographical Map",
 			},
+			physical: {
+				show: true,
+				hiddable: true,
+				defaultChecked: false,
+				name: "Physical Map",
+			},
 		},
 	}), []);
 
 	return (
 		<Grid container width="100%" height="100%" display="flex" direction="row" justifyContent="space-around" spacing={2}>
-			<Grid item width="100%" height="100%">
+			<Grid item xs={12} height="100%">
 				<MapComponent {...mapConfig} geodata={geodata} markers={markers} />
 			</Grid>
 		</Grid>

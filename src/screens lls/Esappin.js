@@ -1,5 +1,5 @@
 import { Grid } from "@mui/material";
-import { memo, useMemo, useState, useCallback, useEffect } from "react";
+import { memo, useMemo, useState, useCallback } from "react";
 
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
@@ -206,9 +206,6 @@ const Esappin = () => {
 				] : [{ labels: [], values: [], type: "pie" }],
 		},
 	], [chartData, dataSets.precipitationSum]);
-
-	console.log("precipitation is an array:", isValidArray(dataSets.precipitationSum));
-	console.log("precipitationSum:", dataSets.precipitationSum);
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
