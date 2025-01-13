@@ -1,7 +1,9 @@
 import { Grid } from "@mui/material";
-import { Circle, LayerGroup, LayersControl, MapContainer, Marker, Polygon, Popup, Rectangle, TileLayer } from "react-leaflet";
+import { Circle, LayerGroup, LayersControl, MapContainer, Marker, Polygon, Popup, Rectangle, TileLayer, GeoJSON } from "react-leaflet";
 
 import colors from "../_colors.scss";
+
+import MinimapControl from "./Minimap.js"; // Add this import
 
 const urls = {
 	normal: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
@@ -28,6 +30,8 @@ const Plot = ({
 	rectangles = [],
 	polygons = [],
 	groups = [],
+	geodata = [],
+	showMinimap = true, // Add this prop
 }) => (
 	<Grid
 		item
@@ -50,6 +54,14 @@ const Plot = ({
 					key={index}
 					url={urls[layer]}
 					attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+				/>
+			))}
+			{geodata.map((geo, index) => (
+				<GeoJSON
+					key={index}
+					data={geo.data}
+					style={geo.style}
+					onEachFeature={geo.action}
 				/>
 			))}
 			{markers.filter((marker) => !marker.hiddable).map((marker, index) => (
@@ -144,7 +156,7 @@ const Plot = ({
 					))}
 				</LayerGroup>
 			))}
-			<LayersControl position="topright">
+			<LayersControl position="bottomright">
 				{Object.keys(layers).filter((layer) => layers[layer].show && layers[layer].hiddable).map((layer, index) => (
 					<LayersControl.BaseLayer key={index} name={layers[layer].name} checked={layers[layer].defaultChecked}>
 						<TileLayer
@@ -193,9 +205,9 @@ const Plot = ({
 				))}
 			</LayersControl>
 			{groups.length > 0 && (
-				<LayersControl position="topright">
+				<LayersControl position="bottomright">
 					{groups.filter((group) => group.hiddable).map((group, index) => (
-						<LayersControl.BaseLayer
+						<LayersControl.Overlay
 							key={index}
 							name={group.name}
 							checked={group.defaultChecked}
@@ -246,12 +258,12 @@ const Plot = ({
 									/>
 								))}
 							</LayerGroup>
-						</LayersControl.BaseLayer>
+						</LayersControl.Overlay>
 					))}
 				</LayersControl>
 			)}
 			{markers.length > 0 && (
-				<LayersControl position="topright">
+				<LayersControl position="bottomright">
 					{markers.filter((marker) => marker.hiddable).map((marker, index) => (
 						<LayersControl.Overlay key={index} name={marker.name} checked={marker.defaultChecked}>
 							<Marker
@@ -268,6 +280,8 @@ const Plot = ({
 					))}
 				</LayersControl>
 			)}
+			{/* Add Minimap control */}
+			{showMinimap && <MinimapControl position="topright" zoom={3} center={center} />}
 		</MapContainer>
 	</Grid>
 );
