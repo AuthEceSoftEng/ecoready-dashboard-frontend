@@ -7,7 +7,7 @@ import Dropdown from "../components/Dropdown.js";
 import useInit from "../utils/screen-init.js";
 import DatePicker from "../components/DatePicker.js";
 import ecoReadyMasuriaConfigs, { organization } from "../config/EcoReadyMasuriaConfig.js";
-import { calculateDates, getCustomDateTime } from "../utils/data-handling-functions.js";
+import { calculateDates, getCustomDateTime, findKeyByText } from "../utils/data-handling-functions.js";
 import { monthNames } from "../utils/useful-constants.js";
 import { cardFooter, DataWarning, LoadingIndicator } from "../utils/rendering-items.js";
 
@@ -20,7 +20,7 @@ const REGIONS = [
 
 const EcoReadyMasuria = () => {
 	const [year, setYear] = useState("2014");
-	const [stationName, setStationName] = useState(REGIONS[0].value);
+	const [stationName, setStationName] = useState(REGIONS[0].text);
 
 	const customDate = useMemo(() => getCustomDateTime(2006, 1), []);
 	console.log("Custom Date", customDate);
@@ -30,15 +30,16 @@ const EcoReadyMasuria = () => {
 	}, []);
 
 	// Memoize the date calculations and fetchConfigs to reduce re-calculations
-	const { month, currentDate } = useMemo(
+	const { month } = useMemo(
 		() => calculateDates(new Date(year, 0, 2)),
 		[year],
 	);
-	console.log("currentDate", currentDate);
 
+	const stationNameKey = findKeyByText(REGIONS, stationName);
+	console.log("Station Name Key:", stationNameKey);
 	const fetchConfigs = useMemo(
-		() => (stationName && year ? ecoReadyMasuriaConfigs(stationName, year) : null),
-		[stationName, year],
+		() => (stationNameKey && year ? ecoReadyMasuriaConfigs(stationNameKey, year) : null),
+		[stationNameKey, year],
 	);
 
 	const { state } = useInit(organization, fetchConfigs);

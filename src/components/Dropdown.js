@@ -159,7 +159,7 @@ const Dropdown = ({
 			onChange={onChange}
 		>
 			{items.map((it, index) => (
-				<MenuItem key={it.value || index} value={it.value}>{it.text}</MenuItem>
+				<MenuItem key={it.value || index} value={it.text}>{it.text}</MenuItem>
 			))}
 		</Select>
 	);
