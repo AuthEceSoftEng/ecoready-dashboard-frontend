@@ -37,13 +37,11 @@ const THALLA = () => {
 	const dropdownContent = useMemo(() => [
 		{
 			id: "region",
+			items: REGIONS,
 			size: "small",
 			width: "170px",
 			height: "40px",
 			color: "primary",
-			label: "Regions",
-			items: REGIONS,
-			defaultValue: "Amfissa",
 			onChange: (event) => {
 				setRegion(event.target.value);
 			},
@@ -102,7 +100,7 @@ const THALLA = () => {
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
-			<StickyBand dropdownContent={dropdownContent} value={region} formRef={formRefDate} formContent={formContentDate} />
+			<StickyBand dropdownContent={dropdownContent} value={[region]} formRef={formRefDate} formContent={formContentDate} />
 			{isValidDateRange ? (
 				<>
 					<Grid item xs={12} md={12} alignItems="center" flexDirection="column">
