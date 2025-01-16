@@ -40,14 +40,36 @@ const useInit = (organization, fetchConfigs) => {
 		console.log("Has issues:", hasIssues);
 		console.log("Promise status:", promiseStatus);
 
+		// Map through each response and dispatch individually
+		for (const [index, item] of promiseStatus.entries()) {
+			const plotId = fetchConfigs[index].plotId;
+			if (hasIssues) {
+				dispatch({
+					type: "FETCH_WARNING",
+					payload: {
+						plotId,
+						response: item.response,
+					},
+					warning: "Some plots may be empty due to no matching data",
+				});
+			} else {
+				dispatch({
+					type: "FETCH_SUCCESS",
+					payload: {
+						plotId,
+						response: item.response,
+					},
+				});
+			}
+		}
+
+		// Show appropriate snackbar message
 		if (hasIssues) {
-			dispatch({ type: "FETCH_WARNING", payload: promiseStatus });
 			refs.current.warning("Some plots may be empty due to no matching data");
 		} else {
-			dispatch({ type: "FETCH_SUCCESS", payload: promiseStatus });
 			refs.current.success("All data fetched successfully");
 		}
-	}, []);
+	}, [fetchConfigs]);
 
 	const updateData = useCallback(async () => {
 		try {
