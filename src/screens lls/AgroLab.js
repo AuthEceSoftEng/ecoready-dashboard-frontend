@@ -7,13 +7,16 @@ import Form from "../components/Form.js";
 import useInit from "../utils/screen-init.js";
 import agroConfigs, { organization } from "../config/AgroConfig.js";
 import colors from "../_colors.scss";
-import { sumByKey, groupByKey, getMaxValuesByProperty, getSumValuesByProperty, calculateDates } from "../utils/data-handling-functions.js";
+import { sumByKey, groupByKey, getMaxValuesByProperty, getSumValuesByProperty, getCustomDateTime, calculateDates } from "../utils/data-handling-functions.js";
 import { monthNames } from "../utils/useful-constants.js";
 import { cardFooter, LoadingIndicator } from "../utils/rendering-items.js";
 
 const AgroLab = () => {
-	// Memoize the date calculations and fetchConfigs to reduce re-calculations
-	const { year, month, currentDate, formattedBeginningOfMonth } = useMemo(calculateDates, []);
+	const customDate = useMemo(() => getCustomDateTime(2024, 9), []);
+	const { year, month, currentDate, formattedBeginningOfMonth } = useMemo(
+		() => calculateDates(customDate),
+		[customDate],
+	);
 
 	const fetchConfigs = useMemo(
 		() => agroConfigs(formattedBeginningOfMonth, currentDate),
@@ -21,7 +24,7 @@ const AgroLab = () => {
 	);
 
 	const { state } = useInit(organization, fetchConfigs);
-	const { isLoading, dataSets } = state;
+	const { isLoading, dataSets, minutesAgo } = state;
 
 	const formRef = useRef();
 	const formContent = useMemo(() => [
@@ -127,7 +130,7 @@ const AgroLab = () => {
 
 	const renderCard = (card, index) => (
 		<Grid key={index} item xs={12} md={4} alignItems="center" flexDirection="column">
-			<Card title={card.title} footer={cardFooter({ minutesAgo: state.minutesAgo })}>
+			<Card title={card.title} footer={cardFooter({ minutesAgo })}>
 				<Typography variant="h4" component="h4" align="center" sx={{ fontWeight: "bold" }}>
 					{card.value}
 					<Typography variant="body2" component="p" sx={{ fontSize: "0.6em" }}>
@@ -142,7 +145,7 @@ const AgroLab = () => {
 
 	const renderPlot = (plot, index) => (
 		<Grid key={index} item xs={12} md={4} alignItems="center" flexDirection="column" mt={2}>
-			<Card title={plot.title} footer={cardFooter({ minutesAgo: state.minutesAgo })}>
+			<Card title={plot.title} footer={cardFooter({ minutesAgo })}>
 				<Plot
 					scrollZoom
 					data={plot.data}
@@ -171,7 +174,7 @@ const AgroLab = () => {
 					{
 						title: "Current Month's Irrigation",
 						value: `${monthIrrigation} Litres`,
-						subtitle: monthNames[month - 1].text,
+						subtitle: monthNames[month].text,
 						percentage: "10%",
 						color: colors.error,
 					},
@@ -232,7 +235,7 @@ const AgroLab = () => {
 			{isLoading ? (<LoadingIndicator />
 			) : (
 				<Grid item xs={12} md={12} mt={2}>
-					<Card title="Annual Yield Per Field" footer={cardFooter({ minutesAgo: state.minutesAgo })}>
+					<Card title="Annual Yield Per Field" footer={cardFooter({ minutesAgo })}>
 						<Plot
 							showLegend
 							scrollZoom
@@ -328,7 +331,7 @@ const AgroLab = () => {
 					},
 				].map((plot, index) => (
 					<Grid key={index} item xs={12} sm={12} md={6} mt={2}>
-						<Card title={plot.title} footer={cardFooter({ minutesAgo: state.minutesAgo })}>
+						<Card title={plot.title} footer={cardFooter({ minutesAgo })}>
 							<Grid container flexDirection="row" sx={{ position: "relative", width: "100%" }}>
 								<Grid item sx={{ position: "relative", width: "75%", zIndex: 1 }}>
 									<Plot
@@ -353,7 +356,7 @@ const AgroLab = () => {
 			{isLoading ? (<LoadingIndicator />
 			) : (
 				<Grid item xs={12} md={12} mt={2}>
-					<Card title="Soil Quality" footer={cardFooter({ minutesAgo: state.minutesAgo })}>
+					<Card title="Soil Quality" footer={cardFooter({ minutesAgo })}>
 						{groupedSoilQuality?.field1 && (
 							<Plot
 								scrollZoom
