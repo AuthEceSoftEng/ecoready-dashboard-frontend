@@ -39,6 +39,7 @@ const Plot = ({
 	height = "100%",
 	background = "white",
 	polarRange = [0, 100],
+	barmode = null,
 	xaxis = {},
 	yaxis = {},
 }) => {
@@ -103,6 +104,7 @@ const Plot = ({
 				yaxis: {
 					...yaxis,
 				},
+				barmode,
 				paper_bgcolor: colors?.[background] || background,
 				plot_bgcolor: colors?.[background] || background,
 				margin: { t: title ? 60 : 40, l: 40, b: 40, ...(!showLegend && { r: 40 }) },
