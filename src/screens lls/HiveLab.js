@@ -7,12 +7,16 @@ import Plot from "../components/Plot.js";
 import useInit from "../utils/screen-init.js";
 import hiveConfigs, { organization } from "../config/HiveConfig.js";
 import colors from "../_colors.scss";
-import { sumByKey, calculateDates } from "../utils/data-handling-functions.js";
+import { sumByKey, getCustomDateTime, calculateDates } from "../utils/data-handling-functions.js";
 import { monthNames } from "../utils/useful-constants.js";
 import { cardFooter } from "../utils/rendering-items.js";
 
 const HiveLab = () => {
-	const { year, month, currentDate, formattedBeginningOfMonth } = useMemo(calculateDates, []);
+	const customDate = useMemo(() => getCustomDateTime(2024, 9), []);
+	const { year, month, currentDate, formattedBeginningOfMonth } = useMemo(
+		() => calculateDates(customDate),
+		[customDate],
+	);
 
 	const fetchConfigs = useMemo(
 		() => hiveConfigs(formattedBeginningOfMonth, currentDate),
@@ -20,14 +24,15 @@ const HiveLab = () => {
 	);
 
 	const { state } = useInit(organization, fetchConfigs);
+	const { isLoading, dataSets, minutesAgo } = state;
 
 	const annualYield = useMemo(() => (
-		state.dataSets.honeyYield ? state.dataSets.honeyYield.reduce((sum, item) => sum + item.honey_yield, 0).toFixed(2) : "N/A"
-	), [state.dataSets.honeyYield]);
+		dataSets.honeyYield ? dataSets.honeyYield.reduce((sum, item) => sum + item.honey_yield, 0).toFixed(2) : "N/A"
+	), [dataSets.honeyYield]);
 
 	const sumsByHive = useMemo(() => (
-		state.dataSets.honeyYield ? sumByKey(state.dataSets.honeyYield, "key", "honey_yield") : {}
-	), [state.dataSets.honeyYield]);
+		dataSets.honeyYield ? sumByKey(dataSets.honeyYield, "key", "honey_yield") : {}
+	), [dataSets.honeyYield]);
 
 	const percentages = useMemo(() => {
 		if (annualYield === "N/A") return [];
@@ -39,15 +44,15 @@ const HiveLab = () => {
 	}, [annualYield, sumsByHive]);
 
 	const bees = useMemo(() => (
-		state.dataSets.beeCount ? state.dataSets.beeCount.reduce((sum, item) => sum + item.avg_bee_count, 0).toFixed(2) : "N/A"
-	), [state.dataSets.beeCount]);
+		dataSets.beeCount ? dataSets.beeCount.reduce((sum, item) => sum + item.avg_bee_count, 0).toFixed(2) : "N/A"
+	), [dataSets.beeCount]);
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2} sx={{ flexGrow: 1, flexBasis: "100%", flexShrink: 0 }}>
 			<Grid item xs={12}>
 				<Card
 					title="Annual Honey Yield Distribution"
-					footer={cardFooter({ minutesAgo: state.minutesAgo })}
+					footer={cardFooter({ minutesAgo })}
 				>
 					<Plot
 						showLegend
@@ -70,15 +75,15 @@ const HiveLab = () => {
 					change: "4%",
 					changeText: `decrease since ${year - 1}`,
 					color: colors.error,
-					footer: cardFooter({ minutesAgo: state.minutesAgo }),
+					footer: cardFooter({ minutesAgo }),
 				},
 				{
 					title: "Annual Costs of Production",
 					value: `${(Math.random() * 5 + 3).toFixed(2)}k $`,
 					change: "5%",
-					changeText: `decrease since last ${monthNames[month - 1].text}`,
+					changeText: `decrease since last ${monthNames[month].text}`,
 					color: colors.secondary,
-					footer: cardFooter({ minutesAgo: state.minutesAgo }),
+					footer: cardFooter({ minutesAgo }),
 				},
 				{
 					title: "Current Bee Count Estimation",
@@ -86,7 +91,7 @@ const HiveLab = () => {
 					change: "8%",
 					changeText: `increase since ${year - 1}`,
 					color: "goldenrod",
-					footer: cardFooter({ minutesAgo: state.minutesAgo }),
+					footer: cardFooter({ minutesAgo }),
 				},
 			].map((card, index) => (
 				<Grid key={index} item xs={12} md={4} alignItems="center" flexDirection="column">
@@ -103,15 +108,15 @@ const HiveLab = () => {
 				</Grid>
 			))}
 			<Grid item xs={12}>
-				<Card title="Honey Yield per Harvest" footer={cardFooter({ minutesAgo: state.minutesAgo })}>
+				<Card title="Honey Yield per Harvest" footer={cardFooter({ minutesAgo })}>
 					<Plot
 						scrollZoom
 						data={["hive1", "hive2", "hive3", "hive4"].map((hive, index) => ({
-							x: state.dataSets.yieldDistribution
-								? state.dataSets.yieldDistribution.map((item) => item.interval_start)
+							x: dataSets.yieldDistribution
+								? dataSets.yieldDistribution.map((item) => item.interval_start)
 								: [],
-							y: state.dataSets.yieldDistribution
-								? state.dataSets.yieldDistribution.filter((item) => item.key === hive).map((item) => item.sum_honey_yield)
+							y: dataSets.yieldDistribution
+								? dataSets.yieldDistribution.filter((item) => item.key === hive).map((item) => item.sum_honey_yield)
 								: [],
 							type: "bar",
 							title: `Hive ${index + 1}`,
@@ -119,8 +124,8 @@ const HiveLab = () => {
 						}))}
 						title="Amount of Honey per Hive (Kg)"
 						xaxis={{
-							tickvals: state.dataSets.yieldDistribution
-								? state.dataSets.yieldDistribution.map((item) => item.interval_start)
+							tickvals: dataSets.yieldDistribution
+								? dataSets.yieldDistribution.map((item) => item.interval_start)
 								: [],
 						}}
 						displayBar={false}
@@ -133,10 +138,10 @@ const HiveLab = () => {
 					title: "Average Area Coverage",
 					data: [
 						{
-							x: Array.from({ length: state.dataSets.coverage
-								? state.dataSets.coverage.length : 0 }, (_, i) => i + 1),
-							y: state.dataSets.coverage
-								? state.dataSets.coverage
+							x: Array.from({ length: dataSets.coverage
+								? dataSets.coverage.length : 0 }, (_, i) => i + 1),
+							y: dataSets.coverage
+								? dataSets.coverage
 									.map((item) => item.sum_area_coverage) : [],
 							type: "bar",
 							color: "goldenrod",
@@ -148,9 +153,9 @@ const HiveLab = () => {
 				{
 					title: "Activity Levels",
 					data: ["hive1", "hive2", "hive3", "hive4"].map((hive, index) => ({
-						x: Array.from({ length: state.dataSets.coverage ? state.dataSets.coverage.length : 0 }, (_, i) => i + 1),
-						y: state.dataSets.activity
-							? state.dataSets.activity.filter((item) => item.key === hive).map((item) => item.avg_activity_level)
+						x: Array.from({ length: dataSets.coverage ? dataSets.coverage.length : 0 }, (_, i) => i + 1),
+						y: dataSets.activity
+							? dataSets.activity.filter((item) => item.key === hive).map((item) => item.avg_activity_level)
 							: [],
 						type: "scatter",
 						title: `Hive ${index + 1}`,
@@ -161,7 +166,7 @@ const HiveLab = () => {
 				},
 			].map((plot, index) => (
 				<Grid key={index} item xs={12} md={6}>
-					<Card title={plot.title} footer={cardFooter({ minutesAgo: state.minutesAgo })}>
+					<Card title={plot.title} footer={cardFooter({ minutesAgo })}>
 						<Plot
 							scrollZoom
 							data={plot.data}
@@ -170,7 +175,7 @@ const HiveLab = () => {
 							height="400px"
 							xaxis={{
 								title: "Date",
-								tickvals: Array.from({ length: state.dataSets.coverage ? state.dataSets.coverage.length : 0 }, (_, i) => i + 1),
+								tickvals: Array.from({ length: dataSets.coverage ? dataSets.coverage.length : 0 }, (_, i) => i + 1),
 								tickangle: 0,
 								tickmode: "linear",
 								tick0: 1,
