@@ -211,3 +211,12 @@ export const calculateDifferenceBetweenDates = (startDate, endDate) => {
 	return { differenceInDays, differenceInHours };
 };
 
+export const getProductCollections = (products, productValue) => {
+	const product = products.find((p) => p.value === productValue);
+	return product?.collections || [];
+};
+
+export const findKeyByText = (array, text) => {
+	const found = array.find((item) => item.text === text);
+	return found?.value || text;
+};

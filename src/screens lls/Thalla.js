@@ -5,7 +5,7 @@ import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
 import useInit from "../utils/screen-init.js";
 import { thallaConfigs, organization } from "../config/ThallaConfig.js";
-import { calculateDates, calculateDifferenceBetweenDates, debounce } from "../utils/data-handling-functions.js";
+import { calculateDates, calculateDifferenceBetweenDates, debounce, findKeyByText } from "../utils/data-handling-functions.js";
 import { cardFooter, LoadingIndicator, StickyBand, DataWarning } from "../utils/rendering-items.js";
 
 const REGIONS = [
@@ -19,7 +19,7 @@ const REGIONS = [
 const THALLA = () => {
 	const [startDate, setStartDate] = useState("2024-06-01");
 	const [endDate, setEndDate] = useState("2024-06-30");
-	const [region, setRegion] = useState("Amfissa");
+	const [region, setRegion] = useState(REGIONS[0].text);
 
 	const debouncedSetDate = useMemo(
 		() => debounce((date, setter) => {
@@ -75,9 +75,10 @@ const THALLA = () => {
 
 	const { differenceInDays } = calculateDifferenceBetweenDates(startDate, endDate);
 
+	const regionKey = findKeyByText(REGIONS, region);
 	const fetchConfigs = useMemo(
-		() => (isValidDateRange && region ? thallaConfigs(region, startDate, endDate, differenceInDays) : null),
-		[isValidDateRange, region, startDate, endDate, differenceInDays],
+		() => (isValidDateRange && regionKey ? thallaConfigs(regionKey, startDate, endDate, differenceInDays) : null),
+		[isValidDateRange, regionKey, startDate, endDate, differenceInDays],
 	);
 
 	const { state } = useInit(organization, fetchConfigs);

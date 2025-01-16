@@ -7,7 +7,7 @@ import Dropdown from "../components/Dropdown.js";
 import useInit from "../utils/screen-init.js";
 import DatePicker from "../components/DatePicker.js";
 import esappinConfigs, { organization } from "../config/EsappinConfig.js";
-import { getCustomDateTime, debounce } from "../utils/data-handling-functions.js";
+import { getCustomDateTime, debounce, findKeyByText } from "../utils/data-handling-functions.js";
 import { monthNames } from "../utils/useful-constants.js";
 import { cardFooter, LoadingIndicator, StickyBand, DataWarning } from "../utils/rendering-items.js";
 
@@ -59,15 +59,16 @@ const Esappin = () => {
 
 	const year = customDate.getFullYear();
 
-	const [product, setProduct] = useState("Rapsfeld B1");
+	const [product, setProduct] = useState(PRODUCTS[0].text);
 	const isValidDateRange = useMemo(
 		() => dateRange.startDate && dateRange.endDate && new Date(dateRange.startDate) <= new Date(dateRange.endDate),
 		[dateRange.startDate, dateRange.endDate],
 	);
 
+	const productKey = findKeyByText(PRODUCTS, product);
 	const fetchConfigs = useMemo(
-		() => (isValidDateRange && product ? esappinConfigs(product, dateRange.startDate, dateRange.endDate) : null),
-		[isValidDateRange, product, dateRange.startDate, dateRange.endDate],
+		() => (isValidDateRange && productKey ? esappinConfigs(productKey, dateRange.startDate, dateRange.endDate) : null),
+		[isValidDateRange, productKey, dateRange.startDate, dateRange.endDate],
 	);
 
 	const dropdownContent = [{
