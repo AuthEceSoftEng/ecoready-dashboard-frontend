@@ -69,6 +69,7 @@ export const StickyBand = ({ dropdownContent = [], value = [], formRef, formCont
 			>
 				<Dropdown
 					id={dropdown.id}
+					multiple={dropdown.multiple}
 					value={value[index]}
 					placeholder={dropdown.label}
 					items={dropdown.items}

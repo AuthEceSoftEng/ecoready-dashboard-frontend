@@ -61,6 +61,7 @@ import THALLA from "./screens lls/Thalla.js";
 import Plots from "./examples/Plots.js";
 import Map from "./screens/Map.js";
 import Mapexamp from "./examples/Map.js";
+import ProductsOverview from "./screens/Products.js";
 
 const {
 	NODE_ENV,
@@ -138,6 +139,7 @@ const App = () => {
 								<Route path="users" element={<Protected c={<Users />} />} />
 								<Route path="plots" element={<Protected c={<Plots />} />} />
 								<Route path="map" element={<Protected c={<Map />} />} />
+								<Route path="products_overview" element={<Protected c={<ProductsOverview />} />} />
 								<Route path="mapexamp" element={<Protected c={<Mapexamp />} />} />
 								{/* Living Labs */}
 								<Route path="agrolab" element={<Protected c={<AgroLab />} />} />
