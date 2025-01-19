@@ -47,12 +47,6 @@ const esappinConfigs = (product, startDate, endDate) => [{
 		interval: "every_1_months",
 		start_time: startDate,
 		end_time: endDate,
-		// filters: [{
-		// 	property_name: "key",
-		// 	operator: "eq",
-		// 	property_value: product,
-		// }],
-		// group_by: "key",
 	}),
 	plotId: "precipitationSum",
 },

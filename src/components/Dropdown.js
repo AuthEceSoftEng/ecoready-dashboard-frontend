@@ -1,6 +1,8 @@
 import { MenuItem, Select } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 
+import Checkbox from "./Checkbox.js";
+
 const useStyles = makeStyles((theme) => ({
 	primary_filled: {
 		backgroundColor: theme.palette.primary.main,
@@ -136,6 +138,7 @@ const Dropdown = ({
 	height = "",
 	items = [],
 	value,
+	multiple = false,
 	onChange,
 }) => {
 	const classes = useStyles();
@@ -143,6 +146,7 @@ const Dropdown = ({
 	return (
 		<Select
 			id={id}
+			multiple={multiple}
 			value={value}
 			displayEmpty={showPlaceholder}
 			className={classes[`${background}_${(filled ? "filled" : "outlined")}`]}
@@ -155,11 +159,28 @@ const Dropdown = ({
 				iconFilled: classes[`${background}_${(filled ? "filled" : "outlined")}`],
 			}}
 			sx={{ ">.MuiOutlinedInput-notchedOutline": { border: (filled) ? "none" : "1px solid", borderColor: `${background}.main` } }}
-			renderValue={(selected) => (selected || placeholder)}
+			renderValue={(selected) => {
+				if (!selected || (Array.isArray(selected) && selected.length === 0)) {
+					return placeholder;
+				}
+
+				return Array.isArray(selected) ? selected.join(", ") : selected;
+			}}
+			// renderValue={(selected) => (selected || placeholder)}
 			onChange={onChange}
 		>
 			{items.map((it, index) => (
-				<MenuItem key={it.value || index} value={it.text}>{it.text}</MenuItem>
+				<MenuItem key={it.value || index} value={it.text}>
+					{multiple && (
+						<Checkbox
+							id={index}
+							checked={Array.isArray(value) && value.includes(it.text)}
+							color={background}
+							size="small"
+						/>
+					)}
+					{it.text}
+				</MenuItem>
 			))}
 		</Select>
 	);

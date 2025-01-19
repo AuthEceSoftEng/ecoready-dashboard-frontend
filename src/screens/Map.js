@@ -1,11 +1,15 @@
 import { Grid } from "@mui/material";
-import { memo, useMemo, useState, useEffect } from "react";
+import { memo, useMemo, useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
 import colors from "../_colors.scss";
 import MapComponent, { getColor } from "../components/Map.js";
 import { SecondaryBackgroundButton } from "../components/Buttons.js";
-import { labs } from "../utils/useful-constants.js";
+import useInit from "../utils/screen-init.js";
+import { mapInfoConfigs, organization } from "../config/MapInfoConfig.js";
+import { LoadingIndicator, StickyBand } from "../utils/rendering-items.js";
+import { europeanCountries, products, labs } from "../utils/useful-constants.js";
+import { getCustomDateTime, calculateDates, calculateDifferenceBetweenDates, debounce, findKeyByText } from "../utils/data-handling-functions.js";
 
 // Extract popup component
 const PopupContent = memo(({ title, onClick }) => (
@@ -37,7 +41,7 @@ const createMarker = (lab, locationKey, index, onClick) => ({
 	/>,
 	name: locationKey ? `${lab.title} - ${index + 1}` : lab.title,
 	hiddable: true,
-	defaultChecked: false,
+	defaultChecked: true,
 });
 
 const onEachCountry = (feature, layer) => {
@@ -74,9 +78,110 @@ const onEachCountry = (feature, layer) => {
   `);
 };
 
+const customDate = getCustomDateTime(2024, 12);
+
 const Map = () => {
 	const navigate = useNavigate();
 	const [geoJsonData, setGeoJsonData] = useState(null);
+	const [startDate, setStartDate] = useState("2024-01-01");
+	const [endDate, setEndDate] = useState("2024-12-31");
+	const [filters, setFilters] = useState({
+		product: "Rice",
+		metric: "price",
+	});
+	const [isDataReady, setIsDataReady] = useState(false);
+
+	const debouncedSetDate = useMemo(
+		() => debounce((date, setter) => {
+			const { currentDate } = calculateDates(date);
+			setter(currentDate);
+		}, 0),
+		[],
+	);
+
+	const handleDateChange = useCallback((newValue, setter) => {
+		if (!newValue?.$d) return;
+		debouncedSetDate(newValue.$d, setter);
+	}, [debouncedSetDate]);
+
+	const dropdownValues = [filters.product];
+
+	const keys = useMemo(() => ({
+		product: findKeyByText(products, filters.product),
+	}), [filters.product]);
+
+	const formRefDate = useRef();
+
+	const formContentDate = useMemo(() => [
+		{
+			customType: "date-range",
+			id: "dateRange",
+			width: "170px",
+			type: "desktop",
+			label: "",
+			startValue: startDate,
+			startLabel: "Start date",
+			endValue: endDate,
+			endLabel: "End date",
+			background: "primary",
+			labelSize: 12,
+			onStartChange: (newValue) => handleDateChange(newValue, setStartDate),
+			onEndChange: (newValue) => handleDateChange(newValue, setEndDate),
+		},
+	], [endDate, handleDateChange, startDate]);
+
+	const dateMetrics = useMemo(() => {
+		const isValid = startDate && endDate && new Date(startDate) <= new Date(endDate);
+		return {
+			isValidDateRange: isValid,
+			...calculateDifferenceBetweenDates(startDate, endDate),
+		};
+	}, [startDate, endDate]);
+
+	const fetchConfigs = useMemo(
+		() => (dateMetrics.isValidDateRange && keys.product
+			? mapInfoConfigs(keys.country, keys.product, startDate, endDate, customDate, dateMetrics.differenceInDays) : null),
+		[dateMetrics.isValidDateRange, dateMetrics.differenceInDays, keys.product, keys.country, startDate, endDate],
+	);
+
+	const { state, dispatch } = useInit(organization, fetchConfigs);
+	const { isLoading, dataSets } = state;
+	console.log(dataSets);
+
+	const ricePrice = useMemo(() => dataSets?.periodPrices || [], [dataSets]);
+	const riceProduction1 = useMemo(() => dataSets?.riceProd1 || [], [dataSets]);
+	const riceProduction2 = useMemo(() => dataSets?.riceProd2 || [], [dataSets]);
+
+	const production = useMemo(() => riceProduction1.map((milledEntry) => {
+		// Find matching husk entry
+		const huskEntry = riceProduction2.find((h) => h.key === milledEntry.key);
+
+		return {
+			key: milledEntry.key,
+			timestamp: milledEntry.interval_start,
+			total_production: (
+				milledEntry.sum_milled_rice_equivalent_quantity
+								+ (huskEntry?.sum_rice_husk_quantity || 0)
+			),
+		};
+	}), [riceProduction1, riceProduction2]);
+
+	const dropdownContent = useMemo(() => ([
+		{
+			id: "product",
+			items: products,
+			onChange: (event) => {
+				dispatch({ type: "FETCH_START" }); // Add loading state
+				setFilters((prev) => ({ ...prev, product: event.target.value }));
+			},
+		},
+	].map((item) => ({
+		...item,
+		size: "small",
+		width: "170px",
+		height: "40px",
+		color: "primary",
+	}))), [dispatch]); // Add dispatch to dependencies
 
 	useEffect(() => {
 		// Load the GeoJSON file from the public directory
@@ -93,17 +198,98 @@ const Map = () => {
 			.catch((error) => console.error("Error loading GeoJSON:", error));
 	}, []);
 
-	// Create geodata for countries
-	const geodata = useMemo(() => (geoJsonData ? [{
-		data: geoJsonData,
-		style: (feature) => ({
-			color: colors.dark,
-			weight: 1,
-			fillColor: getColor(feature.properties.value || 0),
-			fillOpacity: 0.3,
-		}),
-		action: onEachCountry,
-	}] : []), [geoJsonData]);
+	// In the Map component, add this logic before creating geodata
+	const enhancedGeoJsonData = useMemo(() => {
+		if (!geoJsonData) return null;
+
+		return {
+			productionMap: {
+				...geoJsonData,
+				features: geoJsonData.features.map((feature) => {
+					const countryCode = europeanCountries.find(
+						(country) => country.text === feature.properties.name,
+					)?.value;
+					return {
+						...feature,
+						properties: {
+							...feature.properties,
+							value: production.find((p) => p.key === countryCode)?.total_production || 0,
+						},
+					};
+				}),
+			},
+			priceMap: {
+				...geoJsonData,
+				features: geoJsonData.features.map((feature) => {
+					const countryCode = europeanCountries.find(
+						(country) => country.text === feature.properties.name,
+					)?.value;
+					return {
+						...feature,
+						properties: {
+							...feature.properties,
+							value: ricePrice.find((p) => p.key === countryCode)?.avg_price || 0,
+						},
+					};
+				}),
+			},
+		};
+	}, [geoJsonData, ricePrice, production]);
+	console.log("Created Geodata:", enhancedGeoJsonData);
+
+	// Add effect to monitor data readiness
+	useEffect(() => {
+		if (enhancedGeoJsonData && ricePrice.length > 0 && production.length > 0) {
+			console.log("Data is ready:", {
+				enhancedGeoJsonData,
+				ricePrice: ricePrice.length,
+				production: production.length,
+			});
+			setIsDataReady(true);
+		}
+	}, [enhancedGeoJsonData, ricePrice, production]);
+
+	// Then modify the geodata creation:
+	const geodata = useMemo(() => (
+		isDataReady && enhancedGeoJsonData ? [
+			{
+				name: "Production",
+				data: enhancedGeoJsonData.productionMap,
+				range: [0, Math.max(...production
+					.filter((p) => p.key !== "EU")
+					.map((p) => p.total_production || 0))],
+				style: (feature) => ({
+					color: colors.dark,
+					weight: 1,
+					fillColor: getColor(feature.properties.value, [0, Math.max(...production
+						.filter((p) => p.key !== "EU")
+						.map((p) => p.total_production || 0))]),
+					fillOpacity: 0.3,
+				}),
+				action: onEachCountry,
+				hiddable: true,
+				defaultChecked: true,
+			},
+			{
+				name: "Price",
+				data: enhancedGeoJsonData.priceMap,
+				range: [0, Math.max(...ricePrice
+					.filter((p) => p.key !== "EU")
+					.map((p) => p.avg_price || 0))],
+				style: (feature) => ({
+					color: colors.dark,
+					weight: 1,
+					fillColor: getColor(feature.properties.value, [0, Math.max(...ricePrice
+						.filter((p) => p.key !== "EU")
+						.map((p) => p.avg_price || 0))]),
+					fillOpacity: 0.3,
+				}),
+				action: onEachCountry,
+				hiddable: true,
+				defaultChecked: false,
+			},
+
+		] : []), [isDataReady, enhancedGeoJsonData, production, ricePrice]);
 
 	// Create markers for labs with coordinates
 	const markers = useMemo(() => (
@@ -121,81 +307,40 @@ const Map = () => {
 			})
 	), [navigate]);
 
-	// // Group labs by region
-	// const groups = useMemo(() => {
-	// 	const labsByRegion = labs.reduce((acc, lab) => {
-	// 		if (lab.region && lab.coordinates) {
-	// 			if (!acc[lab.region]) acc[lab.region] = [];
-	// 			acc[lab.region].push(lab);
-	// 		}
-
-	// 		return acc;
-	// 	}, {});
-
-	// 	const createGroup = (name, labsList, defaultChecked = false) => ({
-	// 		hiddable: true,
-	// 		name,
-	// 		defaultChecked,
-	// 		shapes: {
-	// 			markers: labsList.flatMap((lab) => {
-	// 				const onClick = () => navigate(lab.path);
-
-	// 				if (typeof lab.coordinates === "object" && !Array.isArray(lab.coordinates)) {
-	// 					return Object.entries(lab.coordinates)
-	// 						.map(([key, index]) => createMarker(lab, key, index, onClick));
-	// 				}
-
-	// 				return [createMarker(lab, null, null, onClick)];
-	// 			}),
-	// 			circles: labsList.flatMap((lab) => regions
-	// 				.filter((r) => r.region === lab.region && r.center)
-	// 				.map((region) => ({
-	// 					center: region.center,
-	// 					radius: region.radius,
-	// 					fillColor: "#00426E",
-	// 					color: "transparent",
-	// 				}))),
-	// 			rectangles: [],
-	// 			polygons: labsList.flatMap((lab) => regions
-	// 				.filter((r) => r.region === lab.region && r.positions)
-	// 				.map((region) => ({
-	// 					positions: region.positions,
-	// 					fillColor: "#00426E",
-	// 					color: "transparent",
-	// 				}))),
-	// 		},
-	// 	});
-
-	// 	return [
-	// 		createGroup("All Labs", labs.filter((lab) => lab.coordinates), true),
-	// 		...Object.entries(labsByRegion)
-	// 			.map(([region, regionLabs]) => createGroup(region, regionLabs)),
-	// 	];
-	// }, [navigate]);
-
 	// Map configuration
 	const mapConfig = useMemo(() => ({
 		scrollWheelZoom: true,
 		zoom: 4,
 		center: [55.499_383, 28.527_665],
 		layers: {
-			topographical: {
-				show: true,
-				hiddable: true,
-				defaultChecked: true,
-				name: "Topographical Map",
-			},
 			physical: {
 				show: true,
 				hiddable: true,
-				defaultChecked: false,
+				defaultChecked: true,
 				name: "Physical Map",
+			},
+			topographical: {
+				show: true,
+				hiddable: true,
+				defaultChecked: false,
+				name: "Topographical Map",
 			},
 		},
 	}), []);
 
+	if (isLoading || !isDataReady) {
+		return <LoadingIndicator />;
+	}
+
 	return (
 		<Grid container width="100%" height="100%" display="flex" direction="row" justifyContent="space-around" spacing={2}>
+			<StickyBand
+				sticky={false}
+				dropdownContent={dropdownContent}
+				value={dropdownValues}
+				formRef={formRefDate}
+				formContent={formContentDate}
+			/>
 			<Grid item xs={12} height="100%">
 				<MapComponent {...mapConfig} geodata={geodata} markers={markers} />
 			</Grid>

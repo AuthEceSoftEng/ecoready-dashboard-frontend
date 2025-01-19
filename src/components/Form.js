@@ -168,7 +168,7 @@ const Form = forwardRef(({ disabled: dsb, content, validationSchema, onSubmit, o
 					{formContent.map((comp) => (
 						<div
 							key={comp.id}
-							style={{ width: "100%", display: "flex", justifyContent: "flex-end" }}
+							style={{ width: "100%", display: "flex", justifyContent: "center" }}
 						>
 							{comp.customType === "input"
 							&& (

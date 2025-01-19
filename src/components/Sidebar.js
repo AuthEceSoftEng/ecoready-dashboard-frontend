@@ -130,6 +130,22 @@ const Sidebar = ({ isSmall: sidebarIsSmall, onToggleSidebar }) => {
 		},
 		{
 			// icon: isselServicesIcon,
+			text: "General Info",
+			handler: () => {
+				handleServicesMenuClose();
+				navigate("/products_overview");
+			},
+		},
+		{
+			// icon: inspectionIcon,
+			text: "Map",
+			handler: () => {
+				handleServicesMenuClose();
+				navigate("/Map");
+			},
+		},
+		{
+			// icon: isselServicesIcon,
 			text: "Living Labs",
 			handler: (event) => {
 				handleServicesMenuClose();
@@ -140,15 +156,6 @@ const Sidebar = ({ isSmall: sidebarIsSmall, onToggleSidebar }) => {
 				handler: () => navigate(lab.path),
 			})),
 		},
-		{
-			// icon: inspectionIcon,
-			text: "Map",
-			handler: () => {
-				handleServicesMenuClose();
-				navigate("/Map");
-			},
-		},
-
 	];
 
 	const renderServicesMenu = (

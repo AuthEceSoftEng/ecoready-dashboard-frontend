@@ -104,7 +104,7 @@ const useInit = (organization, fetchConfigs) => {
 		};
 	}, [updateData, fetchConfigs]);
 
-	return { state };
+	return { state, dispatch };
 };
 
 export default useInit;
