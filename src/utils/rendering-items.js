@@ -38,7 +38,7 @@ export const LoadingIndicator = ({ message = "Loading data...", minHeight = "200
 	</Grid>
 );
 
-export const StickyBand = ({ dropdownContent = [], value = [], formRef, formContent }) => (
+export const StickyBand = ({ sticky = true, dropdownContent = [], value = [], formRef, formContent }) => (
 	<Grid
 		container
 		display="flex"
@@ -47,12 +47,12 @@ export const StickyBand = ({ dropdownContent = [], value = [], formRef, formCont
 		alignItems="flex-end"
 		mt={1}
 		sx={{
-			position: "sticky",
+			position: sticky ? "sticky" : "relative",
 			top: 0,
 			backgroundColor: "white",
 			zIndex: 1000,
-			minWidth: "100%", // Add minimum width
-			gap: "0.5rem", // Add half spacing between items
+			minWidth: "100%",
+			gap: "0.5rem",
 		}}
 	>
 		{dropdownContent.map((dropdown, index) => (
