@@ -5,13 +5,14 @@ import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
 import useInit from "../utils/screen-init.js";
 import { productsConfigs, organization } from "../config/ProductConfig.js";
-import { getCustomDateTime, calculateDates, calculateDifferenceBetweenDates, debounce, findKeyByText } from "../utils/data-handling-functions.js";
+import { getCustomDateTime, calculateDates, calculateDifferenceBetweenDates, debounce, findKeyByText, isValidArray } from "../utils/data-handling-functions.js";
 import { cardFooter, LoadingIndicator, StickyBand, DataWarning } from "../utils/rendering-items.js";
 import { monthNames, europeanCountries, products } from "../utils/useful-constants.js";
 // import { fetchCollections } from "../api/fetch-data.js";
 
 // const metrics = fetchCollections(organization, "rice");
 // console.log(metrics);
+const unit = "t";
 const customDate = getCustomDateTime(2024, 12);
 const { year, month } = calculateDates(customDate);
 console.log(year, month);
@@ -37,26 +38,6 @@ const ProductsScreen = () => {
 		if (!newValue?.$d) return;
 		debouncedSetDate(newValue.$d, setter);
 	}, [debouncedSetDate]);
-
-	const dropdownContent = useMemo(() => ([
-		{
-			id: "country",
-			items: europeanCountries,
-			// multiple: true,
-			onChange: (event) => setFilters((prev) => ({ ...prev, country: event.target.value })),
-		},
-		{
-			id: "product",
-			items: products,
-			onChange: (event) => setFilters((prev) => ({ ...prev, product: event.target.value })),
-		},
-	].map((item) => ({
-		...item,
-		size: "small",
-		width: "170px",
-		height: "40px",
-		color: "primary",
-	}))), []);
 
 	const dropdownValues = [[filters.country], filters.product];
 
@@ -94,47 +75,69 @@ const ProductsScreen = () => {
 	}, [startDate, endDate]);
 	// const { collections } = getProductCollections(countryKey, productKey);
 	const fetchConfigs = useMemo(
-		() => (dateMetrics.isValidDateRange && filters.product
+		() => (dateMetrics.isValidDateRange && keys.product
 			? productsConfigs(keys.country, keys.product, startDate, endDate, customDate, dateMetrics.differenceInDays) : null),
-		[dateMetrics.isValidDateRange, dateMetrics.differenceInDays, filters.product, keys.country, keys.product, startDate, endDate],
+		[dateMetrics.isValidDateRange, dateMetrics.differenceInDays, keys.product, keys.country, startDate, endDate],
 	);
+	console.log(keys.country);
 
-	const { state } = useInit(organization, fetchConfigs);
+	const { state, dispatch } = useInit(organization, fetchConfigs);
 	const { isLoading, dataSets, minutesAgo } = state;
 	console.log(dataSets);
-	const ricePrice = useMemo(() => dataSets?.metrics_rice_price || [], [dataSets]);
-	const riceProduction = useMemo(() => dataSets?.metrics_rice_production || [], [dataSets]);
-	const isValidPrice = useMemo(() => ricePrice.length > 0, [ricePrice]);
-	const sumProduction = useMemo(() => {
-		const milledRice = riceProduction[0]?.milled_rice_equivalent_quantity ?? 0;
-		const riceHusk = riceProduction[0]?.rice_husk_quantity ?? 0;
-		return milledRice + riceHusk;
-	}, [riceProduction]);
-	const unit = useMemo(() => ricePrice[0]?.unit || "", [ricePrice]);
-	// const metrics = useMemo(() => dataSets?.metrics || [], [dataSets]);
-	// const isValidData = useMemo(() => metrics.length > 0, [metrics]);
 
-	// // Pre-compute data transformations
-	// const chartData = useMemo(() => {
-	// 	if (!isValidData) return [];
-	// 	const timestamps = metrics.map((item) => item.timestamp);
-	// 	return {
-	// 		timestamps,
-	// 		maxTemp: metrics.map((item) => item.max_temperature),
-	// 		meanTemp: metrics.map((item) => item.mean_temperature),
-	// 		minTemp: metrics.map((item) => item.min_temperature),
-	// 		windSpeed: metrics.map((item) => item.wind_speed),
-	// 		rain: metrics.map((item) => item.rain),
-	// 	};
-	// }, [metrics, isValidData]);
+	const ricePrice = useMemo(() => dataSets?.pricesTimeline || [], [dataSets]);
+	const isValidPrice = useMemo(() => ricePrice.length > 0, [ricePrice]);
+	console.log(isValidPrice);
+	const riceProduction1 = useMemo(() => dataSets?.riceProd1 || [], [dataSets]);
+	const riceProduction2 = useMemo(() => dataSets?.riceProd2 || [], [dataSets]);
+
+	const production = useMemo(() => riceProduction1.map((milledEntry) => {
+		// Find matching husk entry
+		const huskEntry = riceProduction2.find((h) => h.key === milledEntry.key);
+
+		return {
+			key: milledEntry.key,
+			timestamp: milledEntry.interval_start,
+			total_production: (
+				milledEntry.sum_milled_rice_equivalent_quantity
+								+ (huskEntry?.sum_rice_husk_quantity || 0)
+			),
+		};
+	}), [riceProduction1, riceProduction2]);
+
+	// const unit = useMemo(() => ricePrice[0]?.unit || "", [ricePrice]);
+	const dropdownContent = useMemo(() => ([
+		{
+			id: "country",
+			items: europeanCountries,
+			onChange: (event) => {
+				dispatch({ type: "FETCH_START" }); // Add loading state
+				setFilters((prev) => ({ ...prev, country: event.target.value }));
+			},
+		},
+		{
+			id: "product",
+			items: products,
+			onChange: (event) => {
+				dispatch({ type: "FETCH_START" }); // Add loading state
+				setFilters((prev) => ({ ...prev, product: event.target.value }));
+			},
+		},
+	].map((item) => ({
+		...item,
+		size: "small",
+		width: "170px",
+		height: "40px",
+		color: "primary",
+	}))), [dispatch]);
 
 	const timelineOverview = useMemo(() => [
 		{
-			title: "Rice's Price Evolution",
+			title: `${filters.product}'s Price Timeline`,
 			data: [
 				{
-					x: ricePrice.map((item) => item.timestamp) ?? [],
-					y: ricePrice.map((item) => item.price) ?? [],
+					x: isValidPrice ? ricePrice.map((item) => item.interval_start) : [],
+					y: isValidPrice ? ricePrice.map((item) => item.avg_price) : [],
 					type: "scatter",
 					mode: "lines",
 					color: "secondary",
@@ -144,30 +147,45 @@ const ProductsScreen = () => {
 			xaxis: { title: "Date" },
 			yaxis: { title: `Average Price per ${unit}` },
 		},
-	], [ricePrice, unit]);
+	], [filters.product, isValidPrice, ricePrice]);
 
-	const generalOverview = useMemo(() => [
+	const europeOverview = useMemo(() => [
 		{
 			data: {
-				value: dataSets?.stats_prices_current?.[0]?.avg_price ?? null,
-				subtitle: `${monthNames[month].text}'s Average Price`,
+				value: production.find(
+					(country) => country.key === "EU",
+				)?.total_production ?? null,
+				subtitle: "EU's Annual Production",
 			},
 			color: "third",
-			suffix: `€/${unit}`,
-			shape: "angular",
+			suffix: ` ${unit}s`,
+			shape: "bullet",
 		},
 		{
-			data: {
-				value: dataSets?.stats_prices_historical?.[0]?.avg_price ?? null,
-				subtitle: `${year}'s Average Price`,
-			},
-			color: "third",
-			suffix: `€/${unit}`,
-			shape: "angular",
+			data: isValidArray(production)
+				? [
+					{
+						labels: production.filter(
+							(item) => item.key !== "EU",
+						).map((item) => {
+							const countryName = europeanCountries.find((country) => country.value === item.key);
+							return countryName ? countryName.text : item.key;
+						}),
+						values: production.filter(
+							(item) => item.key !== "EU",
+						).map((item) => item.total_production),
+						type: "pie",
+					},
+				] : [{ labels: [], values: [], type: "pie" }],
 		},
+	], [production]);
+
+	const countryOverview = useMemo(() => [
 		{
 			data: {
-				value: sumProduction,
+				value: production.find(
+					(stat) => stat.key === keys.country,
+				)?.total_production ?? null,
 				subtitle: "Annual Production",
 			},
 			range: [0, 1_000_000],
@@ -175,17 +193,25 @@ const ProductsScreen = () => {
 			suffix: ` ${unit}s`,
 			shape: "angular",
 		},
-		// {
-		// 	data: {
-		// 		value: dataSets?.meanSolarRadiation?.[0]?.avg_solar_radiation ?? null,
-		// 		subtitle: "Average Solar Radiation",
-		// 	},
-		// 	range: [0, 20],
-		// 	color: "goldenrod",
-		// 	suffix: "W/m²",
-		// 	shape: "bullet",
-		// },
-	], [dataSets?.stats_prices_current, dataSets?.stats_prices_historical, sumProduction, unit]);
+		{
+			data: {
+				value: dataSets?.periodPrices?.[0]?.avg_price ?? null,
+				subtitle: "Specified Period's Average Price",
+			},
+			color: "third",
+			suffix: `€/${unit}`,
+			shape: "angular",
+		},
+		{
+			data: {
+				value: dataSets?.monthlyPrices?.[0]?.avg_price ?? null,
+				subtitle: `${monthNames[month].text}'s Average Price`,
+			},
+			color: "third",
+			suffix: `€/${unit}`,
+			shape: "angular",
+		},
+	], [dataSets?.monthlyPrices, dataSets?.periodPrices, keys.country, production]);
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
@@ -198,12 +224,72 @@ const ProductsScreen = () => {
 			{dateMetrics.isValidDateRange ? (
 				<>
 					<Grid item xs={12} md={12} alignItems="center" flexDirection="column">
-						<Card title="General Overview" footer={cardFooter({ minutesAgo })}>
+						<Card title="EU's Annual Overview" footer={cardFooter({ minutesAgo })}>
+							{isLoading ? (
+								<LoadingIndicator />
+							) : (
+								<Grid container display="flex" direction="column" justifyContent="space-evenly" padding={0} spacing={1}>
+									<Grid
+										item
+										xs={12}
+										sm={12}
+										md={europeOverview[0].shape === "bullet" ? 6 : 4}
+										justifyContent="center"
+										alignItems="center"
+									>
+										{europeOverview[0].data.value ? (
+											<Plot
+												showLegend
+												scrollZoom
+												height={europeOverview[0].shape === "bullet" ? "120px" : "200px"}
+												data={[
+													{
+														type: "indicator",
+														mode: "gauge+number",
+														value: europeOverview[0].data.value,
+														range: europeOverview[0].range ?? [0, 5_000_000],
+														color: europeOverview[0].color,
+														shape: europeOverview[0].shape,
+														indicator: "primary",
+														textColor: "primary",
+														suffix: europeOverview[0].suffix,
+													},
+												]}
+												displayBar={false}
+												title={europeOverview[0].data?.subtitle}
+											/>
+										) : (<DataWarning />)}
+									</Grid>
+									<Grid
+										item
+										xs={12}
+										sm={12}
+										md={4}
+										justifyContent="center"
+										alignItems="center"
+									>
+										{europeOverview[1].data.values ? (
+											<Plot
+												showLegend
+												scrollZoom
+												height="400px"
+												data={europeOverview[1].data}
+												displayBar={false}
+												title="Annual Production by Country"
+											/>
+										) : (<DataWarning />)}
+									</Grid>
+								</Grid>
+							)}
+						</Card>
+					</Grid>
+					<Grid item xs={12} md={12} alignItems="center" flexDirection="column">
+						<Card title={`${filters.product} in ${filters.country}`} footer={cardFooter({ minutesAgo })}>
 							{isLoading ? (
 								<LoadingIndicator />
 							) : (
 								<Grid container display="flex" direction="row" justifyContent="space-evenly" padding={0} spacing={1}>
-									{generalOverview.map((plotData, index) => (
+									{countryOverview.map((plotData, index) => (
 										<Grid
 											key={index}
 											item
@@ -232,7 +318,7 @@ const ProductsScreen = () => {
 														},
 													]}
 													displayBar={false}
-													title={plotData.data.subtitle}
+													title={plotData.data?.subtitle}
 												/>
 											) : (<DataWarning />)}
 										</Grid>

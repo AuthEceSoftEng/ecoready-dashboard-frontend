@@ -7,25 +7,25 @@ import colors from "../_colors.scss";
 import MinimapControl from "./Minimap.js"; // Add this import
 
 const urls = {
-	normal: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+	physical: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
 	topographical: "https://a.tile.opentopomap.org/{z}/{x}/{y}.png",
 	humanitarian: "https://a.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png",
 	cycling: "https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png",
 };
 
-export const getColor = (value, domain = [0, 100]) => scaleQuantize()
-	.domain(domain)
+export const getColor = (value, range = [0, 100]) => scaleQuantize()
+	.domain(range)
 	.range([
 		colors.light,
 		colors.info,
 		colors.primary,
 	])(value);
 
-export const Legend = ({
+const Legend = ({
 	title,
 	min,
 	max,
-	colorscale,
+	colorscale = [colors.light, colors.info, colors.primary],
 }) => (
 	<div style={{
 		height: "100%",
@@ -35,7 +35,7 @@ export const Legend = ({
 		flexDirection: "column",
 	}}
 	>
-		<h4 style={{ margin: "0 0 10px 0" }}>{title}</h4>
+		<h4 style={{ margin: "0 0 5px 0" }}>{title}</h4>
 		<div style={{
 			display: "flex",
 			flexGrow: 1,
@@ -100,6 +100,7 @@ const Plot = ({
 					animate: true,
 				}}
 			>
+				{showMinimap && <MinimapControl position="topright" zoom={3} center={center} />}
 				{Object.keys(layers).filter((layer) => layers[layer].show && !layers[layer].hiddable).map((layer, index) => (
 					<TileLayer
 						key={index}
@@ -107,12 +108,12 @@ const Plot = ({
 						attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 					/>
 				))}
-				{geodata.map((geo, index) => (
+				{geodata.filter((metric) => !metric.hiddable).map((metric, index) => (
 					<GeoJSON
 						key={index}
-						data={geo.data}
-						style={geo.style}
-						onEachFeature={geo.action}
+						data={metric.data}
+						style={metric.style}
+						onEachFeature={metric.action}
 					/>
 				))}
 				{markers.filter((marker) => !marker.hiddable).map((marker, index) => (
@@ -255,6 +256,24 @@ const Plot = ({
 						</LayersControl.Overlay>
 					))}
 				</LayersControl>
+				{geodata.length > 0 && (
+					<LayersControl position="bottomleft">
+						{geodata.filter((metric) => metric.hiddable).map((metric, index) => (
+							<LayersControl.BaseLayer
+								key={index}
+								name={metric.name}
+								checked={metric.defaultChecked}
+							>
+								<GeoJSON
+									key={index}
+									data={metric.data}
+									style={metric.style}
+									onEachFeature={metric.action}
+								/>
+							</LayersControl.BaseLayer>
+						))}
+					</LayersControl>
+				)}
 				{groups.length > 0 && (
 					<LayersControl position="bottomright">
 						{groups.filter((group) => group.hiddable).map((group, index) => (
@@ -331,17 +350,21 @@ const Plot = ({
 						))}
 					</LayersControl>
 				)}
-				{/* Add Minimap control */}
-				{showMinimap && <MinimapControl position="topright" zoom={3} center={center} />}
 			</MapContainer>
-		</Grid>
-		<Grid item xs={1}>
-			<Legend
-				title="Legend"
-				min={0}
-				max={100}
-				colorscale={[colors.light, colors.info, colors.primary]}
-			/>
+			{geodata.length > 0 && (
+				<Grid container spacing={1}>
+					{geodata.map((metric, index) => (
+						<Grid key={index} item>
+							<Legend
+								title={metric.name}
+								min={metric.range[0]}
+								max={metric.range[1]}
+								colorscale={metric.style.fillColor}
+							/>
+						</Grid>
+					))}
+				</Grid>
+			)}
 		</Grid>
 	</Grid>
 );

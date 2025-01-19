@@ -220,3 +220,5 @@ export const findKeyByText = (array, text) => {
 	const found = array.find((item) => item.text === text);
 	return found?.value || text;
 };
+
+export const isValidArray = (arr) => Array.isArray(arr) && arr.length > 0;
