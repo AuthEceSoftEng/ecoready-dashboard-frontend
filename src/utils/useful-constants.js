@@ -104,7 +104,7 @@ export const products = [
 	},
 	{
 		value: "oilseeds_protein_crops",
-		text: "Oilseeds_protein_crops",
+		text: "Oilseeds Protein/Crops",
 	},
 	{
 		value: "olive_oil",

@@ -16,16 +16,24 @@ const urls = {
 export const getColor = (value, range = [0, 100]) => scaleQuantize()
 	.domain(range)
 	.range([
-		colors.light,
-		colors.info,
-		colors.primary,
+		colors.choropleth1,
+		colors.choropleth2,
+		colors.choropleth3,
+		colors.choropleth4,
+		colors.choropleth5,
 	])(value);
 
 const Legend = ({
 	title,
 	min,
 	max,
-	colorscale = [colors.light, colors.info, colors.primary],
+	colorscale = [
+		colors.choropleth1,
+		colors.choropleth2,
+		colors.choropleth3,
+		colors.choropleth4,
+		colors.choropleth5,
+	],
 }) => (
 	<div style={{
 		height: "100%",
