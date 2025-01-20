@@ -55,7 +55,7 @@ const THALLA = () => {
 		{
 			customType: "date-range",
 			id: "dateRange",
-			width: "170px",
+			width: "350px",
 			type: "desktop",
 			label: "",
 			startValue: startDate,
