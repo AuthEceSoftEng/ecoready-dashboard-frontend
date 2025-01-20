@@ -16,12 +16,18 @@ const useStyles = makeStyles((theme) => ({
 		position: "fixed",
 	},
 	mainBox: {
-		padding: "10px 20px",
+		padding: "5px 10px",
 		overflow: "auto",
 		position: "absolute",
 		display: "flex",
 		height: "100%",
 		transition: "width 0.3s, margin-left 0.3s",
+	},
+	sidebar: {
+		position: "fixed",
+		zIndex: 1000, // High z-index to stay above other elements
+		height: "100vh",
+		transition: "all 0.3s ease",
 	},
 }));
 
@@ -51,7 +57,9 @@ const Protected = ({ c }) => {
 	return jwt.isAuthenticated()
 		? (
 			<div className={classes.main}>
-				<Sidebar isSmall={isSmall} onToggleSidebar={handleToggleSidebar} />
+				<div className={classes.sidebar}>
+					<Sidebar isSmall={isSmall} onToggleSidebar={handleToggleSidebar} />
+				</div>
 				<div
 					className={classes.mainBox}
 					style={{
