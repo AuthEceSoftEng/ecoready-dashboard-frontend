@@ -3,8 +3,9 @@ import { Circle, LayerGroup, LayersControl, MapContainer, Marker, Polygon, Popup
 import { scaleQuantize } from "d3-scale";
 
 import colors from "../_colors.scss";
+import { formatNumber } from "../utils/data-handling-functions.js";
 
-import MinimapControl from "./Minimap.js"; // Add this import
+import MinimapControl from "./Minimap.js";
 
 const urls = {
 	physical: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
@@ -27,6 +28,7 @@ const Legend = ({
 	title,
 	min,
 	max,
+	unit,
 	colorscale = [
 		colors.choropleth1,
 		colors.choropleth2,
@@ -34,43 +36,61 @@ const Legend = ({
 		colors.choropleth4,
 		colors.choropleth5,
 	],
-}) => (
-	<div style={{
-		height: "100%",
-		padding: "5px",
-		borderRadius: "2px",
-		display: "flex",
-		flexDirection: "column",
-	}}
-	>
-		<h4 style={{ margin: "0 0 5px 0" }}>{title}</h4>
+}) => {
+	const mean = (min + max) / 2;
+	const { roundUpToNextProductMax, formattedNumberMax } = formatNumber(max, "Max");
+	const { roundUpToNextProductMean, formattedNumberMean } = formatNumber(mean, "Mean");
+	console.log("roundUpToNextProductMax", roundUpToNextProductMax);
+	console.log("roundUpToNextProductMean", roundUpToNextProductMean);
+	console.log("formattedNumberMax", formattedNumberMax);
+	console.log("formattedNumberMean", formattedNumberMean);
+
+	return (
 		<div style={{
+			height: "100%",
+			padding: "3px",
+			borderRadius: "2px",
 			display: "flex",
-			flexGrow: 1,
-			gap: "10px",
-			height: "calc(100% - 40px)",
+			flexDirection: "column",
 		}}
 		>
-			<div style={{
-				width: "30px",
-				background: `linear-gradient(to bottom, ${colorscale.reverse().join(", ")})`,
-				borderRadius: "2px",
-			}}
-			/>
+			<h4 style={{ margin: "0 0 5px 0" }}>{title}</h4>
 			<div style={{
 				display: "flex",
-				flexDirection: "column",
-				justifyContent: "space-between",
-				fontSize: "12px",
+				flexGrow: 1,
+				gap: "10px",
+				height: "calc(100% - 30px)",
 			}}
 			>
-				<span>{max}</span>
-				<span>{(max + min) / 2}</span>
-				<span>{min}</span>
+				<div style={{
+					width: "30px",
+					background: `linear-gradient(to bottom, ${colorscale.reverse().join(", ")})`,
+					borderRadius: "2px",
+				}}
+				/>
+				<div style={{
+					display: "flex",
+					flexDirection: "column",
+					justifyContent: "space-between",
+					fontSize: "12px",
+				}}
+				>
+					<span>
+						{formattedNumberMax}
+						{" "}
+						{unit}
+					</span>
+					<span>
+						{formattedNumberMean}
+						{" "}
+						{unit}
+					</span>
+					<span>{min}</span>
+				</div>
 			</div>
 		</div>
-	</div>
-);
+	);
+};
 
 const Plot = ({
 	width = "100%",
@@ -93,8 +113,8 @@ const Plot = ({
 	geodata = [],
 	showMinimap = true, // Add this prop
 }) => (
-	<Grid container width="100%" height="100%" display="flex" direction="row" spacing={2}>
-		<Grid item xs={11}>
+	<Grid container width="100%" height="100%" display="flex" direction="row" spacing={1}>
+		<Grid item xs={10} padding={0}>
 			<MapContainer
 				style={{ width, height }}
 				center={center}
@@ -359,21 +379,19 @@ const Plot = ({
 					</LayersControl>
 				)}
 			</MapContainer>
-			{geodata.length > 0 && (
-				<Grid container spacing={1}>
-					{geodata.map((metric, index) => (
-						<Grid key={index} item>
-							<Legend
-								title={metric.name}
-								min={metric.range[0]}
-								max={metric.range[1]}
-								colorscale={metric.style.fillColor}
-							/>
-						</Grid>
-					))}
-				</Grid>
-			)}
 		</Grid>
+		{geodata.length > 0
+			&& geodata.map((metric, index) => (
+				<Grid key={index} item xs={1}>
+					<Legend
+						title={metric.name}
+						min={metric.range[0]}
+						max={metric.range[1]}
+						unit={metric.unit}
+						colorscale={metric.style.fillColor}
+					/>
+				</Grid>
+			))}
 	</Grid>
 );
 
