@@ -116,7 +116,7 @@ const Map = () => {
 		{
 			customType: "date-range",
 			id: "dateRange",
-			width: "170px",
+			width: "350px",
 			type: "desktop",
 			label: "",
 			startValue: startDate,
@@ -258,6 +258,7 @@ const Map = () => {
 				range: [0, Math.max(...production
 					.filter((p) => p.key !== "EU")
 					.map((p) => p.total_production || 0))],
+				unit: "t",
 				style: (feature) => ({
 					color: colors.dark,
 					weight: 1,
@@ -276,6 +277,7 @@ const Map = () => {
 				range: [0, Math.max(...ricePrice
 					.filter((p) => p.key !== "EU")
 					.map((p) => p.avg_price || 0))],
+				unit: "€/t",
 				style: (feature) => ({
 					color: colors.dark,
 					weight: 1,
@@ -328,12 +330,8 @@ const Map = () => {
 		},
 	}), []);
 
-	if (isLoading || !isDataReady) {
-		return <LoadingIndicator />;
-	}
-
 	return (
-		<Grid container width="100%" height="100%" display="flex" direction="row" justifyContent="space-around" spacing={2}>
+		<Grid container width="100%" height="100%" display="flex" direction="row" justifyContent="space-around">
 			<StickyBand
 				sticky={false}
 				dropdownContent={dropdownContent}
@@ -341,9 +339,19 @@ const Map = () => {
 				formRef={formRefDate}
 				formContent={formContentDate}
 			/>
-			<Grid item xs={12} height="100%">
-				<MapComponent {...mapConfig} geodata={geodata} markers={markers} />
-			</Grid>
+			{isLoading || !isDataReady
+				? (
+					<Grid item xs={12} sm={12} md={12} lg={12} xl={12} height="100%">
+						{" "}
+						<LoadingIndicator />
+						{" "}
+					</Grid>
+				)
+				: (
+					<Grid item xs={12} sm={12} md={12} lg={12} xl={12} height="100%">
+						<MapComponent {...mapConfig} geodata={geodata} markers={markers} />
+					</Grid>
+				)}
 		</Grid>
 	);
 };

@@ -222,3 +222,24 @@ export const findKeyByText = (array, text) => {
 };
 
 export const isValidArray = (arr) => Array.isArray(arr) && arr.length > 0;
+
+export const formatNumber = (num, suffix = "") => {
+	// Round up to next product of 10
+	const roundUpToNextProduct = Math.ceil(num / 10) * 10;
+	const magnitude = 10 ** Math.floor(Math.log10(roundUpToNextProduct));
+	const rounded = Math.ceil(roundUpToNextProduct / magnitude) * magnitude;
+
+	// Format with K, M, B suffixes
+	const lookup = [
+		{ value: 1e9, symbol: "B" },
+		{ value: 1e6, symbol: "M" },
+		{ value: 1e3, symbol: "K" },
+	];
+	const item = lookup.find((division) => num >= division.value);
+	const formatted = item ? (num / item.value).toFixed(2) + item.symbol : rounded.toString();
+
+	return {
+		[`roundUpToNextProduct${suffix}`]: rounded,
+		[`formattedNumber${suffix}`]: formatted,
+	};
+};
