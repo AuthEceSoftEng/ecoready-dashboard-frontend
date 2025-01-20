@@ -1,5 +1,6 @@
 import { Grid, CircularProgress, Typography } from "@mui/material";
 
+import colors from "../_colors.scss";
 import Dropdown from "../components/Dropdown.js";
 import Form from "../components/Form.js";
 
@@ -48,24 +49,28 @@ export const StickyBand = ({ sticky = true, dropdownContent = [], value = [], fo
 		mt={1}
 		sx={{
 			position: sticky ? "sticky" : "relative",
-			top: 0,
-			backgroundColor: "white",
-			zIndex: 1000,
+			top: -5,
+			backgroundColor: sticky ? colors.grey : "inherit",
+			zIndex: sticky ? 100 : "auto",
 			minWidth: "100%",
+			padding: "0.5rem",
 			gap: "0.5rem",
+			margin: 0,
 		}}
 	>
 		{dropdownContent.map((dropdown, index) => (
 			<Grid
 				key={index}
 				item
-				sx={{ display: "flex",
-					justifyContent: "flex-end",
-					minWidth: "fit-content", // Prevent content compression
-					flexShrink: 0 }}
+				sx={{
+					display: "flex",
+					justifyContent: "center",
+					minWidth: "fit-content",
+					flexShrink: 0,
+				}}
 				xs={6}
 				sm={3}
-				md={3}
+				md={2}
 			>
 				<Dropdown
 					id={dropdown.id}
@@ -84,13 +89,15 @@ export const StickyBand = ({ sticky = true, dropdownContent = [], value = [], fo
 		{formContent && (
 			<Grid
 				item
-				sx={{ display: "flex",
-					justifyContent: "flex-end",
-					minWidth: "fit-content", // Prevent content compression
-					flexShrink: 0 }}
-				xs={12}
-				sm={3}
-				md={2}
+				sx={{
+					display: "flex",
+					justifyContent: "center",
+					minWidth: "fit-content",
+					flexShrink: 0,
+				}}
+				xs={6}
+				sm={6}
+				md={5}
 			>
 				<Form ref={formRef} content={formContent} />
 			</Grid>
