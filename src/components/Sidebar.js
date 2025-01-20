@@ -21,6 +21,8 @@ const useStyles = makeStyles((theme) => ({
 		backgroundColor: theme.palette.primary.main,
 		color: "white",
 		overflow: "auto",
+		transition: "all 0.5s ease-in-out", // Add smooth transition
+		zIndex: 1000,
 	},
 	toggleButton: {
 		position: "absolute",
@@ -31,6 +33,7 @@ const useStyles = makeStyles((theme) => ({
 		padding: "4px", // Adjust padding to make the button smaller
 		minWidth: "30px", // Set a smaller minimum width
 		minHeight: "30px", // Set a smaller minimum height
+		transition: "transform 0.3s ease-in-out",
 	},
 }));
 

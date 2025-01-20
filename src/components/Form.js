@@ -68,7 +68,7 @@ const useStyles = makeStyles((theme) => ({
 	},
 	sliderBox: {
 		width: "100%",
-		maxWidth: "300px",
+		maxWidth: "600px",
 		marginBottom: "10px",
 		display: "flex",
 		flexDirection: "column",
@@ -82,14 +82,14 @@ const useStyles = makeStyles((theme) => ({
 		color: "black",
 	},
 	daterangeBox: {
-		maxWidth: "250px",
+		maxWidth: "550px",
 		width: "100%",
-		minWidth: "150px",
+		minWidth: "350px",
 		marginBottom: "1px",
 		display: "flex",
 		justifyContent: "center",
 		alignItems: "flex-end",
-		flexDirection: "column",
+		flexDirection: "row",
 		color: "white",
 	},
 	switchBox: {
@@ -427,61 +427,51 @@ const Form = forwardRef(({ disabled: dsb, content, validationSchema, onSubmit, o
 							)}
 							{comp.customType === "date-range" && (
 								<Grid key={comp.id} container item className={classes.daterangeBox}>
-									<Grid container direction="column" width={comp.width}>
-										<Grid item xs={12}>
-											<Typography textAlign="left" style={{ fontSize: comp.labelSize || "inherit" }}>
-												{comp.label}
-											</Typography>
-										</Grid>
-										<Grid item style={{ marginBottom: "2px" }}>
-											<DatePicker
-												type={comp.type || "desktop"}
-												value={comp.startValue ?? formikProps.values[`${comp.id}_start`]}
-												disabled={disabled || comp.disabled}
-												label={comp.startLabel || "Start date"}
-												views={comp.views || ["day", "month", "year"]}
-												background={comp.background || "secondary"}
-												color="white"
-												sx={{
-													width: {
-														xs: "100%", // Full width on extra-small screens
-														sm: "75%", // 75% width on small screens
-														md: "50%", // 50% width on medium screens
-														lg: "25%", // 25% width on large screens
-													},
-												}}
-												onChange={(value) => {
-													formikProps.setFieldValue(`${comp.id}_start`, value);
-													if (comp.onStartChange) {
-														comp.onStartChange(value);
-													}
-												}}
-											/>
-										</Grid>
-										<Grid item>
-											<DatePicker
-												type={comp.type || "desktop"}
-												value={comp.endValue ?? formikProps.values[`${comp.id}_end`]}
-												disabled={disabled || comp.disabled}
-												label={comp.endLabel || "End date"}
-												views={comp.views || ["day", "month", "year"]}
-												background={comp.background || "secondary"}
-												color="white"
-												sx={{
-													width: {
-														xs: "100%", // Full width on extra-small screens
-														sm: "75%", // 75% width on small screens
-														md: "50%", // 50% width on medium screens
-														lg: "25%", // 25% width on large screens
-													},
-												}}
-												onChange={(value) => {
-													formikProps.setFieldValue(`${comp.id}_end`, value);
-													if (comp.onEndChange) {
-														comp.onEndChange(value);
-													}
-												}}
-											/>
+									<Grid container direction="row" width={comp.width}>
+										{comp.label && (
+											<Grid item xs={2}>
+												<Typography style={{ fontSize: comp.labelSize || "inherit" }}>
+													{comp.label}
+												</Typography>
+											</Grid>
+										)}
+										<Grid container spacing={1} alignItems="center">
+											<Grid item xs={6}>
+												<DatePicker
+													fullWidth
+													type={comp.type || "desktop"}
+													value={comp.startValue ?? formikProps.values[`${comp.id}_start`]}
+													disabled={disabled || comp.disabled}
+													label={comp.startLabel || "Start date"}
+													views={comp.views || ["day", "month", "year"]}
+													background={comp.background || "secondary"}
+													color="white"
+													onChange={(value) => {
+														formikProps.setFieldValue(`${comp.id}_start`, value);
+														if (comp.onStartChange) {
+															comp.onStartChange(value);
+														}
+													}}
+												/>
+											</Grid>
+											<Grid item xs={6}>
+												<DatePicker
+													fullWidth
+													type={comp.type || "desktop"}
+													value={comp.endValue ?? formikProps.values[`${comp.id}_end`]}
+													disabled={disabled || comp.disabled}
+													label={comp.endLabel || "End date"}
+													views={comp.views || ["day", "month", "year"]}
+													background={comp.background || "secondary"}
+													color="white"
+													onChange={(value) => {
+														formikProps.setFieldValue(`${comp.id}_end`, value);
+														if (comp.onEndChange) {
+															comp.onEndChange(value);
+														}
+													}}
+												/>
+											</Grid>
 										</Grid>
 									</Grid>
 								</Grid>
