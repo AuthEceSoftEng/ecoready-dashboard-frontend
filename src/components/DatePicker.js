@@ -21,7 +21,7 @@ const useStyles = makeStyles(() => ({
 		},
 		"& .MuiInputLabel-root.MuiInputLabel-shrink": {
 			// Shrunk position
-			transform: "translate(14px, -3px) scale(0.7)",
+			transform: "translate(14px, 10px) scale(0.7)",
 		},
 		"& .MuiInputLabel-outlined.MuiInputLabel-shrink": {
 			// Additional specificity for outlined variant
@@ -40,7 +40,7 @@ const DatePicker = ({
 	disabled = false,
 	label = "Date",
 	views = ["day", "month", "year"],
-	background = "primary",
+	background = "third",
 	color = "white",
 	borderRadius = "10px",
 	width = "100%",
