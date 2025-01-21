@@ -63,7 +63,9 @@ const Plot = ({
 				name: d.title,
 				text: d.texts,
 				mode: d.mode,
-				marker: { color: colors?.[d?.color] || d?.color },
+				marker: d.type === "pie"
+					? { colors: d.color }
+					: { color: colors?.[d?.color] || d?.color },
 				values: d.values,
 				value: d.value,
 				r: d.r,
@@ -73,6 +75,7 @@ const Plot = ({
 					suffix: d.suffix,
 					font: { color: colors?.[d?.textColor] || d?.textColor || "black" },
 				},
+				sort: d.sort ?? true,
 				gauge: {
 					axis: { range: d.range },
 					bar: { color: colors?.[d?.color] || d?.color, thickness: 1 },
