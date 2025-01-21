@@ -53,8 +53,8 @@ export const StickyBand = ({ sticky = true, dropdownContent = [], value = [], fo
 			backgroundColor: sticky ? colors.grey : "inherit",
 			zIndex: sticky ? 100 : "auto",
 			minWidth: "100%",
-			padding: "0.5rem",
-			gap: "0.5rem",
+			padding: "0.3rem",
+			gap: "0.3rem",
 			margin: 0,
 		}}
 	>
@@ -64,7 +64,7 @@ export const StickyBand = ({ sticky = true, dropdownContent = [], value = [], fo
 				item
 				sx={{
 					display: "flex",
-					justifyContent: "center",
+					justifyContent: "flex-end",
 					minWidth: "fit-content",
 					flexShrink: 0,
 				}}
@@ -91,13 +91,13 @@ export const StickyBand = ({ sticky = true, dropdownContent = [], value = [], fo
 				item
 				sx={{
 					display: "flex",
-					justifyContent: "center",
+					justifyContent: "flex-start",
 					minWidth: "fit-content",
 					flexShrink: 0,
 				}}
 				xs={6}
 				sm={6}
-				md={5}
+				md={formContent.customType === "date-range" ? 6 : 2}
 			>
 				<Form ref={formRef} content={formContent} />
 			</Grid>

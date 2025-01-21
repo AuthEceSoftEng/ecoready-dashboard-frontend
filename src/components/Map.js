@@ -40,10 +40,6 @@ const Legend = ({
 	const mean = (min + max) / 2;
 	const { roundUpToNextProductMax, formattedNumberMax } = formatNumber(max, "Max");
 	const { roundUpToNextProductMean, formattedNumberMean } = formatNumber(mean, "Mean");
-	console.log("roundUpToNextProductMax", roundUpToNextProductMax);
-	console.log("roundUpToNextProductMean", roundUpToNextProductMean);
-	console.log("formattedNumberMax", formattedNumberMax);
-	console.log("formattedNumberMean", formattedNumberMean);
 
 	return (
 		<div style={{
@@ -114,7 +110,7 @@ const Plot = ({
 	showMinimap = true, // Add this prop
 }) => (
 	<Grid container width="100%" height="100%" display="flex" direction="row" spacing={1}>
-		<Grid item xs={10} padding={0}>
+		<Grid item xs={10} style={{ padding: 1 }}>
 			<MapContainer
 				style={{ width, height }}
 				center={center}
