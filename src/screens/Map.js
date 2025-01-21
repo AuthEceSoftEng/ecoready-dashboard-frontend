@@ -9,7 +9,7 @@ import useInit from "../utils/screen-init.js";
 import { mapInfoConfigs, organization } from "../config/MapInfoConfig.js";
 import { LoadingIndicator, StickyBand } from "../utils/rendering-items.js";
 import { europeanCountries, products, labs } from "../utils/useful-constants.js";
-import { getCustomDateTime, calculateDates, calculateDifferenceBetweenDates, debounce, findKeyByText } from "../utils/data-handling-functions.js";
+import { findKeyByText } from "../utils/data-handling-functions.js";
 
 // Extract popup component
 const PopupContent = memo(({ title, onClick }) => (
@@ -72,37 +72,38 @@ const onEachCountry = (feature, layer) => {
 		},
 	});
 
-	layer.bindPopup(`
-    <strong>${feature.properties.name}</strong><br>
-    Value: ${feature.properties.value || "N/A"}
-  `);
-};
+	// Get the layer's name and unit from the GeoJSON properties
+	const value = feature.properties.value;
+	const formattedValue = value === "N/A" ? "N/A" : value.toLocaleString();
 
-const customDate = getCustomDateTime(2024, 12);
+	// Create popup content with proper formatting
+	const popupContent = `
+		<div style="text-align: center;">
+			<h4 style="margin: 0;">${feature.properties.name} ${feature.properties.flag}</h4>
+			<p style="margin: 5px 0;">
+				<strong>${feature.properties.metric || ""}</strong><br/>
+				${formattedValue} ${feature.properties.unit || ""}
+			</p>
+		</div>
+	`;
+
+	layer.bindPopup(popupContent);
+};
 
 const Map = () => {
 	const navigate = useNavigate();
 	const [geoJsonData, setGeoJsonData] = useState(null);
-	const [startDate, setStartDate] = useState("2024-01-01");
-	const [endDate, setEndDate] = useState("2024-12-31");
 	const [filters, setFilters] = useState({
+		year: "2024",
 		product: "Rice",
 		metric: "price",
 	});
 	const [isDataReady, setIsDataReady] = useState(false);
 
-	const debouncedSetDate = useMemo(
-		() => debounce((date, setter) => {
-			const { currentDate } = calculateDates(date);
-			setter(currentDate);
-		}, 0),
-		[],
-	);
-
-	const handleDateChange = useCallback((newValue, setter) => {
-		if (!newValue?.$d) return;
-		debouncedSetDate(newValue.$d, setter);
-	}, [debouncedSetDate]);
+	const handleYearChange = useCallback((newValue) => {
+		console.log("New Year:", newValue);
+		setFilters((prev) => ({ ...prev, year: newValue.$y })); // Select only the year from the resulting object
+	}, [setFilters]);
 
 	const dropdownValues = [filters.product];
 
@@ -114,34 +115,23 @@ const Map = () => {
 
 	const formContentDate = useMemo(() => [
 		{
-			customType: "date-range",
-			id: "dateRange",
-			width: "350px",
+			customType: "date-picker",
+			id: "yearPicker",
+			width: "120px",
 			type: "desktop",
-			label: "",
-			startValue: startDate,
-			startLabel: "Start date",
-			endValue: endDate,
-			endLabel: "End date",
-			background: "primary",
+			value: "2024",
+			sublabel: "Year Picker",
+			views: ["year"],
+			background: "third",
 			labelSize: 12,
-			onStartChange: (newValue) => handleDateChange(newValue, setStartDate),
-			onEndChange: (newValue) => handleDateChange(newValue, setEndDate),
+			onChange: handleYearChange,
 		},
-	], [endDate, handleDateChange, startDate]);
-
-	const dateMetrics = useMemo(() => {
-		const isValid = startDate && endDate && new Date(startDate) <= new Date(endDate);
-		return {
-			isValidDateRange: isValid,
-			...calculateDifferenceBetweenDates(startDate, endDate),
-		};
-	}, [startDate, endDate]);
+	], [handleYearChange]);
 
 	const fetchConfigs = useMemo(
-		() => (dateMetrics.isValidDateRange && keys.product
-			? mapInfoConfigs(keys.country, keys.product, startDate, endDate, customDate, dateMetrics.differenceInDays) : null),
-		[dateMetrics.isValidDateRange, dateMetrics.differenceInDays, keys.product, keys.country, startDate, endDate],
+		() => (keys.product
+			? mapInfoConfigs(keys.country, keys.product, filters.year) : null),
+		[keys.product, keys.country, filters.year],
 	);
 
 	const { state, dispatch } = useInit(organization, fetchConfigs);
@@ -154,14 +144,14 @@ const Map = () => {
 
 	const production = useMemo(() => riceProduction1.map((milledEntry) => {
 		// Find matching husk entry
-		const huskEntry = riceProduction2.find((h) => h.key === milledEntry.key);
+		const huskEntry = riceProduction2.find((h) => h.key === milledEntry.key && h.interval_start === milledEntry.interval_start);
 
 		return {
 			key: milledEntry.key,
 			timestamp: milledEntry.interval_start,
 			total_production: (
-				milledEntry.sum_milled_rice_equivalent_quantity
-								+ (huskEntry?.sum_rice_husk_quantity || 0)
+				(milledEntry.sum_milled_rice_equivalent_quantity || 0)
+				+ (huskEntry?.sum_rice_husk_quantity || 0)
 			),
 		};
 	}), [riceProduction1, riceProduction2]);
@@ -180,7 +170,6 @@ const Map = () => {
 		size: "small",
 		width: "170px",
 		height: "40px",
-		color: "primary",
 	}))), [dispatch]); // Add dispatch to dependencies
 
 	useEffect(() => {
@@ -206,14 +195,15 @@ const Map = () => {
 			productionMap: {
 				...geoJsonData,
 				features: geoJsonData.features.map((feature) => {
-					const countryCode = europeanCountries.find(
-						(country) => country.text === feature.properties.name,
-					)?.value;
+					const country = europeanCountries.find(
+						(c) => c.text === feature.properties.name,
+					);
 					return {
 						...feature,
 						properties: {
 							...feature.properties,
-							value: production.find((p) => p.key === countryCode)?.total_production || 0,
+							flag: country?.flag || "", // Add flag emoji
+							value: production.find((p) => p.key === country?.value)?.total_production || 0,
 						},
 					};
 				}),
@@ -221,14 +211,15 @@ const Map = () => {
 			priceMap: {
 				...geoJsonData,
 				features: geoJsonData.features.map((feature) => {
-					const countryCode = europeanCountries.find(
-						(country) => country.text === feature.properties.name,
-					)?.value;
+					const country = europeanCountries.find(
+						(c) => c.text === feature.properties.name,
+					);
 					return {
 						...feature,
 						properties: {
 							...feature.properties,
-							value: ricePrice.find((p) => p.key === countryCode)?.avg_price || 0,
+							flag: country?.flag || "", // Add flag emoji
+							value: ricePrice.find((p) => p.key === country?.value)?.avg_price || 0,
 						},
 					};
 				}),
@@ -254,7 +245,17 @@ const Map = () => {
 		isDataReady && enhancedGeoJsonData ? [
 			{
 				name: "Production",
-				data: enhancedGeoJsonData.productionMap,
+				data: {
+					...enhancedGeoJsonData.productionMap,
+					features: enhancedGeoJsonData.productionMap.features.map((feature) => ({
+						...feature,
+						properties: {
+							...feature.properties,
+							metric: "Production",
+							unit: "t",
+						},
+					})),
+				},
 				range: [0, Math.max(...production
 					.filter((p) => p.key !== "EU")
 					.map((p) => p.total_production || 0))],
@@ -273,7 +274,17 @@ const Map = () => {
 			},
 			{
 				name: "Price",
-				data: enhancedGeoJsonData.priceMap,
+				data: {
+					...enhancedGeoJsonData.priceMap,
+					features: enhancedGeoJsonData.priceMap.features.map((feature) => ({
+						...feature,
+						properties: {
+							...feature.properties,
+							metric: "Price",
+							unit: "€/t",
+						},
+					})),
+				},
 				range: [0, Math.max(...ricePrice
 					.filter((p) => p.key !== "EU")
 					.map((p) => p.avg_price || 0))],
@@ -331,7 +342,7 @@ const Map = () => {
 	}), []);
 
 	return (
-		<Grid container width="100%" height="100%" display="flex" direction="row" justifyContent="space-around">
+		<Grid container width="100%" height="95%" display="flex" direction="row" justifyContent="space-around">
 			<StickyBand
 				sticky={false}
 				dropdownContent={dropdownContent}

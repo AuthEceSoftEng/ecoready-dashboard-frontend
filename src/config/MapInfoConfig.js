@@ -1,10 +1,6 @@
-import { calculateDates } from "../utils/data-handling-functions.js";
-
 export const organization = "european_data";
 
-export const mapInfoConfigs = (country, product, startDate, endDate, customDate, differenceInDays) => {
-	const { year, currentDate, formattedBeginningOfMonth } = calculateDates(customDate);
-	console.log(year, currentDate, formattedBeginningOfMonth);
+export const mapInfoConfigs = (country, product, year) => {
 	return [
 		{
 			type: "stats",
@@ -13,9 +9,9 @@ export const mapInfoConfigs = (country, product, startDate, endDate, customDate,
 			params: JSON.stringify({
 				attribute: ["price"],
 				stat: "avg",
-				interval: `every_${differenceInDays}_days`,
-				start_time: startDate,
-				end_time: endDate,
+				interval: `every_12_days`,
+				start_time: `${year}-01-01`,
+				end_time: `${year}-12-31`,
 				group_by: "key",
 			}),
 			plotId: "periodPrices",
@@ -49,7 +45,7 @@ export const mapInfoConfigs = (country, product, startDate, endDate, customDate,
 				stat: "sum",
 				interval: "every_12_months",
 				start_time: `${year}-01-01`,
-				end_time: currentDate,
+				end_time: `${year}-12-31`,
 				group_by: "key",
 			}),
 			plotId: "riceProd1",
@@ -63,7 +59,7 @@ export const mapInfoConfigs = (country, product, startDate, endDate, customDate,
 				stat: "sum",
 				interval: "every_12_months",
 				start_time: `${year}-01-01`,
-				end_time: currentDate,
+				end_time: `${year}-12-31`,
 				group_by: "key",
 			}),
 			plotId: "riceProd2",
