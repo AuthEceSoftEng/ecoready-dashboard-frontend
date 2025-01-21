@@ -81,7 +81,7 @@ export const StickyBand = ({ sticky = true, dropdownContent = [], value = [], fo
 					size={dropdown.size}
 					width={dropdown.width}
 					height={dropdown.height}
-					background={dropdown.color}
+					background={dropdown.color ?? "third"}
 					onChange={dropdown.onChange}
 				/>
 			</Grid>
