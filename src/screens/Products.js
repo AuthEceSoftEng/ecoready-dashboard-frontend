@@ -13,7 +13,6 @@ import { monthNames, years, europeanCountries, products } from "../utils/useful-
 // import { fetchCollections } from "../api/fetch-data.js";
 
 // const metrics = fetchCollections(organization, "rice");
-// console.log(metrics);
 const unit = "t";
 const customDate = getCustomDateTime(2024, 12);
 const { year, month } = calculateDates(customDate);
@@ -21,16 +20,17 @@ const { year, month } = calculateDates(customDate);
 const transformProductionData = (production, sliderYear, countries) => ({
 	euProduction: production.find(
 		(country) => country.key === "EU"
-    && country.timestamp === `${sliderYear}-01-01T00:00:00`,
+	&& country.timestamp === `${sliderYear}-01-01T00:00:00`,
 	)?.total_production,
 
 	countryData: production
 		.filter((item) => item.key !== "EU"
-      && item.timestamp === `${sliderYear}-01-01T00:00:00`)
+		&& item.timestamp === `${sliderYear}-01-01T00:00:00`)
 		.map((item) => ({
 			label: countries.find((c) => c.value === item.key)?.text || item.key,
-			value: item.total_production,
-		})),
+			total_production: item.total_production,
+		}))
+		.sort((a, b) => a.label.localeCompare(b.label)),
 });
 
 const ProductsScreen = () => {
@@ -77,7 +77,6 @@ const ProductsScreen = () => {
 			startLabel: "Start date",
 			endValue: endDate,
 			endLabel: "End date",
-			background: "primary",
 			labelSize: 12,
 			onStartChange: (newValue) => handleDateChange(newValue, setStartDate),
 			onEndChange: (newValue) => handleDateChange(newValue, setEndDate),
@@ -153,26 +152,51 @@ const ProductsScreen = () => {
 
 	const production = useMemo(() => riceProduction1.map((milledEntry) => {
 		// Find matching husk entry
-		const huskEntry = riceProduction2.find((h) => h.key === milledEntry.key);
+		const huskEntry = riceProduction2.find((h) => h.key === milledEntry.key && h.interval_start === milledEntry.interval_start);
 
 		return {
 			key: milledEntry.key,
 			timestamp: milledEntry.interval_start,
 			total_production: (
-				milledEntry.sum_milled_rice_equivalent_quantity
-								+ (huskEntry?.sum_rice_husk_quantity || 0)
+				(milledEntry.sum_milled_rice_equivalent_quantity || 0)
+				+ (huskEntry?.sum_rice_husk_quantity || 0)
 			),
 		};
 	}), [riceProduction1, riceProduction2]);
 
 	const productionByCountry = useMemo(() => {
 		const grouped = groupByKey(production, "key");
-		return Object.keys(grouped).reduce((acc, countryCode) => {
-			acc[countryCode] = grouped[countryCode].map((item) => item.total_production);
-			return acc;
-		}, {});
+
+		// Filter out EU and transform codes to names
+		const result = Object.keys(grouped)
+			.filter((code) => code !== "EU")
+			.reduce((acc, countryCode) => {
+				const countryName = europeanCountries.find((country) => country.value === countryCode)?.text;
+				if (countryName) {
+					acc[countryName] = grouped[countryCode].map((item) => item.total_production);
+				}
+
+				return acc;
+			}, {});
+
+		// Sort by country names
+		const sortedResult = Object.keys(result)
+			.sort((a, b) => a.localeCompare(b))
+			.reduce((acc, countryName) => {
+				acc[countryName] = result[countryName];
+				return acc;
+			}, {});
+
+		return sortedResult;
 	}, [production]);
-	console.log("Producion by country", productionByCountry);
+
+	// Create color mapping excluding EU
+	const countryColors = Object.fromEntries(
+		europeanCountries
+			.filter((country) => country.value !== "EU")
+			.map((country) => [country.text, country.color]),
+	);
+	console.log("Country Colors", countryColors);
 
 	// const unit = useMemo(() => ricePrice[0]?.unit || "", [ricePrice]);
 	const dropdownContent = useMemo(() => ([
@@ -197,17 +221,14 @@ const ProductsScreen = () => {
 		size: "small",
 		width: "170px",
 		height: "40px",
-		color: "primary",
 	}))), [dispatch]);
 
 	const europeOverview = useMemo(() => {
 		const { euProduction, countryData } = transformProductionData(production, filters.year, europeanCountries);
-		console.log("Country Data", countryData);
-		console.log("Production", production);
 		return [
 			{
 				data: {
-					value: euProduction ?? null,
+					value: countryData.reduce((sum, data) => sum + (data.total_production || 0), 0),
 					subtitle: "EU's Annual Production",
 				},
 				color: "third",
@@ -219,8 +240,10 @@ const ProductsScreen = () => {
 					? [
 						{
 							labels: countryData.map((item) => item.label),
-							values: countryData.map((item) => item.value),
+							values: countryData.map((item) => item.total_production),
+							color: countryData.map((item) => europeanCountries.find((country) => country.text === item.label)?.color),
 							type: "pie",
+							sort: false,
 						},
 					] : [{ labels: [], values: [], type: "pie" }],
 			},
@@ -232,12 +255,12 @@ const ProductsScreen = () => {
 						y: values,
 						type: "bar",
 						title: countryCode,
-					// color: ["primary", "secondary", "third"][index % 3],
+						color: countryColors[countryCode],
 					})),
 				title: "Annual Production by Country",
 			},
 		];
-	}, [filters.year, production, productionByCountry]);
+	}, [countryColors, filters.year, production, productionByCountry]);
 
 	const countryOverview = useMemo(() => [
 		{
@@ -247,8 +270,8 @@ const ProductsScreen = () => {
 				)?.total_production ?? null,
 				subtitle: "Annual Production",
 			},
-			range: [0, 1_000_000],
-			color: "primary",
+			range: [0, 3_000_000],
+			color: "secondary",
 			suffix: ` ${unit}s`,
 			shape: "angular",
 		},
@@ -340,6 +363,7 @@ const ProductsScreen = () => {
 							>
 								{europeOverview[1].data.values ? (
 									<Plot
+										showLegend={false}
 										height="300px"
 										data={europeOverview[1].data}
 										displayBar={false}
@@ -357,12 +381,12 @@ const ProductsScreen = () => {
 							>
 								{europeOverview[2].data ? (
 									<Plot
-										showLegend
 										scrollZoom
 										height="300px"
-										data={europeOverview[2].data}
+										data={europeOverview[2].data.reverse()}
+										barmode="stack"
 										displayBar={false}
-										title={europeOverview[2].data.title}
+										title={europeOverview[2].title}
 									/>
 								) : (<DataWarning />)}
 							</Grid>
