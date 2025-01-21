@@ -243,3 +243,8 @@ export const formatNumber = (num, suffix = "") => {
 		[`formattedNumber${suffix}`]: formatted,
 	};
 };
+
+export const generateYearsArray = (startYear, endYear) => Array.from(
+	{ length: endYear - startYear + 1 },
+	(_, index) => startYear + index,
+);

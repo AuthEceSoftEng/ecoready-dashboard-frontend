@@ -28,5 +28,6 @@ export const removeUser = (id) => api.post("user/delete", { id });
 export const getUsersData = () => api.get("user");
 
 // EcoReadyServices
+export const getCollections = (organization, project) => api.get("eco-ready-services/getcollections", { organization, project });
 export const getCollectionData = (organization, project, collection, params) => api.get("eco-ready-services/getdata", { organization, project, collection, params });
 export const getCollectionDataStatistics = (organization, project, collection, params) => api.get("eco-ready-services/getdatastatistics", { organization, project, collection, params });
