@@ -1,4 +1,33 @@
-import { getCollectionData, getCollectionDataStatistics } from "./index.js";
+import { getCollectionData, getCollectionDataStatistics, getCollections } from "./index.js";
+
+export const fetchCollections = async (dispatch, organization, project) => {
+	try {
+		const response = await getCollections(organization, project);
+
+		if (response.success === false) {
+			dispatch({
+				type: "FETCH_ERROR",
+				payload: { response },
+				error: "No collections found",
+			});
+			console.warn("Warning: Collections fetched are empty.");
+		} else {
+			dispatch({
+				type: "FETCH_SUCCESS",
+				payload: { response },
+			});
+			console.log("Collections fetched:", response);
+		}
+
+		return { response };
+	} catch (error) {
+		dispatch({
+			type: "FETCH_ERROR",
+			payload: { error },
+		});
+		throw error;
+	}
+};
 
 export const fetchData = async (dispatch, organization, project, collection, params, plotId, type = "data") => {
 	try {
