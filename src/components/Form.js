@@ -208,7 +208,7 @@ const Form = forwardRef(({ disabled: dsb, content, validationSchema, onSubmit, o
 										size={comp?.size || "medium"}
 										width={comp?.width || "200px"}
 										filled={comp?.filled || false}
-										background={comp?.background || "secondary"}
+										background={comp?.background || "third"}
 										onChange={(event) => {
 											formikProps.handleChange({
 												target: {
@@ -370,7 +370,7 @@ const Form = forwardRef(({ disabled: dsb, content, validationSchema, onSubmit, o
 													disabled={disabled || comp.disabled}
 													label={comp.sublabel || ""}
 													views={comp.views || ["day", "month", "year"]}
-													background={comp.background || "secondary"}
+													background={comp.background || "third"}
 													color={comp.background === "grey" ? "black" : "white"}
 													sx={{
 														width: {
@@ -396,11 +396,11 @@ const Form = forwardRef(({ disabled: dsb, content, validationSchema, onSubmit, o
 											</Typography>
 											<DatePicker
 												type={comp.type || "desktop"} // desktop, mobile, time, datetime
-												value={formikProps.values[comp.id]}
+												value={comp.value ?? formikProps.values[comp.id]}
 												disabled={disabled || comp.disabled}
 												label={comp.sublabel || ""}
 												views={comp.views || ["day", "month", "year"]}
-												background={comp.background || "secondary"}
+												background={comp.background || "third"}
 												color="white"
 												sx={{
 													width: {
@@ -444,7 +444,7 @@ const Form = forwardRef(({ disabled: dsb, content, validationSchema, onSubmit, o
 													disabled={disabled || comp.disabled}
 													label={comp.startLabel || "Start date"}
 													views={comp.views || ["day", "month", "year"]}
-													background={comp.background || "secondary"}
+													background={comp.background || "third"}
 													color="white"
 													onChange={(value) => {
 														formikProps.setFieldValue(`${comp.id}_start`, value);
@@ -462,7 +462,7 @@ const Form = forwardRef(({ disabled: dsb, content, validationSchema, onSubmit, o
 													disabled={disabled || comp.disabled}
 													label={comp.endLabel || "End date"}
 													views={comp.views || ["day", "month", "year"]}
-													background={comp.background || "secondary"}
+													background={comp.background || "third"}
 													color="white"
 													onChange={(value) => {
 														formikProps.setFieldValue(`${comp.id}_end`, value);
