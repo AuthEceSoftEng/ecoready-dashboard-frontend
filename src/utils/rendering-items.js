@@ -81,7 +81,7 @@ export const StickyBand = ({ sticky = true, dropdownContent = [], value = [], fo
 					size={dropdown.size}
 					width={dropdown.width}
 					height={dropdown.height}
-					background={dropdown.color ?? "third"}
+					background={"primary"}
 					onChange={dropdown.onChange}
 				/>
 			</Grid>
@@ -105,7 +105,7 @@ export const StickyBand = ({ sticky = true, dropdownContent = [], value = [], fo
 	</Grid>
 );
 
-export const DataWarning = ({ message = "No Availabe Data for the Specified Time Period..." }) => (
+export const DataWarning = ({ message = "No Available Data for the Specified Time Period..." }) => (
 	<Grid
 		item
 		xs={12}
