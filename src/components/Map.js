@@ -1,42 +1,19 @@
 import { Grid } from "@mui/material";
-import { Circle, LayerGroup, LayersControl, Map, MapContainer, Marker, Polygon, Popup, Rectangle, TileLayer, GeoJSON } from "react-leaflet";
+import { Circle, LayerGroup, LayersControl, MapContainer, Marker, Polygon, Popup, Rectangle, TileLayer, GeoJSON } from "react-leaflet";
 import { scaleQuantize } from "d3-scale";
+import { memo, useMemo, useState, useEffect, useRef } from "react";
 
 import colors from "../_colors.scss";
 import { formatNumber } from "../utils/data-handling-functions.js";
 
 import MinimapControl from "./Minimap.js";
 
-
-import { useEffect, useRef, useState } from "react";
-
-import L from "leaflet";
-
-
 const urls = {
-	physical: "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+	physical: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
 };
 
 export const getColor = (value, range = [0, 100]) => scaleQuantize().domain(range)
 	.range([colors.choropleth1, colors.choropleth2, colors.choropleth3, colors.choropleth4, colors.choropleth5])(value);
-
-
-function TheLegend({ }) {
-	  useEffect(() => {
-    const legend = L.control({ position: "bottomleft" });
-
-    legend.onAdd = () => {
-      const div = L.DomUtil.create("div", "info legend");
-      div.innerHTML =
-        "<h4>This is the legend</h4>" +
-        "<b>Lorem ipsum dolor sit amet consectetur adipiscing</b>";
-      return div;
-    };
-	  }, []);
-	  return null;
-}
-
-const positionClass = 'leaflet-bottom leaflet-left';
 
 const TheLegendControl = ({ gdata, selectedLayerIndex }) => {
 	  if (!gdata || gdata.length === 0 || selectedLayerIndex >= gdata.length) return null;
@@ -73,36 +50,46 @@ const TheLegendControl = ({ gdata, selectedLayerIndex }) => {
 	  );
 	};
 
-
-
-const Legend = ({ title, min, max, unit, colorscale = [ colors.choropleth1, colors.choropleth2, colors.choropleth3, colors.choropleth4, colors.choropleth5,], }) => {
+const Legend = ({ title, min, max, unit, colorscale = [colors.choropleth1, colors.choropleth2, colors.choropleth3, colors.choropleth4, colors.choropleth5] }) => {
 	const mean = (min + max) / 2;
-	  const { roundUpToNextProductMax, formattedNumberMax } = formatNumber(max, "Max");
-	  const { roundUpToNextProductMean, formattedNumberMean } = formatNumber(mean, "Mean");
+	const { roundUpToNextProductMax, formattedNumberMax } = formatNumber(max, "Max");
+	const { roundUpToNextProductMean, formattedNumberMean } = formatNumber(mean, "Mean");
 
-	  /*<h4 style={{ margin: "0 10px 0 0" }}>{title}</h4>*/
+	/* <h4 style={{ margin: "0 10px 0 0" }}>{title}</h4> */
 	return (
-			<div style={{ height: "100%", padding: "3px", borderRadius: "2px", display: "flex", flexDirection: "row", alignItems: "center" }}>
-		      
-		      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", height: "100%" }}>
-		        {/* Gradient bar */}
-		        <div
-		          style={{
-		            width: "200px", // Set a fixed width for the gradient bar
-		            height: "20px", // Adjust height for the bar
-		            background: `linear-gradient(to right, ${colorscale.join(", ")})`,
-		            borderRadius: "2px",
-		          }}
-		        />
-		        
-		        {/* Value labels below the gradient bar */}
-		        <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between", fontSize: "12px", width: "200px", marginTop: "5px" }}>
-		          <span>{min} {unit}</span>
-		          <span>{formattedNumberMean} {unit}</span>
-		          <span>{formattedNumberMax} {unit}</span>
-		        </div>
-		      </div>
-		    </div>
+		<div style={{ height: "100%", padding: "3px", borderRadius: "2px", display: "flex", flexDirection: "row", alignItems: "center" }}>
+
+			<div style={{ display: "flex", flexDirection: "column", alignItems: "center", height: "100%" }}>
+				{/* Gradient bar */}
+				<div
+					style={{
+						width: "200px", // Set a fixed width for the gradient bar
+						height: "20px", // Adjust height for the bar
+						background: `linear-gradient(to right, ${colorscale.join(", ")})`,
+						borderRadius: "2px",
+					}}
+				/>
+
+				{/* Value labels below the gradient bar */}
+				<div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between", fontSize: "12px", width: "200px", marginTop: "5px" }}>
+					<span>
+						{min}
+						{" "}
+						{unit}
+					</span>
+					<span>
+						{formattedNumberMean}
+						{" "}
+						{unit}
+					</span>
+					<span>
+						{formattedNumberMax}
+						{" "}
+						{unit}
+					</span>
+				</div>
+			</div>
+		</div>
 	);
 };
 
@@ -186,7 +173,6 @@ const Plot = ({
 	    </Grid>
 	  );
 	};
-
 
 
 export default Plot;
