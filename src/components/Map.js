@@ -1,7 +1,7 @@
 import { Grid } from "@mui/material";
 import { Circle, LayerGroup, LayersControl, MapContainer, Marker, Polygon, Popup, Rectangle, TileLayer, GeoJSON } from "react-leaflet";
 import { scaleQuantize } from "d3-scale";
-import { memo, useMemo, useState, useE, useRef } from "react";
+import { memo, useMemo, useState, useEffect, useRef } from "react";
 
 import colors from "../_colors.scss";
 import { formatNumber } from "../utils/data-handling-functions.js";
