@@ -330,15 +330,11 @@ const Map = () => {
 
 	return (
 		<Grid container width="100%" height="100%" display="flex" direction="row" >
-			<Grid width="100%" height="100%" display="flex" direction="row">
-			{/*<StickyBand
-				sticky={false}
-				dropdownContent={dropdownContent}
-				value={dropdownValues}
-				formRef={formRefDate}
-				formContent={formContentDate}
-			/>*/}
-			{isLoading || !isDataReady
+    		<Grid width="100%" height="10%" style={{ minHeight: "50px", marginBottom: "5px", marginRight: "190px" }} display="flex" direction="row">
+    			{<StickyBand sticky={false} dropdownContent={dropdownContent} value={dropdownValues} formRef={formRefDate} formContent={formContentDate} />}
+		    </Grid>
+		    <Grid width="100%" height="90%" display="flex" direction="row">
+				{isLoading || !isDataReady
 				? (
 					<Grid item xs={12} sm={12} md={12} lg={12} xl={12} height="100%">
 						{" "}
@@ -351,8 +347,6 @@ const Map = () => {
 						<MapComponent {...mapConfig} geodata={geodata} markers={markers} />
 					</Grid>
 				)}
-			</Grid>
-			<Grid width="100%" height="100%" display="flex" direction="row" justifyContent="space-around">
 			</Grid>
 		</Grid>
 	);
