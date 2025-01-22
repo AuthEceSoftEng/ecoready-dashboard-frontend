@@ -3,13 +3,11 @@ import { memo, useMemo, useState, useCallback, useRef } from "react";
 
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
-// import Dropdown from "../components/Dropdown.js";
 import useInit from "../utils/screen-init.js";
-import Form from "../components/Form.js";
 import { probioConfigs, organization } from "../config/ProbioConfig.js";
 // import { monthNames } from "../utils/useful-constants.js";
 import { calculateDates, debounce } from "../utils/data-handling-functions.js";
-import { cardFooter, LoadingIndicator, DataWarning } from "../utils/rendering-items.js";
+import { cardFooter, StickyBand, LoadingIndicator, DataWarning } from "../utils/rendering-items.js";
 
 const Probio = () => {
 	const [startDate, setStartDate] = useState("2023-06-01");
@@ -31,36 +29,22 @@ const Probio = () => {
 		debouncedSetDate(newValue.$d, setter);
 	}, [debouncedSetDate]);
 
-	const formRef = useRef();
+	const formRefDate = useRef();
 
-	const formContent = useMemo(() => [
+	const formContentDate = useMemo(() => [
 		{
-			customType: "date-picker",
-			id: "start",
-			width: "210px",
+			customType: "date-range",
+			id: "dateRange",
 			type: "desktop",
-			label: "From:",
-			sublabel: "Start date",
-			background: "primary",
-			value: startDate,
-			labelPosition: "side",
+			startValue: startDate,
+			startLabel: "Start date",
+			endValue: endDate,
+			endLabel: "End date",
 			labelSize: 12,
-			onChange: (newValue) => handleDateChange(newValue, setStartDate),
+			onStartChange: (newValue) => handleDateChange(newValue, setStartDate),
+			onEndChange: (newValue) => handleDateChange(newValue, setEndDate),
 		},
-		{
-			customType: "date-picker",
-			id: "end",
-			width: "210px",
-			type: "desktop",
-			label: "To:",
-			sublabel: "End date",
-			background: "primary",
-			value: endDate,
-			labelPosition: "side",
-			labelSize: 12,
-			onChange: (newValue) => handleDateChange(newValue, setEndDate),
-		},
-	], [startDate, endDate, handleDateChange]);
+	], [endDate, handleDateChange, startDate]);
 
 	const isValidDateRange = useMemo(() => startDate && endDate && new Date(startDate) <= new Date(endDate), [startDate, endDate]);
 
@@ -74,154 +58,139 @@ const Probio = () => {
 	const metrics = useMemo(() => dataSets?.metrics || [], [dataSets]);
 	const isValidData = useMemo(() => metrics.length > 0, [metrics]);
 
+	const graphConfigs = useMemo(() => [
+		{
+			title: "Temperature Evolution Per Day",
+			data: [
+				{
+					x: metrics.map((item) => item.timestamp),
+					y: metrics.map((item) => item.air_temperature_max),
+					type: "bar",
+					title: "Max",
+					color: "primary",
+				},
+				{
+					x: metrics.map((item) => item.timestamp),
+					y: metrics.map((item) => item.air_temperature_avg),
+					type: "bar",
+					title: "Avg",
+					color: "secondary",
+				},
+				{
+					x: metrics.map((item) => item.timestamp),
+					y: metrics.map((item) => item.air_temperature_min),
+					type: "bar",
+					title: "Min",
+					color: "third",
+				},
+			],
+			xaxis: { title: "Days" },
+			yaxis: { title: "Temperature (°C)" },
+		},
+		{
+			title: "Air Temperature Vs Pressure Correlation",
+			data: [
+				{
+					x: metrics.map((item) => item.timestamp),
+					y: metrics.map((item) => item.air_temperature_avg * 100),
+					type: "scatter",
+					mode: "lines",
+					title: "Avg Temperature / 100",
+					color: "secondary",
+				},
+				{
+					x: metrics.map((item) => item.timestamp),
+					y: metrics.map((item) => item.air_pressure),
+					type: "scatter",
+					mode: "lines",
+					title: "Air Pressure",
+					color: "third",
+				},
+			],
+			xaxis: { title: "Days" },
+		},
+		{
+			title: "Air Temperature Vs Humidity Correlation",
+			data: [
+				{
+					x: metrics.map((item) => item.timestamp),
+					y: metrics.map((item) => item.air_temperature_avg * 10),
+					type: "scatter",
+					mode: "lines",
+					title: "Avg Temperature / 10",
+					color: "secondary",
+				},
+				{
+					x: metrics.map((item) => item.timestamp),
+					y: metrics.map((item) => item.air_humidity),
+					type: "scatter",
+					mode: "lines",
+					title: "Air Pressure",
+					color: "third",
+				},
+			],
+			xaxis: { title: "Days" },
+		},
+		{
+			title: "Air Pressure Vs Humidity Correlation",
+			data: [
+				{
+					x: metrics.map((item) => item.timestamp),
+					y: metrics.map((item) => item.air_pressure),
+					type: "scatter",
+					mode: "lines",
+					title: "Air Pressure",
+					color: "primary",
+				},
+				{
+					x: metrics.map((item) => item.timestamp),
+					y: metrics.map((item) => item.air_humidity * 10),
+					type: "scatter",
+					mode: "lines",
+					title: "Air Pressure / 10",
+					color: "third",
+				},
+			],
+			xaxis: { title: "Days" },
+		},
+		{
+			title: "Complete Overview",
+			data: [
+				{
+					x: metrics.map((item) => item.timestamp),
+					y: metrics.map((item) => item.air_temperature_max * 100),
+					type: "bar",
+					title: "Max Temperature / 100",
+					color: "secondary",
+				},
+				{
+					x: metrics.map((item) => item.timestamp),
+					y: metrics.map((item) => item.air_pressure),
+					type: "scatter",
+					mode: "lines",
+					title: "Air Pressure",
+					color: "primary",
+				},
+				{
+					x: metrics.map((item) => item.timestamp),
+					y: metrics.map((item) => item.air_humidity * 10),
+					type: "scatter",
+					mode: "lines",
+					title: "Air Pressure / 10",
+					color: "third",
+				},
+			],
+			xaxis: { title: "Days" },
+		},
+	], [metrics]);
+
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
-			<Grid container display="flex" direction="row" justifyContent="flex-end" alignItems="center" spacing={2}>
-				{/* <Grid item sx={{ display: "flex", justifyContent: "flex-end" }} md={3}>
-					<Dropdown
-						id={dropdownContent[0].id}
-						value={stationName}
-						placeholder={dropdownContent[0].label}
-						items={dropdownContent[0].items}
-						size={dropdownContent[0].size}
-						width={dropdownContent[0].width}
-						height={dropdownContent[0].height}
-						background={dropdownContent[0].color}
-						onChange={dropdownContent[0].onChange}
-					/>
-				</Grid> */}
-				<Grid item sx={{ display: "flex", justifyContent: "flex-end" }} xs={6} md={3} mt={1}>
-					<Form ref={formRef} content={formContent} />
-				</Grid>
-			</Grid>
+			<StickyBand formRef={formRefDate} formContent={formContentDate} />
 			{isValidDateRange ? (
 				<>
-					{[
-						{
-							title: "Temperature Evolution Per Day",
-							data: [
-								{
-									x: metrics.map((item) => item.timestamp),
-									y: metrics.map((item) => item.air_temperature_max),
-									type: "bar",
-									title: "Max",
-									color: "primary",
-								},
-								{
-									x: metrics.map((item) => item.timestamp),
-									y: metrics.map((item) => item.air_temperature_avg),
-									type: "bar",
-									title: "Avg",
-									color: "secondary",
-								},
-								{
-									x: metrics.map((item) => item.timestamp),
-									y: metrics.map((item) => item.air_temperature_min),
-									type: "bar",
-									title: "Min",
-									color: "third",
-								},
-							],
-							xaxis: { title: "Days" },
-							yaxis: { title: "Temperature (°C)" },
-						},
-						{
-							title: "Air Temperature Vs Pressure Correlation",
-							data: [
-								{
-									x: metrics.map((item) => item.timestamp),
-									y: metrics.map((item) => item.air_temperature_avg * 100),
-									type: "scatter",
-									mode: "lines",
-									title: "Avg Temperature / 100",
-									color: "secondary",
-								},
-								{
-									x: metrics.map((item) => item.timestamp),
-									y: metrics.map((item) => item.air_pressure),
-									type: "scatter",
-									mode: "lines",
-									title: "Air Pressure",
-									color: "third",
-								},
-							],
-							xaxis: { title: "Days" },
-						},
-						{
-							title: "Air Temperature Vs Humidity Correlation",
-							data: [
-								{
-									x: metrics.map((item) => item.timestamp),
-									y: metrics.map((item) => item.air_temperature_avg * 10),
-									type: "scatter",
-									mode: "lines",
-									title: "Avg Temperature / 10",
-									color: "secondary",
-								},
-								{
-									x: metrics.map((item) => item.timestamp),
-									y: metrics.map((item) => item.air_humidity),
-									type: "scatter",
-									mode: "lines",
-									title: "Air Pressure",
-									color: "third",
-								},
-							],
-							xaxis: { title: "Days" },
-						},
-						{
-							title: "Air Pressure Vs Humidity Correlation",
-							data: [
-								{
-									x: metrics.map((item) => item.timestamp),
-									y: metrics.map((item) => item.air_pressure),
-									type: "scatter",
-									mode: "lines",
-									title: "Air Pressure",
-									color: "primary",
-								},
-								{
-									x: metrics.map((item) => item.timestamp),
-									y: metrics.map((item) => item.air_humidity * 10),
-									type: "scatter",
-									mode: "lines",
-									title: "Air Pressure / 10",
-									color: "third",
-								},
-							],
-							xaxis: { title: "Days" },
-						},
-						{
-							title: "Complete Overview",
-							data: [
-								{
-									x: metrics.map((item) => item.timestamp),
-									y: metrics.map((item) => item.air_temperature_max * 100),
-									type: "bar",
-									title: "Max Temperature / 100",
-									color: "secondary",
-								},
-								{
-									x: metrics.map((item) => item.timestamp),
-									y: metrics.map((item) => item.air_pressure),
-									type: "scatter",
-									mode: "lines",
-									title: "Air Pressure",
-									color: "primary",
-								},
-								{
-									x: metrics.map((item) => item.timestamp),
-									y: metrics.map((item) => item.air_humidity * 10),
-									type: "scatter",
-									mode: "lines",
-									title: "Air Pressure / 10",
-									color: "third",
-								},
-							],
-							xaxis: { title: "Days" },
-						},
-					].map((card, index) => (
-						<Grid key={index} item xs={12} sm={12} md={6}>
+					{graphConfigs.map((card, index) => (
+						<Grid key={index} item xs={12} sm={12} md={6} mb={index === graphConfigs.length - 1 ? 1 : 0}>
 							<Card title={card.title} footer={cardFooter({ minutesAgo })}>
 								{isValidData
 									? isLoading ? (<LoadingIndicator />
