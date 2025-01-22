@@ -157,7 +157,7 @@ const Dropdown = ({
 						},
 						transform: "translate(14px, -3px) scale(0.7)",
 						"&.MuiInputLabel-shrink": {
-							transform: "translate(14px, 0px) scale(0.7)",
+							transform: "translate(14px, -1px) scale(0.7)",
 							color: `${color}!important`,
 						},
 					}}
