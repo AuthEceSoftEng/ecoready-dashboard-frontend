@@ -1,5 +1,5 @@
 import { Grid } from "@mui/material";
-import { Circle, LayerGroup, LayersControl, MapContainer, Marker, Polygon, Popup, Rectangle, TileLayer, GeoJSON } from "react-leaflet";
+import { Circle, LayerGroup, LayersControl, Map, MapContainer, Marker, Polygon, Popup, Rectangle, TileLayer, GeoJSON } from "react-leaflet";
 import { scaleQuantize } from "d3-scale";
 
 import colors from "../_colors.scss";
@@ -8,7 +8,8 @@ import { formatNumber } from "../utils/data-handling-functions.js";
 import MinimapControl from "./Minimap.js";
 
 
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
+
 import L from "leaflet";
 
 
@@ -37,37 +38,41 @@ function TheLegend({ }) {
 
 const positionClass = 'leaflet-bottom leaflet-left';
 
-const TheLegendControl = ({ gdata }) => {
-	console.log("AAAAAAAAAAAAAAAAAA")
-	console.log(gdata)
-//	geodata.map((metric, index) => (
-	//		<Grid key={index} item xs={1}>
-			//	<Legend title={metric.name} min={metric.range[0]} max={metric.range[1]} unit={metric.unit} colorscale={metric.style.fillColor}/>
-		//	</Grid>
-//		))
-    return(
-    	 <div style={{position: "absolute", top: "70px", right: "10px", zIndex: 1000}}>
-    	 	<div style={{backgroundColor: "white", border: "2px solid rgba(0,0,0,0.2)", borderRadius: "5px", minWidth: "150px"}}>
-    	       <Legend title="rice1" min={gdata[0].range[0]} max={gdata[0].range[1]} unit={gdata[0].unit} colorscale={gdata[0].style.fillColor}/>
-    	 	</div>
-    	 </div>
-      
-//      <div>
-//        <div className="leaflet-control leaflet-bar">
-//          <div className="bg-red-500 w-[80px] h-[80px]">Block 1</div>
-//        </div>
-//        <div className="leaflet-control leaflet-bar">
-//          <div className="bg-yellow-500 w-[80px] h-[80px]">Block 2</div>
-//        </div>
-//        <div className="leaflet-control leaflet-bar">
-//          <div className="bg-green-500 w-[80px] h-[80px]">Block 3</div>
-//        </div>
-//        <div className="leaflet-control leaflet-bar">
-//          <div className="bg-blue-500 w-[80px] h-[80px]">Block 4</div>
-//        </div>
-//      </div>
-    )
-  }
+const TheLegendControl = ({ gdata, selectedLayerIndex }) => {
+	  if (!gdata || gdata.length === 0 || selectedLayerIndex >= gdata.length) return null;
+
+	  const selectedLayer = gdata[selectedLayerIndex];
+	  return (
+	    <div
+	      style={{
+	        position: "absolute",
+	        top: "10px", // Distance from the top of the map
+	        left: "50%", // Center horizontally
+	        transform: "translateX(-50%)", // Adjust for centering
+	        zIndex: 1000,
+	      }}
+	    >
+	      <div
+	        style={{
+	          backgroundColor: "white",
+	          border: "2px solid rgba(0,0,0,0.2)",
+	          borderRadius: "5px",
+	          padding: "10px",
+	          boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)", // Optional for better appearance
+	        }}
+	      >
+	        <Legend
+	          title={selectedLayer.name}
+	          min={selectedLayer.range[0]}
+	          max={selectedLayer.range[1]}
+	          unit={selectedLayer.unit}
+	          colorscale={selectedLayer.style.fillColor}
+	        />
+	      </div>
+	    </div>
+	  );
+	};
+
 
 
 const Legend = ({ title, min, max, unit, colorscale = [ colors.choropleth1, colors.choropleth2, colors.choropleth3, colors.choropleth4, colors.choropleth5,], }) => {
@@ -101,200 +106,87 @@ const Legend = ({ title, min, max, unit, colorscale = [ colors.choropleth1, colo
 	);
 };
 
-
 const Plot = ({
-	width = "100%",
-	height = "100%",
-	scrollWheelZoom = true,
-	zoom = 12,
-	center = [40.627, 22.96],
-	layers = {normal: { show: false }, simple: { show: false }, dark: { show: false }, terrain: { show: false }, satellite: { show: false }},
-	markers = [],
-	circles = [],
-	rectangles = [],
-	polygons = [],
-	groups = [],
-	geodata = [],
-	showMinimap = false, // Add this prop
-}) => (
-	<Grid container width="100%" height="100%" display="flex" direction="row" spacing={1}>
-		<Grid item xs={10} style={{ padding: 1 }}>
-			<MapContainer style={{ width, height }} center={center} zoom={zoom} scrollWheelZoom={scrollWheelZoom} minZoom={2.37}
-				maxBounds={[[-90, -180], [90, 180]]} // Latitude/longitude bounds for whole world
-				maxBoundsViscosity={1} // Makes bounds completely rigid
-				boundsOptions={{ padding: [50, 50], animate: true, }} >
-				{showMinimap && <MinimapControl position="bottomleft" zoom={3} center={center} />}
-				{Object.keys(layers).filter((layer) => layers[layer].show && !layers[layer].hiddable).map((layer, index) => (
-					<TileLayer key={index} url={urls[layer]} attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'/>
-				))}
-				{geodata.filter((metric) => !metric.hiddable).map((metric, index) => (
-					<GeoJSON key={index} data={metric.data} style={metric.style} onEachFeature={metric.action} />
-				))}
-				{markers.filter((marker) => !marker.hiddable).map((marker, index) => (
-					<Marker key={index} position={marker.position} {...(marker.icon && { icon: marker.icon })}>
-						{marker.popup && (<Popup> {marker.popup} </Popup>)}
-					</Marker>
-				))}
-				{circles.filter((circle) => !circle.hiddable).map((circle, index) => (
-					<Circle key={index} center={circle.center}
-						pathOptions={{
-							fillColor: colors?.[circle?.fillColor] || circle?.fillColor,
-							color: colors?.[circle?.color] || circle?.color,
-						}}
-						radius={circle.radius}
-					/>
-				))}
-				{rectangles.filter((rectangle) => !rectangle.hiddable).map((rectangle, index) => (
-					<Rectangle key={index} bounds={rectangle.bounds}
-						pathOptions={{
-							fillColor: colors?.[rectangle?.fillColor] || rectangle?.fillColor,
-							color: colors?.[rectangle?.color] || rectangle?.color,
-						}}
-					/>
-				))}
-				{polygons.filter((polygon) => !polygon.hiddable).map((polygon, index) => (
-					<Polygon key={index} positions={polygon.positions}
-						pathOptions={{
-							fillColor: colors?.[polygon?.fillColor] || polygon?.fillColor,
-							color: colors?.[polygon?.color] || polygon?.color,
-						}}
-					/>
-				))}
-				{groups.filter((group) => !group.hiddable).map((group, index) => (
-					<LayerGroup key={index}>
-						{group.shapes.markers.filter((marker) => !marker.hiddable).map((marker, index2) => (
-							<Marker key={index2} position={marker.position} {...(marker.icon && { icon: marker.icon })} >
-								{marker.popup && ( <Popup> {marker.popup} </Popup> )}
-							</Marker>
-						))}
-						{group.shapes.circles.filter((circle) => !circle.hiddable).map((circle, index2) => (
-							<Circle key={index2} center={circle.center}
-								pathOptions={{
-									fillColor: colors?.[circle?.fillColor] || circle?.fillColor,
-									color: colors?.[circle?.color] || circle?.color,
-								}}
-								radius={circle.radius}
-							/>
-						))}
-						{group.shapes.rectangles.filter((rectangle) => !rectangle.hiddable).map((rectangle, index2) => (
-							<Rectangle key={index2} bounds={rectangle.bounds}
-								pathOptions={{
-									fillColor: colors?.[rectangle?.fillColor] || rectangle?.fillColor,
-									color: colors?.[rectangle?.color] || rectangle?.color,
-								}}
-							/>
-						))}
-						{group.shapes.polygons.filter((polygon) => !polygon.hiddable).map((polygon, index2) => (
-							<Polygon
-								key={index2}
-								positions={polygon.positions}
-								pathOptions={{
-									fillColor: colors?.[polygon?.fillColor] || polygon?.fillColor,
-									color: colors?.[polygon?.color] || polygon?.color,
-								}}
-							/>
-						))}
-					</LayerGroup>
-				))}
-				{geodata.length > 0 && (
-					<LayersControl position="topright" collapsed={false}>
-						{geodata.filter((metric) => metric.hiddable).map((metric, index) => (
-							<LayersControl.BaseLayer key={index} name={metric.name} checked={metric.defaultChecked}>
-								<GeoJSON key={index} data={metric.data} style={metric.style} onEachFeature={metric.action}/>
-							</LayersControl.BaseLayer>
-						))}
-					</LayersControl>
-				)}
-				{groups.length > 0 && (
-					<LayersControl position="bottomright">
-						{groups.filter((group) => group.hiddable).map((group, index) => (
-							<LayersControl.Overlay
-								key={index}
-								name={group.name}
-								checked={group.defaultChecked}
-							>
-								<LayerGroup key={index}>
-									{group.shapes.markers.map((marker, index2) => (
-										<Marker
-											key={index2}
-											position={marker.position}
-											{...(marker.icon && { icon: marker.icon })}
-										>
-											{marker.popup && (
-												<Popup>
-													{marker.popup}
-												</Popup>
-											)}
-										</Marker>
-									))}
-									{group.shapes.circles.filter((circle) => !circle.hiddable).map((circle, index2) => (
-										<Circle
-											key={index2}
-											center={circle.center}
-											pathOptions={{
-												fillColor: colors?.[circle?.fillColor] || circle?.fillColor,
-												color: colors?.[circle?.color] || circle?.color,
-											}}
-											radius={circle.radius}
-										/>
-									))}
-									{group.shapes.rectangles.filter((rectangle) => !rectangle.hiddable).map((rectangle, index2) => (
-										<Rectangle
-											key={index2}
-											bounds={rectangle.bounds}
-											pathOptions={{
-												fillColor: colors?.[rectangle?.fillColor] || rectangle?.fillColor,
-												color: colors?.[rectangle?.color] || rectangle?.color,
-											}}
-										/>
-									))}
-									{group.shapes.polygons.filter((polygon) => !polygon.hiddable).map((polygon, index2) => (
-										<Polygon
-											key={index2}
-											positions={polygon.positions}
-											pathOptions={{
-												fillColor: colors?.[polygon?.fillColor] || polygon?.fillColor,
-												color: colors?.[polygon?.color] || polygon?.color,
-											}}
-										/>
-									))}
-								</LayerGroup>
-							</LayersControl.Overlay>
-						))}
-					</LayersControl>
-				)}
-				{markers.length > 0 && (
-					<LayersControl position="bottomright" collapsed={false}>
-						{markers.filter((marker) => marker.hiddable).map((marker, index) => (
-							<LayersControl.Overlay key={index} name={marker.name} checked={marker.defaultChecked}>
-								<Marker
-									position={marker.position}
-									{...(marker.icon && { icon: marker.icon })}
-								>
-									{marker.popup && (
-										<Popup>
-											{marker.popup}
-										</Popup>
-									)}
-								</Marker>
-							</LayersControl.Overlay>
-						))}
-					</LayersControl>
-				)}
-				{console.log(geodata)}
-				<TheLegendControl gdata={geodata} collapsed={false} />
-			</MapContainer>
-		</Grid>
+	  width = "100%",
+	  height = "100%",
+	  scrollWheelZoom = true,
+	  zoom = 12,
+	  center = [40.627, 22.96],
+	  layers = { normal: { show: false }, simple: { show: false }, dark: { show: false }, terrain: { show: false }, satellite: { show: false } },
+	  markers = [],
+	  circles = [],
+	  rectangles = [],
+	  polygons = [],
+	  groups = [],
+	  geodata = [],
+	  showMinimap = false,
+	}) => {
+	  const [selectedLayerIndex, setSelectedLayerIndex] = useState(0);
+	  const mapRef = useRef(null);
 
-		
-		{/*geodata.length > 0
-			&& geodata.map((metric, index) => (
-				<Grid key={index} item xs={1}>
-					<Legend title={metric.name} min={metric.range[0]} max={metric.range[1]} unit={metric.unit} colorscale={metric.style.fillColor}/>
-				</Grid>
-			))*/}
+	  useEffect(() => {
+	    const map = mapRef.current;
 
-		</Grid>
-);
+	    if (map) {
+	      const handleLayerChange = (event) => {
+	        const layerName = event.name; // This is the name set in the LayersControl.BaseLayer
+	        const newIndex = geodata.findIndex((metric) => metric.name === layerName);
+	        if (newIndex !== -1) {
+	          setSelectedLayerIndex(newIndex);
+	        }
+	      };
+
+	      map.on("baselayerchange", handleLayerChange);
+
+	      return () => {
+	        map.off("baselayerchange", handleLayerChange);
+	      };
+	    }
+	  }, [geodata]);
+
+	  return (
+	    <Grid container width="100%" height="100%" display="flex" direction="row" spacing={1}>
+	      <Grid item xs={10} style={{ padding: 1 }}>
+	        <MapContainer
+	          style={{ width, height }}
+	          center={center}
+	          zoom={zoom}
+	          scrollWheelZoom={scrollWheelZoom}
+	          minZoom={2.37}
+	          maxBounds={[[-90, -180], [90, 180]]}
+	          maxBoundsViscosity={1}
+	          boundsOptions={{ padding: [50, 50], animate: true }}
+	          ref={mapRef} // Attach the map instance to the ref
+	        >
+	          {showMinimap && <MinimapControl position="bottomleft" zoom={3} center={center} />}
+	          {Object.keys(layers)
+	            .filter((layer) => layers[layer].show && !layers[layer].hiddable)
+	            .map((layer, index) => (
+	              <TileLayer
+	                key={index}
+	                url={urls[layer]}
+	                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+	              />
+	            ))}
+	          {geodata.filter((metric) => !metric.hiddable).map((metric, index) => (
+	            <GeoJSON key={index} data={metric.data} style={metric.style} onEachFeature={metric.action} />
+	          ))}
+	          <LayersControl position="topright" collapsed={false}>
+	            {geodata
+	              .filter((metric) => metric.hiddable)
+	              .map((metric, index) => (
+	                <LayersControl.BaseLayer key={index} name={metric.name} checked={metric.defaultChecked}>
+	                  <GeoJSON data={metric.data} style={metric.style} onEachFeature={metric.action} />
+	                </LayersControl.BaseLayer>
+	              ))}
+	          </LayersControl>
+	          <TheLegendControl gdata={geodata} selectedLayerIndex={selectedLayerIndex} />
+	        </MapContainer>
+	      </Grid>
+	    </Grid>
+	  );
+	};
+
+
 
 export default Plot;
