@@ -66,8 +66,6 @@ const ProductsScreen = () => {
 		debouncedSetDate(newValue.$d, setter);
 	}, [debouncedSetDate]);
 
-	const dropdownValues = [filters.product, [filters.country]];
-
 	const keys = useMemo(() => ({
 		country: findKeyByText(europeanCountries, filters.country),
 		product: findKeyByText(products, filters.product),
@@ -79,9 +77,6 @@ const ProductsScreen = () => {
 		{
 			customType: "date-range",
 			id: "dateRange",
-			width: "350px",
-			type: "desktop",
-			label: "",
 			startValue: startDate,
 			startLabel: "Start date",
 			endValue: endDate,
@@ -204,6 +199,7 @@ const ProductsScreen = () => {
 		{
 			id: "product",
 			items: products,
+			value: filters.product,
 			onChange: (event) => {
 				dispatch({ type: "FETCH_START" }); // Add loading state
 				setFilters((prev) => ({ ...prev, product: event.target.value }));
@@ -212,6 +208,7 @@ const ProductsScreen = () => {
 		{
 			id: "country",
 			items: europeanCountries,
+			value: filters.country,
 			onChange: (event) => {
 				dispatch({ type: "FETCH_START" }); // Add loading state
 				setFilters((prev) => ({ ...prev, country: event.target.value }));
@@ -220,9 +217,7 @@ const ProductsScreen = () => {
 	].map((item) => ({
 		...item,
 		size: "small",
-		width: "170px",
-		height: "40px",
-	}))), [dispatch]);
+	}))), [dispatch, filters.country, filters.product]);
 
 	const europeOverview = useMemo(() => {
 		const { euProduction, countryData } = transformProductionData(production, filters.year, europeanCountries);
@@ -313,7 +308,7 @@ const ProductsScreen = () => {
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
-			<StickyBand dropdownContent={[dropdownContent[0]]} value={[dropdownValues[0]]} />
+			<StickyBand dropdownContent={[dropdownContent[0]]} />
 			<Grid item xs={12} md={12} alignItems="center" flexDirection="column">
 				<Card title="EU's Annual Overview" footer={cardFooter({ minutesAgo })}>
 					<Grid item xs={12} md={12} alignItems="center" flexDirection="column">
@@ -401,7 +396,6 @@ const ProductsScreen = () => {
 					<StickyBand
 						sticky={false}
 						dropdownContent={[dropdownContent[1]]}
-						value={dropdownValues[1]}
 						formRef={formRefDate}
 						formContent={formContentDate}
 					/>

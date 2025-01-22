@@ -14,8 +14,8 @@ import { findKeyByText } from "../utils/data-handling-functions.js";
 // Extract popup component
 const PopupContent = memo(({ title, onClick }) => (
 	<div>
-		<div style={{ display: "flex", justifyContent: "center", marginBottom: "8px", height: "40px", width: "100%", }}>
-			<SecondaryBackgroundButton title={title} size="small" onClick={onClick}/>
+		<div style={{ display: "flex", justifyContent: "center", marginBottom: "8px", height: "40px", width: "100%" }}>
+			<SecondaryBackgroundButton title={title} size="small" onClick={onClick} />
 		</div>
 		<p>{"A description of the Living Lab will probably go here"}</p>
 	</div>
@@ -24,7 +24,7 @@ const PopupContent = memo(({ title, onClick }) => (
 // Extract marker creation logic
 const createMarker = (lab, locationKey, index, onClick) => ({
 	position: locationKey ? lab.coordinates[locationKey] : lab.coordinates,
-	popup: <PopupContent title={locationKey ? `${lab.title} - ${locationKey}` : lab.title} onClick={onClick}/>,
+	popup: <PopupContent title={locationKey ? `${lab.title} - ${locationKey}` : lab.title} onClick={onClick} />,
 	name: locationKey ? `${lab.title} - ${index + 1}` : lab.title,
 	hiddable: true,
 	defaultChecked: true,
@@ -91,8 +91,6 @@ const Map = () => {
 		setFilters((prev) => ({ ...prev, year: newValue.$y })); // Select only the year from the resulting object
 	}, [setFilters]);
 
-	const dropdownValues = [filters.product];
-
 	const keys = useMemo(() => ({
 		product: findKeyByText(products, filters.product),
 	}), [filters.product]);
@@ -103,16 +101,16 @@ const Map = () => {
 		{
 			customType: "date-picker",
 			id: "yearPicker",
-			width: "120px",
-			type: "desktop",
-			value: "2024",
+			value: filters.year,
 			sublabel: "Year Picker",
 			views: ["year"],
+			minDate: new Date(2000, 0, 1),
+			maxDate: new Date(2024, 11, 31),
 			background: "third",
 			labelSize: 12,
 			onChange: handleYearChange,
 		},
-	], [handleYearChange]);
+	], [filters.year, handleYearChange]);
 
 	const fetchConfigs = useMemo(
 		() => (keys.product
@@ -146,6 +144,8 @@ const Map = () => {
 		{
 			id: "product",
 			items: products,
+			label: "Select Product",
+			value: filters.product,
 			onChange: (event) => {
 				dispatch({ type: "FETCH_START" }); // Add loading state
 				setFilters((prev) => ({ ...prev, product: event.target.value }));
@@ -154,9 +154,7 @@ const Map = () => {
 	].map((item) => ({
 		...item,
 		size: "small",
-		width: "170px",
-		height: "40px",
-	}))), [dispatch]); // Add dispatch to dependencies
+	}))), [dispatch, filters.product]); // Add dispatch to dependencies
 
 	useEffect(() => {
 		// Load the GeoJSON file from the public directory
@@ -288,8 +286,7 @@ const Map = () => {
 				defaultChecked: false,
 			},
 
-		] : []), [isDataReady, enhancedGeoJsonData, production, ricePrice]
-	);
+		] : []), [isDataReady, enhancedGeoJsonData, production, ricePrice]);
 
 	// Create markers for labs with coordinates
 	const markers = useMemo(() => (
@@ -319,34 +316,32 @@ const Map = () => {
 				defaultChecked: true,
 				name: "Physical Map",
 			},
-			//topographical: {
-				//show: true,
-				//hiddable: true,
-				//defaultChecked: false,
-				//name: "Topographical Map",
-			},
-		//},
+			// topographical: {
+			// show: true,
+			// hiddable: true,
+			// defaultChecked: false,
+			// name: "Topographical Map",
+		},
+		// },
 	}), []);
 
 	return (
-		<Grid container width="100%" height="100%" display="flex" direction="row" >
-    		<Grid width="100%" height="10%" style={{ minHeight: "50px", marginBottom: "5px", marginRight: "190px" }} display="flex" direction="row">
-    			{<StickyBand sticky={false} dropdownContent={dropdownContent} value={dropdownValues} formRef={formRefDate} formContent={formContentDate} />}
-		    </Grid>
-		    <Grid width="100%" height="90%" display="flex" direction="row">
+		<Grid container width="100%" height="100%" display="flex" direction="row">
+			<StickyBand sticky={false} dropdownContent={dropdownContent} formRef={formRefDate} formContent={formContentDate} />
+			<Grid width="100%" height="100%" display="flex" direction="row">
 				{isLoading || !isDataReady
-				? (
-					<Grid item xs={12} sm={12} md={12} lg={12} xl={12} height="100%">
-						{" "}
-						<LoadingIndicator />
-						{" "}
-					</Grid>
-				)
-				: (
-					<Grid item xs={12} sm={12} md={12} lg={12} xl={12} height="100%">
-						<MapComponent {...mapConfig} geodata={geodata} markers={markers} />
-					</Grid>
-				)}
+					? (
+						<Grid item xs={12} sm={12} md={12} lg={12} xl={12} height="100%">
+							{" "}
+							<LoadingIndicator />
+							{" "}
+						</Grid>
+					)
+					: (
+						<Grid item xs={12} sm={12} md={12} lg={12} xl={12} height="100%">
+							<MapComponent {...mapConfig} geodata={geodata} markers={markers} />
+						</Grid>
+					)}
 			</Grid>
 		</Grid>
 	);

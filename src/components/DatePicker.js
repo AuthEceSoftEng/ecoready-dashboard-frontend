@@ -26,7 +26,7 @@ const useStyles = makeStyles(() => ({
 		},
 		"& .MuiInputLabel-outlined.MuiInputLabel-shrink": {
 			// Additional specificity for outlined variant
-			transform: "translate(14px, 0px) scale(0.7)",
+			transform: "translate(14px, -1px) scale(0.7)",
 		},
 		"& .MuiInputBase-input": {
 			padding: (props) => (props.height === "auto" ? undefined : "0 14px"),
