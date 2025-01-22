@@ -8,7 +8,8 @@ import colors from "../_colors.scss";
 const useStyles = makeStyles(() => ({
 	date_picker: {
 		color: (props) => colors[props.color] || props.color,
-		backgroundColor: (props) => colors[props.background] || props.background,
+		backgroundColor: "#1f2d45", // this is a hack
+		minWidth: "160px",
 		borderRadius: (props) => props.borderRadius,
 		outline: "none",
 		width: (props) => props.width,
