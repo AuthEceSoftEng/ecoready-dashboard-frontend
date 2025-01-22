@@ -26,13 +26,38 @@ const useStyles = makeStyles(() => ({
 		},
 		"& .MuiInputLabel-outlined.MuiInputLabel-shrink": {
 			// Additional specificity for outlined variant
-			transform: "translate(14px, -3px) scale(0.7)",
+			transform: "translate(14px, -1px) scale(0.7)",
 		},
 		"& .MuiInputBase-input": {
 			padding: (props) => (props.height === "auto" ? undefined : "0 14px"),
 		},
 	},
 }));
+
+const getInputFormat = (views) => {
+	if (!views) return "DD/MM/YYYY";
+	if (views.length === 1) {
+		switch (views[0]) {
+			case "year": { return "YYYY";
+			}
+
+			case "month": { return "MM/YYYY";
+			}
+
+			case "day": { return "DD/MM/YYYY";
+			}
+
+			default: { return "DD/MM/YYYY";
+			}
+		}
+	}
+
+	if (views.includes("year") && views.includes("month") && !views.includes("day")) {
+		return "MM/YYYY";
+	}
+
+	return "DD/MM/YYYY";
+};
 
 const DatePicker = ({
 	type = "desktop",
@@ -41,11 +66,13 @@ const DatePicker = ({
 	disabled = false,
 	label = "Date",
 	views = ["day", "month", "year"],
-	background = "third",
+	background = "primary",
 	color = "white",
 	borderRadius = "10px",
 	width = "100%",
-	height = "40px", // Add height prop with default value
+	height = "40px",
+	minDate,
+	maxDate,
 }) => {
 	const classes = useStyles({ background, color, borderRadius, width, height });
 	const [customValue, setCustomValue] = useState(value);
@@ -63,8 +90,10 @@ const DatePicker = ({
 					views={views}
 					disabled={disabled}
 					label={label}
-					inputFormat={label === "Year Picker" ? "YYYY" : "DD/MM/YYYY"}
+					inputFormat={getInputFormat(views)}
 					value={customValue}
+					minDate={minDate ?? new Date("2000-01-01")}
+					maxDate={maxDate ?? new Date("2050-12-31")}
 					renderInput={(params) => <TextField {...params} />}
 					onChange={handleChange}
 				/>
@@ -75,8 +104,10 @@ const DatePicker = ({
 					views={views}
 					disabled={disabled}
 					label={label}
-					inputFormat={label === "Year Picker" ? "YYYY" : "DD/MM/YYYY"}
+					inputFormat={getInputFormat(views)}
 					value={customValue}
+					minDate={minDate ?? new Date("2000-01-01")}
+					maxDate={maxDate ?? new Date("2050-12-31")}
 					renderInput={(params) => <TextField {...params} />}
 					onChange={handleChange}
 				/>
@@ -98,6 +129,8 @@ const DatePicker = ({
 					disabled={disabled}
 					label={label}
 					value={customValue}
+					minDate={minDate ?? new Date("2000-01-01")}
+					maxDate={maxDate ?? new Date("2050-12-31")}
 					renderInput={(params) => <TextField {...params} />}
 					onChange={handleChange}
 				/>

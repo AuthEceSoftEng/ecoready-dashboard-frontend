@@ -1,15 +1,13 @@
 import { Grid } from "@mui/material";
-import { memo, useMemo, useState, useCallback } from "react";
+import { memo, useMemo, useState, useCallback, useRef } from "react";
 
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
-import Dropdown from "../components/Dropdown.js";
 import useInit from "../utils/screen-init.js";
-import DatePicker from "../components/DatePicker.js";
 import ecoReadyMasuriaConfigs, { organization } from "../config/EcoReadyMasuriaConfig.js";
 import { calculateDates, getCustomDateTime, findKeyByText } from "../utils/data-handling-functions.js";
 import { monthNames } from "../utils/useful-constants.js";
-import { cardFooter, DataWarning, LoadingIndicator } from "../utils/rendering-items.js";
+import { cardFooter, StickyBand, DataWarning, LoadingIndicator } from "../utils/rendering-items.js";
 
 const REGIONS = [
 	{ value: "BEZEK", text: "Bezek" },
@@ -35,8 +33,38 @@ const EcoReadyMasuria = () => {
 		[year],
 	);
 
+	const dropdownContent = useMemo(() => [
+		{
+			id: "station name",
+			size: "small",
+			label: "Select Weather Station",
+			items: REGIONS,
+			value: stationName,
+			onChange: (event) => {
+				setStationName(event.target.value);
+			},
+
+		},
+	], [stationName]);
+
+	const formRefDate = useRef();
+
+	const formContentDate = useMemo(() => [
+		{
+			customType: "date-picker",
+			id: "yearPicker",
+			width: "170px",
+			sublabel: "Year Picker",
+			views: ["year"],
+			value: `${year}`,
+			minDate: new Date("2001-01-01"),
+			maxDate: new Date("2015-12-31"),
+			labelSize: 12,
+			onChange: handleYearChange,
+		},
+	], [handleYearChange, year]);
+
 	const stationNameKey = findKeyByText(REGIONS, stationName);
-	console.log("Station Name Key:", stationNameKey);
 	const fetchConfigs = useMemo(
 		() => (stationNameKey && year ? ecoReadyMasuriaConfigs(stationNameKey, year) : null),
 		[stationNameKey, year],
@@ -61,23 +89,6 @@ const EcoReadyMasuria = () => {
 			snowHeight: metrics.map((item) => item.snow_cover_height),
 		};
 	}, [metrics, isValidData]);
-
-	const dropdownContent = useMemo(() => [
-		{
-			id: "station name",
-			size: "small",
-			width: "200px",
-			height: "40px",
-			color: "primary",
-			label: "Weather Station",
-			items: REGIONS,
-			defaultValue: "",
-			onChange: (event) => {
-				setStationName(event.target.value);
-			},
-
-		},
-	], []);
 
 	const charts = useMemo(() => [
 		{
@@ -154,31 +165,7 @@ const EcoReadyMasuria = () => {
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
-			<Grid container display="flex" direction="row" justifyContent="flex-end" alignItems="center" spacing={2} mt={1}>
-				<Grid item sx={{ display: "flex", justifyContent: "flex-end" }} md={3}>
-					<Dropdown
-						id={dropdownContent[0].id}
-						value={stationName}
-						placeholder={dropdownContent[0].label}
-						items={dropdownContent[0].items}
-						size={dropdownContent[0].size}
-						width={dropdownContent[0].width}
-						height={dropdownContent[0].height}
-						background={dropdownContent[0].color}
-						onChange={dropdownContent[0].onChange}
-					/>
-				</Grid>
-				<Grid item sx={{ display: "flex", justifyContent: "flex-end" }} md={2}>
-					{/* Select only the year */}
-					<DatePicker
-						type="desktop"
-						label="Year Picker"
-						views={["year"]}
-						value={`${year}`}
-						onChange={handleYearChange}
-					/>
-				</Grid>
-			</Grid>
+			<StickyBand dropdownContent={dropdownContent} formRef={formRefDate} formContent={formContentDate} />
 			{isValidData ? (
 				<>
 					{charts.map((card, index) => (

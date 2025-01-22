@@ -1,6 +1,7 @@
 import { Grid } from "@mui/material";
 import { memo, useMemo, useState, useCallback, useRef } from "react";
 
+import colors from "../_colors.scss";
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
 import Form from "../components/Form.js";
@@ -13,9 +14,17 @@ import { monthNames, years, europeanCountries, products } from "../utils/useful-
 // import { fetchCollections } from "../api/fetch-data.js";
 
 // const metrics = fetchCollections(organization, "rice");
-const unit = "t";
+const unit = "Tonnes";
 const customDate = getCustomDateTime(2024, 12);
 const { year, month } = calculateDates(customDate);
+
+const agriColors = [
+	colors.ag1, colors.ag2, colors.ag3, colors.ag4, colors.ag5,
+	colors.ag6, colors.ag7, colors.ag8, colors.ag9, colors.ag10,
+	colors.ag11, colors.ag12, colors.ag13, colors.ag14, colors.ag15,
+	colors.ag16, colors.ag17, colors.ag18, colors.ag19, colors.ag20,
+];
+const agColorKeys = Array.from({ length: 20 }, (_, i) => `ag${i + 1}`);
 
 const transformProductionData = (production, sliderYear, countries) => ({
 	euProduction: production.find(
@@ -57,8 +66,6 @@ const ProductsScreen = () => {
 		debouncedSetDate(newValue.$d, setter);
 	}, [debouncedSetDate]);
 
-	const dropdownValues = [filters.product, [filters.country]];
-
 	const keys = useMemo(() => ({
 		country: findKeyByText(europeanCountries, filters.country),
 		product: findKeyByText(products, filters.product),
@@ -70,9 +77,6 @@ const ProductsScreen = () => {
 		{
 			customType: "date-range",
 			id: "dateRange",
-			width: "350px",
-			type: "desktop",
-			label: "",
 			startValue: startDate,
 			startLabel: "Start date",
 			endValue: endDate,
@@ -190,19 +194,12 @@ const ProductsScreen = () => {
 		return sortedResult;
 	}, [production]);
 
-	// Create color mapping excluding EU
-	const countryColors = Object.fromEntries(
-		europeanCountries
-			.filter((country) => country.value !== "EU")
-			.map((country) => [country.text, country.color]),
-	);
-	console.log("Country Colors", countryColors);
-
 	// const unit = useMemo(() => ricePrice[0]?.unit || "", [ricePrice]);
 	const dropdownContent = useMemo(() => ([
 		{
 			id: "product",
 			items: products,
+			value: filters.product,
 			onChange: (event) => {
 				dispatch({ type: "FETCH_START" }); // Add loading state
 				setFilters((prev) => ({ ...prev, product: event.target.value }));
@@ -211,6 +208,7 @@ const ProductsScreen = () => {
 		{
 			id: "country",
 			items: europeanCountries,
+			value: filters.country,
 			onChange: (event) => {
 				dispatch({ type: "FETCH_START" }); // Add loading state
 				setFilters((prev) => ({ ...prev, country: event.target.value }));
@@ -219,9 +217,7 @@ const ProductsScreen = () => {
 	].map((item) => ({
 		...item,
 		size: "small",
-		width: "170px",
-		height: "40px",
-	}))), [dispatch]);
+	}))), [dispatch, filters.country, filters.product]);
 
 	const europeOverview = useMemo(() => {
 		const { euProduction, countryData } = transformProductionData(production, filters.year, europeanCountries);
@@ -241,7 +237,7 @@ const ProductsScreen = () => {
 						{
 							labels: countryData.map((item) => item.label),
 							values: countryData.map((item) => item.total_production),
-							color: countryData.map((item) => europeanCountries.find((country) => country.text === item.label)?.color),
+							color: agriColors,
 							type: "pie",
 							sort: false,
 						},
@@ -250,17 +246,17 @@ const ProductsScreen = () => {
 			{
 				data: Object.entries(productionByCountry)
 					.filter(([countryCode]) => countryCode !== "EU")
-					.map(([countryCode, values]) => ({
+					.map(([countryCode, values], index) => ({
 						x: generateYearsArray(2010, Number.parseInt(filters.year, 10)),
 						y: values,
 						type: "bar",
 						title: countryCode,
-						color: countryColors[countryCode],
+						color: agColorKeys[index % agColorKeys.length],
 					})),
 				title: "Annual Production by Country",
 			},
 		];
-	}, [countryColors, filters.year, production, productionByCountry]);
+	}, [filters.year, production, productionByCountry]);
 
 	const countryOverview = useMemo(() => [
 		{
@@ -312,7 +308,7 @@ const ProductsScreen = () => {
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
-			<StickyBand dropdownContent={[dropdownContent[0]]} value={[dropdownValues[0]]} />
+			<StickyBand dropdownContent={[dropdownContent[0]]} />
 			<Grid item xs={12} md={12} alignItems="center" flexDirection="column">
 				<Card title="EU's Annual Overview" footer={cardFooter({ minutesAgo })}>
 					<Grid item xs={12} md={12} alignItems="center" flexDirection="column">
@@ -363,6 +359,7 @@ const ProductsScreen = () => {
 							>
 								{europeOverview[1].data.values ? (
 									<Plot
+										scrollZoom
 										showLegend={false}
 										height="300px"
 										data={europeOverview[1].data}
@@ -395,11 +392,10 @@ const ProductsScreen = () => {
 				</Card>
 			</Grid>
 			<Grid item xs={12} md={12} alignItems="center" flexDirection="column">
-				<Card title={`${filters.product} in ${filters.country}`} footer={cardFooter({ minutesAgo })}>
+				<Card title="Product per Country" footer={cardFooter({ minutesAgo })}>
 					<StickyBand
 						sticky={false}
 						dropdownContent={[dropdownContent[1]]}
-						value={dropdownValues[1]}
 						formRef={formRefDate}
 						formContent={formContentDate}
 					/>

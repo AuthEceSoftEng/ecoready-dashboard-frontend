@@ -1,4 +1,4 @@
-import { MenuItem, Select } from "@mui/material";
+import { MenuItem, Select, FormControl, InputLabel } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 
 import Checkbox from "./Checkbox.js";
@@ -129,11 +129,10 @@ const useStyles = makeStyles((theme) => ({
 const Dropdown = ({
 	id = "custom-dropdown",
 	size = "",
-	placeholder = "Placeholder",
+	placeholder = "",
 	filled = true,
 	color = "white",
 	background = "secondary",
-	showPlaceholder = true,
 	width = "",
 	height = "",
 	items = [],
@@ -144,45 +143,69 @@ const Dropdown = ({
 	const classes = useStyles();
 
 	return (
-		<Select
-			id={id}
-			multiple={multiple}
-			value={value}
-			displayEmpty={showPlaceholder}
-			className={classes[`${background}_${(filled ? "filled" : "outlined")}`]}
-			color={background}
-			size={size}
-			style={{ color, width, height }}
-			autoWidth={!width}
-			classes={{
-				filled: classes[`${background}_${(filled ? "filled" : "outlined")}`],
-				iconFilled: classes[`${background}_${(filled ? "filled" : "outlined")}`],
-			}}
-			sx={{ ">.MuiOutlinedInput-notchedOutline": { border: (filled) ? "none" : "1px solid", borderColor: `${background}.main` } }}
-			renderValue={(selected) => {
-				if (!selected || (Array.isArray(selected) && selected.length === 0)) {
-					return placeholder;
-				}
-
-				return Array.isArray(selected) ? selected.join(", ") : selected;
-			}}
-			// renderValue={(selected) => (selected || placeholder)}
-			onChange={onChange}
-		>
-			{items.map((it, index) => (
-				<MenuItem key={it.value || index} value={it.text}>
-					{multiple && (
-						<Checkbox
-							id={index}
-							checked={Array.isArray(value) && value.includes(it.text)}
-							color={background}
-							size="small"
-						/>
-					)}
-					{it.text}
-				</MenuItem>
-			))}
-		</Select>
+		<FormControl fullWidth={!width}>
+			{placeholder && (
+				<InputLabel
+					id={`${id}-label`}
+					sx={{
+						color: `${color}!important`,
+						"&.Mui-focused": {
+							color: `${color}!important`,
+						},
+						"&.MuiFormLabel-root": {
+							color: `${color}!important`,
+						},
+						transform: "translate(14px, -3px) scale(0.7)",
+						"&.MuiInputLabel-shrink": {
+							transform: "translate(14px, -1px) scale(0.7)",
+							color: `${color}!important`,
+						},
+					}}
+				>
+					{placeholder}
+				</InputLabel>
+			)}
+			<Select
+				id={id}
+				labelId={`${id}-label`}
+				multiple={multiple}
+				value={value}
+				label={placeholder}
+				className={classes[`${background}_${(filled ? "filled" : "outlined")}`]}
+				color={background}
+				size={size}
+				style={{ color, width, height }}
+				autoWidth={!width}
+				classes={{
+					filled: classes[`${background}_${(filled ? "filled" : "outlined")}`],
+					iconFilled: classes[`${background}_${(filled ? "filled" : "outlined")}`],
+				}}
+				sx={{
+					">.MuiOutlinedInput-notchedOutline": {
+						border: (filled) ? "none" : "1px solid",
+						borderColor: `${background}.main`,
+					},
+					".MuiSelect-icon": {
+						fill: color,
+					},
+				}}
+				onChange={onChange}
+			>
+				{items.map((it, index) => (
+					<MenuItem key={it.value || index} value={it.text}>
+						{multiple && (
+							<Checkbox
+								id={index}
+								checked={Array.isArray(value) && value.includes(it.text)}
+								color={background}
+								size="small"
+							/>
+						)}
+						{it.text}
+					</MenuItem>
+				))}
+			</Select>
+		</FormControl>
 	);
 };
 

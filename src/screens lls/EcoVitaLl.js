@@ -1,22 +1,53 @@
 import { Grid } from "@mui/material";
-import { memo, useMemo } from "react";
+import { memo, useMemo, useRef, useState, useCallback } from "react";
 
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
 import useInit from "../utils/screen-init.js";
 // import Form from "../components/Form.js";
 import { ecoVitallConfigs, randomDataRadial, organization } from "../config/EcoVitallConfig.js";
-import { calculateDates, getCustomDateTime } from "../utils/data-handling-functions.js";
+import { calculateDates, getCustomDateTime, debounce, isValidArray } from "../utils/data-handling-functions.js";
 import { monthNames } from "../utils/useful-constants.js";
-import { cardFooter, LoadingIndicator } from "../utils/rendering-items.js";
+import { cardFooter, LoadingIndicator, StickyBand } from "../utils/rendering-items.js";
 
 const EcoVItaLl = () => {
-	const customDate = useMemo(() => getCustomDateTime(2024, 9), []);
+	const [dateRange, setDateRange] = useState(() => getCustomDateTime(2024, 9), []);
 
 	const { month, currentDate, formattedBeginningOfMonth, formattedBeginningOfHour } = useMemo(
-		() => calculateDates(customDate),
-		[customDate],
+		() => calculateDates(dateRange),
+		[dateRange],
 	);
+
+	const debouncedSetMonth = useMemo(
+		() => debounce((date, setter) => {
+			setter(date);
+		}, 100),
+		[],
+	);
+
+	const handleMonthChange = useCallback((newValue) => {
+		if (!newValue?.$d) return;
+
+		const newMonth = newValue.$d.getMonth();
+
+		debouncedSetMonth(newMonth, setDateRange);
+	}, [debouncedSetMonth]);
+
+	const formRefDate = useRef();
+	const formContentDate = useMemo(() => [
+		{
+			customType: "date-picker",
+			id: "monthPicker",
+			type: "desktop",
+			sublabel: "Select Month",
+			views: ["month"],
+			minDate: new Date(2024, 8, 1),
+			maxDate: new Date(2024, 8, 30),
+			value: "2024-09-01",
+			labelSize: 12,
+			onChange: handleMonthChange,
+		},
+	], [handleMonthChange]);
 
 	const fetchConfigs = useMemo(
 		() => ecoVitallConfigs(currentDate, formattedBeginningOfMonth, formattedBeginningOfHour),
@@ -122,14 +153,14 @@ const EcoVItaLl = () => {
 		{
 			min: 0,
 			max: 14,
-			value: dataSets.ph_avg && dataSets.ph_avg.length > 0 ? dataSets.ph_avg[0].avg_ph : null,
+			value: isValidArray(dataSets.ph_avg) ? dataSets.ph_avg[0].avg_ph : null,
 			symbol: "",
 			title: "pH",
 		},
 		{
 			min: 0,
 			max: 5,
-			value: dataSets.ec_avg && dataSets.ec_avg.length > 0 ? dataSets.ec_avg[0].avg_ec : null,
+			value: isValidArray(dataSets.ec_avg) ? dataSets.ec_avg[0].avg_ec : null,
 			symbol: "",
 			title: "EC",
 		},
@@ -137,8 +168,9 @@ const EcoVItaLl = () => {
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2} sx={{ flexGrow: 1, flexBasis: "100%", flexShrink: 0 }}>
+			<StickyBand formRef={formRefDate} formContent={formContentDate} />
 			{gaugeData.map((card, index) => (
-				<Grid key={index} item xs={12} md={6} alignItems="center" flexDirection="column" mt={2} padding={0}>
+				<Grid key={index} item xs={12} md={6} alignItems="center" flexDirection="column">
 					<Card title={card.title} footer={cardFooter({ minutesAgo })}>
 						{isLoading ? (<LoadingIndicator />
 						) : (
@@ -172,7 +204,7 @@ const EcoVItaLl = () => {
 				</Grid>
 			))}
 			{dailyData.map((card, index) => (
-				<Grid key={index} item xs={12} sm={12} md={6} mt={2}>
+				<Grid key={index} item xs={12} sm={12} md={6} mb={index === dailyData.length - 1 ? 1 : 0}>
 					<Card title={card.title} footer={cardFooter({ minutesAgo })}>
 						{isLoading ? (<LoadingIndicator />
 						) : (
@@ -189,7 +221,7 @@ const EcoVItaLl = () => {
 					</Card>
 				</Grid>
 			))}
-			<Grid item xs={12} md={12} mt={2}>
+			<Grid item xs={12} md={12}>
 				<Card
 					title={`${monthNames[month].text}'s Targets`}
 					footer={cardFooter({ minutesAgo })}
@@ -225,7 +257,7 @@ const EcoVItaLl = () => {
 					)}
 				</Card>
 			</Grid>
-			<Grid item xs={12} md={12} mt={2}>
+			<Grid item xs={12} md={12} mb={1}>
 				<Card
 					title="Sensory Analysis of Leafy Greens"
 					footer={cardFooter({ minutesAgo })}

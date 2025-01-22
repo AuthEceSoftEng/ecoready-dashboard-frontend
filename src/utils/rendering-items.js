@@ -39,7 +39,7 @@ export const LoadingIndicator = ({ message = "Loading data...", minHeight = "200
 	</Grid>
 );
 
-export const StickyBand = ({ sticky = true, dropdownContent = [], value = [], formRef, formContent }) => (
+export const StickyBand = ({ sticky = true, dropdownContent = [], formRef, formContent }) => (
 	<Grid
 		container
 		display="flex"
@@ -70,18 +70,18 @@ export const StickyBand = ({ sticky = true, dropdownContent = [], value = [], fo
 				}}
 				xs={6}
 				sm={3}
-				md={2}
+				md={1}
 			>
 				<Dropdown
 					id={dropdown.id}
 					multiple={dropdown.multiple}
-					value={value[index]}
+					value={dropdown.value}
 					placeholder={dropdown.label}
 					items={dropdown.items}
 					size={dropdown.size}
-					width={dropdown.width}
-					height={dropdown.height}
-					background={"primary"}
+					width={dropdown.width || "170px"}
+					height={dropdown.height || "40px"}
+					background={dropdown.color ?? "primary"}
 					onChange={dropdown.onChange}
 				/>
 			</Grid>
@@ -97,7 +97,7 @@ export const StickyBand = ({ sticky = true, dropdownContent = [], value = [], fo
 				}}
 				xs={6}
 				sm={6}
-				md={formContent.customType === "date-range" ? 6 : 2}
+				md={formContent.customType === "date-range" ? 2 : 1}
 			>
 				<Form ref={formRef} content={formContent} />
 			</Grid>
@@ -105,7 +105,7 @@ export const StickyBand = ({ sticky = true, dropdownContent = [], value = [], fo
 	</Grid>
 );
 
-export const DataWarning = ({ message = "No Available Data for the Specified Time Period..." }) => (
+export const DataWarning = ({ message = "No Data Available for the Specified Time Period..." }) => (
 	<Grid
 		item
 		xs={12}
@@ -116,6 +116,6 @@ export const DataWarning = ({ message = "No Available Data for the Specified Tim
 			minHeight: "200px",
 		}}
 	>
-		<Typography variant="h6">{message}</Typography>
+		<Typography variant="h6" sx={{ fontWeight: "bold" }}>{message}</Typography>
 	</Grid>
 );
