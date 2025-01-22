@@ -199,16 +199,16 @@ const Form = forwardRef(({ disabled: dsb, content, validationSchema, onSubmit, o
 							{comp.customType === "dropdown"
 							&& (
 								<Grid item className={classes.dropdown}>
-									<Typography>{comp.label}</Typography>
 									<Dropdown
 										id={comp.id}
 										items={comp.items}
-										value={formikProps.values[comp.id]}
+										placeholder={comp.label}
+										value={comp.value || formikProps.values[comp.id]}
 										disabled={disabled || comp.disabled}
 										size={comp?.size || "medium"}
 										width={comp?.width || "200px"}
 										filled={comp?.filled || false}
-										background={comp?.background || "third"}
+										background={comp?.background || "primary"}
 										onChange={(event) => {
 											formikProps.handleChange({
 												target: {
@@ -355,22 +355,19 @@ const Form = forwardRef(({ disabled: dsb, content, validationSchema, onSubmit, o
 								</Grid>
 							)}
 							{comp.customType === "date-picker" && (
-								<Grid key={comp.id} container item className={classes.datepickerBox} width={comp.width}>
+								<Grid key={comp.id} container item className={classes.datepickerBox} width={comp.width || "170px"}>
 									{comp.labelPosition === "side" ? (
 										<Grid container spacing={1} alignItems="center">
-											<Grid item xs={2}>
-												<Typography style={{ fontSize: comp.labelSize || "inherit" }}>
-													{comp.label}
-												</Typography>
-											</Grid>
 											<Grid item sx={{ display: "flex", justifyContent: "flex-end" }} xs={10}>
 												<DatePicker
 													type={comp.type || "desktop"} // desktop, mobile, time, datetime
-													value={formikProps.values[comp.id]}
+													value={comp.value ?? formikProps.values[comp.id]}
+													minDate={comp.minDate}
+													maxDate={comp.maxDate}
 													disabled={disabled || comp.disabled}
-													label={comp.sublabel || ""}
+													label={comp.label || ""}
 													views={comp.views || ["day", "month", "year"]}
-													background={comp.background || "third"}
+													background={comp.background || "primary"}
 													color={comp.background === "grey" ? "black" : "white"}
 													sx={{
 														width: {
@@ -397,10 +394,12 @@ const Form = forwardRef(({ disabled: dsb, content, validationSchema, onSubmit, o
 											<DatePicker
 												type={comp.type || "desktop"} // desktop, mobile, time, datetime
 												value={comp.value ?? formikProps.values[comp.id]}
+												minDate={comp.minDate}
+												maxDate={comp.maxDate}
 												disabled={disabled || comp.disabled}
 												label={comp.sublabel || ""}
 												views={comp.views || ["day", "month", "year"]}
-												background={comp.background || "third"}
+												background={comp.background || "primary"}
 												color="white"
 												sx={{
 													width: {
@@ -427,7 +426,7 @@ const Form = forwardRef(({ disabled: dsb, content, validationSchema, onSubmit, o
 							)}
 							{comp.customType === "date-range" && (
 								<Grid key={comp.id} container item className={classes.daterangeBox}>
-									<Grid container direction="row" width={comp.width}>
+									<Grid container direction="row" width={comp.width || "350px"}>
 										{comp.label && (
 											<Grid item xs={2}>
 												<Typography style={{ fontSize: comp.labelSize || "inherit" }}>
@@ -441,10 +440,12 @@ const Form = forwardRef(({ disabled: dsb, content, validationSchema, onSubmit, o
 													fullWidth
 													type={comp.type || "desktop"}
 													value={comp.startValue ?? formikProps.values[`${comp.id}_start`]}
+													minDate={comp.minDate}
+													maxDate={comp.maxDate}
 													disabled={disabled || comp.disabled}
 													label={comp.startLabel || "Start date"}
 													views={comp.views || ["day", "month", "year"]}
-													background={comp.background || "third"}
+													background={comp.background || "primary"}
 													color="white"
 													onChange={(value) => {
 														formikProps.setFieldValue(`${comp.id}_start`, value);
@@ -459,10 +460,12 @@ const Form = forwardRef(({ disabled: dsb, content, validationSchema, onSubmit, o
 													fullWidth
 													type={comp.type || "desktop"}
 													value={comp.endValue ?? formikProps.values[`${comp.id}_end`]}
+													minDate={comp.minDate}
+													maxDate={comp.maxDate}
 													disabled={disabled || comp.disabled}
 													label={comp.endLabel || "End date"}
 													views={comp.views || ["day", "month", "year"]}
-													background={comp.background || "third"}
+													background={comp.background || "primary"}
 													color="white"
 													onChange={(value) => {
 														formikProps.setFieldValue(`${comp.id}_end`, value);
