@@ -167,6 +167,28 @@ const Plot = ({
 	                </LayersControl.BaseLayer>
 	              ))}
 	          </LayersControl>
+
+	          
+				{markers.length > 0 && (
+						<LayersControl position="bottomright" collapsed={false}>
+							{markers.filter((marker) => marker.hiddable).map((marker, index) => (
+								<LayersControl.Overlay key={index} name={marker.name} checked={marker.defaultChecked}>
+									<Marker
+										position={marker.position}
+										{...(marker.icon && { icon: marker.icon })}
+									>
+										{marker.popup && (
+											<Popup>
+												{marker.popup}
+											</Popup>
+										)}
+									</Marker>
+								</LayersControl.Overlay>
+							))}
+						</LayersControl>
+					)}
+
+				
 	          <TheLegendControl gdata={geodata} selectedLayerIndex={selectedLayerIndex} />
 	        </MapContainer>
 	      </Grid>
