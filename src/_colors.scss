@@ -18,9 +18,30 @@ $theme: (
     'choropleth2': #fcae91,
     'choropleth3': #fb6a4a,
     'choropleth4': #de2d26,
-    'choropleth5': #a50f15
-);
+    'choropleth5': #a50f15,
 
+     // Agriculture colors complementing primary (dark blues/teals)
+    'ag1': #003F5C,
+    'ag2': #2F4B7C,
+    'ag3': #1E6091,
+    'ag4': #005F73,
+    'ag5': #466365,
+    'ag6': #94D2BD,
+    'ag7': #98D8AA,
+    'ag8': #7CB342,
+    'ag9': #A4AC86,
+    'ag10': #656D4A,
+    'ag11': #168AAD,
+    'ag12': #1A759F,
+    'ag13': #0A9396,
+    'ag14': #2AB7CA,
+    'ag15': #45B7D1,
+    'ag16': #73C2DE,
+    'ag17': #414833,
+    'ag18': #FF7C43,
+    'ag19': #FFA07A,
+    'ag20': #665191,    
+);
 :export {
     @each $key, $value in $theme {
         #{unquote($key)}: $value;
