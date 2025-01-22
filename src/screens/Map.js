@@ -14,19 +14,8 @@ import { findKeyByText } from "../utils/data-handling-functions.js";
 // Extract popup component
 const PopupContent = memo(({ title, onClick }) => (
 	<div>
-		<div style={{
-			display: "flex",
-			justifyContent: "center",
-			marginBottom: "8px",
-			height: "40px",
-			width: "100%",
-		}}
-		>
-			<SecondaryBackgroundButton
-				title={title}
-				size="small"
-				onClick={onClick}
-			/>
+		<div style={{ display: "flex", justifyContent: "center", marginBottom: "8px", height: "40px", width: "100%", }}>
+			<SecondaryBackgroundButton title={title} size="small" onClick={onClick}/>
 		</div>
 		<p>{"A description of the Living Lab will probably go here"}</p>
 	</div>
@@ -35,10 +24,7 @@ const PopupContent = memo(({ title, onClick }) => (
 // Extract marker creation logic
 const createMarker = (lab, locationKey, index, onClick) => ({
 	position: locationKey ? lab.coordinates[locationKey] : lab.coordinates,
-	popup: <PopupContent
-		title={locationKey ? `${lab.title} - ${locationKey}` : lab.title}
-		onClick={onClick}
-	/>,
+	popup: <PopupContent title={locationKey ? `${lab.title} - ${locationKey}` : lab.title} onClick={onClick}/>,
 	name: locationKey ? `${lab.title} - ${index + 1}` : lab.title,
 	hiddable: true,
 	defaultChecked: true,
@@ -302,7 +288,8 @@ const Map = () => {
 				defaultChecked: false,
 			},
 
-		] : []), [isDataReady, enhancedGeoJsonData, production, ricePrice]);
+		] : []), [isDataReady, enhancedGeoJsonData, production, ricePrice]
+	);
 
 	// Create markers for labs with coordinates
 	const markers = useMemo(() => (
@@ -328,28 +315,29 @@ const Map = () => {
 		layers: {
 			physical: {
 				show: true,
-				hiddable: true,
+				hiddable: false,
 				defaultChecked: true,
 				name: "Physical Map",
 			},
-			topographical: {
-				show: true,
-				hiddable: true,
-				defaultChecked: false,
-				name: "Topographical Map",
+			//topographical: {
+				//show: true,
+				//hiddable: true,
+				//defaultChecked: false,
+				//name: "Topographical Map",
 			},
-		},
+		//},
 	}), []);
 
 	return (
-		<Grid container width="100%" height="95%" display="flex" direction="row" justifyContent="space-around">
-			<StickyBand
+		<Grid container width="100%" height="100%" display="flex" direction="row" >
+			<Grid width="100%" height="100%" display="flex" direction="row">
+			{/*<StickyBand
 				sticky={false}
 				dropdownContent={dropdownContent}
 				value={dropdownValues}
 				formRef={formRefDate}
 				formContent={formContentDate}
-			/>
+			/>*/}
 			{isLoading || !isDataReady
 				? (
 					<Grid item xs={12} sm={12} md={12} lg={12} xl={12} height="100%">
@@ -363,6 +351,9 @@ const Map = () => {
 						<MapComponent {...mapConfig} geodata={geodata} markers={markers} />
 					</Grid>
 				)}
+			</Grid>
+			<Grid width="100%" height="100%" display="flex" direction="row" justifyContent="space-around">
+			</Grid>
 		</Grid>
 	);
 };
