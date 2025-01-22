@@ -38,6 +38,8 @@ const THALLA = () => {
 		{
 			id: "region",
 			items: REGIONS,
+			label: "Select Area",
+			value: region,
 			size: "small",
 			width: "170px",
 			height: "40px",
@@ -47,7 +49,7 @@ const THALLA = () => {
 			},
 
 		},
-	], []);
+	], [region]);
 
 	const formRefDate = useRef();
 
@@ -100,7 +102,7 @@ const THALLA = () => {
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
-			<StickyBand dropdownContent={dropdownContent} value={[region]} formRef={formRefDate} formContent={formContentDate} />
+			<StickyBand dropdownContent={dropdownContent} formRef={formRefDate} formContent={formContentDate} />
 			{isValidDateRange ? (
 				<>
 					<Grid item xs={12} md={12} alignItems="center" flexDirection="column">

@@ -19,6 +19,7 @@ const Card = ({
 	width = "100%",
 	height = "auto",
 	padding = "10px",
+	borderRadius = "16px",
 }) => (
 	<Box
 		sx={{
@@ -28,6 +29,7 @@ const Card = ({
 			backgroundColor: colors?.[backgroundColor] || backgroundColor,
 			boxSizing: "border-box", // Ensure padding is included in the width
 			overflow: "hidden", // Prevent content overflow
+			borderRadius,
 		}}
 	>
 		{titleExists && (
@@ -41,6 +43,7 @@ const Card = ({
 				justifyContent="center"
 				alignItems="center"
 				boxSizing="border-box" // Ensure padding is included in the width
+				borderRadius={borderRadius}
 			>
 				{typeof title === "string" ? (
 					<Typography variant="body" component="h2" sx={{ fontWeight: "bold", fontSize: titleFontSize }}>

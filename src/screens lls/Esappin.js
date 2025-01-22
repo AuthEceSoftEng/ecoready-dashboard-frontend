@@ -1,11 +1,9 @@
 import { Grid } from "@mui/material";
-import { memo, useMemo, useState, useCallback } from "react";
+import { memo, useMemo, useState, useCallback, useRef } from "react";
 
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
-import Dropdown from "../components/Dropdown.js";
 import useInit from "../utils/screen-init.js";
-import DatePicker from "../components/DatePicker.js";
 import esappinConfigs, { organization } from "../config/EsappinConfig.js";
 import { getCustomDateTime, debounce, findKeyByText } from "../utils/data-handling-functions.js";
 import { monthNames } from "../utils/useful-constants.js";
@@ -60,31 +58,40 @@ const Esappin = () => {
 	const year = customDate.getFullYear();
 
 	const [product, setProduct] = useState(PRODUCTS[0].text);
-	const isValidDateRange = useMemo(
-		() => dateRange.startDate && dateRange.endDate && new Date(dateRange.startDate) <= new Date(dateRange.endDate),
-		[dateRange.startDate, dateRange.endDate],
-	);
-
-	const productKey = findKeyByText(PRODUCTS, product);
-	const fetchConfigs = useMemo(
-		() => (isValidDateRange && productKey ? esappinConfigs(productKey, dateRange.startDate, dateRange.endDate) : null),
-		[isValidDateRange, productKey, dateRange.startDate, dateRange.endDate],
-	);
 
 	const dropdownContent = [{
 		id: "product",
 		size: "small",
-		width: "170px",
-		height: "40px",
-		color: "primary",
-		label: "Product",
+		label: "Select field",
+		value: product,
 		items: PRODUCTS,
-		defaultValue: "Rapsfeld B1",
 		onChange: (event) => {
 			setProduct(event.target.value);
 		},
 
 	}];
+
+	const formRefDate = useRef();
+	const formContentDate = useMemo(() => [
+		{
+			customType: "date-picker",
+			id: "monthPicker",
+			type: "desktop",
+			sublabel: "Select Month",
+			views: ["month"],
+			minDate: new Date(2024, 8, 1),
+			maxDate: new Date(2024, 10, 30),
+			value: "2024-10-01",
+			labelSize: 12,
+			onChange: handleMonthChange,
+		},
+	], [handleMonthChange]);
+
+	const productKey = findKeyByText(PRODUCTS, product);
+	const fetchConfigs = useMemo(
+		() => (productKey ? esappinConfigs(productKey, dateRange.startDate, dateRange.endDate) : null),
+		[productKey, dateRange.startDate, dateRange.endDate],
+	);
 
 	const { state } = useInit(organization, fetchConfigs);
 	const { isLoading, dataSets, minutesAgo } = state;
@@ -210,100 +217,71 @@ const Esappin = () => {
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
-			<Grid container display="flex" direction="row" justifyContent="flex-end" alignItems="center" mt={1} spacing={2}>
-				<Grid item sx={{ display: "flex", justifyContent: "flex-end" }} xs={6} md={3}>
-					<Dropdown
-						id={dropdownContent[0].id}
-						value={product}
-						placeholder={dropdownContent[0].label}
-						items={dropdownContent[0].items}
-						size={dropdownContent[0].size}
-						width={dropdownContent[0].width}
-						height={dropdownContent[0].height}
-						background={dropdownContent[0].color}
-						onChange={dropdownContent[0].onChange}
-					/>
-				</Grid>
-				<Grid item sx={{ display: "flex", justifyContent: "flex-end" }} xs={6} sm={3} md={2}>
-					{/* Select only the month */}
-					<DatePicker
-						type="desktop"
-						label="Month Picker"
-						width="170px"
-						views={["month", "year"]}
-						onChange={handleMonthChange}
-					/>
-				</Grid>
-			</Grid>
-			{isValidDateRange ? (
-				<>
-					<Grid item xs={12} md={12} alignItems="center" flexDirection="column" padding={0}>
-						<Card title={`${monthNames[dateRange.month].text}'s Overview`} footer={cardFooter({ minutesAgo })}>
-							<Grid container display="flex" direction="row" justifyContent="space-evenly" padding={0} spacing={1}>
-								{monthlyOverview.map((plotData, index) => (
-									<Grid
-										key={index}
-										item
-										xs={12}
-										sm={12}
-										md={plotData.shape === "bullet" ? 6 : 4}
-										justifyContent="center"
-										alignItems="center"
-									>
-										{plotData.data.value
-											? isLoading ? (<LoadingIndicator />
-											) : (
-												<Plot
-													showLegend
-													scrollZoom
-													height={plotData.shape === "bullet" ? "120px" : "200px"}
-													data={[
-														{
-															type: "indicator",
-															mode: "gauge+number",
-															value: plotData.data.value,
-															range: plotData.range,
-															color: plotData.color,
-															shape: plotData.shape,
-															indicator: "primary",
-															textColor: "primary",
-															suffix: plotData.suffix,
-														},
-													]}
-													displayBar={false}
-													title={plotData.data.subtitle}
-												/>
-											) : (<DataWarning />)}
-									</Grid>
-								))}
+			<StickyBand dropdownContent={dropdownContent} formContent={formContentDate} formRef={formRefDate} />
+			<Grid item xs={12} md={12} alignItems="center" flexDirection="column" padding={0}>
+				<Card title={`${monthNames[dateRange.month].text}'s Overview`} footer={cardFooter({ minutesAgo })}>
+					<Grid container display="flex" direction="row" justifyContent="space-evenly" padding={0} spacing={1}>
+						{monthlyOverview.map((plotData, index) => (
+							<Grid
+								key={index}
+								item
+								xs={12}
+								sm={12}
+								md={plotData.shape === "bullet" ? 6 : 4}
+								justifyContent="center"
+								alignItems="center"
+							>
+								{plotData.data.value
+									? isLoading ? (<LoadingIndicator />
+									) : (
+										<Plot
+											showLegend
+											scrollZoom
+											height={plotData.shape === "bullet" ? "120px" : "200px"}
+											data={[
+												{
+													type: "indicator",
+													mode: "gauge+number",
+													value: plotData.data.value,
+													range: plotData.range,
+													color: plotData.color,
+													shape: plotData.shape,
+													indicator: "primary",
+													textColor: "primary",
+													suffix: plotData.suffix,
+												},
+											]}
+											displayBar={false}
+											title={plotData.data.subtitle}
+										/>
+									) : (<DataWarning />)}
 							</Grid>
-						</Card>
+						))}
 					</Grid>
-					{isValidData ? (
-						<>
-							{charts.map((card, index) => (
-								<Grid key={index} item xs={12} sm={12} md={6} mb={index === charts.length - 1 ? 2 : 0}>
-									<Card title={card.title} footer={cardFooter({ minutesAgo })}>
-										{isLoading ? (<LoadingIndicator />
-										) : (
-											<Plot
-												scrollZoom
-												data={card.data}
-												title={dateRange.month ? `${monthNames[dateRange.month].text} ${year}` : ""}
-												showLegend={index === 0 || 3}
-												height="300px"
-												xaxis={card?.xaxis}
-												yaxis={card?.yaxis}
-											/>
-										)}
-									</Card>
-								</Grid>
-							))}
-						</>
-					) : (<DataWarning />)}
+				</Card>
+			</Grid>
+			{isValidData ? (
+				<>
+					{charts.map((card, index) => (
+						<Grid key={index} item xs={12} sm={12} md={6} mb={index === charts.length - 1 ? 2 : 0}>
+							<Card title={card.title} footer={cardFooter({ minutesAgo })}>
+								{isLoading ? (<LoadingIndicator />
+								) : (
+									<Plot
+										scrollZoom
+										data={card.data}
+										title={dateRange.month ? `${monthNames[dateRange.month].text} ${year}` : ""}
+										showLegend={index === 0 || 3}
+										height="300px"
+										xaxis={card?.xaxis}
+										yaxis={card?.yaxis}
+									/>
+								)}
+							</Card>
+						</Grid>
+					))}
 				</>
-			) : (<DataWarning message="Please Select a Valid Date Range" />
-			)}
+			) : (<DataWarning />)}
 		</Grid>
 	);
 };

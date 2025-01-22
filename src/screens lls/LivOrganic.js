@@ -11,8 +11,7 @@ import { cardFooter, DataWarning, LoadingIndicator, StickyBand } from "../utils/
 
 const LivOrganic = () => {
 	const [startDate, setStartDate] = useState("2024-06-01");
-	const [endDate, setEndDate] = useState("2024-06-30");
-	// const [region, setRegion] = useState(null);
+	const [endDate, setEndDate] = useState("2024-07-01");
 
 	const debouncedSetDate = useMemo(
 		() => debounce((date, setter) => {
@@ -36,9 +35,8 @@ const LivOrganic = () => {
 		{
 			customType: "date-range",
 			id: "dateRange",
-			width: "170px",
 			type: "desktop",
-			label: "",
+			views: ["month", "year"],
 			startValue: startDate,
 			startLabel: "Start date",
 			endValue: endDate,
@@ -52,11 +50,11 @@ const LivOrganic = () => {
 
 	const isValidDateRange = useMemo(() => startDate && endDate && new Date(startDate) <= new Date(endDate), [startDate, endDate]);
 
-	const { differenceInDays } = calculateDifferenceBetweenDates(startDate, endDate);
+	const { days } = calculateDifferenceBetweenDates(startDate, endDate);
 
 	const fetchConfigs = useMemo(
-		() => (isValidDateRange ? livOrganicConfigs(startDate, endDate, differenceInDays) : null),
-		[isValidDateRange, startDate, endDate, differenceInDays],
+		() => (isValidDateRange ? livOrganicConfigs(startDate, endDate, days) : null),
+		[isValidDateRange, startDate, endDate, days],
 	);
 
 	const { state } = useInit(organization, fetchConfigs);
@@ -77,13 +75,89 @@ const LivOrganic = () => {
 		};
 	}, [metrics, isValidData]);
 
+	const graphConfigs = useMemo(() => [
+		{
+			title: "Temperature Evolution Per Day",
+			data: [
+				{
+					x: chartData.timestamps,
+					y: chartData.maxTemp,
+					type: "bar",
+					title: "Max",
+					color: "secondary",
+				},
+				{
+					x: chartData.timestamps,
+					y: chartData.minTemp,
+					type: "bar",
+					title: "Min",
+					color: "third",
+				},
+			],
+			xaxis: { title: "Days" },
+			yaxis: { title: "Temperature (°C)" },
+		},
+		{
+			title: "Period Temperature Distribution",
+			data: [
+				{
+					y: chartData.maxTemp,
+					type: "box",
+					title: "Max Temperature",
+					color: "primary",
+				},
+				{
+					y: chartData.meanTemp,
+					type: "box",
+					title: "Mean Temperature",
+					color: "secondary",
+				},
+				{
+					y: chartData.minTemp,
+					type: "box",
+					title: "Min Temperature",
+					color: "third",
+				},
+			],
+			xaxis: { title: "Days" },
+			yaxis: { title: "Temperature (°C)" },
+		},
+		{
+			title: "Wind Speed",
+			data: [
+				{
+					x: chartData.timestamps,
+					y: chartData.solarRadiation,
+					type: "scatter",
+					mode: "lines+markers",
+					title: "Wind Speed",
+					color: "primary",
+				},
+			],
+			xaxis: { title: "Days" },
+		},
+		{
+			title: "Daily Rain Sum",
+			data: [
+				{
+					x: chartData.timestamps,
+					y: chartData.precipitation,
+					type: "bar",
+					title: "Rain",
+					color: "third",
+				},
+			],
+			xaxis: { title: "Days" },
+		},
+	], [chartData]);
+
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
 			<StickyBand formRef={formRefDate} formContent={formContentDate} />
 			{isValidDateRange ? (
 				<>
 					<Grid item xs={12} md={12} alignItems="center" flexDirection="column">
-						<Card title={`${differenceInDays}-day Overview`} footer={cardFooter({ minutesAgo })}>
+						<Card title="Period Overview" footer={cardFooter({ minutesAgo })}>
 							{isLoading ? (
 								<LoadingIndicator />
 							) : (
@@ -163,82 +237,8 @@ const LivOrganic = () => {
 							)}
 						</Card>
 					</Grid>
-					{[
-						{
-							title: "Temperature Evolution Per Day",
-							data: [
-								{
-									x: chartData.timestamps,
-									y: chartData.maxTemp,
-									type: "bar",
-									title: "Max",
-									color: "secondary",
-								},
-								{
-									x: chartData.timestamps,
-									y: chartData.minTemp,
-									type: "bar",
-									title: "Min",
-									color: "third",
-								},
-							],
-							xaxis: { title: "Days" },
-							yaxis: { title: "Temperature (°C)" },
-						},
-						{
-							title: `${differenceInDays}-day Temperature Distribution`,
-							data: [
-								{
-									y: chartData.maxTemp,
-									type: "box",
-									title: "Max Temperature",
-									color: "primary",
-								},
-								{
-									y: chartData.meanTemp,
-									type: "box",
-									title: "Mean Temperature",
-									color: "secondary",
-								},
-								{
-									y: chartData.minTemp,
-									type: "box",
-									title: "Min Temperature",
-									color: "third",
-								},
-							],
-							xaxis: { title: "Days" },
-							yaxis: { title: "Temperature (°C)" },
-						},
-						{
-							title: "Wind Speed",
-							data: [
-								{
-									x: chartData.timestamps,
-									y: chartData.solarRadiation,
-									type: "scatter",
-									mode: "lines+markers",
-									title: "Wind Speed",
-									color: "primary",
-								},
-							],
-							xaxis: { title: "Days" },
-						},
-						{
-							title: "Daily Rain Sum",
-							data: [
-								{
-									x: chartData.timestamps,
-									y: chartData.precipitation,
-									type: "bar",
-									title: "Rain",
-									color: "third",
-								},
-							],
-							xaxis: { title: "Days" },
-						},
-					].map((card, index) => (
-						<Grid key={index} item xs={12} sm={12} md={6}>
+					{graphConfigs.map((card, index) => (
+						<Grid key={index} item xs={12} sm={12} md={6} mb={index === graphConfigs.length - 1 ? 1 : 0}>
 							<Card title={card.title} footer={cardFooter({ minutesAgo })}>
 								{isValidData
 									? isLoading ? (<LoadingIndicator />
