@@ -102,7 +102,7 @@ const Map = () => {
 			customType: "date-picker",
 			id: "yearPicker",
 			value: filters.year,
-			sublabel: "Year Picker",
+			sublabel: "Select Year",
 			views: ["year"],
 			minDate: new Date(2000, 0, 1),
 			maxDate: new Date(2024, 11, 31),
@@ -326,25 +326,28 @@ const Map = () => {
 	}), []);
 
 	return (
-		<Grid container width="100%" height="100%" display="flex" direction="row">
-			<StickyBand sticky={false} dropdownContent={dropdownContent} formRef={formRefDate} formContent={formContentDate} />
-			<Grid width="100%" height="100%" display="flex" direction="row">
-				{isLoading || !isDataReady
-					? (
-						<Grid item xs={12} sm={12} md={12} lg={12} xl={12} height="100%">
-							{" "}
-							<LoadingIndicator />
-							{" "}
-						</Grid>
-					)
-					: (
-						<Grid item xs={12} sm={12} md={12} lg={12} xl={12} height="100%">
-							<MapComponent {...mapConfig} geodata={geodata} markers={markers} />
-						</Grid>
-					)}
-			</Grid>
-		</Grid>
-	);
+			  <Grid container style={{ width: "100%", height: "100%" }} direction="column">
+			    {/* Top Menu Bar */}
+			    <Grid item style={{ width: "100%", height: "47px" }}>
+			      <StickyBand
+			        sticky={false}
+			        dropdownContent={dropdownContent}
+			        formRef={formRefDate}
+			        formContent={formContentDate}
+			      />
+			    </Grid>
+
+			    {/* Main Content (Map) */}
+			    <Grid item style={{ flexGrow: 1, width: "100%", height: "calc(100% - 47px)" }}>
+			      {isLoading || !isDataReady ? (
+			        <LoadingIndicator />
+			      ) : (
+			        <MapComponent {...mapConfig} geodata={geodata} markers={markers} />
+			      )}
+			    </Grid>
+			  </Grid>
+			);
+
 };
 
 export default memo(Map);

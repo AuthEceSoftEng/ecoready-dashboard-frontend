@@ -116,7 +116,7 @@ const Plot = ({
 
 	    if (map) {
 	      const handleLayerChange = (event) => {
-	        const layerName = event.name; // This is the name set in the LayersControl.BaseLayer
+	        const layerName = event.name;
 	        const newIndex = geodata.findIndex((metric) => metric.name === layerName);
 	        if (newIndex !== -1) {
 	          setSelectedLayerIndex(newIndex);
@@ -132,10 +132,10 @@ const Plot = ({
 	  }, [geodata]);
 
 	  return (
-	    <Grid container width="100%" height="100%" display="flex" direction="row" spacing={1}>
-	      <Grid item xs={10} style={{ padding: 1 }}>
+	    <Grid container style={{ width: "100%", height: "100%" }}>
+	      <Grid item xs={12} style={{ width: "100%", height: "100%" }}>
 	        <MapContainer
-	          style={{ width, height }}
+	          style={{ width: "100%", height: "100%" }}
 	          center={center}
 	          zoom={zoom}
 	          scrollWheelZoom={scrollWheelZoom}
@@ -143,7 +143,7 @@ const Plot = ({
 	          maxBounds={[[-90, -180], [90, 180]]}
 	          maxBoundsViscosity={1}
 	          boundsOptions={{ padding: [50, 50], animate: true }}
-	          ref={mapRef} // Attach the map instance to the ref
+	          ref={mapRef}
 	        >
 	          {showMinimap && <MinimapControl position="bottomleft" zoom={3} center={center} />}
 	          {Object.keys(layers)
@@ -173,6 +173,7 @@ const Plot = ({
 	    </Grid>
 	  );
 	};
+
 
 
 export default Plot;
