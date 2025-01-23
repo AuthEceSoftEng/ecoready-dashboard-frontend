@@ -120,7 +120,12 @@ const Map = () => {
 
 	const { state, dispatch } = useInit(organization, fetchConfigs);
 	const { isLoading, dataSets } = state;
+	console.log("-------------------");
+	console.log("-------------------");
+	console.log(isLoading);
 	console.log(dataSets);
+	console.log("-------------------");
+	console.log("-------------------");
 
 	const ricePrice = useMemo(() => dataSets?.periodPrices || [], [dataSets]);
 	const riceProduction1 = useMemo(() => dataSets?.riceProd1 || [], [dataSets]);
