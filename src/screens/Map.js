@@ -120,30 +120,61 @@ const Map = () => {
 
 	const { state, dispatch } = useInit(organization, fetchConfigs);
 	const { isLoading, dataSets } = state;
-	console.log("-------------------");
-	console.log("-------------------");
-	console.log(isLoading);
-	console.log(dataSets);
-	console.log("-------------------");
-	console.log("-------------------");
+//	console.log("-------------------");
+//	console.log("-------------------");
+//	console.log(isLoading);
+//	console.log(dataSets);
+//	console.log(fetchConfigs);
+//	console.log("-------------------");
+//	console.log("-------------------");
 
-	const ricePrice = useMemo(() => dataSets?.periodPrices || [], [dataSets]);
-	const riceProduction1 = useMemo(() => dataSets?.riceProd1 || [], [dataSets]);
-	const riceProduction2 = useMemo(() => dataSets?.riceProd2 || [], [dataSets]);
+	const statistics = useMemo(() => {
+	  if (!fetchConfigs || !dataSets) return [];
 
-	const production = useMemo(() => riceProduction1.map((milledEntry) => {
-		// Find matching husk entry
-		const huskEntry = riceProduction2.find((h) => h.key === milledEntry.key && h.interval_start === milledEntry.interval_start);
+	  return fetchConfigs.map((statistic) => {
+		const values = dataSets[statistic.plotId] || []; // Ensure `values` is an array
+	    return {
+	      plotId: statistic.plotId,
+	      name: statistic.attributename,
+	      metric: statistic.metric,
+	      unit: statistic.unit,
+	      values,
+	    };
+	  });
+	}, [fetchConfigs, dataSets]);
 
-		return {
-			key: milledEntry.key,
-			timestamp: milledEntry.interval_start,
-			total_production: (
-				(milledEntry.sum_milled_rice_equivalent_quantity || 0)
-				+ (huskEntry?.sum_rice_husk_quantity || 0)
-			),
-		};
-	}), [riceProduction1, riceProduction2]);
+	console.log("STATISTICS");
+	console.log(statistics);
+
+	
+//	const statistics = fetchConfigs.map((statistic) => {
+//		// const statisticparams = JSON.parse(statistic.params); // use this for "name": statisticparams["attribute"][0]
+//		// console.log(statisticparams["attribute"][0]);
+//		return {"plotId": statistic["plotId"], "name": statistic["attributename"], "unit": statistic["unit"], "values": dataSets[statistic.plotId]};
+//	});
+//	console.log("STATISTICS");
+//	console.log(statistics);
+//	//{type: 'stats', project: 'rice', collection: '__rice_prices__', params: '{"attribute":["price"],"stat":"avg","interval":"ev…-01-01","end_time":"2024-12-31","group_by":"key"}', plotId: 'productPrices'
+	
+	const productPrice = useMemo(() => dataSets?.productPrices || [], [dataSets]);
+	const productProduction1 = useMemo(() => dataSets?.productProduction1 || [], [dataSets]);
+	const productProduction2 = useMemo(() => dataSets?.productProduction2 || [], [dataSets]);
+
+//	const production = useMemo(() => productProduction1.map((milledEntry) => {
+//		// Find matching husk entry
+//		const huskEntry = productProduction2.find((h) => h.key === milledEntry.key && h.interval_start === milledEntry.interval_start);
+//
+//		return {
+//			key: milledEntry.key,
+//			timestamp: milledEntry.interval_start,
+//			total_production: (
+//				(milledEntry.sum_milled_rice_equivalent_quantity || 0)
+//				+ (huskEntry?.sum_rice_husk_quantity || 0)
+//			),
+//		};
+//	}), [productProduction1, productProduction2]);
+
+	//const production = productProduction1;
 
 	const dropdownContent = useMemo(() => ([
 		{
@@ -178,120 +209,85 @@ const Map = () => {
 
 	// In the Map component, add this logic before creating geodata
 	const enhancedGeoJsonData = useMemo(() => {
-		if (!geoJsonData) return null;
+		if (!geoJsonData || !statistics.length) return null; // Check if statistics is populated
 
-		return {
-			productionMap: {
-				...geoJsonData,
-				features: geoJsonData.features.map((feature) => {
-					const country = europeanCountries.find(
-						(c) => c.text === feature.properties.name,
-					);
-					return {
-						...feature,
-						properties: {
-							...feature.properties,
-							flag: country?.flag || "", // Add flag emoji
-							value: production.find((p) => p.key === country?.value)?.total_production || 0,
-						},
-					};
-				}),
-			},
-			priceMap: {
-				...geoJsonData,
-				features: geoJsonData.features.map((feature) => {
-					const country = europeanCountries.find(
-						(c) => c.text === feature.properties.name,
-					);
-					return {
-						...feature,
-						properties: {
-							...feature.properties,
-							flag: country?.flag || "", // Add flag emoji
-							value: ricePrice.find((p) => p.key === country?.value)?.avg_price || 0,
-						},
-					};
-				}),
-			},
-		};
-	}, [geoJsonData, ricePrice, production]);
+		return statistics.map((statistic) => ({
+			  ...geoJsonData,
+			  features: geoJsonData.features.map((feature) => {
+			    const country = europeanCountries.find(
+			      (c) => c.text === feature.properties.name,
+			    );
+			    return {
+			      ...feature,
+			      properties: {
+			        ...feature.properties,
+			        flag: country?.flag || "", // Add flag emoji
+			        value: statistic.values.find((p) => p.key === country?.value)?.[statistic.name] || 0,
+			      },
+			    };
+			  }),
+			}));
+
+	}, [geoJsonData, statistics]);
 	console.log("Created Geodata:", enhancedGeoJsonData);
 
 	// Add effect to monitor data readiness
 	useEffect(() => {
-		if (enhancedGeoJsonData && ricePrice.length > 0 && production.length > 0) {
-			console.log("Data is ready:", {
-				enhancedGeoJsonData,
-				ricePrice: ricePrice.length,
-				production: production.length,
-			});
+		if (enhancedGeoJsonData && statistics.every(statistic => statistic.values.length > 0)) {
+			console.log("Data is ready:", { enhancedGeoJsonData });
 			setIsDataReady(true);
 		}
-	}, [enhancedGeoJsonData, ricePrice, production]);
+	}, [enhancedGeoJsonData, statistics]);
 
 	// Then modify the geodata creation:
-	const geodata = useMemo(() => (
-		isDataReady && enhancedGeoJsonData ? [
-			{
-				name: "Production",
-				data: {
-					...enhancedGeoJsonData.productionMap,
-					features: enhancedGeoJsonData.productionMap.features.map((feature) => ({
-						...feature,
-						properties: {
-							...feature.properties,
-							metric: "Production",
-							unit: "t",
-						},
-					})),
-				},
-				range: [0, Math.max(...production
-					.filter((p) => p.key !== "EU")
-					.map((p) => p.total_production || 0))],
-				unit: "t",
-				style: (feature) => ({
-					color: colors.dark,
-					weight: 1,
-					fillColor: getColor(feature.properties.value, [0, Math.max(...production
-						.filter((p) => p.key !== "EU")
-						.map((p) => p.total_production || 0))]),
-					fillOpacity: 0.3,
-				}),
-				action: onEachCountry,
-				hiddable: true,
-				defaultChecked: true,
-			},
-			{
-				name: "Price",
-				data: {
-					...enhancedGeoJsonData.priceMap,
-					features: enhancedGeoJsonData.priceMap.features.map((feature) => ({
-						...feature,
-						properties: {
-							...feature.properties,
-							metric: "Price",
-							unit: "€/t",
-						},
-					})),
-				},
-				range: [0, Math.max(...ricePrice
-					.filter((p) => p.key !== "EU")
-					.map((p) => p.avg_price || 0))],
-				unit: "€/t",
-				style: (feature) => ({
-					color: colors.dark,
-					weight: 1,
-					fillColor: getColor(feature.properties.value, [0, Math.max(...ricePrice
-						.filter((p) => p.key !== "EU")
-						.map((p) => p.avg_price || 0))]),
-					fillOpacity: 0.3,
-				}),
-				action: onEachCountry,
-				hiddable: true,
-				defaultChecked: false,
-			},
+	const geodata = useMemo(() => {
+		  if (!isDataReady || !enhancedGeoJsonData || !statistics.length) return []; // Safeguard
 
-		] : []), [isDataReady, enhancedGeoJsonData, production, ricePrice]);
+		  return statistics.map((statistic, index) => ({
+		    name: statistic.metric,
+		    data: {
+		      ...enhancedGeoJsonData[index],
+		      features: enhancedGeoJsonData[index]?.features?.map((feature) => ({
+		        ...feature,
+		        properties: {
+		          ...feature.properties,
+		          metric: statistic.metric,
+		          unit: statistic.unit,
+		        },
+		      })),
+		    },
+		    range: [
+		      0,
+		      Math.max(
+		        ...statistic.values
+		          ?.filter((p) => p.key !== "EU")
+		          ?.map((p) => p[statistic.name] || 0),
+		      ),
+		    ],
+		    unit: statistic.unit,
+		    style: (feature) => ({
+		      color: colors.dark,
+		      weight: 1,
+		      fillColor: getColor(
+		        feature.properties.value,
+		        [
+		          0,
+		          Math.max(
+		            ...statistic.values
+		              ?.filter((p) => p.key !== "EU")
+		              ?.map((p) => p[statistic.name] || 0),
+		          ),
+		        ],
+		      ),
+		      fillOpacity: 0.3,
+		    }),
+		    action: onEachCountry,
+		    hiddable: true,
+		    defaultChecked: index === 0, // Default check only the first layer
+		  }));
+		}, [isDataReady, enhancedGeoJsonData, statistics]);
+
+		console.log("Geodata", geodata); // Debugging output
 
 	// Create markers for labs with coordinates
 	const markers = useMemo(() => (
