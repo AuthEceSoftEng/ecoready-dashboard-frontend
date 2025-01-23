@@ -7,11 +7,6 @@ import { ExpandMore } from "@mui/icons-material";
 
 import { labs } from "../utils/useful-constants.js";
 
-// // eslint-disable-next-line import/no-duplicates
-// import inspectionIcon from "../assets/icons/inspection.png";
-// // eslint-disable-next-line import/no-duplicates
-// import isselServicesIcon from "../assets/icons/inspection.png";
-
 import Accordion from "./Accordion.js";
 
 const useStyles = makeStyles((theme) => ({
@@ -49,6 +44,10 @@ const ButtonWithText = ({ text, icon, more, handler }) => (
 					flexDirection: "row",
 					justifyContent: "flex-start",
 					padding: "8px 40px 8px 16px",
+					"&:hover": {
+						backgroundColor: "rgba(255, 255, 255, 0.1)", // subtle white overlay on hover
+						transition: "background-color 0.3s ease",
+					},
 				}}
 				onClick={(event) => handler(event)}
 			>
@@ -90,7 +89,19 @@ const ButtonWithText = ({ text, icon, more, handler }) => (
 				content={(
 					<Grid container flexDirection="column" width="100%">
 						{more.map((el) => (
-							<Button key={el.title} color="white" sx={{ justifyContent: "flex-start", marginLeft: "30px" }} onClick={el.handler}>
+							<Button
+								key={el.title}
+								color="white"
+								sx={{
+									justifyContent: "flex-start",
+									marginLeft: "30px",
+									"&:hover": {
+										backgroundColor: "rgba(255, 255, 255, 0.1)",
+										transition: "background-color 0.3s ease",
+									},
+								}}
+								onClick={el.handler}
+							>
 								<Typography sx={{ textTransform: "capitalize", textAlign: "left" }}>{el.title}</Typography>
 							</Button>
 						))}
@@ -105,7 +116,19 @@ const ButtonWithText = ({ text, icon, more, handler }) => (
 );
 
 const ButtonSimple = ({ text, icon, handler, ind }) => (
-	<Button key={text} sx={{ minWidth: "30px!important", padding: "0px", marginTop: (ind === 0) ? "0px" : "10px" }} onClick={(event) => handler(event)}>
+	<Button
+		key={text}
+		sx={{
+			minWidth: "30px!important",
+			padding: "0px",
+			marginTop: (ind === 0) ? "0px" : "10px",
+			"&:hover": {
+				backgroundColor: "rgba(255, 255, 255, 0.1)",
+				transition: "background-color 0.3s ease",
+			},
+		}}
+		onClick={(event) => handler(event)}
+	>
 		<Image src={icon} alt={text} fit="contain" width="30px" />
 	</Button>
 );
@@ -133,10 +156,10 @@ const Sidebar = ({ isSmall: sidebarIsSmall, onToggleSidebar }) => {
 		},
 		{
 			// icon: isselServicesIcon,
-			text: "General Info",
+			text: "Products",
 			handler: () => {
 				handleServicesMenuClose();
-				navigate("/products_overview");
+				navigate("/products");
 			},
 		},
 		{
