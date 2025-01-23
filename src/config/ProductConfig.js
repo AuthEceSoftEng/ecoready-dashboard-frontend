@@ -6,7 +6,7 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 	{
 		type: "stats",
 		project: product,
-		collection: "__rice_prices__",
+		collection: "__prices__",
 		params: JSON.stringify({
 			attribute: ["price"],
 			stat: "avg",
@@ -27,7 +27,7 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 	{
 		type: "stats",
 		project: product,
-		collection: "__rice_prices__",
+		collection: "__prices__",
 		params: JSON.stringify({
 			attribute: ["price"],
 			stat: "avg",
@@ -52,7 +52,7 @@ export const getMonthlyPriceConfigs = (country, product, customDate) => {
 	return [{
 		type: "stats",
 		project: product,
-		collection: "__rice_prices__",
+		collection: "__prices__",
 		params: JSON.stringify({
 			attribute: ["price"],
 			stat: "avg",
@@ -75,7 +75,7 @@ export const getProductionConfigs = (product) => [
 	{
 		type: "stats",
 		project: product,
-		collection: "__rice_production__",
+		collection: "__production__",
 		params: JSON.stringify({
 			attribute: ["milled_rice_equivalent_quantity"],
 			stat: "sum",
@@ -89,7 +89,7 @@ export const getProductionConfigs = (product) => [
 	{
 		type: "stats",
 		project: product,
-		collection: "__rice_production__",
+		collection: "__production__",
 		params: JSON.stringify({
 			attribute: ["rice_husk_quantity"],
 			stat: "sum",
