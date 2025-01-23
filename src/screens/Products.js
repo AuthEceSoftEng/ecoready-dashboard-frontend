@@ -238,7 +238,7 @@ const ProductsScreen = () => {
 					subtitle: "EU's Annual Production",
 				},
 				color: "third",
-				suffix: ` ${unit}s`,
+				suffix: ` ${unit}`,
 				shape: "bullet",
 			},
 			{
@@ -257,13 +257,15 @@ const ProductsScreen = () => {
 				data: Object.entries(productionByCountry)
 					.filter(([countryCode]) => countryCode !== "EU")
 					.map(([countryCode, values], index) => ({
-						x: generateYearsArray(2010, Number.parseInt(filters.year, 10)),
+						x: generateYearsArray(2010, 2025),
 						y: values,
 						type: "bar",
 						title: countryCode,
 						color: agColorKeys[index % agColorKeys.length],
 					})),
 				title: "Annual Production by Country",
+				xaxis: { title: "Year" },
+				yaxis: { title: `Production (${unit})` },
 			},
 		];
 	}, [filters.year, production, productionByCountry]);
@@ -278,22 +280,13 @@ const ProductsScreen = () => {
 			},
 			range: [0, 3_000_000],
 			color: "secondary",
-			suffix: ` ${unit}s`,
-			shape: "angular",
-		},
-		{
-			data: {
-				value: dataSets?.periodPrices?.[0]?.avg_price ?? null,
-				subtitle: "Specified Period's Average Price",
-			},
-			color: "third",
-			suffix: `€/${unit}`,
+			suffix: ` ${unit}`,
 			shape: "angular",
 		},
 		{
 			data: {
 				value: dataSets?.monthlyPrices?.[0]?.avg_price ?? null,
-				subtitle: `${monthNames[month].text}'s Average Price`,
+				subtitle: "Current Month's Average Price",
 			},
 			color: "third",
 			suffix: `€/${unit}`,
@@ -314,28 +307,33 @@ const ProductsScreen = () => {
 			xaxis: { title: "Date" },
 			yaxis: { title: `Average Price per ${unit}` },
 		},
+		{
+			data: {
+				value: dataSets?.periodPrices?.[0]?.avg_price ?? null,
+				subtitle: "Specified Period's Average Price",
+			},
+			color: "third",
+			suffix: `€/${unit}`,
+			shape: "angular",
+		},
 	], [dataSets?.monthlyPrices, dataSets?.periodPrices, filters.product, isValidPrice, keys.country, production, ricePrice]);
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
 			<StickyBand dropdownContent={[dropdownContent[0]]} />
 			<Grid item xs={12} md={6} alignItems="center" flexDirection="column">
-				<Card title="EU's Annual Overview" footer={cardFooter({ minutesAgo })}>
-					<Grid item xs={12} md={12} alignItems="center" flexDirection="column">
+				<Card
+					title="EU's Annual Overview"
+					footer={cardFooter({ minutesAgo })}
+				>
+					<Grid item xs={12} md={12} display="flex" justifyContent="flex-end">
 						<DatePicker {...yearPickerProps} />
 					</Grid>
 					{isLoading ? (
 						<LoadingIndicator />
 					) : (
-						<Grid container display="flex" direction="row" justifyContent="space-evenly" padding={0} spacing={1}>
-							<Grid
-								item
-								xs={12}
-								sm={12}
-								md={12}
-								justifyContent="center"
-								alignItems="center"
-							>
+						<Grid container display="flex" direction="row" justifyContent="space-evenly" sx={{ flex: 1 }}>
+							<Grid item xs={12} sm={12} md={12} justifyContent="center" alignItems="center">
 								{europeOverview[0].data.value ? (
 									<Plot
 										showLegend
@@ -359,20 +357,13 @@ const ProductsScreen = () => {
 									/>
 								) : (<DataWarning />)}
 							</Grid>
-							<Grid
-								item
-								xs={12}
-								sm={12}
-								md={12}
-								justifyContent="center"
-								alignItems="center"
-							>
+							<Grid item xs={12} sm={12} md={12} justifyContent="center" alignItems="center">
 								{europeOverview[1].data.values ? (
 									<Plot
 										scrollZoom
 										showLegend
 										displayBar={false}
-										height="300px"
+										height="295px"
 										title={`${filters.year}'s Production by Country`}
 										data={europeOverview[1].data}
 									/>
@@ -382,29 +373,29 @@ const ProductsScreen = () => {
 					)}
 				</Card>
 			</Grid>
-			<Grid item xs={12} md={12} alignItems="center" flexDirection="column">
-				<Card title="Product Production per Year" footer={cardFooter({ minutesAgo })}>
+			<Grid item xs={12} md={6} alignItems="center" flexDirection="column">
+				<Card
+					title="Product Production per Year"
+					footer={cardFooter({ minutesAgo })}
+				>
 					{isLoading ? (
 						<LoadingIndicator />
 					) : (
-						<Grid container display="flex" direction="row" justifyContent="space-evenly" padding={0} spacing={1}>
-							<Grid item xs={12} sm={12} md={6} justifyContent="center" alignItems="center">
-								{europeOverview[2].data ? (
-									<Plot
-										scrollZoom
-										height="300px"
-										data={[...europeOverview[2].data].reverse()}
-										barmode="stack"
-										displayBar={false}
-										title={europeOverview[2].title}
-									/>
-								) : (<DataWarning />)}
-							</Grid>
+						<Grid item xs={12} sm={12} justifyContent="center" alignItems="center" sx={{ flex: 1 }}>
+							{europeOverview[2].data ? (
+								<Plot
+									scrollZoom
+									data={[...europeOverview[2].data].reverse()}
+									barmode="stack"
+									displayBar={false}
+									title={europeOverview[2].title}
+								/>
+							) : (<DataWarning />)}
 						</Grid>
 					)}
 				</Card>
 			</Grid>
-			<Grid item xs={12} md={12} alignItems="center" flexDirection="column">
+			<Grid item xs={12} md={12} mb={2} alignItems="center" flexDirection="column">
 				<Card title="Product per Country" footer={cardFooter({ minutesAgo })}>
 					<StickyBand
 						sticky={false}
@@ -421,20 +412,20 @@ const ProductsScreen = () => {
 									<Grid
 										key={index}
 										item
+										height="200px"
 										xs={12}
 										sm={12}
-										md={index === countryOverview.length - 1 ? 12 : 4}
-										mb={index === -1 ? 2 : 0}
+										md={index === countryOverview.length - 1 ? 3 : index === countryOverview.length - 2 ? 9 : 4}
 										justifyContent="center"
 										alignItems="center"
 									>
-										{index === countryOverview.length - 1 ? (
+										{index === countryOverview.length - 2 ? (
 										// Timeline plot
 											isValidPrice ? (
 												<Plot
 													scrollZoom
 													data={plotData.data}
-													height="300px"
+													// height="300px"
 													xaxis={plotData.xaxis}
 													yaxis={plotData.yaxis}
 												/>
