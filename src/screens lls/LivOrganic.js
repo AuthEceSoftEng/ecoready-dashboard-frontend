@@ -50,11 +50,11 @@ const LivOrganic = () => {
 
 	const isValidDateRange = useMemo(() => startDate && endDate && new Date(startDate) <= new Date(endDate), [startDate, endDate]);
 
-	const { days } = calculateDifferenceBetweenDates(startDate, endDate);
+	const { differenceInDays } = calculateDifferenceBetweenDates(startDate, endDate);
 
 	const fetchConfigs = useMemo(
-		() => (isValidDateRange ? livOrganicConfigs(startDate, endDate, days) : null),
-		[isValidDateRange, startDate, endDate, days],
+		() => (isValidDateRange ? livOrganicConfigs(startDate, endDate, differenceInDays) : null),
+		[isValidDateRange, startDate, endDate, differenceInDays],
 	);
 
 	const { state } = useInit(organization, fetchConfigs);
@@ -74,6 +74,45 @@ const LivOrganic = () => {
 			precipitation: metrics.map((item) => item.precipitation),
 		};
 	}, [metrics, isValidData]);
+
+	const gaugeConfigs = useMemo(() => [
+		{
+			data: {
+				value: dataSets?.maxMaxTemperature?.[0]?.max_max_temperature ?? null,
+				subtitle: "Max Temperature",
+			},
+			color: "primary",
+			shape: "angular",
+		},
+		{
+			data: {
+				value: dataSets?.minMinTemperature?.[0]?.min_min_temperature ?? null,
+				subtitle: "Min Temperature",
+			},
+			color: "third",
+			shape: "angular",
+		},
+		{
+			data: {
+				value: dataSets?.meanPrecipitation?.[0]?.avg_precipitation ?? null,
+				subtitle: "Average Precipitation",
+			},
+			range: [0, 100],
+			color: "third",
+			suffix: "mm",
+			shape: "bullet",
+		},
+		{
+			data: {
+				value: dataSets?.meanSolarRadiation?.[0]?.avg_solar_radiation ?? null,
+				subtitle: "Average Solar Radiation",
+			},
+			range: [0, 30],
+			color: "goldenrod",
+			suffix: "W/m²",
+			shape: "bullet",
+		},
+	], [dataSets]);
 
 	const graphConfigs = useMemo(() => [
 		{
@@ -123,7 +162,7 @@ const LivOrganic = () => {
 			yaxis: { title: "Temperature (°C)" },
 		},
 		{
-			title: "Wind Speed",
+			title: "Solar Radiation Evolution",
 			data: [
 				{
 					x: chartData.timestamps,
@@ -131,10 +170,11 @@ const LivOrganic = () => {
 					type: "scatter",
 					mode: "lines+markers",
 					title: "Wind Speed",
-					color: "primary",
+					color: "goldenrod",
 				},
 			],
 			xaxis: { title: "Days" },
+			yaxis: { title: "Solar Radiation (W/m²)" },
 		},
 		{
 			title: "Daily Rain Sum",
@@ -148,6 +188,7 @@ const LivOrganic = () => {
 				},
 			],
 			xaxis: { title: "Days" },
+			yaxis: { title: "Precipitation (mm)" },
 		},
 	], [chartData]);
 
@@ -162,44 +203,7 @@ const LivOrganic = () => {
 								<LoadingIndicator />
 							) : (
 								<Grid container display="flex" direction="row" justifyContent="space-evenly" padding={0} spacing={1}>
-									{[
-										{
-											data: {
-												value: dataSets?.maxMaxTemperature?.[0]?.max_max_temperature ?? null,
-												subtitle: "Max Temperature",
-											},
-											color: "primary",
-											shape: "angular",
-										},
-										{
-											data: {
-												value: dataSets?.minMinTemperature?.[0]?.min_min_temperature ?? null,
-												subtitle: "Min Temperature",
-											},
-											color: "third",
-											shape: "angular",
-										},
-										{
-											data: {
-												value: dataSets?.meanPrecipitation?.[0]?.avg_precipitation ?? null,
-												subtitle: "Average Precipitation",
-											},
-											range: [0, 100],
-											color: "third",
-											suffix: "mm",
-											shape: "bullet",
-										},
-										{
-											data: {
-												value: dataSets?.meanSolarRadiation?.[0]?.avg_solar_radiation ?? null,
-												subtitle: "Average Solar Radiation",
-											},
-											range: [0, 20],
-											color: "goldenrod",
-											suffix: "W/m²",
-											shape: "bullet",
-										},
-									].map((plotData, index) => (
+									{gaugeConfigs.map((plotData, index) => (
 										<Grid
 											key={index}
 											item
