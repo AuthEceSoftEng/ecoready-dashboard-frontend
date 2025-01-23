@@ -11,11 +11,6 @@ export const livOrganicConfigs = (startDate, endDate, differenceInDays) => [
 				"min_temperature", "precipitation", "solar_radiation",
 			],
 			filters: [
-				// {
-				// 	property_name: "key",
-				// 	operator: "eq",
-				// 	property_value: region,
-				// },
 				{
 					property_name: "timestamp",
 					operator: "gte",
@@ -44,11 +39,6 @@ export const livOrganicConfigs = (startDate, endDate, differenceInDays) => [
 			interval: differenceInDays ? `every_${Math.max(differenceInDays, 1)}_days` : "every_1_days",
 			start_time: startDate,
 			end_time: endDate,
-			// filters: [{
-			// 	property_name: "key",
-			// 	operator: "eq",
-			// 	property_value: region,
-			// }],
 			group_by: "key",
 		}),
 		plotId: "maxMaxTemperature",
@@ -63,11 +53,6 @@ export const livOrganicConfigs = (startDate, endDate, differenceInDays) => [
 			interval: differenceInDays ? `every_${Math.max(differenceInDays, 1)}_days` : "every_1_days",
 			start_time: startDate,
 			end_time: endDate,
-			// filters: [{
-			// 	property_name: "key",
-			// 	operator: "eq",
-			// 	property_value: region,
-			// }],
 			group_by: "key",
 		}),
 		plotId: "minMinTemperature",
@@ -82,11 +67,6 @@ export const livOrganicConfigs = (startDate, endDate, differenceInDays) => [
 			interval: differenceInDays ? `every_${Math.max(differenceInDays, 1)}_days` : "every_1_days",
 			start_time: startDate,
 			end_time: endDate,
-			// filters: [{
-			// 	property_name: "key",
-			// 	operator: "eq",
-			// 	property_value: region,
-			// }],
 			group_by: "key",
 		}),
 		plotId: "meanPrecipitation",
@@ -101,11 +81,6 @@ export const livOrganicConfigs = (startDate, endDate, differenceInDays) => [
 			interval: differenceInDays ? `every_${Math.max(differenceInDays, 1)}_days` : "every_1_days",
 			start_time: startDate,
 			end_time: endDate,
-			// filters: [{
-			// 	property_name: "key",
-			// 	operator: "eq",
-			// 	property_value: region,
-			// }],
 			group_by: "key",
 		}),
 		plotId: "meanSolarRadiation",

@@ -3,6 +3,13 @@ import Plotly from "react-plotly.js";
 import { DataWarning } from "../utils/rendering-items.js";
 import colors from "../_colors.scss";
 
+const agriColors = [
+	colors.ag1, colors.ag2, colors.ag3, colors.ag4, colors.ag5,
+	colors.ag6, colors.ag7, colors.ag8, colors.ag9, colors.ag10,
+	colors.ag11, colors.ag12, colors.ag13, colors.ag14, colors.ag15,
+	colors.ag16, colors.ag17, colors.ag18, colors.ag19, colors.ag20,
+];
+
 const validatePieData = (data) => {
 	let errorMessage = "";
 
@@ -55,7 +62,7 @@ const Plot = ({
 	return (
 		<Plotly
 			useResizeHandler // Enable resize handler
-			data={data.map((d) => ({
+			data={data.map((d, index) => ({
 				x: d.x,
 				y: d.y,
 				z: d.z,
@@ -64,8 +71,12 @@ const Plot = ({
 				text: d.texts,
 				mode: d.mode,
 				marker: d.type === "pie"
-					? { colors: d.color }
-					: { color: colors?.[d?.color] || d?.color },
+					? { colors: d.color || agriColors }
+					: {
+						color: d.color
+							? (colors?.[d.color] || d.color)
+							: agriColors[index % agriColors.length],
+					},
 				values: d.values,
 				value: d.value,
 				r: d.r,
