@@ -64,7 +64,7 @@ export const mapInfoConfigs = (country, product, year) => {
 			{
 				type: "stats",
 				project: "olive_oil",
-				collection: "olive_oil_annual_production",
+				collection: "__annual_production__",
 				params: JSON.stringify({ attribute: ["year_production_quantity"], stat: "sum", interval: "every_12_months", start_time: `${year}-01-01`, end_time: `${year}-12-31`, group_by: "key", }),
 				attributename: "sum_year_production_quantity",
 				metric: "Production",

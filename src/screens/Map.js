@@ -146,36 +146,6 @@ const Map = () => {
 	console.log("STATISTICS");
 	console.log(statistics);
 
-	
-//	const statistics = fetchConfigs.map((statistic) => {
-//		// const statisticparams = JSON.parse(statistic.params); // use this for "name": statisticparams["attribute"][0]
-//		// console.log(statisticparams["attribute"][0]);
-//		return {"plotId": statistic["plotId"], "name": statistic["attributename"], "unit": statistic["unit"], "values": dataSets[statistic.plotId]};
-//	});
-//	console.log("STATISTICS");
-//	console.log(statistics);
-//	//{type: 'stats', project: 'rice', collection: '__rice_prices__', params: '{"attribute":["price"],"stat":"avg","interval":"ev…-01-01","end_time":"2024-12-31","group_by":"key"}', plotId: 'productPrices'
-	
-	const productPrice = useMemo(() => dataSets?.productPrices || [], [dataSets]);
-	const productProduction1 = useMemo(() => dataSets?.productProduction1 || [], [dataSets]);
-	const productProduction2 = useMemo(() => dataSets?.productProduction2 || [], [dataSets]);
-
-//	const production = useMemo(() => productProduction1.map((milledEntry) => {
-//		// Find matching husk entry
-//		const huskEntry = productProduction2.find((h) => h.key === milledEntry.key && h.interval_start === milledEntry.interval_start);
-//
-//		return {
-//			key: milledEntry.key,
-//			timestamp: milledEntry.interval_start,
-//			total_production: (
-//				(milledEntry.sum_milled_rice_equivalent_quantity || 0)
-//				+ (huskEntry?.sum_rice_husk_quantity || 0)
-//			),
-//		};
-//	}), [productProduction1, productProduction2]);
-
-	//const production = productProduction1;
-
 	const dropdownContent = useMemo(() => ([
 		{
 			id: "product",
