@@ -35,6 +35,30 @@ export const mapInfoConfigs = (country, product, year) => {
 			},
 		];
 	}
+	else if (product === "beef") {
+		return [
+			{
+				type: "stats",
+				project: "beef",
+				collection: "__carcass_prices__",
+				params: JSON.stringify({ attribute: ["price"], stat: "avg", interval: "every_12_months", start_time: `${year}-01-01`, end_time: `${year}-12-31`, group_by: "key", }),
+				attributename: "avg_price",
+				metric: "Average Carcass Price",
+				unit: "€/100kg",
+				plotId: "productPrices",
+			},
+			{
+				type: "stats",
+				project: "beef",
+				collection: "__production__",
+				params: JSON.stringify({ attribute: ["tonnes"], stat: "sum", interval: "every_12_months", start_time: `${year}-01-01`, end_time: `${year}-12-31`, group_by: "key", }),
+				attributename: "sum_tonnes",
+				metric: "Production",
+				unit: "t",
+				plotId: "productProduction1",
+			},
+		];
+	}
 	else if (product === "wine") {
 		return [
 			{
@@ -54,7 +78,7 @@ export const mapInfoConfigs = (country, product, year) => {
 			{
 				type: "stats",
 				project: "olive_oil",
-				collection: "__prices__",
+				collection: "olive_oil_prices",
 				params: JSON.stringify({ attribute: ["price"], stat: "avg", interval: `every_12_days`, start_time: `${year}-01-01`, end_time: `${year}-12-31`, group_by: "key", }),
 				attributename: "avg_price",
 				metric: "Average Price",
@@ -64,7 +88,7 @@ export const mapInfoConfigs = (country, product, year) => {
 			{
 				type: "stats",
 				project: "olive_oil",
-				collection: "__annual_production__",
+				collection: "olive_oil_annual_production",
 				params: JSON.stringify({ attribute: ["year_production_quantity"], stat: "sum", interval: "every_12_months", start_time: `${year}-01-01`, end_time: `${year}-12-31`, group_by: "key", }),
 				attributename: "sum_year_production_quantity",
 				metric: "Production",
