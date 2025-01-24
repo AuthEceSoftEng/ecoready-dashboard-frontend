@@ -46,16 +46,16 @@ const onEachCountry = (feature, layer) => {
 				fillOpacity: 0.5,
 			});
 		},
-		click: (e) => {
-			const map = e.target._map;
-			// Get the bounds of the clicked country
-			const bounds = e.target.getBounds();
-			// Fly to the bounds with animation
-			map.flyToBounds(bounds, {
-				padding: [30, 30], // Add padding around the bounds
-				duration: 0.8, // Animation duration in seconds
-			});
-		},
+//		click: (e) => {
+//			const map = e.target._map;
+//			// Get the bounds of the clicked country
+//			const bounds = e.target.getBounds();
+//			// Fly to the bounds with animation
+//			map.flyToBounds(bounds, {
+//				padding: [30, 30], // Add padding around the bounds
+//				duration: 0.8, // Animation duration in seconds
+//			});
+//		},
 	});
 
 	// Get the layer's name and unit from the GeoJSON properties
@@ -138,6 +138,7 @@ const Map = () => {
 	      name: statistic.attributename,
 	      metric: statistic.metric,
 	      unit: statistic.unit,
+	      perRegion: statistic?.perRegion || false,
 	      values,
 	    };
 	  });
@@ -192,7 +193,7 @@ const Map = () => {
 			      properties: {
 			        ...feature.properties,
 			        flag: country?.flag || "", // Add flag emoji
-			        value: statistic.values.find((p) => p.key === country?.value)?.[statistic.name] || 0,
+			        value: statistic.values.find((p) => p.key === (statistic.perRegion ? country?.region : country?.value))?.[statistic.name] || 0
 			      },
 			    };
 			  }),
