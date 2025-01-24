@@ -99,6 +99,20 @@ export const mapInfoConfigs = (country, product, year) => {
 			},
 		];
 	}
+	else if (product === "tomato") {
+		return [
+			{
+				type: "stats",
+				project: "fruit_vegetables",
+				collection: "__prices__",
+				params: JSON.stringify({ attribute: ["price"], stat: "avg", interval: `every_12_days`, start_time: `${year}-01-01`, end_time: `${year}-12-31`, group_by: "key", filters: [{property_name: "product", operator: "eq", property_value: "tomatoes"}]}),
+				attributename: "avg_price",
+				metric: "Average Price",
+				unit: "€/100kg",
+				plotId: "productPrices"
+			}
+		];
+	}
 	else {
 		// TODO: Perform error handling
 		return [{type: "error"}, {type: "error"}, {type: "error"}];
