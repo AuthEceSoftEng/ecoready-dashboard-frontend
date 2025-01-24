@@ -1,3 +1,4 @@
+import { useLocation } from "react-router-dom";
 import { Grid } from "@mui/material";
 import { memo, useMemo, useState, useCallback, useRef } from "react";
 
@@ -10,13 +11,13 @@ import { getPriceConfigs, getMonthlyPriceConfigs, getProductionConfigs, organiza
 import { getCustomDateTime, calculateDates, calculateDifferenceBetweenDates,
 	debounce, findKeyByText, isValidArray, generateYearsArray, groupByKey } from "../utils/data-handling-functions.js";
 import { cardFooter, LoadingIndicator, StickyBand, DataWarning } from "../utils/rendering-items.js";
-import { monthNames, europeanCountries, products } from "../utils/useful-constants.js";
+import { europeanCountries, products } from "../utils/useful-constants.js";
 // import { fetchCollections } from "../api/fetch-data.js";
 
 // const metrics = fetchCollections(organization, "rice");
 const unit = "Tonnes";
 const customDate = getCustomDateTime(2024, 12);
-const { year, month } = calculateDates(customDate);
+const { year } = calculateDates(customDate);
 
 const agriColors = [
 	colors.ag1, colors.ag2, colors.ag3, colors.ag4, colors.ag5,
@@ -52,13 +53,15 @@ const transformProductionData = (production, sliderYear, countries) => ({
 });
 
 const ProductsScreen = () => {
+	const location = useLocation();
+	const selectedProduct = location.state?.selectedProduct;
 	const [startDate, setStartDate] = useState("2024-01-01");
 	const [endDate, setEndDate] = useState("2024-12-31");
 
 	const [filters, setFilters] = useState({
 		year: "2024",
 		country: "Greece",
-		product: "Rice",
+		product: selectedProduct || "Rice",
 		metric: "price",
 	});
 
