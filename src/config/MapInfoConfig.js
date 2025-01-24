@@ -99,13 +99,18 @@ export const mapInfoConfigs = (country, product, year) => {
 			},
 		];
 	}
-	else if (product === "tomato") {
+	else if (product === "abricots" || product === "apples" || product === "asparagus" || product === "avocados" || product === "beans" || product === "cabbages" || 
+			product === "carrots" || product === "cauliflowers" || product === "cherries" || product === "clementines" || product === "courgettes" || 
+			product === "cucumbers" || product === "egg plants, aubergines" || product === "garlic" || product === "kiwis" || product === "leeks" || 
+			product === "lemons" || product === "lettuces" || product === "mandarins" || product === "melons" || product === "mushrooms, cultivated" || 
+			product === "nectarines" || product === "onions" || product === "oranges" || product === "peaches" || product === "pears" || product === "peppers" || 
+			product === "plums" || product === "satsumas" || product === "strawberries" || product === "table grapes" || product === "tomatoes" || product === "water melons") {
 		return [
 			{
 				type: "stats",
 				project: "fruit_vegetables",
 				collection: "__prices__",
-				params: JSON.stringify({ attribute: ["price"], stat: "avg", interval: `every_12_days`, start_time: `${year}-01-01`, end_time: `${year}-12-31`, group_by: "key", filters: [{property_name: "product", operator: "eq", property_value: "tomatoes"}]}),
+				params: JSON.stringify({ attribute: ["price"], stat: "avg", interval: `every_12_days`, start_time: `${year}-01-01`, end_time: `${year}-12-31`, group_by: "key", filters: [{property_name: "product", operator: "eq", property_value: product}]}),
 				attributename: "avg_price",
 				metric: "Average Price",
 				unit: "€/100kg",
