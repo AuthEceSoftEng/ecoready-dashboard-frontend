@@ -81,15 +81,15 @@ const Home = () => {
 	};
 
 	return (
-		<Grid container direction="row" alignItems="flex-start" justifyContent="center" sx={{ textAlign: "center" }}>
-			<Grid item xs={12} md={6} padding={1}>
+		<Grid container direction="row" alignItems="flex-start" justifyContent="space-between" sx={{ textAlign: "center" }}>
+			<Grid item xs={12} md={5} padding={1}>
 				<SectionTitle>{"Meet the Labs"}</SectionTitle>
 				<CardSection
 					items={labs}
 					onCardClick={(lab) => navigate(lab.path, { replace: true })}
 				/>
 			</Grid>
-			<Grid item xs={12} md={6} padding={1}>
+			<Grid item xs={12} md={5} padding={1}>
 				<SectionTitle>{"Product Selection"}</SectionTitle>
 				<CardSection
 					showLabsLabel
