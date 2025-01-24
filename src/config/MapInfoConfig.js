@@ -84,6 +84,7 @@ export const mapInfoConfigs = (country, product, year) => {
 				metric: "Average Price",
 				unit: "€/t",
 				plotId: "productPrices",
+				perRegion: true
 			},
 			{
 				type: "stats",
@@ -94,6 +95,7 @@ export const mapInfoConfigs = (country, product, year) => {
 				metric: "Gross Production",
 				unit: "t",
 				plotId: "productProduction1",
+				perRegion: true
 			},
 		];
 	}

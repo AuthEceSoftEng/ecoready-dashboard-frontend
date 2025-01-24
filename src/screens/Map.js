@@ -138,6 +138,7 @@ const Map = () => {
 	      name: statistic.attributename,
 	      metric: statistic.metric,
 	      unit: statistic.unit,
+	      perRegion: statistic?.perRegion || false,
 	      values,
 	    };
 	  });
@@ -192,7 +193,7 @@ const Map = () => {
 			      properties: {
 			        ...feature.properties,
 			        flag: country?.flag || "", // Add flag emoji
-			        value: statistic.values.find((p) => p.key === country?.value)?.[statistic.name] || 0,
+			        value: statistic.values.find((p) => p.key === (statistic.perRegion ? country?.region : country?.value))?.[statistic.name] || 0
 			      },
 			    };
 			  }),
