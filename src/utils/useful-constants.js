@@ -17,6 +17,7 @@ export const labs = [
 	{
 		title: "AIDEMEC",
 		path: "../aidemec",
+		logo: "/ll_logos/AIDEMEC.png",
 		image: "/ll_images/AIDEMEC.png",
 		region: "Mediterranean",
 		coordinates: [40.575_348, 15.882_535],
@@ -26,6 +27,7 @@ export const labs = [
 	{
 		title: "CONCATLL",
 		path: "../concatll",
+		logo: "/ll_logos/CONCATLL.png",
 		image: "/ll_images/CONCATLL.png",
 		region: "Mediterranean",
 		coordinates: [41.586_168, 1.514_272],
@@ -35,6 +37,7 @@ export const labs = [
 	{
 		title: "EcoReadyMasuria",
 		path: "../ecoreadymasuria",
+		logo: "/ll_logos/EcoReadyMasuria.png",
 		image: "/ll_images/EcoReadyMasuria.jpg",
 		region: "Central Europe",
 		coordinates: [53.619_53, 20.366_513],
@@ -44,6 +47,7 @@ export const labs = [
 	{
 		title: "EcoVita LL",
 		path: "../ecovitall",
+		logo: "/ll_logos/EcoVitaLL.png",
 		image: "/ll_images/EcoVitaLL.jpg",
 		region: "Central Europe",
 		coordinates: [47.492_367, 19.044_356],
@@ -53,6 +57,7 @@ export const labs = [
 	{
 		title: "Esappin",
 		path: "../esappin",
+		logo: "/ll_logos/Esappin.png",
 		image: "/ll_images/Esappin.png",
 		region: "Western Europe",
 		coordinates: [51.443_657, 7.657_856],
@@ -62,6 +67,7 @@ export const labs = [
 	{
 		title: "LivOrganic",
 		path: "../livorganic",
+		logo: "/ll_logos/LivOrganic.png",
 		image: "/ll_images/LivOrganic.webp",
 		region: "Scandinavia",
 		coordinates: [55.939_112_079_462_35, 12.490_630_314_430_565],
@@ -71,6 +77,7 @@ export const labs = [
 	{
 		title: "LOFS",
 		path: "../lofs",
+		logo: "/ll_logos/LOFS.png",
 		image: "/ll_images/LOFS.jpg",
 		region: "Western Europe",
 		coordinates: [47.710_385, 1.727_322],
@@ -81,6 +88,7 @@ export const labs = [
 	{
 		title: "Probio",
 		path: "../probio",
+		logo: "/ll_logos/Probio.png",
 		image: "/ll_images/Probio.png",
 		region: "Central Europe",
 		coordinates: [49.039_97, 16.864_949],
@@ -90,7 +98,8 @@ export const labs = [
 	{
 		title: "Seco Collab",
 		path: "../secocollab",
-		image: "/ll_images/Seco Collab.png",
+		logo: "/ll_logos/SecoCollab.png",
+		image: "/ll_images/SecoCollab.png",
 		region: "Scandinavia",
 		coordinates: [59.618_634_049_219_36, 16.540_738_729_629_07],
 		products: ["vertical farm", "leafy greens"],
@@ -99,6 +108,7 @@ export const labs = [
 	{
 		title: "THALLA",
 		path: "../thalla",
+		logo: "/ll_logos/Thalla.png",
 		image: "/ll_images/Thalla.webp",
 		region: "Mediterranean",
 		coordinates: [38.533_333, 22.366_667],
