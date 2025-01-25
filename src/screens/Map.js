@@ -1,6 +1,6 @@
 import { Grid } from "@mui/material";
 import { memo, useMemo, useState, useEffect, useCallback, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 import colors from "../_colors.scss";
 import MapComponent, { getColor } from "../components/Map.js";
@@ -77,11 +77,13 @@ const onEachCountry = (feature, layer) => {
 };
 
 const Map = () => {
+	const location = useLocation();
+	const selectedProduct = location.state?.selectedProduct;
 	const navigate = useNavigate();
 	const [geoJsonData, setGeoJsonData] = useState(null);
 	const [filters, setFilters] = useState({
 		year: "2024",
-		product: "Rice",
+		product: selectedProduct || "Rice",
 		metric: "price",
 	});
 	const [isDataReady, setIsDataReady] = useState(false);
