@@ -43,10 +43,12 @@ const SectionTitle = ({ children }) => (
 	</Typography>
 );
 
-const CardSection = ({ items, onCardClick, showLabsLabel }) => (
+const CardSection = ({ items, onCardClick, showLabsLabel }) => {
+    	const navigate = useNavigate();
+    return (	
 	<Grid container spacing={2} sx={{ mt: 2 }}>
 		{items.map((item, index) => (
-			<Grid key={index} item xs={12} sm={6} md={4}>
+			<Grid key={index} item xs={12} sm={6} md={6}>
 				<Card
 					transparent
 					clickable={!!onCardClick}
@@ -61,19 +63,35 @@ const CardSection = ({ items, onCardClick, showLabsLabel }) => (
 							style={imageStyles}
 						/>
 					</Box>
-					{showLabsLabel && (
-						<Typography variant="subtitle1" sx={{ fontWeight: "bold", textAlign: "center" }}>
-							{"Relevant Living Labs:"}
-						</Typography>
-					)}
 					<Typography variant="body2" sx={{ color: "text.secondary", fontSize: "0.875rem", mb: 1, padding: "0 8px" }}>
 						{item.description}
 					</Typography>
+
+	                  <Box
+	                    sx={{
+	                      display: "flex",
+	                      flexDirection: "column", // Stack buttons vertically
+	                      alignItems: "center",
+	                      gap: "8px", // Space between buttons
+	                      mb: 1,
+	                    }}
+	                  >
+	                    <PrimaryBorderButton
+	                      id={`view-details-${index}`}
+	                      title="Go to Living Lab page"
+	                      width="220px"
+	                      height="27px"
+	                      onClick={() => navigate(item.path, { replace: true })}
+	                    />
+	                  </Box>
+					
+					
+					
 				</Card>
 			</Grid>
 		))}
 	</Grid>
-);
+)};
 
 const ProductCardSection = ({ items, onCardClick, showLabsLabel }) => {
 	  const navigate = useNavigate();
@@ -92,7 +110,7 @@ const ProductCardSection = ({ items, onCardClick, showLabsLabel }) => {
 	        const relevantLabs = getRelevantLabs(item); // Get the relevant labs
 
 	        return (
-	          <Grid key={index} item xs={12} sm={12} md={6}>
+	          <Grid key={index} item xs={12} sm={6} md={6}>
 	            <Card
 	              transparent
 	              clickable={!!onCardClick}
@@ -235,11 +253,11 @@ const Home = () => {
 
 	return (
 		<Grid container direction="row" alignItems="flex-start" justifyContent="space-between" sx={{ textAlign: "center" }}>
-			<Grid item xs={12} md={5} padding={1}>
+			<Grid item xs={12} md={6} padding={1}>
 				<SectionTitle>{"Meet the Labs"}</SectionTitle>
 				<CardSection
 					items={labs}
-					onCardClick={(lab) => navigate(lab.path, { replace: true })}
+//					onCardClick={(lab) => navigate(lab.path, { replace: true })}
 				/>
 			</Grid>
 			<Grid item xs={12} md={5} padding={1}>
