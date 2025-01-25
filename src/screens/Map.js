@@ -193,7 +193,7 @@ const Map = () => {
 			      properties: {
 			        ...feature.properties,
 			        flag: country?.flag || "", // Add flag emoji
-			        value: statistic.values.find((p) => p.key === (statistic.perRegion ? country?.region : country?.value))?.[statistic.name] || 0
+			        value: (Array.isArray(statistic.values) ? statistic.values : []).find((p) => p.key === (statistic.perRegion ? country?.region : country?.value))?.[statistic.name] || 0
 			      },
 			    };
 			  }),
@@ -204,7 +204,7 @@ const Map = () => {
 
 	// Add effect to monitor data readiness
 	useEffect(() => {
-		if (enhancedGeoJsonData && statistics.every(statistic => statistic.values.length > 0)) {
+		if (enhancedGeoJsonData && statistics.every(statistic => (Array.isArray(statistic.values) ? statistic.values : []).length > 0)) {
 			console.log("Data is ready:", { enhancedGeoJsonData });
 			setIsDataReady(true);
 		}
@@ -230,7 +230,7 @@ const Map = () => {
 		    range: [
 		      0,
 		      Math.max(
-		        ...statistic.values
+		        ...(Array.isArray(statistic.values) ? statistic.values : [])
 		          ?.filter((p) => p.key !== "EU")
 		          ?.map((p) => p[statistic.name] || 0),
 		      ),
@@ -244,7 +244,7 @@ const Map = () => {
 		        [
 		          0,
 		          Math.max(
-		            ...statistic.values
+		            ...(Array.isArray(statistic.values) ? statistic.values : [])
 		              ?.filter((p) => p.key !== "EU")
 		              ?.map((p) => p[statistic.name] || 0),
 		          ),
