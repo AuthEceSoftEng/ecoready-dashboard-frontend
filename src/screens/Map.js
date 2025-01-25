@@ -193,7 +193,7 @@ const Map = () => {
 			      properties: {
 			        ...feature.properties,
 			        flag: country?.flag || "", // Add flag emoji
-			        value: (Array.isArray(statistic.values) ? statistic.values : []).find((p) => p.key === (statistic.perRegion ? country?.region : country?.value))?.[statistic.name] || 0
+			        value: (Array.isArray(statistic.values) ? statistic.values : []).find((p) => p.key === (statistic.perRegion ? country?.region : country?.value))?.[statistic.name] || "-"
 			      },
 			    };
 			  }),
@@ -228,7 +228,11 @@ const Map = () => {
 		      })),
 		    },
 		    range: [
-		      0,
+		      Math.min(
+				...statistic.values
+				  ?.filter((p) => p.key !== "EU")
+				  ?.map((p) => p[statistic.name] || 0),
+			  ),
 		      Math.max(
 		        ...statistic.values
 		          ?.filter((p) => p.key !== "EU")
@@ -242,7 +246,11 @@ const Map = () => {
 		      fillColor: getColor(
 		        feature.properties.value,
 		        [
-		          0,
+		          Math.min(
+				    ...statistic.values
+				      ?.filter((p) => p.key !== "EU")
+				      ?.map((p) => p[statistic.name] || 0),
+				  ),
 		          Math.max(
 		            ...statistic.values
 		              ?.filter((p) => p.key !== "EU")
