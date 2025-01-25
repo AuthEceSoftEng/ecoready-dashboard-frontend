@@ -230,7 +230,7 @@ const Map = () => {
 		    range: [
 		      0,
 		      Math.max(
-		        ...(Array.isArray(statistic.values) ? statistic.values : [])
+		        ...statistic.values
 		          ?.filter((p) => p.key !== "EU")
 		          ?.map((p) => p[statistic.name] || 0),
 		      ),
@@ -244,7 +244,7 @@ const Map = () => {
 		        [
 		          0,
 		          Math.max(
-		            ...(Array.isArray(statistic.values) ? statistic.values : [])
+		            ...statistic.values
 		              ?.filter((p) => p.key !== "EU")
 		              ?.map((p) => p[statistic.name] || 0),
 		          ),
