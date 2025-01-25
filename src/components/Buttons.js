@@ -42,6 +42,7 @@ export const PrimaryBorderButton = ({
 	titleColor = "primary",
 	size = "",
 	width = "200px",
+	height = null,
 	title = "Button",
 	backgroundColor = "white",
 	onClick,
@@ -55,7 +56,7 @@ export const PrimaryBorderButton = ({
 		variant="outlined"
 		color="primary"
 		size={(size || "")}
-		style={{ ...(width && { width }), backgroundColor: (backgroundColor || "white"), borderWidth: "3px", borderColor: titleColor }}
+		style={{ ...(width && { width }), ...(height && { height }), backgroundColor: (backgroundColor || "white"), borderWidth: "2px", borderColor: titleColor }}
 		onClick={onClick}
 	>
 		<Typography className={titleClassName} sx={{ color: `${titleColor}!important` }} style={{ textTransform: "none" }}>

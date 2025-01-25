@@ -165,42 +165,43 @@ export const europeanCountries = [
 ];
 
 export const products = [
-	{
-		value: "beef",
-		text: "Beef",
-		collections: ["carcass_prices", "live_animal_prices", "production"],
-		description: "No living labs currently working with beef",
-		image: "/product_images/beef.png",
-	},
-	{
-		value: "cereals",
-		text: "Cereals",
-		description: "AIDEMEC (barley, wheat), CONCATLL (wheat), EcoReadyMasuria (barley, maize), Esappin (barley, oats), LivOrganic (barley), Probio (wheat), THALLA (wheat)",
-		image: "/product_images/cereals.png",
-	},
-	{
-		value: "eggs_poultry",
-		text: "Eggs/Poultry",
-		collections: ["poultry_prices", "poultry_monthly_prices", "poultry_production", "egg_prices"],
-		description: "CONCATLL, Probio",
-		image: "/product_images/poultry.png",
-	},
-	{
-		value: "fertiliser",
-		text: "Fertiliser",
-		description: "No living labs currently working with fertiliser",
-		image: "/product_images/fertiliser.png",
-	},
+//	{
+//		value: "beef",
+//		text: "Beef",
+//		collections: ["carcass_prices", "live_animal_prices", "production"],
+//		description: "No living labs currently working with beef",
+//		image: "/product_images/beef.png",
+//	},
+//	{
+//		value: "cereals",
+//		text: "Cereals",
+//		description: "AIDEMEC (barley, wheat), CONCATLL (wheat), EcoReadyMasuria (barley, maize), Esappin (barley, oats), LivOrganic (barley), Probio (wheat), THALLA (wheat)",
+//		image: "/product_images/cereals.png",
+//	},
+//	{
+//		value: "eggs_poultry",
+//		text: "Eggs/Poultry",
+//		collections: ["poultry_prices", "poultry_monthly_prices", "poultry_production", "egg_prices"],
+//		description: "CONCATLL, Probio",
+//		relevantLLs: ["CONCATLL", "Probio"],
+//		image: "/product_images/poultry.png",
+//	},
+//	{
+//		value: "fertiliser",
+//		text: "Fertiliser",
+//		description: "No living labs currently working with fertiliser",
+//		image: "/product_images/fertiliser.png",
+//	},
 	//	{
 	//		value: "fruit_vegetables",
 	//		text: "Fruits & Vegetables",
 	//	},
 	// Fruits and Vegetables
-	{ value: "abricots", text: "Abricots" },
+	{ value: "abricots", text: "Abricots", image: "/product_images/abricots.png", },
 	{ value: "apples", text: "Apples" },
 	{ value: "asparagus", text: "Asparagus" },
 	{ value: "avocados", text: "Avocados" },
-	{ value: "beans", text: "Beans" },
+	{ value: "beans", text: "Beans", image: "/product_images/beans.png", },
 	{ value: "cabbages", text: "Cabbages" },
 	{ value: "carrots", text: "Carrots" },
 	{ value: "cauliflowers", text: "Cauliflowers" },
