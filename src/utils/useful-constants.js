@@ -17,6 +17,7 @@ export const labs = [
 	{
 		title: "AIDEMEC",
 		path: "../aidemec",
+		logo: "/ll_logos/AIDEMEC.png",
 		image: "/ll_images/AIDEMEC.png",
 		region: "Mediterranean",
 		coordinates: [40.575_348, 15.882_535],
@@ -26,6 +27,7 @@ export const labs = [
 	{
 		title: "CONCATLL",
 		path: "../concatll",
+		logo: "/ll_logos/CONCATLL.png",
 		image: "/ll_images/CONCATLL.png",
 		region: "Mediterranean",
 		coordinates: [41.586_168, 1.514_272],
@@ -35,7 +37,8 @@ export const labs = [
 	{
 		title: "EcoReadyMasuria",
 		path: "../ecoreadymasuria",
-		image: "/ll_images/EcoReadyMasuria.jpg",
+		logo: "/ll_logos/EcoReadyMasuria.png",
+		image: "/ll_images/EcoReadyMasuria.png",
 		region: "Central Europe",
 		coordinates: [53.619_53, 20.366_513],
 		products: ["barley", "maize", "sunflower", "red clover", "milk"],
@@ -44,7 +47,8 @@ export const labs = [
 	{
 		title: "EcoVita LL",
 		path: "../ecovitall",
-		image: "/ll_images/EcoVitaLL.jpg",
+		logo: "/ll_logos/EcoVitaLL.png",
+		image: "/ll_images/EcoVitaLL.png",
 		region: "Central Europe",
 		coordinates: [47.492_367, 19.044_356],
 		products: ["vertival farm", "leafy greens"],
@@ -53,6 +57,7 @@ export const labs = [
 	{
 		title: "Esappin",
 		path: "../esappin",
+		logo: "/ll_logos/Esappin.png",
 		image: "/ll_images/Esappin.png",
 		region: "Western Europe",
 		coordinates: [51.443_657, 7.657_856],
@@ -62,7 +67,8 @@ export const labs = [
 	{
 		title: "LivOrganic",
 		path: "../livorganic",
-		image: "/ll_images/LivOrganic.webp",
+		logo: "/ll_logos/LivOrganic.png",
+		image: "/ll_images/LivOrganic.png",
 		region: "Scandinavia",
 		coordinates: [55.939_112_079_462_35, 12.490_630_314_430_565],
 		products: ["barley", "potato"],
@@ -71,7 +77,8 @@ export const labs = [
 	{
 		title: "LOFS",
 		path: "../lofs",
-		image: "/ll_images/LOFS.jpg",
+		logo: "/ll_logos/LOFS.png",
+		image: "/ll_images/LOFS.png",
 		region: "Western Europe",
 		coordinates: [47.710_385, 1.727_322],
 		// coordinates: { cite1: [47.710_385, 1.727_322], cite2: [47.769_127, -0.327_92] },
@@ -81,6 +88,7 @@ export const labs = [
 	{
 		title: "Probio",
 		path: "../probio",
+		logo: "/ll_logos/Probio.png",
 		image: "/ll_images/Probio.png",
 		region: "Central Europe",
 		coordinates: [49.039_97, 16.864_949],
@@ -90,7 +98,8 @@ export const labs = [
 	{
 		title: "Seco Collab",
 		path: "../secocollab",
-		image: "/ll_images/Seco Collab.png",
+		logo: "/ll_logos/SecoCollab.png",
+		image: "/ll_images/SecoCollab.png",
 		region: "Scandinavia",
 		coordinates: [59.618_634_049_219_36, 16.540_738_729_629_07],
 		products: ["vertical farm", "leafy greens"],
@@ -99,7 +108,8 @@ export const labs = [
 	{
 		title: "THALLA",
 		path: "../thalla",
-		image: "/ll_images/Thalla.webp",
+		logo: "/ll_logos/Thalla.png",
+		image: "/ll_images/Thalla.png",
 		region: "Mediterranean",
 		coordinates: [38.533_333, 22.366_667],
 		products: ["honey", "olive", "wheat", "tomato", "fish"],
@@ -155,42 +165,43 @@ export const europeanCountries = [
 ];
 
 export const products = [
-	{
-		value: "beef",
-		text: "Beef",
-		collections: ["carcass_prices", "live_animal_prices", "production"],
-		description: "No living labs currently working with beef",
-		image: "/product_images/beef.png",
-	},
-	{
-		value: "cereals",
-		text: "Cereals",
-		description: "AIDEMEC (barley, wheat), CONCATLL (wheat), EcoReadyMasuria (barley, maize), Esappin (barley, oats), LivOrganic (barley), Probio (wheat), THALLA (wheat)",
-		image: "/product_images/cereals.png",
-	},
-	{
-		value: "eggs_poultry",
-		text: "Eggs/Poultry",
-		collections: ["poultry_prices", "poultry_monthly_prices", "poultry_production", "egg_prices"],
-		description: "CONCATLL, Probio",
-		image: "/product_images/poultry.png",
-	},
-	{
-		value: "fertiliser",
-		text: "Fertiliser",
-		description: "No living labs currently working with fertiliser",
-		image: "/product_images/fertiliser.png",
-	},
+//	{
+//		value: "beef",
+//		text: "Beef",
+//		collections: ["carcass_prices", "live_animal_prices", "production"],
+//		description: "No living labs currently working with beef",
+//		image: "/product_images/beef.png",
+//	},
+//	{
+//		value: "cereals",
+//		text: "Cereals",
+//		description: "AIDEMEC (barley, wheat), CONCATLL (wheat), EcoReadyMasuria (barley, maize), Esappin (barley, oats), LivOrganic (barley), Probio (wheat), THALLA (wheat)",
+//		image: "/product_images/cereals.png",
+//	},
+//	{
+//		value: "eggs_poultry",
+//		text: "Eggs/Poultry",
+//		collections: ["poultry_prices", "poultry_monthly_prices", "poultry_production", "egg_prices"],
+//		description: "CONCATLL, Probio",
+//		relevantLLs: ["CONCATLL", "Probio"],
+//		image: "/product_images/poultry.png",
+//	},
+//	{
+//		value: "fertiliser",
+//		text: "Fertiliser",
+//		description: "No living labs currently working with fertiliser",
+//		image: "/product_images/fertiliser.png",
+//	},
 	//	{
 	//		value: "fruit_vegetables",
 	//		text: "Fruits & Vegetables",
 	//	},
 	// Fruits and Vegetables
-	{ value: "abricots", text: "Abricots" },
+	{ value: "abricots", text: "Abricots", image: "/product_images/abricots.png", },
 	{ value: "apples", text: "Apples" },
 	{ value: "asparagus", text: "Asparagus" },
 	{ value: "avocados", text: "Avocados" },
-	{ value: "beans", text: "Beans" },
+	{ value: "beans", text: "Beans", image: "/product_images/beans.png", },
 	{ value: "cabbages", text: "Cabbages" },
 	{ value: "carrots", text: "Carrots" },
 	{ value: "cauliflowers", text: "Cauliflowers" },
