@@ -1,6 +1,6 @@
 import { Grid } from "@mui/material";
 import { memo, useMemo, useState, useEffect, useCallback, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 import colors from "../_colors.scss";
 import MapComponent, { getColor } from "../components/Map.js";
@@ -77,11 +77,13 @@ const onEachCountry = (feature, layer) => {
 };
 
 const Map = () => {
+	const location = useLocation();
+	const selectedProduct = location.state?.selectedProduct;
 	const navigate = useNavigate();
 	const [geoJsonData, setGeoJsonData] = useState(null);
 	const [filters, setFilters] = useState({
 		year: "2024",
-		product: "Rice",
+		product: selectedProduct || "Rice",
 		metric: "price",
 	});
 	const [isDataReady, setIsDataReady] = useState(false);
@@ -193,7 +195,7 @@ const Map = () => {
 			      properties: {
 			        ...feature.properties,
 			        flag: country?.flag || "", // Add flag emoji
-			        value: statistic.values.find((p) => p.key === (statistic.perRegion ? country?.region : country?.value))?.[statistic.name] || 0
+			        value: (Array.isArray(statistic.values) ? statistic.values : []).find((p) => p.key === (statistic.perRegion ? country?.region : country?.value))?.[statistic.name] || "-"
 			      },
 			    };
 			  }),
@@ -204,7 +206,7 @@ const Map = () => {
 
 	// Add effect to monitor data readiness
 	useEffect(() => {
-		if (enhancedGeoJsonData && statistics.every(statistic => statistic.values.length > 0)) {
+		if (enhancedGeoJsonData && statistics.every(statistic => (Array.isArray(statistic.values) ? statistic.values : []).length > 0)) {
 			console.log("Data is ready:", { enhancedGeoJsonData });
 			setIsDataReady(true);
 		}
@@ -228,7 +230,11 @@ const Map = () => {
 		      })),
 		    },
 		    range: [
-		      0,
+		      Math.min(
+				...statistic.values
+				  ?.filter((p) => p.key !== "EU")
+				  ?.map((p) => p[statistic.name] || 0),
+			  ),
 		      Math.max(
 		        ...statistic.values
 		          ?.filter((p) => p.key !== "EU")
@@ -242,7 +248,11 @@ const Map = () => {
 		      fillColor: getColor(
 		        feature.properties.value,
 		        [
-		          0,
+		          Math.min(
+				    ...statistic.values
+				      ?.filter((p) => p.key !== "EU")
+				      ?.map((p) => p[statistic.name] || 0),
+				  ),
 		          Math.max(
 		            ...statistic.values
 		              ?.filter((p) => p.key !== "EU")
