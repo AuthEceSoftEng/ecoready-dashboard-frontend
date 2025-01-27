@@ -17,7 +17,7 @@ const useStyles = makeStyles((theme) => ({
 		borderRadius: 3 * theme.shape.borderRadius,
 		color: "white!important",
 		"&:hover": {
-			backgroundColor: theme.palette.primaryDark.main,
+			backgroundColor: theme.palette.primary.main,
 		},
 	},
 	formControl: {
@@ -31,7 +31,6 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const defaultFilterMethod = ({ id, value }, row) => isFuzzyMatch(row[id], value);
-const getTdProps = () => ({ style: { alignSelf: "center", textAlign: "center" } });
 
 const Table = (props) => {
 	const {
@@ -62,7 +61,7 @@ const Table = (props) => {
 			onChange={(event) => onChange(event.target.value)}
 		/>
 	), []);
-
+	
 	const PreviousComponent = useCallback((prps) => (
 		<Button variant="outlined" size="small" {...prps} className={classes.paginationButton}>
 			<NavigateBefore />
@@ -77,20 +76,44 @@ const Table = (props) => {
 
 	const getTheadTrProps = useCallback(() => ({
 		style: {
-			backgroundColor: theme.palette.primaryDark.main,
+			backgroundColor: theme.palette.primary.main,
 			color: theme.palette.common.white,
+			borderBottom: `1px solid ${theme.palette.divider}`, // Optional: Add a subtle border
 		},
-	}), [theme.palette.common.white, theme.palette.primaryDark.main]);
+	}), [theme.palette.common.white, theme.palette.primary.main, theme.palette.divider]);
 
+	const getThProps = useCallback(() => ({
+		style: {
+			backgroundColor: theme.palette.common.white, // Set header cell background to white
+			color: theme.palette.text.primary,          // Ensure text is neutral
+			textAlign: "center",                        // Center align the text
+			padding: theme.spacing(1),                 // Add padding for better appearance
+		},
+	}), [theme.palette.common.white, theme.palette.text.primary, theme.spacing]);
+
+	  // Custom row background color
+	  const getTdProps = useCallback(() => ({
+	    style: {
+	      backgroundColor: theme.palette.common.white,
+	      color: theme.palette.text.primary,
+	      textAlign: "center",
+	      verticalAlign: "middle",
+	      borderBottom: `1px solid ${theme.palette.divider}`, // Add only bottom borders for horizontal lines
+		  borderLeft: "none",                        // Ensure no vertical borders
+		  borderRight: "none",                       // Ensure no vertical borders
+	    },
+	  }), [theme.palette.common.white, theme.palette.text.primary, theme.palette.divider]);
+	
 	const getTableProps = useCallback(() => ({
 		style: {
-			border: `${theme.spacing(0.3)} solid ${theme.palette.primaryDark.main}`,
+			backgroundColor: theme.palette.common.white,
+			border: `${theme.spacing(0.3)} solid ${theme.palette.primary.main}`,
 			borderRadius: 2.5 * theme.shape.borderRadius,
 		},
 	}), [theme]);
 
 	const getPaginationProps = useCallback(() => ({
-		style: { margin: theme.spacing(2, 5), backgroundColor: "transparent", border: "none", boxShadow: "none", color: "white" },
+		style: { margin: theme.spacing(2, 5), backgroundColor: "transparent", border: "none", boxShadow: "none", color: theme.palette.common.black },
 	}), [theme]);
 
 	const renderPageSizeOptions = useCallback(({ pageSize, onPageSizeChange, pageSizeOptions, rowsText }) => (
@@ -104,7 +127,9 @@ const Table = (props) => {
 			>
 				{pageSizeOptions.map((option, i) => (
 					<MenuItem key={i} value={option}>
-						<Typography>{`${option} ${rowsText}`}</Typography>
+						<Typography sx={{ color: theme.palette.text.primary }}> {/* Set text color explicitly */}
+							{`${option} ${rowsText}`}
+						</Typography>
 					</MenuItem>
 				))}
 			</Select>
@@ -126,6 +151,7 @@ const Table = (props) => {
 			className={clsx("-striped -highlight -noborder", className)}
 			getTdProps={getTdProps}
 			getTheadTrProps={getTheadTrProps}
+			getThProps={getThProps}
 			getTableProps={getTableProps}
 			getPaginationProps={getPaginationProps}
 			PreviousComponent={PreviousComponent}
