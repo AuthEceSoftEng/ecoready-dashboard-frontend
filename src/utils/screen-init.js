@@ -91,7 +91,12 @@ const useInit = (organization, fetchConfigs) => {
 	}, [organization, fetchConfigs, handleFetchResponse]);
 
 	useEffect(() => {
-		if (!fetchConfigs) return;
+		if (!fetchConfigs) {
+			dispatch({
+				type: "FETCH_START",
+			});
+			return;
+		}
 
 		const timerManager = new TimerManager(updateData, () => {
 			dispatch({ type: "UPDATE_MINUTES_AGO" });

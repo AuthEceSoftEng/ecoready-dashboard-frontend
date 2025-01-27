@@ -17,6 +17,7 @@ export const reducer = (state, action) => {
 				isLoading: true,
 				warning: null,
 				error: null,
+				dataSets: {},
 			};
 		}
 
