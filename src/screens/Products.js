@@ -1,20 +1,17 @@
 import { useLocation } from "react-router-dom";
 import { Grid } from "@mui/material";
-import React, { memo, useMemo, useState, useCallback, useRef, useEffect } from "react";
+import { memo, useMemo, useState, useCallback, useRef, useEffect } from "react";
 
 import colors from "../_colors.scss";
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
-import DatePicker from "../components/DatePicker.js";
 import useInit from "../utils/screen-init.js";
 import { getPriceConfigs, getMonthlyPriceConfigs, getProductionConfigs, organization } from "../config/ProductConfig.js";
 import { getCustomDateTime, calculateDates, calculateDifferenceBetweenDates,
 	debounce, findKeyByText, isValidArray, generateYearsArray, groupByKey } from "../utils/data-handling-functions.js";
 import { cardFooter, LoadingIndicator, StickyBand, DataWarning } from "../utils/rendering-items.js";
 import { europeanCountries, products } from "../utils/useful-constants.js";
-// import { fetchCollections } from "../api/fetch-data.js";
 
-// const metrics = fetchCollections(organization, "rice");
 const customDate = getCustomDateTime(2024, 12);
 const { year } = calculateDates(customDate);
 
@@ -28,36 +25,24 @@ const agColorKeys = Array.from({ length: 20 }, (_, i) => `ag${i + 1}`);
 
 const transformProductionData = (productionData, yearPicker, sumFieldName) => {
 	const timestamp = `${yearPicker}-01-01T00:00:00`;
-	console.log("Debug - Input:", {
-		productionData,
-		yearPicker,
-		sumFieldName,
-		timestamp,
-	});
 
 	const euData = productionData.EU?.find(
 		(item) => item.timestamp === timestamp,
 	)?.[sumFieldName] || 0;
-	console.log("Debug - EU data:", euData);
 
 	const countryData = Object.keys(productionData)
 		.filter((countryName) => countryName !== "EU")
 		.map((countryName) => {
 			const countryArray = productionData[countryName] || [];
-			console.log("Debug - Country Array:", {
-				countryName,
-				arrayLength: countryArray.length,
-				firstItem: countryArray[0],
-			});
+			// console.log("Debug - Country Array:", {
+			// 	countryName,
+			// 	arrayLength: countryArray.length,
+			// 	firstItem: countryArray[0],
+			// });
 
 			const matchingData = countryArray.find(
 				(item) => item.interval_start === timestamp,
 			);
-			console.log("Debug - Matching Data:", {
-				countryName,
-				matchingData,
-				sumValue: matchingData?.[sumFieldName],
-			});
 
 			return {
 				label: countryName,
@@ -67,7 +52,7 @@ const transformProductionData = (productionData, yearPicker, sumFieldName) => {
 		.filter((item) => item.production > 0)
 		.sort((a, b) => a.label.localeCompare(b.label));
 
-	console.log("Debug - Final countryData:", countryData);
+	// console.log("Debug - Final countryData:", countryData);
 
 	return {
 		euProduction: euData,
@@ -118,6 +103,8 @@ const ProductsScreen = () => {
 			: null),
 		[dateMetrics.isValidDateRange, dateMetrics.differenceInDays, keys.product, keys.country, startDate, endDate],
 	);
+	console.log("Price Configs:", priceConfigs);
+	const unit = useMemo(() => priceConfigs[0]?.unit || "", [priceConfigs]);
 
 	const monthlyPriceConfigs = useMemo(
 		() => (keys.product
@@ -147,13 +134,13 @@ const ProductsScreen = () => {
 
 	const { state, dispatch } = useInit(organization, allConfigs);
 	const { isLoading, dataSets, minutesAgo } = state;
-	console.log(dataSets);
+	console.log("DATATATATATASETS:", dataSets);
 
 	const pricesTimeline = useMemo(() => dataSets?.pricesTimeline || [], [dataSets]);
 	const periodPrices = useMemo(() => dataSets?.periodPrices || [], [dataSets]);
 	const monthlyPrices = useMemo(() => dataSets?.monthlyPrices || [], [dataSets]);
 	const isValidPrice = useMemo(() => isValidArray(pricesTimeline), [pricesTimeline]);
-	const unit = useMemo(() => dataSets?.unit || [], [dataSets]);
+	const maxPrice = useMemo(() => dataSets?.maxPrice?.[0]?.avg_price, [dataSets]);
 
 	const production = useMemo(() => {
 		if (!dataSets) return [];
@@ -165,6 +152,17 @@ const ProductsScreen = () => {
 		return productionKeys.map((key) => dataSets[key] || []);
 	}, [dataSets]);
 	// console.log("Combined Production Data:", production);
+
+	const maxProduction = useMemo(() => {
+		if (!dataSets) return [];
+
+		// Get all productProduction keys
+		const maxProductionKeys = Object.keys(dataSets).filter((key) => key.startsWith("maxProduction"));
+
+		// Map each key to its array
+		return maxProductionKeys.map((key) => dataSets[key] || []);
+	}, [dataSets]);
+	console.log("Max Production Data:", maxProduction);
 
 	const productionByCountry = useMemo(() => production.map((productionData) => {
 		const grouped = groupByKey(productionData, "key");
@@ -216,7 +214,7 @@ const ProductsScreen = () => {
 		if (productionTypes.length > 0 && !productionType) {
 			setProductionType(productionTypes[0].value);
 		}
-	}, [productionType, productionTypes]);
+	}, [productionType, productionTypes, filters.product]);
 
 	console.log("Selected prouction type:", productionType);
 	console.log("Selected date:", filters.year);
@@ -236,7 +234,7 @@ const ProductsScreen = () => {
 		},
 	], [endDate, handleDateChange, startDate]);
 
-	const yearPickerRef = useRef;
+	const yearPickerRef = useRef();
 	const yearPickerProps = useMemo(() => [
 		{
 			customType: "date-picker",
@@ -323,9 +321,9 @@ const ProductsScreen = () => {
 						subtitle: "EU's Annual Production",
 					},
 					shape: "bullet",
-					range: [0, 5_000_000],
-					color: "primary",
-					suffix: ` ${unit}`,
+					range: [0, 3_000],
+					color: "third",
+					suffix: ` ${productionConfigs[0]?.unit || ""}`,
 				},
 				pie: {
 					data: isValidArray(countryData) ? [{
@@ -348,7 +346,7 @@ const ProductsScreen = () => {
 				},
 			},
 		};
-	}, [productionByCountry, productionType, filters.year, unit]);
+	}, [productionByCountry, filters.year, productionType, productionConfigs]);
 	console.log("Europe Overview:", europeOverview);
 	console.log("General production data:", productionByCountry);
 
@@ -358,10 +356,10 @@ const ProductsScreen = () => {
 				value: europeOverview?.countryData?.find(
 					(country) => country.label === filters.country,
 				)?.production ?? null,
-				subtitle: `${filters.country}'s ${europeOverview?.productionType} Production`,
+				subtitle: `${productionTypes.find((type) => type.value === productionType)?.text || ""}`,
 			},
-			range: [0, 3_000_000],
-			color: "secondary",
+			range: [0, 2_000],
+			color: "third",
 			suffix: ` ${unit}`,
 			shape: "angular",
 		},
@@ -370,7 +368,7 @@ const ProductsScreen = () => {
 				value: monthlyPrices?.[0]?.avg_price ?? null,
 				subtitle: "Current Month's Average Price",
 			},
-			color: "third",
+			color: "secondary",
 			suffix: `€/${unit}`,
 			shape: "angular",
 		},
@@ -383,22 +381,23 @@ const ProductsScreen = () => {
 					type: "scatter",
 					mode: "lines",
 					color: "secondary",
-					title: `€/${unit}`,
+					title: `${unit}`,
 				},
 			],
+			color: "secondary",
 			xaxis: { title: "Date" },
-			yaxis: { title: `Average Price per ${unit}` },
+			yaxis: { title: `Average ${unit}` },
 		},
 		{
 			data: {
 				value: periodPrices?.[0]?.avg_price ?? null,
 				subtitle: "Specified Period's Average Price",
 			},
-			color: "third",
-			suffix: `€/${unit}`,
+			color: "secondary",
+			suffix: `${unit}`,
 			shape: "angular",
 		},
-	], [europeOverview?.countryData, europeOverview?.productionType, filters.country, filters.product, unit, monthlyPrices, isValidPrice, pricesTimeline, periodPrices]);
+	], [europeOverview?.countryData, productionType, productionTypes, filters.country, filters.product, unit, monthlyPrices, isValidPrice, pricesTimeline, periodPrices]);
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
@@ -412,7 +411,7 @@ const ProductsScreen = () => {
 						<StickyBand
 							sticky={false}
 							dropdownContent={[dropdownContent[2]]}
-							formRef={yearPickerRef.production1}
+							formRef={yearPickerRef}
 							formContent={yearPickerProps}
 						/>
 					</Grid>
@@ -469,6 +468,7 @@ const ProductsScreen = () => {
 							{europeOverview?.charts.bars.data && (
 								<Plot
 									scrollZoom
+									height="461px"
 									data={[...europeOverview.charts.bars.data].reverse()}
 									barmode="stack"
 									displayBar={false}
@@ -525,7 +525,7 @@ const ProductsScreen = () => {
 														type: "indicator",
 														mode: "gauge+number",
 														value: plotData.data.value,
-														range: plotData.range ?? [0, 2000],
+														range: plotData.range ?? [0, maxPrice],
 														color: plotData.color,
 														shape: plotData.shape,
 														indicator: "primary",
