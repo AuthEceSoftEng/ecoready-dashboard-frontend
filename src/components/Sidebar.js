@@ -182,6 +182,14 @@ const Sidebar = ({ isSmall: sidebarIsSmall, onToggleSidebar }) => {
 				handler: () => navigate(lab.path),
 			})),
 		},
+//		{
+//			// icon: inspectionIcon,
+//			text: "Data View",
+//			handler: () => {
+//				handleServicesMenuClose();
+//				navigate("/dataview");
+//			},
+//		},
 	];
 
 	const renderServicesMenu = (
