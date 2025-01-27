@@ -165,19 +165,21 @@ export const europeanCountries = [
 ];
 
 export const products = [
-//	{
-//		value: "beef",
-//		text: "Beef",
-//		collections: ["carcass_prices", "live_animal_prices", "production"],
-//		description: "No living labs currently working with beef",
-//		image: "/product_images/beef.png",
-//	},
-//	{
-//		value: "cereals",
-//		text: "Cereals",
-//		description: "AIDEMEC (barley, wheat), CONCATLL (wheat), EcoReadyMasuria (barley, maize), Esappin (barley, oats), LivOrganic (barley), Probio (wheat), THALLA (wheat)",
-//		image: "/product_images/cereals.png",
-//	},
+	{
+		value: "beef",
+		text: "Beef",
+		collections: ["carcass_prices", "live_animal_prices", "production"],
+		description: "No living labs currently working with beef",
+		image: "/product_images/beef.png",
+	},
+	// Cereals
+	{ value: "barley", text: "Barley", productiontext: ["Barley"], pricetext: ["Feed barley", "Malting barley"] },
+	{ value: "wheat", text: "Wheat", productiontext: ["Durum wheat", "Soft wheat"], pricetext: ["Durum wheat", "Feed wheat", "Milling wheat"] },
+	{ value: "maize", text: "Maize", productiontext: ["Maize"], pricetext: ["Feed maize"] },
+	{ value: "oats", text: "Oats", productiontext: ["Oat"], pricetext: ["Feed oats", "Milling oats"] },
+	{ value: "rye", text: "Rye", productiontext: ["Rye"], pricetext: ["Feed rye", "Milling rye"] },
+	{ value: "sorghum", text: "Sorghum", productiontext: ["Sorghum"] },
+	{ value: "triticale", text: "Triticale", productiontext: ["Triticale"], pricetext: ["Triticale"] },
 //	{
 //		value: "eggs_poultry",
 //		text: "Eggs/Poultry",
@@ -288,6 +290,7 @@ export const products = [
 		image: "/product_images/wine.jpg",
 	},
 ];
+products.sort((a, b) => a.value.localeCompare(b.value));
 
 export const years = [
 	{ value: 2010, label: "2010" },

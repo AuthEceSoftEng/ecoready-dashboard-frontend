@@ -1,4 +1,5 @@
 export const organization = "european_data";
+import { products } from "../utils/useful-constants.js";
 
 export const mapInfoConfigs = (country, product, year) => {
 	if (product === "rice") {
@@ -141,6 +142,51 @@ export const mapInfoConfigs = (country, product, year) => {
 				plotId: "productPrices"
 			}
 		];
+	}
+	else if (product === "barley" || product === "wheat" || product === "maize" || product === "oats" || product === "rye" || product === "sorghum" || product === "triticale") {
+		const productnames = products.find(item => item.value === product)?.pricetext || [];
+		const cropnames = products.find(item => item.value === product)?.productiontext || [];
+
+		const productData = productnames.map((productname, index) => ({
+			  type: "stats",
+			  project: "cereals",
+			  collection: "__prices__",
+			  params: JSON.stringify({
+			    attribute: ["price"],
+			    stat: "avg",
+			    interval: "every_12_days",
+			    start_time: `${year}-01-01`,
+			    end_time: `${year}-12-31`,
+			    group_by: "key",
+			    filters: [{ property_name: "product_name", operator: "eq", property_value: productname }]
+			  }),
+			  attributename: "avg_price",
+			  metric: `Average Price (${productname})`, // Include productname in the metric
+			  unit: "€/t",
+			  plotId: `productPrices${index + 1}` // Add an index to the plotId
+			}));
+
+		const cropData = cropnames.map((cropname, index) => ({
+			  type: "stats",
+			  project: "cereals",
+			  collection: "__production__",
+			  params: JSON.stringify({
+			    attribute: ["gross_production"],
+			    stat: "sum",
+			    interval: "every_12_months",
+			    start_time: `${year}-01-01`,
+			    end_time: `${year}-12-31`,
+			    group_by: "key",
+			    filters: [{ property_name: "crop", operator: "eq", property_value: cropname }]
+			  }),
+			  attributename: "sum_gross_production",
+			  metric: `Gross Production (${cropname})`, // Include cropname in the metric
+			  unit: "t",
+			  plotId: `productProduction${index + 1}`, // Add an index to the plotId
+			  perRegion: false
+			}));
+
+		return [...productData, ...cropData];
 	}
 	else {
 		// TODO: Perform error handling
