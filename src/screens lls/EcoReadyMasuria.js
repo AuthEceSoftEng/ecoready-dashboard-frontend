@@ -54,7 +54,7 @@ const EcoReadyMasuria = () => {
 			customType: "date-picker",
 			id: "yearPicker",
 			width: "170px",
-			sublabel: "Year Picker",
+			sublabel: "Select Year",
 			views: ["year"],
 			value: `${year}`,
 			minDate: new Date("2001-01-01"),
