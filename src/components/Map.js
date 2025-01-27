@@ -106,6 +106,7 @@ const Plot = ({
 	  polygons = [],
 	  groups = [],
 	  geodata = [],
+	  showLegend = true, // New prop to control legend visibility
 	  showMinimap = false,
 	}) => {
 	  const [selectedLayerIndex, setSelectedLayerIndex] = useState(0);
@@ -169,7 +170,7 @@ const Plot = ({
 	          </LayersControl>
 
 	          
-				{markers.length > 0 && (
+				{showLegend && markers.length > 0 && (
 						<LayersControl position="bottomright" collapsed={false}>
 							{markers.filter((marker) => marker.hiddable).map((marker, index) => (
 								<LayersControl.Overlay key={index} name={marker.name} checked={marker.defaultChecked}>

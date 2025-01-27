@@ -44,54 +44,76 @@ const SectionTitle = ({ children }) => (
 );
 
 const CardSection = ({ items, onCardClick, showLabsLabel }) => {
-    	const navigate = useNavigate();
-    return (	
-	<Grid container spacing={2} sx={{ mt: 2 }}>
-		{items.map((item, index) => (
-			<Grid key={index} item xs={12} sm={6} md={6}>
-				<Card
-					transparent
-					clickable={!!onCardClick}
-					title={item.title || item.text}
-					sx={{ display: "flex", flexDirection: "column" }}
-					onClick={() => onCardClick?.(item)}
-				>
-					<Box sx={{ width: "100%", mb: 1, display: "flex", justifyContent: "center", alignItems: "center", boxSizing: "border-box" }}>
-						<img
-							src={item.image}
-							alt={item.title || item.text}
-							style={imageStyles}
-						/>
-					</Box>
-					<Typography variant="body2" sx={{ color: "text.secondary", fontSize: "0.875rem", mb: 1, padding: "0 8px" }}>
-						{item.description}
-					</Typography>
+	  const navigate = useNavigate();
 
-	                  <Box
-	                    sx={{
-	                      display: "flex",
-	                      flexDirection: "column", // Stack buttons vertically
-	                      alignItems: "center",
-	                      gap: "8px", // Space between buttons
-	                      mb: 1,
-	                    }}
-	                  >
-	                    <PrimaryBorderButton
-	                      id={`view-details-${index}`}
-	                      title="Go to Living Lab page"
-	                      width="220px"
-	                      height="27px"
-	                      onClick={() => navigate(item.path, { replace: true })}
-	                    />
-	                  </Box>
-					
-					
-					
-				</Card>
-			</Grid>
-		))}
-	</Grid>
-)};
+	  return (
+	    <Grid container spacing={2} sx={{ mt: 2, alignItems: "stretch" }}>
+	      {items.map((item, index) => (
+	        <Grid key={index} item xs={12} sm={6} md={6} sx={{ display: "flex" }}>
+	          <Card
+	            transparent
+	            clickable={!!onCardClick}
+	            title={item.title || item.text}
+	            sx={{
+	              display: "flex",
+	              flexDirection: "column",
+	              justifyContent: "space-between", // Ensure content spacing is even
+	              flexGrow: 1, // Ensure cards take up equal height
+	            }}
+	            onClick={() => onCardClick?.(item)}
+	          >
+	            <Box
+	              sx={{
+	                width: "100%",
+	                mb: 1,
+	                display: "flex",
+	                justifyContent: "center",
+	                alignItems: "center",
+	                boxSizing: "border-box",
+	              }}
+	            >
+	              <img
+	                src={item.image}
+	                alt={item.title || item.text}
+	                style={{ maxWidth: "100%", height: "auto" }}
+	              />
+	            </Box>
+	            <Typography
+	              variant="body2"
+	              sx={{
+	                color: "text.secondary",
+	                fontSize: "0.875rem",
+	                mb: 1,
+	                padding: "0 8px",
+	              }}
+	            >
+	              {item.description}
+	            </Typography>
+
+	            <Box
+	              sx={{
+	                display: "flex",
+	                flexDirection: "column", // Stack buttons vertically
+	                alignItems: "center",
+	                gap: "8px", // Space between buttons
+	                mb: 1,
+	              }}
+	            >
+	              <PrimaryBorderButton
+	                id={`view-details-${index}`}
+	                title="Go to Living Lab page"
+	                width="220px"
+	                height="27px"
+	                onClick={() => navigate(item.path, { replace: true })}
+	              />
+	            </Box>
+	          </Card>
+	        </Grid>
+	      ))}
+	    </Grid>
+	  );
+	};
+
 
 const ProductCardSection = ({ items, onCardClick, showLabsLabel }) => {
 	  const navigate = useNavigate();
@@ -139,9 +161,13 @@ const ProductCardSection = ({ items, onCardClick, showLabsLabel }) => {
 	                  }}
 	                >
 	                  <img
-	                    src={item.image}
+	                    src={item.image || `/product_images/${item.value}.png`}
 	                    alt={item.title || item.text}
-	                    style={imageStyles}
+                        style={imageStyles}
+	                    style={{ maxWidth: "100%", height: "auto" }}
+	                    onError={(e) => {
+	                	  e.target.src = "/product_images/default.png"; // Fallback image path
+	                	}}
 	                  />
 	                </Box>
 

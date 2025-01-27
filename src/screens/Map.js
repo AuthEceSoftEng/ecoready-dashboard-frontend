@@ -5,6 +5,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import colors from "../_colors.scss";
 import MapComponent, { getColor } from "../components/Map.js";
 import { SecondaryBackgroundButton } from "../components/Buttons.js";
+import Switch from "../components/Switch.js";
 import useInit from "../utils/screen-init.js";
 import { mapInfoConfigs, organization } from "../config/MapInfoConfig.js";
 import { LoadingIndicator, StickyBand } from "../utils/rendering-items.js";
@@ -81,6 +82,7 @@ const Map = () => {
 	const selectedProduct = location.state?.selectedProduct;
 	const navigate = useNavigate();
 	const [geoJsonData, setGeoJsonData] = useState(null);
+	const [showLegend, setShowLegend] = useState(false); // State for controlling legend visibility
 	const [filters, setFilters] = useState({
 		year: "2024",
 		product: selectedProduct || "Rice",
@@ -88,6 +90,10 @@ const Map = () => {
 	});
 	const [isDataReady, setIsDataReady] = useState(false);
 
+	const handleToggleLegend = () => {
+	    setShowLegend((prev) => !prev); // Toggle legend visibility
+	};
+	
 	const handleYearChange = useCallback((newValue) => {
 		console.log("New Year:", newValue);
 		setFilters((prev) => ({ ...prev, year: newValue.$y })); // Select only the year from the resulting object
@@ -308,23 +314,35 @@ const Map = () => {
 	}), []);
 
 	return (
-			  <Grid container style={{ width: "100%", height: "100%" }} direction="column">
-			    {/* Top Menu Bar */}
-			    <Grid item style={{ width: "100%", height: "47px" }}>
-			      <StickyBand
-			        sticky={false}
-			        dropdownContent={dropdownContent}
-			        formRef={formRefDate}
-			        formContent={formContentDate}
-			      />
-			    </Grid>
+		    <Grid container style={{ width: "100%", height: "100%" }} direction="column">
+		      {/* Top Menu Bar */}
+		      <Grid item style={{ width: "100%", height: "47px" }}>
+		        <StickyBand
+		          sticky={false}
+		          dropdownContent={dropdownContent}
+		          formRef={formRefDate}
+		          formContent={formContentDate}
+		          toggleContent={(
+		            <div style={{ display: "flex", alignItems: "center" }}>
+		              <label style={{ marginRight: "8px", fontWeight: "bold" }}>Show Living Labs:</label>
+		              <Switch
+		                id="legend-switch"
+		                checked={showLegend}
+		                onChange={handleToggleLegend}
+		                size="medium"
+		                color="primary"
+		              />
+		            </div>
+		          )}
+		        />
+		      </Grid>
 
 			    {/* Main Content (Map) */}
 			    <Grid item style={{ flexGrow: 1, width: "100%", height: "calc(100% - 47px)" }}>
 			      {isLoading || !isDataReady ? (
 			        <LoadingIndicator />
 			      ) : (
-			        <MapComponent {...mapConfig} geodata={geodata} markers={markers} />
+			        <MapComponent {...mapConfig} geodata={geodata} markers={markers} showLegend={showLegend} />
 			      )}
 			    </Grid>
 			  </Grid>
