@@ -1,6 +1,6 @@
 import { useLocation } from "react-router-dom";
 import { Grid } from "@mui/material";
-import { memo, useMemo, useState, useCallback, useRef } from "react";
+import React, { memo, useMemo, useState, useCallback, useRef } from "react";
 
 import colors from "../_colors.scss";
 import Card from "../components/Card.js";
@@ -15,7 +15,6 @@ import { europeanCountries, products } from "../utils/useful-constants.js";
 // import { fetchCollections } from "../api/fetch-data.js";
 
 // const metrics = fetchCollections(organization, "rice");
-const unit = "Tonnes";
 const customDate = getCustomDateTime(2024, 12);
 const { year } = calculateDates(customDate);
 
@@ -32,25 +31,54 @@ const countryOrder = europeanCountries
 	.sort((a, b) => a.text.localeCompare(b.text))
 	.map((country) => country.value);
 
-const transformProductionData = (production, sliderYear, countries) => ({
-	euProduction: production.find(
-		(country) => country.key === "EU"
-			&& country.timestamp === `${sliderYear}-01-01T00:00:00`,
-	)?.total_production,
+const transformProductionData = (productionData, yearPicker, sumFieldName) => {
+	const timestamp = `${yearPicker}-01-01T00:00:00`;
+	console.log("Debug - Input:", {
+		productionData,
+		yearPicker,
+		sumFieldName,
+		timestamp,
+	});
 
-	countryData: countryOrder
-		.map((countryCode) => {
-			const productionItem = production.find(
-				(item) => item.key === countryCode
-					&& item.timestamp === `${sliderYear}-01-01T00:00:00`,
+	const euData = productionData.EU?.find(
+		(item) => item.timestamp === timestamp,
+	)?.[sumFieldName] || 0;
+	console.log("Debug - EU data:", euData);
+
+	const countryData = Object.keys(productionData)
+		.filter((countryName) => countryName !== "EU")
+		.map((countryName) => {
+			const countryArray = productionData[countryName] || [];
+			console.log("Debug - Country Array:", {
+				countryName,
+				arrayLength: countryArray.length,
+				firstItem: countryArray[0],
+			});
+
+			const matchingData = countryArray.find(
+				(item) => item.interval_start === timestamp,
 			);
+			console.log("Debug - Matching Data:", {
+				countryName,
+				matchingData,
+				sumValue: matchingData?.[sumFieldName],
+			});
+
 			return {
-				label: countries.find((c) => c.value === countryCode)?.text || countryCode,
-				total_production: productionItem?.total_production || 0,
+				label: countryName,
+				production: matchingData?.[sumFieldName] || 0,
 			};
 		})
-		.filter((item) => item.total_production > 0),
-});
+		.filter((item) => item.production > 0)
+		.sort((a, b) => a.label.localeCompare(b.label));
+
+	console.log("Debug - Final countryData:", countryData);
+
+	return {
+		euProduction: euData,
+		countryData,
+	};
+};
 
 const ProductsScreen = () => {
 	const location = useLocation();
@@ -106,7 +134,7 @@ const ProductsScreen = () => {
 		views: ["year"],
 		value: new Date(`${year}-01-01`),
 		minDate: new Date("2001-01-01"),
-		maxDate: new Date("2035-12-31"),
+		maxDate: new Date("2025-12-31"),
 		onChange: (newValue) => {
 			if (newValue) {
 				setFilters((prev) => ({
@@ -162,27 +190,26 @@ const ProductsScreen = () => {
 	const { isLoading, dataSets, minutesAgo } = state;
 	console.log(dataSets);
 
-	const ricePrice = useMemo(() => dataSets?.pricesTimeline || [], [dataSets]);
-	const isValidPrice = useMemo(() => isValidArray(ricePrice), [ricePrice]);
-	const riceProduction1 = useMemo(() => dataSets?.riceProd1 || [], [dataSets]);
-	const riceProduction2 = useMemo(() => dataSets?.riceProd2 || [], [dataSets]);
+	const pricesTimeline = useMemo(() => dataSets?.pricesTimeline || [], [dataSets]);
+	const periodPrices = useMemo(() => dataSets?.periodPrices || [], [dataSets]);
+	const monthlyPrices = useMemo(() => dataSets?.monthlyPrices || [], [dataSets]);
+	const isValidPrice = useMemo(() => isValidArray(pricesTimeline), [pricesTimeline]);
+	const unit = useMemo(() => dataSets?.unit || [], [dataSets]);
 
-	const production = useMemo(() => riceProduction1.map((milledEntry) => {
-		// Find matching husk entry
-		const huskEntry = riceProduction2.find((h) => h.key === milledEntry.key && h.interval_start === milledEntry.interval_start);
+	const production = useMemo(() => {
+		if (!dataSets) return [];
 
-		return {
-			key: milledEntry.key,
-			timestamp: milledEntry.interval_start,
-			total_production: (
-				(milledEntry.sum_milled_rice_equivalent_quantity || 0)
-				+ (huskEntry?.sum_rice_husk_quantity || 0)
-			),
-		};
-	}), [riceProduction1, riceProduction2]);
+		// Get all productProduction keys
+		const productionKeys = Object.keys(dataSets).filter((key) => key.startsWith("productProduction"));
 
-	const productionByCountry = useMemo(() => {
-		const grouped = groupByKey(production, "key");
+		// Map each key to its array
+		return productionKeys.map((key) => dataSets[key] || []);
+	}, [dataSets]);
+
+	// console.log("Combined Production Data:", production);
+
+	const productionByCountry = useMemo(() => production.map((productionData) => {
+		const grouped = groupByKey(productionData, "key");
 
 		// Filter out EU and transform codes to names
 		const result = Object.keys(grouped)
@@ -190,7 +217,7 @@ const ProductsScreen = () => {
 			.reduce((acc, countryCode) => {
 				const countryName = europeanCountries.find((country) => country.value === countryCode)?.text;
 				if (countryName) {
-					acc[countryName] = grouped[countryCode].map((item) => item.total_production);
+					acc[countryName] = grouped[countryCode];
 				}
 
 				return acc;
@@ -205,9 +232,9 @@ const ProductsScreen = () => {
 			}, {});
 
 		return sortedResult;
-	}, [production]);
+	}), [production]);
+	// console.log("Production by Country:", productionByCountry);
 
-	// const unit = useMemo(() => ricePrice[0]?.unit || "", [ricePrice]);
 	const dropdownContent = useMemo(() => ([
 		{
 			id: "product",
@@ -232,46 +259,60 @@ const ProductsScreen = () => {
 		size: "small",
 	}))), [dispatch, filters.country, filters.product]);
 
-	const europeOverview = useMemo(() => {
-		const { euProduction, countryData } = transformProductionData(production, filters.year, europeanCountries);
-		return [
-			{
-				data: {
-					value: countryData.reduce((sum, data) => sum + (data.total_production || 0), 0),
-					subtitle: "EU's Annual Production",
+	const europeOverviews = useMemo(() => productionByCountry.map((productionData) => {
+		const firstCountryData = Object.values(productionData)[0] || [];
+		const sumFieldName = Object.keys(firstCountryData[0] || {})
+			.find((key) => key.startsWith("sum_"));
+
+		const productionType = (sumFieldName?.split("sum_")[1]?.replace(/_/g, " ") || "")
+			.split(" ")
+			.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+			.join(" ");
+		const { euProduction, countryData } = transformProductionData(
+			productionData,
+			filters.year,
+			sumFieldName,
+		);
+
+		return {
+			productionType,
+			chartConfigs: [
+				{
+					data: {
+						value: countryData.reduce((sum, data) => sum + (data.production || 0), 0),
+						subtitle: "EU's Annual Production",
+					},
+					color: "third",
+					suffix: ` ${unit}`,
+					shape: "bullet",
 				},
-				color: "third",
-				suffix: ` ${unit}`,
-				shape: "bullet",
-			},
-			{
-				data: isValidArray(countryData)
-					? [
-						{
+				{
+					data: isValidArray(countryData)
+						? [{
 							labels: countryData.map((item) => item.label),
-							values: countryData.map((item) => item.total_production),
+							values: countryData.map((item) => item.production),
 							color: agriColors,
 							type: "pie",
 							sort: false,
-						},
-					] : [{ labels: [], values: [], type: "pie" }],
-			},
-			{
-				data: Object.entries(productionByCountry)
-					.filter(([countryCode]) => countryCode !== "EU")
-					.map(([countryCode, values], index) => ({
-						x: generateYearsArray(2010, 2025),
-						y: values,
-						type: "bar",
-						title: countryCode,
-						color: agColorKeys[index % agColorKeys.length],
-					})),
-				title: "Annual Production by Country",
-				xaxis: { title: "Year" },
-				yaxis: { title: `Production (${unit})` },
-			},
-		];
-	}, [filters.year, production, productionByCountry]);
+						}]
+						: [{ labels: [], values: [], type: "pie" }],
+				},
+				{
+					data: Object.entries(productionData)
+						.map(([countryCode, values], index) => ({
+							x: generateYearsArray(2010, 2025),
+							y: values.map((item) => item[sumFieldName] || 0),
+							type: "bar",
+							title: countryCode,
+							color: agColorKeys[index % agColorKeys.length],
+						})),
+					title: "Annual Production by Country",
+					xaxis: { title: "Year" },
+					yaxis: { title: `Production (${unit})` },
+				},
+			],
+		};
+	}), [filters.year, productionByCountry, unit]);
 
 	const countryOverview = useMemo(() => [
 		{
@@ -288,7 +329,7 @@ const ProductsScreen = () => {
 		},
 		{
 			data: {
-				value: dataSets?.monthlyPrices?.[0]?.avg_price ?? null,
+				value: monthlyPrices?.[0]?.avg_price ?? null,
 				subtitle: "Current Month's Average Price",
 			},
 			color: "third",
@@ -299,8 +340,8 @@ const ProductsScreen = () => {
 			title: `${filters.product}'s Price Timeline`,
 			data: [
 				{
-					x: isValidPrice ? ricePrice.map((item) => item.interval_start) : [],
-					y: isValidPrice ? ricePrice.map((item) => item.avg_price) : [],
+					x: isValidPrice ? pricesTimeline.map((item) => item.interval_start) : [],
+					y: isValidPrice ? pricesTimeline.map((item) => item.avg_price) : [],
 					type: "scatter",
 					mode: "lines",
 					color: "secondary",
@@ -312,92 +353,96 @@ const ProductsScreen = () => {
 		},
 		{
 			data: {
-				value: dataSets?.periodPrices?.[0]?.avg_price ?? null,
+				value: periodPrices?.[0]?.avg_price ?? null,
 				subtitle: "Specified Period's Average Price",
 			},
 			color: "third",
 			suffix: `€/${unit}`,
 			shape: "angular",
 		},
-	], [dataSets?.monthlyPrices, dataSets?.periodPrices, filters.product, isValidPrice, keys.country, production, ricePrice]);
+	], [production, unit, monthlyPrices, periodPrices, filters.product, isValidPrice, pricesTimeline, keys.country]);
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
 			<StickyBand dropdownContent={[dropdownContent[0]]} />
-			<Grid item xs={12} md={6} alignItems="center" flexDirection="column">
-				<Card
-					title="EU's Annual Overview"
-					footer={cardFooter({ minutesAgo })}
-				>
-					<Grid item xs={12} md={12} display="flex" justifyContent="flex-end">
-						<DatePicker {...yearPickerProps} />
+			{europeOverviews.map((europeOverview, index) => (
+				<React.Fragment key={`overview-${index}`}>
+					<Grid item xs={12} md={6} alignItems="center" flexDirection="column">
+						<Card
+							title={`EU's Annual ${europeOverview.productionType} Overview`}
+							footer={cardFooter({ minutesAgo })}
+						>
+							<Grid item xs={12} md={12} display="flex" justifyContent="flex-end">
+								<DatePicker {...yearPickerProps} />
+							</Grid>
+							{isLoading ? (
+								<LoadingIndicator />
+							) : (
+								<Grid container display="flex" direction="row" justifyContent="space-evenly" sx={{ flex: 1 }}>
+									<Grid item xs={12} sm={12} md={12} justifyContent="center" alignItems="center">
+										{europeOverview.chartConfigs[0].data.value ? (
+											<Plot
+												showLegend
+												scrollZoom
+												height={europeOverview.chartConfigs[0].shape === "bullet" ? "115px" : "200px"}
+												data={[
+													{
+														type: "indicator",
+														mode: "gauge+number",
+														value: europeOverview.chartConfigs[0].data.value,
+														range: europeOverview.chartConfigs[0].range ?? [0, 5_000_000],
+														color: europeOverview.chartConfigs[0].color,
+														shape: europeOverview.chartConfigs[0].shape,
+														indicator: "primary",
+														textColor: "primary",
+														suffix: europeOverview.chartConfigs[0].suffix,
+													},
+												]}
+												displayBar={false}
+												title={europeOverview.chartConfigs[0].data?.subtitle}
+											/>
+										) : (<DataWarning />)}
+									</Grid>
+									<Grid item xs={12} sm={12} md={12} justifyContent="center" alignItems="center">
+										{europeOverview.chartConfigs[1].data.values ? (
+											<Plot
+												scrollZoom
+												showLegend
+												displayBar={false}
+												height="295px"
+												title={`${filters.year}'s Production by Country`}
+												data={europeOverview.chartConfigs[1].data}
+											/>
+										) : (<DataWarning />)}
+									</Grid>
+								</Grid>
+							)}
+						</Card>
 					</Grid>
-					{isLoading ? (
-						<LoadingIndicator />
-					) : (
-						<Grid container display="flex" direction="row" justifyContent="space-evenly" sx={{ flex: 1 }}>
-							<Grid item xs={12} sm={12} md={12} justifyContent="center" alignItems="center">
-								{europeOverview[0].data.value ? (
-									<Plot
-										showLegend
-										scrollZoom
-										height={europeOverview[0].shape === "bullet" ? "115px" : "200px"}
-										data={[
-											{
-												type: "indicator",
-												mode: "gauge+number",
-												value: europeOverview[0].data.value,
-												range: europeOverview[0].range ?? [0, 5_000_000],
-												color: europeOverview[0].color,
-												shape: europeOverview[0].shape,
-												indicator: "primary",
-												textColor: "primary",
-												suffix: europeOverview[0].suffix,
-											},
-										]}
-										displayBar={false}
-										title={europeOverview[0].data?.subtitle}
-									/>
-								) : (<DataWarning />)}
-							</Grid>
-							<Grid item xs={12} sm={12} md={12} justifyContent="center" alignItems="center">
-								{europeOverview[1].data.values ? (
-									<Plot
-										scrollZoom
-										showLegend
-										displayBar={false}
-										height="295px"
-										title={`${filters.year}'s Production by Country`}
-										data={europeOverview[1].data}
-									/>
-								) : (<DataWarning />)}
-							</Grid>
-						</Grid>
-					)}
-				</Card>
-			</Grid>
-			<Grid item xs={12} md={6} alignItems="center" flexDirection="column">
-				<Card
-					title="Product Production per Year"
-					footer={cardFooter({ minutesAgo })}
-				>
-					{isLoading ? (
-						<LoadingIndicator />
-					) : (
-						<Grid item xs={12} sm={12} justifyContent="center" alignItems="center" sx={{ flex: 1 }}>
-							{europeOverview[2].data ? (
-								<Plot
-									scrollZoom
-									data={[...europeOverview[2].data].reverse()}
-									barmode="stack"
-									displayBar={false}
-									title={europeOverview[2].title}
-								/>
-							) : (<DataWarning />)}
-						</Grid>
-					)}
-				</Card>
-			</Grid>
+					<Grid item xs={12} md={6} alignItems="center" flexDirection="column">
+						<Card
+							title={`${europeOverview.productionType} per Year`}
+							footer={cardFooter({ minutesAgo })}
+						>
+							{isLoading ? (
+								<LoadingIndicator />
+							) : (
+								<Grid item xs={12} sm={12} justifyContent="center" alignItems="center" sx={{ flex: 1 }}>
+									{europeOverview.chartConfigs[2].data ? (
+										<Plot
+											scrollZoom
+											data={[...europeOverview.chartConfigs[2].data].reverse()}
+											barmode="stack"
+											displayBar={false}
+											title={europeOverview.chartConfigs[2].title}
+										/>
+									) : (<DataWarning />)}
+								</Grid>
+							)}
+						</Card>
+					</Grid>
+				</React.Fragment>
+			))}
 			<Grid item xs={12} md={12} mb={2} alignItems="center" flexDirection="column">
 				<Card title="Product per Country" footer={cardFooter({ minutesAgo })}>
 					<StickyBand
