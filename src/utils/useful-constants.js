@@ -197,11 +197,11 @@ export const products = [
 	//		text: "Fruits & Vegetables",
 	//	},
 	// Fruits and Vegetables
-	{ value: "abricots", text: "Abricots", image: "/product_images/abricots.png", },
+	{ value: "abricots", text: "Abricots", },
 	{ value: "apples", text: "Apples" },
 	{ value: "asparagus", text: "Asparagus" },
 	{ value: "avocados", text: "Avocados" },
-	{ value: "beans", text: "Beans", image: "/product_images/beans.png", },
+	{ value: "beans", text: "Beans", },
 	{ value: "cabbages", text: "Cabbages" },
 	{ value: "carrots", text: "Carrots" },
 	{ value: "cauliflowers", text: "Cauliflowers" },
