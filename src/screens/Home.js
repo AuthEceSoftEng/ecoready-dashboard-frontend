@@ -7,11 +7,11 @@ import { PrimaryBorderButton } from "../components/Buttons.js";
 import { labs, products } from "../utils/useful-constants.js";
 
 const imageStyles = {
-	width: "100%",
+	height: "100%",
 	objectFit: "contain",
 	borderRadius: "16px",
 	boxSizing: "border-box",
-	padding: "8px",
+	padding: "4px",
 };
 
 const SectionTitle = ({ children }) => (
@@ -161,8 +161,9 @@ const ProductCardSection = ({ items, onCardClick, showLabsLabel }) => {
 	                  }}
 	                >
 	                  <img
-	                    src={`/product_images/${item.value}.png`}
+	                    src={item.image || `/product_images/${item.value}.png`}
 	                    alt={item.title || item.text}
+                        style={imageStyles}
 	                    style={{ maxWidth: "100%", height: "auto" }}
 	                    onError={(e) => {
 	                	  e.target.src = "/product_images/default.png"; // Fallback image path
