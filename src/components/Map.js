@@ -93,7 +93,7 @@ const Legend = ({ title, min, max, unit, colorscale = [colors.choropleth1, color
 	);
 };
 
-const Plot = ({
+const MapComponent = ({
 	  width = "100%",
 	  height = "100%",
 	  scrollWheelZoom = true,
@@ -156,14 +156,14 @@ const Plot = ({
 	                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 	              />
 	            ))}
-	          {geodata.filter((metric) => !metric.hiddable).map((metric, index) => (
-	            <GeoJSON key={index} data={metric.data} style={metric.style} onEachFeature={metric.action} />
+	          {geodata.filter((metric) => !metric.hiddable).map((metric) => (
+	            <GeoJSON key={`${metric.name}-${metric.range[0]}-${metric.range[1]}`} data={metric.data} style={metric.style} onEachFeature={metric.action} />
 	          ))}
 	          <LayersControl position="topright" collapsed={false}>
 	            {geodata
 	              .filter((metric) => metric.hiddable)
-	              .map((metric, index) => (
-	                <LayersControl.BaseLayer key={index} name={metric.name} checked={metric.defaultChecked}>
+	              .map((metric) => (
+	                <LayersControl.BaseLayer key={`${metric.name}-${metric.range[0]}-${metric.range[1]}`} name={metric.name} checked={metric.defaultChecked}>
 	                  <GeoJSON data={metric.data} style={metric.style} onEachFeature={metric.action} />
 	                </LayersControl.BaseLayer>
 	              ))}
@@ -199,4 +199,4 @@ const Plot = ({
 
 
 
-export default Plot;
+export default MapComponent;
