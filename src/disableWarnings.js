@@ -1,7 +1,7 @@
 const originalConsoleError = console.error;
 
 console.error = (message, ...args) => {
-  console.log("Intercepted console.error:", message); // Debug log
+  // console.log("Intercepted console.error:", message);
   if (
     typeof message === "string" &&
     message.includes(
