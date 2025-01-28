@@ -47,7 +47,7 @@ export const fetchData = async (dispatch, organization, project, collection, par
 				type: "FETCH_SUCCESS",
 				payload: { plotId, response },
 			});
-			console.log(`Data fetched for plot ${plotId}:`, response);
+			//console.log(`Data fetched for plot ${plotId}:`, response);
 		}
 
 		return { response };
