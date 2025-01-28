@@ -144,8 +144,8 @@ export const mapInfoConfigs = (country, product, year) => {
 		];
 	}
 	else if (product === "barley" || product === "wheat" || product === "maize" || product === "oats" || product === "rye" || product === "sorghum" || product === "triticale") {
-		const productnames = products.find(item => item.value === product)?.pricetext || [];
-		const cropnames = products.find(item => item.value === product)?.productiontext || [];
+		const productnames = products.find(item => item.value === product)?.priceProductType || [];
+		const cropnames = products.find(item => item.value === product)?.productionProductType || [];
 
 		const productData = productnames.map((productname, index) => ({
 			  type: "stats",
