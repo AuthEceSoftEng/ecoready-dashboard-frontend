@@ -302,7 +302,7 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 	}
 
 	if (CEREALS.has(product)) {
-		const productnames = products.find((item) => item.value === product)?.pricetext || [];
+		const productnames = products.find((item) => item.value === product)?.priceProductType || [];
 
 		return productnames.map((productname, index) => ({
 			...STATS_BASE_CONFIG,
@@ -627,7 +627,7 @@ export const getProductionConfigs = (product) => {
 	}
 
 	if (CEREALS.has(product)) {
-		const cropnames = products.find((item) => item.value === product)?.productiontext || [];
+		const cropnames = products.find((item) => item.value === product)?.productionProductType || [];
 
 		return cropnames.map((cropname, index) => ({
 			type: "stats",
