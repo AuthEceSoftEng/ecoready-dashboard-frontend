@@ -1,3 +1,4 @@
+import "./disableWarnings";
 
 import { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
@@ -187,7 +188,7 @@ const App = () => {
 
 const root = ReactDOM.createRoot(document.querySelector("#root"));
 root.render(
-	<Router>
+	<Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
 		<App />
 	</Router>,
 );

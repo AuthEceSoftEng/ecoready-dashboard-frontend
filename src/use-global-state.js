@@ -1,7 +1,7 @@
-import { create } from "zustand";
+import { createWithEqualityFn } from "zustand/traditional";
 import { persist } from "zustand/middleware";
 
-export default create(persist(
+export default createWithEqualityFn(persist(
 	(setState) => ({
 		name: "",
 		setName: (name) => setState({ name }),
