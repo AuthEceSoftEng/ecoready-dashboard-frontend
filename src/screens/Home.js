@@ -9,9 +9,10 @@ import { labs, products } from "../utils/useful-constants.js";
 const imageStyles = {
 	height: "100%",
 	objectFit: "contain",
-	borderRadius: "16px",
+	borderRadius: "8px",
 	boxSizing: "border-box",
 	padding: "4px",
+	minWidth: "40px"
 };
 
 const SectionTitle = ({ children }) => (
@@ -49,7 +50,7 @@ const CardSection = ({ items, onCardClick, showLabsLabel }) => {
 	  return (
 	    <Grid container spacing={2} sx={{ mt: 2, alignItems: "stretch" }}>
 	      {items.map((item, index) => (
-	        <Grid key={index} item xs={12} sm={6} md={6} sx={{ display: "flex" }}>
+	        <Grid key={index} item xs={12} sm={12} md={12} lg={6} sx={{ display: "flex" }}>
 	          <Card
 	            transparent
 	            clickable={!!onCardClick}
@@ -75,7 +76,7 @@ const CardSection = ({ items, onCardClick, showLabsLabel }) => {
 	              <img
 	                src={item.image}
 	                alt={item.title || item.text}
-	                style={{ maxWidth: "100%", height: "auto" }}
+	                style={imageStyles}
 	              />
 	            </Box>
 	            <Typography
@@ -132,7 +133,7 @@ const ProductCardSection = ({ items, onCardClick, showLabsLabel }) => {
 	        const relevantLabs = getRelevantLabs(item); // Get the relevant labs
 
 	        return (
-	          <Grid key={index} item xs={12} sm={6} md={6}>
+	          <Grid key={index} item xs={12} sm={12} md={12} lg={6} >
 	            <Card
 	              transparent
 	              clickable={!!onCardClick}
@@ -164,7 +165,6 @@ const ProductCardSection = ({ items, onCardClick, showLabsLabel }) => {
 	                    src={item.image || `/product_images/${item.value}.png`}
 	                    alt={item.title || item.text}
                         style={imageStyles}
-	                    style={{ maxWidth: "100%", height: "auto" }}
 	                    onError={(e) => {
 	                	  e.target.src = "/product_images/default.png"; // Fallback image path
 	                	}}
@@ -194,14 +194,14 @@ const ProductCardSection = ({ items, onCardClick, showLabsLabel }) => {
 	                    <PrimaryBorderButton
 	                      id={`view-details-${index}`}
 	                      title="View stats"
-	                      width="110px"
+	                      width="115px"
 	                      height="27px"
 	                      onClick={() => navigate("/products", { state: { selectedProduct: item.text } })}
 	                    />
 	                    <PrimaryBorderButton
 	                      id={`view-on-map-${index}`}
 	                      title="View map"
-	                      width="110px"
+	                      width="115px"
 		                  height="27px"
 		                  onClick={() => navigate("/map", { state: { selectedProduct: item.text } })}
 	                    />
