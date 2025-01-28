@@ -342,7 +342,7 @@ const Map = () => {
 			      {isLoading || !isDataReady ? (
 			        <LoadingIndicator />
 			      ) : (
-			        <MapComponent {...mapConfig} geodata={geodata} markers={markers} showLegend={showLegend} />
+			        <MapComponent key={JSON.stringify(geodata)} {...mapConfig} geodata={geodata} markers={markers} showLegend={showLegend} />
 			      )}
 			    </Grid>
 			  </Grid>
