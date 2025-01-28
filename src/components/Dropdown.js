@@ -191,17 +191,17 @@ const Dropdown = ({
 				}}
 				onChange={onChange}
 			>
-				{items.map((it, index) => (
-					<MenuItem key={it.value || index} value={it.text}>
+				{items.map((item, index) => (
+					<MenuItem key={index} value={typeof item === "string" ? item : item.text}>
 						{multiple && (
 							<Checkbox
 								id={index}
-								checked={Array.isArray(value) && value.includes(it.text)}
+								checked={Array.isArray(value) && value.includes(typeof item === "string" ? item : item.text)}
 								color={background}
 								size="small"
 							/>
 						)}
-						{it.text}
+						{typeof item === "string" ? item : item.text}
 					</MenuItem>
 				))}
 			</Select>
