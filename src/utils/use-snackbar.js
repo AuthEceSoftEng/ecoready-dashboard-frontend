@@ -1,8 +1,8 @@
 import { useCallback } from "react";
-import { create } from "zustand";
+import { createWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";
 
-export const snackStore = create((setState) => ({
+export const snackStore = createWithEqualityFn((setState) => ({
 	severity: "success",
 	setSeverity: (severity) => setState({ severity }),
 	message: "Done.",
