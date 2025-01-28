@@ -37,8 +37,8 @@ const useInit = (organization, fetchConfigs) => {
 			(item) => item?.response?.success === false
             || (Array.isArray(item?.response) && item.response.length === 0),
 		);
-		console.log("Has issues:", hasIssues);
-		console.log("Promise status:", promiseStatus);
+		//console.log("Has issues:", hasIssues);
+		//console.log("Promise status:", promiseStatus);
 
 		// Map through each response and dispatch individually
 		for (const [index, item] of promiseStatus.entries()) {
@@ -75,7 +75,7 @@ const useInit = (organization, fetchConfigs) => {
 		try {
 			dispatch({ type: "FETCH_START" });
 			const promiseStatus = await fetchAllData(dispatch, organization, fetchConfigs);
-			console.log("Promise status:", promiseStatus);
+			//console.log("Promise status:", promiseStatus);
 			handleFetchResponse(promiseStatus);
 		} catch (error_) {
 			dispatch({
