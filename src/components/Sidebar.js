@@ -129,7 +129,7 @@ const ButtonSimple = ({ text, icon, handler, ind }) => (
 		}}
 		onClick={(event) => handler(event)}
 	>
-		<Image src={icon} alt={text} fit="contain" width="30px" />
+		{icon && <Image src={icon} alt={text} fit="contain" width="30px" />}
 	</Button>
 );
 
@@ -182,14 +182,14 @@ const Sidebar = ({ isSmall: sidebarIsSmall, onToggleSidebar }) => {
 				handler: () => navigate(lab.path),
 			})),
 		},
-//		{
-//			// icon: inspectionIcon,
-//			text: "Data View",
-//			handler: () => {
-//				handleServicesMenuClose();
-//				navigate("/dataview");
-//			},
-//		},
+		//		{
+		//			// icon: inspectionIcon,
+		//			text: "Data View",
+		//			handler: () => {
+		//				handleServicesMenuClose();
+		//				navigate("/dataview");
+		//			},
+		//		},
 	];
 
 	const renderServicesMenu = (
