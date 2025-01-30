@@ -122,7 +122,7 @@ export const europeanCountries = [
 	// Region 1: AT - CZ - DK - FI - HU - LT - PL - SE - SK
 	// Region 2: BE - DE - FR - NL
 	// Region 3: BG - ES - HR - IT - PT - RO
-	{ value: "EU", text: "European Union", flag: "🇪🇺" },
+	{ value: "EU", text: "European Union", flag: "🇪🇺", region: "EU Average" },
 	{ value: "AL", text: "Albania", flag: "🇦🇱" },
 	{ value: "AT", text: "Austria", flag: "🇦🇹", region: "Region 1" },
 	{ value: "BE", text: "Belgium", flag: "🇧🇪", region: "Region 2" },
@@ -183,6 +183,18 @@ export const products = [
 	{ value: "rye", text: "Rye", productionProductType: ["Rye"], priceProductType: ["Feed rye", "Milling rye"], image: "/product_images/rye.jpg" },
 	{ value: "sorghum", text: "Sorghum", productionProductType: ["Sorghum"], image: "/product_images/sorghum.jpg" },
 	{ value: "triticale", text: "Triticale", productionProductType: ["Triticale"], priceProductType: ["Triticale"], image: "/product_images/triticale.jpg" },
+	// {
+	// 	value: "cereals",
+	// 	text: "Cereals",
+	// 	collections: ["prices", "production"],
+	// 	prices: { 
+	// 		products: ["Durum wheat", "Feed barley", "Feed maize", "Feed oats", "Feed rye", "Feed wheat",
+	// 		"Malting barley", "Milling oats", "Milling rye", "Milling wheat", "Triticale", "Wheat bran"
+	// 	  ] 
+	// 	},
+	// 	production: { products: [ "Barley", "Durum wheat", "Maize", "Oat", "Other cereals", "Rye", "Soft wheat", "Sorghum", "Triticale" ] },
+	// 	image: "/product_images/cereals.jpg",
+	// },
 	{
 		value: "eggs_poultry",
 		text: "Eggs/Poultry",
