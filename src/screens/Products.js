@@ -72,6 +72,15 @@ const ProductsScreen = () => {
 		product: selectedProduct || "Rice",
 	});
 
+	useEffect(() => {
+	    if (selectedProduct) {
+	        setFilters((prev) => ({
+	            ...prev,
+	            product: selectedProduct,
+	        }));
+	    }
+	}, [selectedProduct]);
+
 	const debouncedSetDate = useMemo(
 		() => debounce((date, setter) => {
 			const { currentDate } = calculateDates(date);
