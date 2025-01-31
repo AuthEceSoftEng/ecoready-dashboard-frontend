@@ -170,19 +170,42 @@ export const products = [
 		value: "beef",
 		text: "Beef",
 		collections: ["carcass_prices", "live_animal_prices", "production"],
-		prices:	{
-			carcass_prices: {
-				products: ["Adult male indicative price", "Bulls",
-					"Calves slaughtered <8M", "Cows", "Heifers", "Steers", "Young bulls", "Young cattle"],
-			},
-			live_animal_prices: {
-				products: ["Male Calves Beef Type", "Male Calves Dairy Type", "Yearling Female Store Cattle",
-					"Yearling Male Store Cattle", "Young Store Cattle"],
-			},
+		carcass_prices: {
+			products: ["Adult male indicative price", "Bulls",
+				"Calves slaughtered <8M", "Cows", "Heifers", "Steers", "Young bulls", "Young cattle"],
+		},
+		live_animal_prices: {
+			products: ["Male Calves Beef Type", "Male Calves Dairy Type", "Yearling Female Store Cattle",
+				"Yearling Male Store Cattle", "Young Store Cattle"],
 		},
 		production: { products: ["Bull", "Bullock", "Calf", "Cow", "Heifer", "Young cattle"] },
 		description: "No living labs currently working with beef",
 		image: "/product_images/beef.png",
+	},
+	{
+		value: "pigmeat",
+		text: "Pigmeat",
+		collections: ["carcass_prices", "cuts_prices", "production"],
+		cuts_prices: {
+			products: ["Belly", "Ham", "Loin", "Minced Meat", "Shoulder"],
+			productTypes: ["Non-retail buying price", "Retail buying price", "Selling price"],
+		},
+		production: {
+			products: ["tonnes", "heads", "kgPerHead"],
+		},
+		description: "No living labs currently working with pigmeat",
+		image: "/product_images/pigmeat.png",
+	},
+	{
+		value: "cereals",
+		text: "Cereals",
+		collections: ["prices", "production"],
+		prices: {
+			products: ["Durum wheat", "Feed barley", "Feed maize", "Feed oats", "Feed rye", "Feed wheat",
+				"Malting barley", "Milling oats", "Milling rye", "Milling wheat", "Triticale", "Wheat bran"],
+		},
+		production: { products: ["Barley", "Durum wheat", "Maize", "Oat", "Other cereals", "Rye", "Soft wheat", "Sorghum", "Triticale"] },
+		image: "/product_images/cereals.jpg",
 	},
 	// Cereals
 	{ value: "barley", text: "Barley", productionProductType: ["Barley"], priceProductType: ["Feed barley", "Malting barley"], image: "/product_images/barley.jpg" },
@@ -350,7 +373,7 @@ export const products = [
 	},
 	{
 		value: "milk_dairy",
-		text: "Dairy Products",
+		text: "Dairy",
 		collections: ["dairy_prices", "dairy_production"],
 		prices: {
 			products: ["Butter", "Cheese", "Cream", "Milk powder", "Whey powder", "Yoghurt"],
@@ -423,23 +446,11 @@ export const products = [
 	// {
 	// 	value: "organic",
 	// 	text: "Organic",
+	// 	collections: ["prices"],
+	// 	prices: { products: ["LivOrganic", "Probio"] },
 	// 	description: "LivOrganic, Probio",
 	// 	image: "/product_images/organic.jpg",
 	// },
-	{
-		value: "pigmeat",
-		text: "Pigmeat",
-		collections: ["carcass_prices", "cuts_prices", "cuts_prices_monthly", "production"],
-		prices: {
-			products: ["Belly", "Ham", "Loin", "Minced Meat", "Shoulder"],
-			productTypes: ["Non-retail buying price", "Retail buying price", "Selling price"],
-		},
-		production: {
-			products: ["tonnes", "heads", "kgPerHead"],
-		},
-		description: "No living labs currently working with pigmeat",
-		image: "/product_images/pigmeat.png",
-	},
 	{
 		value: "rice",
 		text: "Rice",

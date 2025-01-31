@@ -1,9 +1,9 @@
+import { collapseClasses } from "@mui/material";
+
 import { calculateDates } from "../utils/data-handling-functions.js";
 import { products, europeanCountries } from "../utils/useful-constants.js";
 
 export const organization = "european_data";
-
-const CEREALS = new Set(["barley", "wheat", "maize", "oats", "rye", "sorghum", "triticale"]);
 
 const FRUIT_VEGETABLES = new Set([
 	"abricots", "apples", "asparagus", "avocados", "beans", "cabbages",
@@ -19,6 +19,8 @@ const UNITS = {
 		Rice: "€/t",
 		Sugar: "€/t",
 		Cereals: "€/t",
+		Oilseesds: "€/t",
+		Fertilisers: "€/t",
 		Wine: "€/HL",
 		default: "€/100kg",
 	},
@@ -27,6 +29,7 @@ const UNITS = {
 		Sugar: "tonnes",
 		Cereals: "tonnes",
 		Wine: "HL",
+		Dairy: "1000 tonnes",
 		default: "100kg",
 	},
 };
@@ -42,7 +45,7 @@ const STATS_BASE_CONFIG = {
 	attribute: "avg_price",
 };
 
-export const getPriceConfigs = (country, product, startDate, endDate, differenceInDays, productType = null, productVariety = null) => {
+export const getPriceConfigs = (country, product, startDate, endDate, differenceInDays, productType = null, productVariety = null, collection = null) => {
 	if (product === "Rice") {
 		return [
 			{
@@ -423,12 +426,12 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 		];
 	}
 
-	if (product === "Beef") {
+	if (product === "Beef") { // needs configuration in the main screen
 		return [
 			{
 				...STATS_BASE_CONFIG,
 				project: "beef",
-				collection: `__${productType}__`, // Note different collection
+				collection: `__${collection}__`, // Note different collection
 				params: JSON.stringify({
 					attribute: ["price"],
 					stat: "avg",
@@ -439,9 +442,9 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 							property_value: country,
 						},
 						{
-							property_name: "key",
+							property_name: "category",
 							operator: "eq",
-							property_value: country,
+							property_value: productType,
 						},
 					],
 					group_by: "key",
@@ -465,6 +468,11 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 							operator: "eq",
 							property_value: country,
 						},
+						{
+							property_name: "category",
+							operator: "eq",
+							property_value: productType,
+						},
 					],
 					group_by: "key",
 					interval: "every_1_days",
@@ -487,6 +495,11 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 							operator: "eq",
 							property_value: country,
 						},
+						{
+							property_name: "category",
+							operator: "eq",
+							property_value: productType,
+						},
 					],
 					group_by: "key",
 					interval: `every_${differenceInDays}_days`,
@@ -499,35 +512,176 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 		];
 	}
 
-	if (CEREALS.has(product)) {
-		const productnames = products.find((item) => item.value === product)?.priceProductType || [];
+	if (product === "Pigmeat") {
+		if (collection === "carcass_prices") {
+			return [
+				{
+					...STATS_BASE_CONFIG,
+					project: "pigmeat",
+					collection: `__${collection}__`, // Note different collection
+					params: JSON.stringify({
+						attribute: ["price"],
+						stat: "avg",
+						filters: [
+							{
+								property_name: "key",
+								operator: "eq",
+								property_value: country,
+							},
+						],
+						group_by: "key",
+						interval: `every_${differenceInDays}_days`,
+						start_time: startDate,
+						end_time: endDate,
+					}),
+					plotId: "periodPrices",
+					unit: getUnit(product),
+				},
+				{
+					...STATS_BASE_CONFIG,
+					project: "pigmeat",
+					collection: `__${collection}__`, // Note different collection
+					params: JSON.stringify({
+						attribute: ["price"],
+						stat: "avg",
+						filters: [
+							{
+								property_name: "key",
+								operator: "eq",
+								property_value: country,
+							},
+						],
+						group_by: "key",
+						interval: "every_1_days",
+						start_time: startDate,
+						end_time: endDate,
+					}),
+					plotId: "pricesTimeline",
+					unit: getUnit(product),
+				},
+				{
+					...STATS_BASE_CONFIG,
+					project: "pigmeat",
+					collection: `__${collection}__`,
+					params: JSON.stringify({
+						attribute: ["price"],
+						stat: "max",
+						filters: [
+							{
+								property_name: "key",
+								operator: "eq",
+								property_value: country,
+							},
+						],
+						group_by: "key",
+						interval: `every_${differenceInDays}_days`,
+						start_time: startDate,
+						end_time: endDate,
+					}),
+					plotId: "maxPrice",
+					unit: getUnit(product),
+				},
+			];
+		}
 
-		return productnames.map((productname, index) => ({
-			...STATS_BASE_CONFIG,
-			project: "cereals",
-			params: JSON.stringify({
-				attribute: ["price"],
-				stat: "avg",
-				filters: [
-					{
-						property_name: "key",
-						operator: "eq",
-						property_value: country,
-					},
-					{
-						property_name: "product_name",
-						operator: "eq",
-						property_value: productname,
-					},
-				],
-				group_by: "key",
-				interval: `every_${differenceInDays}_days`,
-				start_time: startDate,
-				end_time: endDate,
-			}),
-			plotId: `periodPrices${index + 1}`,
-			unit: "€/t",
-		}));
+		return [
+			{
+				...STATS_BASE_CONFIG,
+				project: "pigmeat",
+				collection: `__${collection}__`, // Note different collection
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "avg",
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: country,
+						},
+						{
+							property_name: "category",
+							operator: "eq",
+							property_value: productType,
+						},
+						{
+							property_name: "price_type",
+							operator: "eq",
+							property_value: productVariety,
+						},
+					],
+					group_by: "key",
+					interval: `every_${differenceInDays}_days`,
+					start_time: startDate,
+					end_time: endDate,
+				}),
+				plotId: "periodPrices",
+				unit: getUnit(product),
+			},
+			{
+				...STATS_BASE_CONFIG,
+				project: "pigmeat",
+				collection: `__${collection}__`, // Note different collection
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "avg",
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: country,
+						},
+						{
+							property_name: "category",
+							operator: "eq",
+							property_value: productType,
+						},
+						{
+							property_name: "price_type",
+							operator: "eq",
+							property_value: productVariety,
+						},
+					],
+					group_by: "key",
+					interval: "every_1_days",
+					start_time: startDate,
+					end_time: endDate,
+				}),
+				plotId: "pricesTimeline",
+				unit: getUnit(product),
+			},
+			{
+				...STATS_BASE_CONFIG,
+				project: "pigmeat",
+				collection: `__${collection}__`,
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "max",
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: country,
+						},
+						{
+							property_name: "category",
+							operator: "eq",
+							property_value: productType,
+						},
+						{
+							property_name: "price_type",
+							operator: "eq",
+							property_value: productVariety,
+						},
+					],
+					group_by: "key",
+					interval: `every_${differenceInDays}_days`,
+					start_time: startDate,
+					end_time: endDate,
+				}),
+				plotId: "maxPrice",
+				unit: getUnit(product),
+			},
+		];
 	}
 
 	if (product === "Eggs") {
@@ -717,10 +871,618 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 		];
 	}
 
+	if (product === "Cereals") {
+		return [
+			{
+				...STATS_BASE_CONFIG,
+				project: "cereals",
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "avg",
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: country,
+						},
+						{
+							property_name: "product_name",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+					group_by: "key",
+					interval: `every_${differenceInDays}_days`,
+					start_time: startDate,
+					end_time: endDate,
+				}),
+				plotId: "periodPrices",
+				unit: getUnit(product),
+			},
+			{
+				...STATS_BASE_CONFIG,
+				project: product,
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "avg",
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: country,
+						},
+						{
+							property_name: "product_name",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+					group_by: "key",
+					interval: "every_1_days",
+					start_time: startDate,
+					end_time: endDate,
+				}),
+				plotId: "pricesTimeline",
+				unit: getUnit(product),
+			},
+			{
+				...STATS_BASE_CONFIG,
+				project: product,
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "max",
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: country,
+						},
+						{
+							property_name: "product_name",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+					group_by: "key",
+					interval: `every_${differenceInDays}_days`,
+					start_time: startDate,
+					end_time: endDate,
+				}),
+				plotId: "maxPrice",
+				unit: getUnit(product),
+			},
+		];
+	}
+
+	if (product === "Milk") {
+		return [
+			{
+				...STATS_BASE_CONFIG,
+				project: "milk_dairy",
+				collection: "__raw_milk_prices__",
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "avg",
+					interval: `every_${differenceInDays}_days`,
+					start_time: startDate,
+					end_time: endDate,
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: country,
+						},
+						{
+							property_name: "product",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+				}),
+				plotId: "periodPrices",
+				unit: getUnit(product),
+			},
+			{
+				...STATS_BASE_CONFIG,
+				project: "milk_dairy",
+				collection: "__raw_milk_prices__",
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "avg",
+					interval: `every_${differenceInDays}_days`,
+					start_time: startDate,
+					end_time: endDate,
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: country,
+						},
+						{
+							property_name: "product",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+				}),
+				plotId: "pricesTimeline",
+				unit: getUnit(product),
+			},
+			{
+				...STATS_BASE_CONFIG,
+				project: "milk_dairy",
+				collection: "__raw_milk_prices__",
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "avg",
+					interval: `every_${differenceInDays}_days`,
+					start_time: startDate,
+					end_time: endDate,
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: country,
+						},
+						{
+							property_name: "product",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+				}),
+				plotId: "maxPrice",
+				unit: getUnit(product),
+			},
+		];
+	}
+
+	if (product === "Dairy") {
+		return [
+			{
+				...STATS_BASE_CONFIG,
+				project: "milk_dairy",
+				collection: "__dairy_prices__",
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "avg",
+					interval: `every_${differenceInDays}_days`,
+					start_time: startDate,
+					end_time: endDate,
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: country,
+						},
+						{
+							property_name: "product",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+				}),
+				plotId: "periodPrices",
+				unit: getUnit(product),
+			},
+			{
+				...STATS_BASE_CONFIG,
+				project: "milk_dairy",
+				collection: "__dairy_prices__",
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "avg",
+					interval: `every_${differenceInDays}_days`,
+					start_time: startDate,
+					end_time: endDate,
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: country,
+						},
+						{
+							property_name: "product",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+				}),
+				plotId: "pricesTimeline",
+				unit: getUnit(product),
+			},
+			{
+				...STATS_BASE_CONFIG,
+				project: "milk_dairy",
+				collection: "__dairy_prices__",
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "avg",
+					interval: `every_${differenceInDays}_days`,
+					start_time: startDate,
+					end_time: endDate,
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: country,
+						},
+						{
+							property_name: "product",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+				}),
+				plotId: "maxPrice",
+				unit: getUnit(product),
+			},
+		];
+	}
+
+	if (product === "Oilseeds") {
+		return [
+			{
+				...STATS_BASE_CONFIG,
+				project: "oilseeds_protein_crops",
+				collection: "__oilseeds_prices__",
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "avg",
+					interval: `every_${differenceInDays}_days`,
+					start_time: startDate,
+					end_time: endDate,
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: country,
+						},
+						{
+							property_name: "product",
+							operator: "eq",
+							property_value: productType,
+						},
+						{
+							property_name: "product_type",
+							operator: "eq",
+							property_value: productVariety,
+						},
+					],
+				}),
+				plotId: "periodPrices",
+				unit: getUnit(product),
+			},
+			{
+				...STATS_BASE_CONFIG,
+				project: "oilseeds_protein_crops",
+				collection: "__oilseeds_prices__",
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "avg",
+					interval: "every_1_days",
+					start_time: startDate,
+					end_time: endDate,
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: country,
+						},
+						{
+							property_name: "product",
+							operator: "eq",
+							property_value: productType,
+						},
+						{
+							property_name: "product_type",
+							operator: "eq",
+							property_value: productVariety,
+						},
+					],
+				}),
+				plotId: "pricesTimeline",
+				unit: getUnit(product),
+			},
+			{
+				...STATS_BASE_CONFIG,
+				project: "oilseeds_protein_crops",
+				collection: "__oilseeds_prices__",
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "avg",
+					interval: `every_${differenceInDays}_days`,
+					start_time: startDate,
+					end_time: endDate,
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: country,
+						},
+						{
+							property_name: "product",
+							operator: "eq",
+							property_value: productType,
+						},
+						{
+							property_name: "product_type",
+							operator: "eq",
+							property_value: productVariety,
+						},
+					],
+				}),
+				plotId: "maxPrice",
+				unit: getUnit(product),
+			},
+		];
+	}
+
+	if (product === "Protein Crops") {
+		return [
+			{
+				...STATS_BASE_CONFIG,
+				project: "oilseeds_protein_crops",
+				collection: "__protein_crops_prices__",
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "avg",
+					interval: `every_${differenceInDays}_days`,
+					start_time: startDate,
+					end_time: endDate,
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: country,
+						},
+						{
+							property_name: "product",
+							operator: "eq",
+							property_value: productType,
+						},
+						{
+							property_name: "product_type",
+							operator: "eq",
+							property_value: productVariety,
+						},
+					],
+				}),
+				plotId: "periodPrices",
+				unit: getUnit(product),
+			},
+			{
+				...STATS_BASE_CONFIG,
+				project: "oilseeds_protein_crops",
+				collection: "__protein_crops_prices__",
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "avg",
+					interval: "every_1_days",
+					start_time: startDate,
+					end_time: endDate,
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: country,
+						},
+						{
+							property_name: "product",
+							operator: "eq",
+							property_value: productType,
+						},
+						{
+							property_name: "product_type",
+							operator: "eq",
+							property_value: productVariety,
+						}
+					],
+				}),
+				plotId: "pricesTimeline",
+				unit: getUnit(product),
+			},
+			{
+				...STATS_BASE_CONFIG,
+				project: "oilseeds_protein_crops",
+				collection: "__protein_crops_prices__",
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "max",
+					interval: `every_${differenceInDays}_days`,
+					start_time: startDate,
+					end_time: endDate,
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: country,
+						},
+						{
+							property_name: "product",
+							operator: "eq",
+							property_value: productType,
+						},
+						{
+							property_name: "product_type",
+							operator: "eq",
+							property_value: productVariety,
+						},
+					],
+				}),
+				plotId: "maxPrice",
+				unit: getUnit(product),
+			},
+		];
+	}
+
+	if (product === "Sheep/Goat Meat") {
+		return [
+			{
+				...STATS_BASE_CONFIG,
+				project: "sheep_goat_meat",
+				collection: "__meat_prices__",
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "avg",
+					interval: `every_${differenceInDays}_days`,
+					start_time: startDate,
+					end_time: endDate,
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: country,
+						},
+						{
+							property_name: "category",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+				}),
+				plotId: "periodPrices",
+				unit: getUnit(product),
+			},
+			{
+				...STATS_BASE_CONFIG,
+				project: "sheep_goat_meat",
+				collection: "__meat_prices__",
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "avg",
+					interval: "every_1_days",
+					start_time: startDate,
+					end_time: endDate,
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: country,
+						},
+						{
+							property_name: "category",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+				}),
+				plotId: "pricesTimeline",
+				unit: getUnit(product),
+			},
+			{
+				...STATS_BASE_CONFIG,
+				project: "sheep_goat_meat",
+				collection: "__meat_prices__",
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "max",
+					interval: `every_${differenceInDays}_days`,
+					start_time: startDate,
+					end_time: endDate,
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: country,
+						},
+						{
+							property_name: "category",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+				}),
+				plotId: "maxPrice",
+				unit: getUnit(product),
+			},
+		];
+	}
+
+	if (product === "Fertiliser") {
+		return [
+			{
+				...STATS_BASE_CONFIG,
+				project: "fertiliser",
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "avg",
+					interval: `every_${differenceInDays}_days`,
+					start_time: startDate,
+					end_time: endDate,
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: country,
+						},
+						{
+							property_name: "product",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+				}),
+				plotId: "periodPrices",
+				unit: getUnit(product),
+			},
+			{
+				...STATS_BASE_CONFIG,
+				project: "fertiliser",
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "avg",
+					interval: "every_1_days",
+					start_time: startDate,
+					end_time: endDate,
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: country,
+						},
+						{
+							property_name: "product",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+				}),
+				plotId: "pricesTimeline",
+				unit: getUnit(product),
+			},
+			{
+				...STATS_BASE_CONFIG,
+				project: "fertiliser",
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "max",
+					interval: `every_${differenceInDays}_days`,
+					start_time: startDate,
+					end_time: endDate,
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: country,
+						},
+						{
+							property_name: "product",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+				}),
+				plotId: "maxPrice",
+				unit: getUnit(product),
+			},
+		];
+	}
+
 	return [];
 };
 
-export const getMonthlyPriceConfigs = (country, product, customDate, productType = null, productVariety = null) => {
+export const getMonthlyPriceConfigs = (country, product, customDate, productType = null, productVariety = null, collection = null) => {
 	const { currentDate, formattedBeginningOfMonth } = calculateDates(customDate);
 
 	if (product === "Rice") {
@@ -896,6 +1658,68 @@ export const getMonthlyPriceConfigs = (country, product, customDate, productType
 							operator: "eq",
 							property_value: country,
 						},
+						{
+							property_name: "category",
+							operator: "eq",
+							property_value: productVariety,
+						},
+					],
+				}),
+				plotId: "monthlyPrices",
+				unit: getUnit(product),
+			},
+		];
+	}
+
+	if (product === "Pigmeat") {
+		if (collection === "carcass_prices") {
+			return [
+				{
+					...STATS_BASE_CONFIG,
+					project: "pigmeat",
+					collection: `__${collection}__`,
+					params: JSON.stringify({
+						attribute: ["price"],
+						stat: "avg",
+						interval: "every_1_months",
+						start_time: formattedBeginningOfMonth,
+						end_time: currentDate,
+						filters: [
+							{
+								property_name: "key",
+								operator: "eq",
+								property_value: country,
+							},
+						],
+					}),
+					plotId: "monthlyPrices",
+					unit: getUnit(product),
+				},
+			];
+		}
+
+		return [
+			{
+				...STATS_BASE_CONFIG,
+				project: "pigmeat",
+				collection: `__${collection}__`,
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "avg",
+					interval: "every_1_months",
+					start_time: formattedBeginningOfMonth,
+					end_time: currentDate,
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: country,
+						},
+						{
+							property_name: "category",
+							operator: "eq",
+							property_value: productType,
+						},
 					],
 				}),
 				plotId: "monthlyPrices",
@@ -943,7 +1767,7 @@ export const getMonthlyPriceConfigs = (country, product, customDate, productType
 				collection: "__poultry_prices__",
 				params: JSON.stringify({
 					attribute: ["price"],
-					stat: "max",
+					stat: "avg",
 					filters: [
 						{
 							property_name: "key",
@@ -971,11 +1795,237 @@ export const getMonthlyPriceConfigs = (country, product, customDate, productType
 		];
 	}
 
+	if (product === "Cereals") {
+		return [
+			{
+				...STATS_BASE_CONFIG,
+				project: "cereals",
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "avg",
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: country,
+						},
+						{
+							property_name: "product_name",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+					group_by: "key",
+					interval: "every_1_months",
+					start_time: formattedBeginningOfMonth,
+					end_time: currentDate,
+				}),
+				plotId: "monthlyPrices",
+			},
+		];
+	}
+
+	if (product === "Milk") {
+		return [
+			{
+				...STATS_BASE_CONFIG,
+				project: "milk_dairy",
+				collection: "__raw_prices__",
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "avg",
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: country,
+						},
+						{
+							property_name: "product",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+					group_by: "key",
+					interval: "every_1_months",
+					start_time: formattedBeginningOfMonth,
+					end_time: currentDate,
+				}),
+				plotId: "monthlyPrices",
+			},
+		];
+	}
+
+	if (product === "Dairy") {
+		return [
+			{
+				...STATS_BASE_CONFIG,
+				project: "milk_dairy",
+				collection: "__dairy_prices__",
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "avg",
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: country,
+						},
+						{
+							property_name: "product",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+					group_by: "key",
+					interval: "every_1_months",
+					start_time: formattedBeginningOfMonth,
+					end_time: currentDate,
+				}),
+				plotId: "monthlyPrices",
+			},
+		];
+	}
+
+	if (product === "Oilseeds") {
+		return [
+			{
+				...STATS_BASE_CONFIG,
+				project: "oilseeds_protein_crops",
+				collection: "__oilseeds_prices__",
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "avg",
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: country,
+						},
+						{
+							property_name: "product",
+							operator: "eq",
+							property_value: productType,
+						},
+						{
+							property_name: "product_type",
+							operator: "eq",
+							property_value: productVariety,
+						},
+					],
+					group_by: "key",
+					interval: "every_1_months",
+					start_time: formattedBeginningOfMonth,
+					end_time: currentDate,
+				}),
+				plotId: "monthlyPrices",
+			},
+		];
+	}
+
+	if (product === "Protein Crops") {
+		return [
+			{
+				...STATS_BASE_CONFIG,
+				project: "oilseeds_protein_crops",
+				collection: "__protein_crops_prices__",
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "avg",
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: country,
+						},
+						{
+							property_name: "product",
+							operator: "eq",
+							property_value: productType,
+						},
+						{
+							property_name: "product_type",
+							operator: "eq",
+							property_value: productVariety,
+						},
+					],
+					group_by: "key",
+					interval: "every_1_months",
+					start_time: formattedBeginningOfMonth,
+					end_time: currentDate,
+				}),
+				plotId: "monthlyPrices",
+			},
+		];
+	}
+
+	if (product === "Sheep/Goat Meat") {
+		return [
+			{
+				...STATS_BASE_CONFIG,
+				project: "sheep_goat_meat",
+				collection: "__meat_prices__",
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "avg",
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: country,
+						},
+						{
+							property_name: "category",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+					group_by: "key",
+					interval: "every_1_months",
+					start_time: formattedBeginningOfMonth,
+					end_time: currentDate,
+				}),
+				plotId: "monthlyPrices",
+			},
+		];
+	}
+
+	if (product === "Fertiliser") {
+		return [
+			{
+				...STATS_BASE_CONFIG,
+				project: "fertiliser",
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "avg",
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: country,
+						},
+						{
+							property_name: "product",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+					group_by: "key",
+					interval: "every_1_months",
+					start_time: formattedBeginningOfMonth,
+					end_time: currentDate,
+				}),
+				plotId: "monthlyPrices",
+			},
+		];
+	}
+
 	return [];
 };
 
-export const getProductionConfigs = (product, productType) => {
+export const getProductionConfigs = (product, productType, productVariety = null) => {
 	const year = new Date().getFullYear().toString();
+
 	if (product === "Rice") {
 		return [
 			{
@@ -1019,7 +2069,7 @@ export const getProductionConfigs = (product, productType) => {
 			},
 			{
 				type: "stats",
-				project: product,
+				project: "rice",
 				collection: "__production__",
 				params: JSON.stringify({
 					attribute: ["rice_husk_quantity"],
@@ -1027,6 +2077,13 @@ export const getProductionConfigs = (product, productType) => {
 					interval: "every_12_months",
 					start_time: "2010-01-01",
 					end_time: `${year}-12-31`,
+					filters: [
+						{
+							property_name: "type",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
 					group_by: "key",
 				}),
 				plotId: "productProduction2",
@@ -1035,7 +2092,7 @@ export const getProductionConfigs = (product, productType) => {
 			},
 			{
 				type: "stats",
-				project: product,
+				project: "rice",
 				collection: "__production__",
 				params: JSON.stringify({
 					attribute: ["rice_husk_quantity"],
@@ -1052,11 +2109,11 @@ export const getProductionConfigs = (product, productType) => {
 		];
 	}
 
-	if (product === "olive_oil") {
+	if (product === "Olive Oil") {
 		return [
 			{
 				type: "stats",
-				project: product,
+				project: "olive_oil",
 				collection: "__annual_production__",
 				params: JSON.stringify({
 					attribute: ["year_production_quantity"],
@@ -1072,7 +2129,7 @@ export const getProductionConfigs = (product, productType) => {
 			},
 			{
 				type: "stats",
-				project: product,
+				project: "olive_oil",
 				collection: "__annual_production__",
 				params: JSON.stringify({
 					attribute: ["year_production_quantity"],
@@ -1089,11 +2146,11 @@ export const getProductionConfigs = (product, productType) => {
 		];
 	}
 
-	if (product === "sugar") {
+	if (product === "Sugar") {
 		return [
 			{
 				type: "stats",
-				project: product,
+				project: "sugar",
 				collection: "__production__",
 				params: JSON.stringify({
 					attribute: ["gross_production"],
@@ -1109,7 +2166,7 @@ export const getProductionConfigs = (product, productType) => {
 			},
 			{
 				type: "stats",
-				project: product,
+				project: "sugar",
 				collection: "__production__",
 				params: JSON.stringify({
 					attribute: ["yield"],
@@ -1125,7 +2182,7 @@ export const getProductionConfigs = (product, productType) => {
 			},
 			{
 				type: "stats",
-				project: product,
+				project: "sugar",
 				collection: "__production__",
 				params: JSON.stringify({
 					attribute: ["gross_production"],
@@ -1141,7 +2198,7 @@ export const getProductionConfigs = (product, productType) => {
 			},
 			{
 				type: "stats",
-				project: product,
+				project: "sugar",
 				collection: "__production__",
 				params: JSON.stringify({
 					attribute: ["yield"],
@@ -1158,11 +2215,154 @@ export const getProductionConfigs = (product, productType) => {
 		];
 	}
 
-	if (product === "beef") {
+	if (product === "Beef") {
 		return [
 			{
 				type: "stats",
-				project: product,
+				project: "beef",
+				collection: "__production__",
+				params: JSON.stringify({
+					attribute: ["tonnes"],
+					stat: "sum",
+					interval: "every_12_months",
+					start_time: "2010-01-01",
+					end_time: `${year}-12-31`,
+					filters: [
+						{
+							property_name: "category",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+					group_by: "key",
+				}),
+				plotId: "productProduction1",
+				unit: "t",
+				attribute: "sum_tonnes",
+			},
+			{
+				type: "stats",
+				project: "beef",
+				collection: "__production__",
+				params: JSON.stringify({
+					attribute: ["tonnes"],
+					stat: "max",
+					interval: "every_36500_days",
+					start_time: "2010-01-01",
+					end_time: `${year}-12-31`,
+					filters: [
+						{
+							property_name: "category",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+					group_by: "key",
+				}),
+				plotId: "maxProduction1",
+				unit: getUnit(product, "production"),
+				attribute: "max_tonnes",
+			},
+			{
+				type: "stats",
+				project: "beef",
+				collection: "__production__",
+				params: JSON.stringify({
+					attribute: ["heads"],
+					stat: "sum",
+					interval: "every_12_months",
+					start_time: "2010-01-01",
+					end_time: `${year}-12-31`,
+					filters: [
+						{
+							property_name: "category",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+					group_by: "key",
+				}),
+				plotId: "productProduction2",
+				unit: "t",
+				attribute: "sum_heads",
+			},
+			{
+				type: "stats",
+				project: "beef",
+				collection: "__production__",
+				params: JSON.stringify({
+					attribute: ["heads"],
+					stat: "max",
+					interval: "every_36500_days",
+					start_time: "2010-01-01",
+					end_time: `${year}-12-31`,
+					filters: [
+						{
+							property_name: "category",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+					group_by: "key",
+				}),
+				plotId: "maxProduction2",
+				unit: "heads",
+				attribute: "max_heads",
+			},
+			{
+				type: "stats",
+				project: "beef",
+				collection: "__production__",
+				params: JSON.stringify({
+					attribute: ["kg_per_head"],
+					stat: "sum",
+					interval: "every_12_months",
+					start_time: "2010-01-01",
+					end_time: `${year}-12-31`,
+					filters: [
+						{
+							property_name: "category",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+					group_by: "key",
+				}),
+				plotId: "productProduction3",
+				unit: "kg/head",
+				attribute: "sum_kg_per_head",
+			},
+			{
+				type: "stats",
+				project: "beef",
+				collection: "__production__",
+				params: JSON.stringify({
+					attribute: ["kg_per_head"],
+					stat: "max",
+					interval: "every_36500_days",
+					start_time: "2010-01-01",
+					end_time: `${year}-12-31`,
+					filters: [
+						{
+							property_name: "category",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+					group_by: "key",
+				}),
+				plotId: "maxProduction3",
+				unit: "kg/head",
+				attribute: "max_kg_per_head",
+			},
+		];
+	}
+
+	if (product === "Pigmeat") {
+		return [
+			{
+				type: "stats",
+				project: "pigmeat",
 				collection: "__production__",
 				params: JSON.stringify({
 					attribute: ["tonnes"],
@@ -1173,12 +2373,12 @@ export const getProductionConfigs = (product, productType) => {
 					group_by: "key",
 				}),
 				plotId: "productProduction1",
-				unit: getUnit(product, "production"),
+				unit: "t",
 				attribute: "sum_tonnes",
 			},
 			{
 				type: "stats",
-				project: product,
+				project: "pigmeat",
 				collection: "__production__",
 				params: JSON.stringify({
 					attribute: ["tonnes"],
@@ -1192,33 +2392,589 @@ export const getProductionConfigs = (product, productType) => {
 				unit: getUnit(product, "production"),
 				attribute: "max_tonnes",
 			},
+			{
+				type: "stats",
+				project: "pigmeat",
+				collection: "__production__",
+				params: JSON.stringify({
+					attribute: ["heads"],
+					stat: "sum",
+					interval: "every_12_months",
+					start_time: "2010-01-01",
+					end_time: `${year}-12-31`,
+					group_by: "key",
+				}),
+				plotId: "productProduction2",
+				unit: "t",
+				attribute: "sum_heads",
+			},
+			{
+				type: "stats",
+				project: "pigmeat",
+				collection: "__production__",
+				params: JSON.stringify({
+					attribute: ["heads"],
+					stat: "max",
+					interval: "every_36500_days",
+					start_time: "2010-01-01",
+					end_time: `${year}-12-31`,
+					group_by: "key",
+				}),
+				plotId: "maxProduction2",
+				unit: "heads",
+				attribute: "max_heads",
+			},
+			{
+				type: "stats",
+				project: "pigmeat",
+				collection: "__production__",
+				params: JSON.stringify({
+					attribute: ["kg_per_head"],
+					stat: "sum",
+					interval: "every_12_months",
+					start_time: "2010-01-01",
+					end_time: `${year}-12-31`,
+					group_by: "key",
+				}),
+				plotId: "productProduction3",
+				unit: "kg/head",
+				attribute: "sum_kg_per_head",
+			},
+			{
+				type: "stats",
+				project: "pigmeat",
+				collection: "__production__",
+				params: JSON.stringify({
+					attribute: ["kg_per_head"],
+					stat: "max",
+					interval: "every_36500_days",
+					start_time: "2010-01-01",
+					end_time: `${year}-12-31`,
+					group_by: "key",
+				}),
+				plotId: "maxProduction3",
+				unit: "kg/head",
+				attribute: "max_kg_per_head",
+			},
 		];
 	}
 
-	if (CEREALS.has(product)) {
-		const cropnames = products.find((item) => item.value === product)?.productionProductType || [];
+	if (product === "Poultry") {
+		return [
+			{
+				type: "stats",
+				project: "eggs_poultry",
+				collection: "__poultry_production__",
+				params: JSON.stringify({
+					attribute: ["tonnes"],
+					stat: "sum",
+					interval: "every_12_months",
+					start_time: "2010-01-01",
+					end_time: `${year}-12-31`,
+					filters: [
+						{
+							property_name: "animal",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+					group_by: "key",
+				}),
+				plotId: "productProduction1",
+				unit: getUnit(product, "production"),
+				attribute: "sum_tonnes",
+			},
+			{
+				type: "stats",
+				project: "eggs_poultry",
+				collection: "__poultry_production__",
+				params: JSON.stringify({
+					attribute: ["tonnes"],
+					stat: "max",
+					interval: "every_36500_days",
+					start_time: "2010-01-01",
+					end_time: `${year}-12-31`,
+					filters: [
+						{
+							property_name: "animal",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+					group_by: "key",
+				}),
+				plotId: "maxProduction1",
+				unit: getUnit(product, "production"),
+				attribute: "max_tonnes",
+			},
+			{
+				type: "stats",
+				project: "eggs_poultry",
+				collection: "__poultry_production__",
+				params: JSON.stringify({
+					attribute: ["heads"],
+					stat: "sum",
+					interval: "every_12_months",
+					start_time: "2010-01-01",
+					end_time: `${year}-12-31`,
+					filters: [
+						{
+							property_name: "animal",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+					group_by: "key",
+				}),
+				plotId: "productProduction2",
+				unit: "heads",
+				attribute: "sum_heads",
+			},
+			{
+				type: "stats",
+				project: "eggs_poultry",
+				collection: "__poultry_production__",
+				params: JSON.stringify({
+					attribute: ["heads"],
+					stat: "max",
+					interval: "every_36500_days",
+					start_time: "2010-01-01",
+					end_time: `${year}-12-31`,
+					filters: [
+						{
+							property_name: "animal",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+					group_by: "key",
+				}),
+				plotId: "maxProduction2",
+				unit: "heads",
+				attribute: "max_heads",
+			},
+			{
+				type: "stats",
+				project: "eggs_poultry",
+				collection: "__poultry_production__",
+				params: JSON.stringify({
+					attribute: ["kg_per_head"],
+					stat: "sum",
+					interval: "every_12_months",
+					start_time: "2010-01-01",
+					end_time: `${year}-12-31`,
+					filters: [
+						{
+							property_name: "animal",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+					group_by: "key",
+				}),
+				plotId: "productProduction3",
+				unit: "kg/head",
+				attribute: "sum_kg_per_head",
+			},
+			{
+				type: "stats",
+				project: "eggs_poultry",
+				collection: "__poultry_production__",
+				params: JSON.stringify({
+					attribute: ["kg_per_head"],
+					stat: "max",
+					interval: "every_36500_days",
+					start_time: "2010-01-01",
+					end_time: `${year}-12-31`,
+					filters: [
+						{
+							property_name: "animal",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+					group_by: "key",
+				}),
+				plotId: "maxProduction1",
+				unit: "kg/head",
+				attribute: "max_kg_per_head",
+			},
+		];
+	}
 
-		return cropnames.map((cropname, index) => ({
-			type: "stats",
-			project: "cereals",
-			collection: "__production__",
-			params: JSON.stringify({
-				attribute: ["gross_production"],
-				stat: "sum",
-				interval: "every_12_months",
-				start_time: "2010-01-01",
-				end_time: `${year}-12-31`,
-				group_by: "key",
-				filters: [{
-					property_name: "crop",
-					operator: "eq",
-					property_value: cropname,
-				}],
-			}),
-			plotId: `productProduction${index + 1}`,
-			unit: "t",
-			attribute: "sum_gross_production",
-		}));
+	if (product === "Cereals") {
+		return [
+			{
+				type: "stats",
+				project: "cereals",
+				collection: "__production__",
+				params: JSON.stringify({
+					attribute: ["gross_production"],
+					stat: "sum",
+					interval: "every_12_months",
+					start_time: "2010-01-01",
+					end_time: `${year}-12-31`,
+					filters: [
+						{
+							property_name: "crop",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+					group_by: "key",
+				}),
+				plotId: "productProduction1",
+				unit: "t",
+				attribute: "sum_gross_production",
+			},
+			{
+				type: "stats",
+				project: "cereals",
+				collection: "__production__",
+				params: JSON.stringify({
+					attribute: ["gross_production"],
+					stat: "max",
+					interval: "every_36500_days",
+					start_time: "2010-01-01",
+					end_time: `${year}-12-31`,
+					filters: [
+						{
+							property_name: "crop",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+					group_by: "key",
+				}),
+				plotId: "maxProduction1",
+				unit: "t",
+				attribute: "max_tonnes",
+			},
+			{
+				type: "stats",
+				project: "cereals",
+				collection: "__production__",
+				params: JSON.stringify({
+					attribute: ["yield"],
+					stat: "sum",
+					interval: "every_12_months",
+					start_time: "2010-01-01",
+					end_time: `${year}-12-31`,
+					filters: [
+						{
+							property_name: "product_name",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+					group_by: "key",
+				}),
+				plotId: "productProduction2",
+				unit: "t/ha",
+				attribute: "sum_yield",
+			},
+			{
+				type: "stats",
+				project: "cereals",
+				collection: "__production__",
+				params: JSON.stringify({
+					attribute: ["yield"],
+					stat: "max",
+					interval: "every_36500_days",
+					start_time: "2010-01-01",
+					end_time: `${year}-12-31`,
+					group_by: "key",
+				}),
+				plotId: "maxProduction2",
+				unit: "t/ha",
+				attribute: "max_yield",
+			},
+		];
+	}
+
+	if (product === "Dairy") {
+		return [
+			{
+				type: "stats",
+				project: "milk_dairy",
+				collection: "__dairy_production__",
+				params: JSON.stringify({
+					attribute: ["production"],
+					stat: "sum",
+					interval: "every_12_months",
+					start_time: "2010-01-01",
+					end_time: `${year}-12-31`,
+					filters: [
+						{
+							property_name: "category",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+					group_by: "key",
+				}),
+				plotId: "productProduction1",
+				unit: getUnit(product, "production"),
+				attribute: "sum_production",
+			},
+			{
+				type: "stats",
+				project: "milk_dairy",
+				collection: "__dairy_production__",
+				params: JSON.stringify({
+					attribute: ["production"],
+					stat: "max",
+					interval: "every_36500_days",
+					start_time: "2010-01-01",
+					end_time: `${year}-12-31`,
+					filters: [
+						{
+							property_name: "category",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+					group_by: "key",
+				}),
+				plotId: "maxProduction1",
+				unit: getUnit(product, "production"),
+				attribute: "max_tonnes",
+			},
+		];
+	}
+
+	if (product === "Oilseeds") {
+		return [
+			{
+				type: "stats",
+				project: "oilseeds_protein_crops",
+				collection: "__protein_crops_production__",
+				params: JSON.stringify({
+					attribute: ["gross_production"],
+					stat: "sum",
+					interval: "every_12_months",
+					start_time: "2010-01-01",
+					end_time: `${year}-12-31`,
+					filters: [
+						{
+							property_name: "crop",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+					group_by: "key",
+				}),
+				plotId: "productProduction1",
+				unit: "t",
+				attribute: "sum_gross_production",
+			},
+			{
+				type: "stats",
+				project: "oilseeds_protein_crops",
+				collection: "__protein_crops_production__",
+				params: JSON.stringify({
+					attribute: ["gross_production"],
+					stat: "max",
+					interval: "every_36500_days",
+					start_time: "2010-01-01",
+					end_time: `${year}-12-31`,
+					filters: [
+						{
+							property_name: "crop",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+					group_by: "key",
+				}),
+				plotId: "maxProduction1",
+				unit: "t",
+				attribute: "max_tonnes",
+			},
+			{
+				type: "stats",
+				project: "oilseeds_protein_crops",
+				collection: "__protein_crops_production__",
+				params: JSON.stringify({
+					attribute: ["yield"],
+					stat: "sum",
+					interval: "every_12_months",
+					start_time: "2010-01-01",
+					end_time: `${year}-12-31`,
+					filters: [
+						{
+							property_name: "crop",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+					group_by: "key",
+				}),
+				plotId: "productProduction2",
+				unit: "t/ha",
+				attribute: "sum_yield",
+			},
+			{
+				type: "stats",
+				project: "oilseeds_protein_crops",
+				collection: "__protein_crops_production__",
+				params: JSON.stringify({
+					attribute: ["yield"],
+					stat: "max",
+					interval: "every_36500_days",
+					start_time: "2010-01-01",
+					end_time: `${year}-12-31`,
+					filters: [
+						{
+							property_name: "crop",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+					group_by: "key",
+				}),
+				plotId: "maxProduction2",
+				unit: "t/ha",
+				attribute: "max_yield",
+			},
+		];
+	}
+
+	if (product === "Sheep/Goat Meat") {
+		return [
+			{
+				type: "stats",
+				project: "sheep_goat_meat",
+				collection: "__production__",
+				params: JSON.stringify({
+					attribute: ["tonnes"],
+					stat: "sum",
+					interval: "every_12_months",
+					start_time: "2010-01-01",
+					end_time: `${year}-12-31`,
+					filters: [
+						{
+							property_name: "meat",
+							operator: "eq",
+							property_value: productType,
+						},
+						{
+							property_name: "item",
+							operator: "eq",
+							property_value: productVariety,
+						},
+					],
+					group_by: "key",
+				}),
+				plotId: "productProduction1",
+				unit: "t",
+				attribute: "sum_tonnes",
+			},
+			{
+				type: "stats",
+				project: "sheep_goat_meat",
+				collection: "__production__",
+				params: JSON.stringify({
+					attribute: ["tonnes"],
+					stat: "max",
+					interval: "every_36500_days",
+					start_time: "2010-01-01",
+					end_time: `${year}-12-31`,
+					group_by: "key",
+				}),
+				plotId: "maxProduction1",
+				unit: getUnit(product, "production"),
+				attribute: "max_tonnes",
+			},
+			{
+				type: "stats",
+				project: "sheep_goat_meat",
+				collection: "__production__",
+				params: JSON.stringify({
+					attribute: ["heads"],
+					stat: "sum",
+					interval: "every_12_months",
+					start_time: "2010-01-01",
+					end_time: `${year}-12-31`,
+					filters: [
+						{
+							property_name: "meat",
+							operator: "eq",
+							property_value: productType,
+						},
+						{
+							property_name: "item",
+							operator: "eq",
+							property_value: productVariety,
+						},
+					],
+					group_by: "key",
+				}),
+				plotId: "productProduction2",
+				unit: "t",
+				attribute: "sum_heads",
+			},
+			{
+				type: "stats",
+				project: "sheep_goat_meat",
+				collection: "__production__",
+				params: JSON.stringify({
+					attribute: ["heads"],
+					stat: "max",
+					interval: "every_36500_days",
+					start_time: "2010-01-01",
+					end_time: `${year}-12-31`,
+					group_by: "key",
+				}),
+				plotId: "maxProduction2",
+				unit: "heads",
+				attribute: "max_heads",
+			},
+			{
+				type: "stats",
+				project: "sheep_goat_meat",
+				collection: "__production__",
+				params: JSON.stringify({
+					attribute: ["kg_per_head"],
+					stat: "sum",
+					interval: "every_12_months",
+					start_time: "2010-01-01",
+					end_time: `${year}-12-31`,
+					filters: [
+						{
+							property_name: "meat",
+							operator: "eq",
+							property_value: productType,
+						},
+						{
+							property_name: "item",
+							operator: "eq",
+							property_value: productVariety,
+						},
+					],
+					group_by: "key",
+				}),
+				plotId: "productProduction3",
+				unit: "kg/head",
+				attribute: "sum_kg_per_head",
+			},
+			{
+				type: "stats",
+				project: "sheep_goat_meat",
+				collection: "__production__",
+				params: JSON.stringify({
+					attribute: ["kg_per_head"],
+					stat: "max",
+					interval: "every_36500_days",
+					start_time: "2010-01-01",
+					end_time: `${year}-12-31`,
+					group_by: "key",
+				}),
+				plotId: "maxProduction3",
+				unit: "kg/head",
+				attribute: "max_kg_per_head",
+			},
+		];
 	}
 
 	return [];
