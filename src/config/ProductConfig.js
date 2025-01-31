@@ -1,5 +1,5 @@
 import { calculateDates } from "../utils/data-handling-functions.js";
-import { products } from "../utils/useful-constants.js";
+import { products, europeanCountries } from "../utils/useful-constants.js";
 
 export const organization = "european_data";
 
@@ -14,16 +14,26 @@ const FRUIT_VEGETABLES = new Set([
 	"plums", "satsumas", "strawberries", "table grapes", "tomatoes", "water melons",
 ]);
 
-const getUnit = (product) => {
-	const units = {
-		rice: "€/t",
-		sugar: "€/t",
-		wine: "€/HL",
-		beef: "€/100kg",
-		olive_oil: "€/100kg",
+const UNITS = {
+	price: {
+		Rice: "€/t",
+		Sugar: "€/t",
+		Cereals: "€/t",
+		Wine: "€/HL",
 		default: "€/100kg",
-	};
-	return units[product] || (FRUIT_VEGETABLES.has(product) ? units.default : "");
+	},
+	production: {
+		Rice: "tonnes",
+		Sugar: "tonnes",
+		Cereals: "tonnes",
+		Wine: "HL",
+		default: "100kg",
+	},
+};
+
+const getUnit = (product, type = "price") => {
+	const unitMap = UNITS[type] || UNITS.price;
+	return unitMap[product] || (FRUIT_VEGETABLES.has(product) ? unitMap.default : "");
 };
 
 const STATS_BASE_CONFIG = {
@@ -32,13 +42,11 @@ const STATS_BASE_CONFIG = {
 	attribute: "avg_price",
 };
 
-export const getPriceConfigs = (country, product, startDate, endDate, differenceInDays) => {
-	if (product === "rice") {
+export const getPriceConfigs = (country, product, startDate, endDate, differenceInDays, productType = null, productVariety = null) => {
+	if (product === "Rice") {
 		return [
 			{
-				type: "stats",
-				collection: "__prices__",
-				attribute: "avg_price",
+				...STATS_BASE_CONFIG,
 				project: "rice",
 				params: JSON.stringify({
 					attribute: ["price"],
@@ -48,6 +56,16 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 							property_name: "key",
 							operator: "eq",
 							property_value: country,
+						},
+						{
+							property_name: "type",
+							operator: "eq",
+							property_value: productType,
+						},
+						{
+							property_name: "variety",
+							operator: "eq",
+							property_value: productVariety,
 						},
 					],
 					group_by: "key",
@@ -59,9 +77,7 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 				unit: getUnit(product),
 			},
 			{
-				type: "stats",
-				collection: "__prices__",
-				attribute: "avg_price",
+				...STATS_BASE_CONFIG,
 				project: "rice",
 				params: JSON.stringify({
 					attribute: ["price"],
@@ -71,6 +87,16 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 							property_name: "key",
 							operator: "eq",
 							property_value: country,
+						},
+						{
+							property_name: "type",
+							operator: "eq",
+							property_value: productType,
+						},
+						{
+							property_name: "variety",
+							operator: "eq",
+							property_value: productVariety,
 						},
 					],
 					group_by: "key",
@@ -84,7 +110,7 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 		];
 	}
 
-	if (["wine", "olive_oil", "sugar"].includes(product)) {
+	if (product === "Olive Oil") {
 		return [
 			{
 				...STATS_BASE_CONFIG,
@@ -97,6 +123,11 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 							property_name: "key",
 							operator: "eq",
 							property_value: country,
+						},
+						{
+							property_name: "product",
+							operator: "eq",
+							property_value: productType,
 						},
 					],
 					group_by: "key",
@@ -118,6 +149,11 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 							property_name: "key",
 							operator: "eq",
 							property_value: country,
+						},
+						{
+							property_name: "product",
+							operator: "eq",
+							property_value: productType,
 						},
 					],
 					group_by: "key",
@@ -140,6 +176,11 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 							operator: "eq",
 							property_value: country,
 						},
+						{
+							property_name: "product",
+							operator: "eq",
+							property_value: productType,
+						},
 					],
 					group_by: "key",
 					interval: `every_${differenceInDays}_days`,
@@ -152,7 +193,159 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 		];
 	}
 
-	if (FRUIT_VEGETABLES.has(product)) {
+	if (product === "Sugar") {
+		const region = europeanCountries.find((item) => item.value === country)?.region || "EU Average";
+		return [
+			{
+				...STATS_BASE_CONFIG,
+				project: product,
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "avg",
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: region,
+						},
+					],
+					group_by: "key",
+					interval: `every_${differenceInDays}_days`,
+					start_time: startDate,
+					end_time: endDate,
+				}),
+				plotId: "periodPrices",
+				unit: getUnit(product),
+			},
+			{
+				...STATS_BASE_CONFIG,
+				project: product,
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "avg",
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: region,
+						},
+					],
+					group_by: "key",
+					interval: "every_1_days",
+					start_time: startDate,
+					end_time: endDate,
+				}),
+				plotId: "pricesTimeline",
+				unit: getUnit(product),
+			},
+			{
+				...STATS_BASE_CONFIG,
+				project: product,
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "max",
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: region,
+						},
+					],
+					group_by: "key",
+					interval: `every_${differenceInDays}_days`,
+					start_time: startDate,
+					end_time: endDate,
+				}),
+				plotId: "maxPrice",
+				unit: getUnit(product),
+			},
+		];
+	}
+
+	if (product === "Wine") {
+		return [
+			{
+				...STATS_BASE_CONFIG,
+				project: product,
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "avg",
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: country,
+						},
+						{
+							property_name: "description",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+					group_by: "key",
+					interval: `every_${differenceInDays}_days`,
+					start_time: startDate,
+					end_time: endDate,
+				}),
+				plotId: "periodPrices",
+				unit: getUnit(product),
+			},
+			{
+				...STATS_BASE_CONFIG,
+				project: product,
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "avg",
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: country,
+						},
+						{
+							property_name: "description",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+					group_by: "key",
+					interval: "every_1_days",
+					start_time: startDate,
+					end_time: endDate,
+				}),
+				plotId: "pricesTimeline",
+				unit: getUnit(product),
+			},
+			{
+				...STATS_BASE_CONFIG,
+				project: product,
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "max",
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: country,
+						},
+						{
+							property_name: "description",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+					group_by: "key",
+					interval: `every_${differenceInDays}_days`,
+					start_time: startDate,
+					end_time: endDate,
+				}),
+				plotId: "maxPrice",
+				unit: getUnit(product),
+			},
+		];
+	}
+
+	if (product === "Fruits & Vegetables") {
 		return [
 			{
 				...STATS_BASE_CONFIG,
@@ -169,7 +362,7 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 						{
 							property_name: "product",
 							operator: "eq",
-							property_value: product,
+							property_value: productType,
 						},
 					],
 					group_by: "key",
@@ -195,7 +388,7 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 						{
 							property_name: "product",
 							operator: "eq",
-							property_value: product,
+							property_value: productType,
 						},
 					],
 					group_by: "key",
@@ -211,7 +404,7 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 				project: "fruit_vegetables",
 				params: JSON.stringify({
 					attribute: ["price"],
-					stat: "avg",
+					stat: "max",
 					filters: [
 						{
 							property_name: "key",
@@ -230,16 +423,21 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 		];
 	}
 
-	if (product === "beef") {
+	if (product === "Beef") {
 		return [
 			{
 				...STATS_BASE_CONFIG,
 				project: "beef",
-				collection: "__carcass_prices__", // Note different collection
+				collection: `__${productType}__`, // Note different collection
 				params: JSON.stringify({
 					attribute: ["price"],
 					stat: "avg",
 					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: country,
+						},
 						{
 							property_name: "key",
 							operator: "eq",
@@ -257,7 +455,7 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 			{
 				...STATS_BASE_CONFIG,
 				project: "beef",
-				collection: "__carcass_prices__", // Note different collection
+				collection: `__${productType}__`, // Note different collection
 				params: JSON.stringify({
 					attribute: ["price"],
 					stat: "avg",
@@ -279,7 +477,7 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 			{
 				...STATS_BASE_CONFIG,
 				project: "beef",
-				collection: "__carcass_prices__",
+				collection: `__${productType}__`,
 				params: JSON.stringify({
 					attribute: ["price"],
 					stat: "max",
@@ -332,13 +530,200 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 		}));
 	}
 
+	if (product === "Eggs") {
+		return [
+			{
+				...STATS_BASE_CONFIG,
+				project: "eggs_poultry",
+				collection: "__egg_prices__",
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "avg",
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: country,
+						},
+						{
+							property_name: "farming_method",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+					group_by: "key",
+					interval: `every_${differenceInDays}_days`,
+					start_time: startDate,
+					end_time: endDate,
+				}),
+				plotId: "periodPrices",
+				unit: getUnit(product),
+			},
+			{
+				...STATS_BASE_CONFIG,
+				project: "eggs_poultry",
+				collection: "__egg_prices__",
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "avg",
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: country,
+						},
+						{
+							property_name: "farming_method",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+					group_by: "key",
+					interval: "every_1_days",
+					start_time: startDate,
+					end_time: endDate,
+				}),
+				plotId: "pricesTimeline",
+				unit: getUnit(product),
+			},
+			{
+				...STATS_BASE_CONFIG,
+				project: "eggs_poultry",
+				collection: "__egg_prices__",
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "max",
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: country,
+						},
+						{
+							property_name: "farming_method",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+					group_by: "key",
+					interval: `every_${differenceInDays}_days`,
+					start_time: startDate,
+					end_time: endDate,
+				}),
+				plotId: "maxPrice",
+				unit: getUnit(product),
+			},
+		];
+	}
+
+	if (product === "Poultry") {
+		return [
+			{
+				...STATS_BASE_CONFIG,
+				project: "eggs_poultry",
+				collection: "__poultry_prices__",
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "avg",
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: country,
+						},
+						{
+							property_name: "product_name",
+							operator: "eq",
+							property_value: productType,
+						},
+						{
+							property_name: "price_type",
+							operator: "eq",
+							property_value: productVariety,
+						},
+					],
+					group_by: "key",
+					interval: `every_${differenceInDays}_days`,
+					start_time: startDate,
+					end_time: endDate,
+				}),
+				plotId: "periodPrices",
+				unit: getUnit(product),
+			},
+			{
+				...STATS_BASE_CONFIG,
+				project: "eggs_poultry",
+				collection: "__poultry_prices__",
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "avg",
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: country,
+						},
+						{
+							property_name: "product_name",
+							operator: "eq",
+							property_value: productType,
+						},
+						{
+							property_name: "price_type",
+							operator: "eq",
+							property_value: productVariety,
+						},
+					],
+					group_by: "key",
+					interval: "every_1_days",
+					start_time: startDate,
+					end_time: endDate,
+				}),
+				plotId: "pricesTimeline",
+				unit: getUnit(product),
+			},
+			{
+				...STATS_BASE_CONFIG,
+				project: "eggs_poultry",
+				collection: "__poultry_prices__",
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "max",
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: country,
+						},
+						{
+							property_name: "product_name",
+							operator: "eq",
+							property_value: productType,
+						},
+						{
+							property_name: "price_type",
+							operator: "eq",
+							property_value: productVariety,
+						},
+					],
+					group_by: "key",
+					interval: `every_${differenceInDays}_days`,
+					start_time: startDate,
+					end_time: endDate,
+				}),
+				plotId: "maxPrice",
+				unit: getUnit(product),
+			},
+		];
+	}
+
 	return [];
 };
 
-export const getMonthlyPriceConfigs = (country, product, customDate) => {
+export const getMonthlyPriceConfigs = (country, product, customDate, productType = null, productVariety = null) => {
 	const { currentDate, formattedBeginningOfMonth } = calculateDates(customDate);
 
-	if (product === "rice") {
+	if (product === "Rice") {
 		return [
 			{
 				type: "stats",
@@ -356,14 +741,25 @@ export const getMonthlyPriceConfigs = (country, product, customDate) => {
 							operator: "eq",
 							property_value: country,
 						},
+						{
+							property_name: "type",
+							operator: "eq",
+							property_value: productType,
+						},
+						{
+							property_name: "variety",
+							operator: "eq",
+							property_value: productVariety,
+						},
 					],
 				}),
 				plotId: "monthlyPrices",
+				unit: getUnit(product),
 			},
 		];
 	}
 
-	if (["wine", "olive_oil", "sugar"].includes(product)) {
+	if (product === "Olive Oil") {
 		return [
 			{
 				...STATS_BASE_CONFIG,
@@ -371,23 +767,87 @@ export const getMonthlyPriceConfigs = (country, product, customDate) => {
 				params: JSON.stringify({
 					attribute: ["price"],
 					stat: "avg",
-					interval: "every_1_months",
-					start_time: formattedBeginningOfMonth,
-					end_time: currentDate,
 					filters: [
 						{
 							property_name: "key",
 							operator: "eq",
 							property_value: country,
 						},
+						{
+							property_name: "product",
+							operator: "eq",
+							property_value: productType,
+						},
 					],
+					group_by: "key",
+					interval: "every_1_months",
+					start_time: formattedBeginningOfMonth,
+					end_time: currentDate,
 				}),
 				plotId: "monthlyPrices",
+				unit: getUnit(product),
 			},
 		];
 	}
 
-	if (FRUIT_VEGETABLES.has(product)) {
+	if (product === "Sugar") {
+		const region = europeanCountries.find((item) => item.value === country)?.region || "EU Average";
+		return [
+			{
+				...STATS_BASE_CONFIG,
+				project: product,
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "avg",
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: region,
+						},
+					],
+					group_by: "key",
+					interval: "every_1_months",
+					start_time: formattedBeginningOfMonth,
+					end_time: currentDate,
+				}),
+				plotId: "monthlyPrices",
+				unit: getUnit(product),
+			},
+		];
+	}
+
+	if (product === "Wine") {
+		return [
+			{
+				...STATS_BASE_CONFIG,
+				project: product,
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "avg",
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: country,
+						},
+						{
+							property_name: "description",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+					group_by: "key",
+					interval: "every_1_months",
+					start_time: formattedBeginningOfMonth,
+					end_time: currentDate,
+				}),
+				unit: getUnit(product),
+			},
+		];
+	}
+
+	if ((product === "Fruits & Vegetables")) {
 		return [
 			{
 				...STATS_BASE_CONFIG,
@@ -395,9 +855,6 @@ export const getMonthlyPriceConfigs = (country, product, customDate) => {
 				params: JSON.stringify({
 					attribute: ["price"],
 					stat: "avg",
-					interval: "every_1_months",
-					start_time: formattedBeginningOfMonth,
-					end_time: currentDate,
 					filters: [
 						{
 							property_name: "key",
@@ -410,18 +867,23 @@ export const getMonthlyPriceConfigs = (country, product, customDate) => {
 							property_value: product,
 						},
 					],
+					group_by: "key",
+					interval: "every_1_months",
+					start_time: formattedBeginningOfMonth,
+					end_time: currentDate,
 				}),
-				plotId: "monthlyPrices",
+				plotId: "periodPrices",
+				unit: getUnit(product),
 			},
 		];
 	}
 
-	if (product === "beef") {
+	if (product === "Beef") {
 		return [
 			{
 				...STATS_BASE_CONFIG,
 				project: "beef",
-				collection: "__carcass_prices__",
+				collection: `__${productType}__`,
 				params: JSON.stringify({
 					attribute: ["price"],
 					stat: "avg",
@@ -437,6 +899,74 @@ export const getMonthlyPriceConfigs = (country, product, customDate) => {
 					],
 				}),
 				plotId: "monthlyPrices",
+				unit: getUnit(product),
+			},
+		];
+	}
+
+	if (product === "Eggs") {
+		return [
+			{
+				...STATS_BASE_CONFIG,
+				project: "eggs_poultry",
+				collection: "__egg_prices__",
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "avg",
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: country,
+						},
+						{
+							property_name: "farming_method",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
+					group_by: "key",
+					interval: "every_1_months",
+					start_time: formattedBeginningOfMonth,
+					end_time: currentDate,
+				}),
+				plotId: "monthlyPrices",
+			},
+		];
+	}
+
+	if (product === "Poultry") {
+		return [
+			{
+				...STATS_BASE_CONFIG,
+				project: "eggs_poultry",
+				collection: "__poultry_prices__",
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "max",
+					filters: [
+						{
+							property_name: "key",
+							operator: "eq",
+							property_value: country,
+						},
+						{
+							property_name: "product_name",
+							operator: "eq",
+							property_value: productType,
+						},
+						{
+							property_name: "price_type",
+							operator: "eq",
+							property_value: productVariety,
+						},
+					],
+					group_by: "key",
+					interval: "every_1_months",
+					start_time: formattedBeginningOfMonth,
+					end_time: currentDate,
+				}),
+				plotId: "monthlyPrices",
 			},
 		];
 	}
@@ -444,13 +974,13 @@ export const getMonthlyPriceConfigs = (country, product, customDate) => {
 	return [];
 };
 
-export const getProductionConfigs = (product) => {
+export const getProductionConfigs = (product, productType) => {
 	const year = new Date().getFullYear().toString();
-	if (product === "rice") {
+	if (product === "Rice") {
 		return [
 			{
 				type: "stats",
-				project: product,
+				project: "rice",
 				collection: "__production__",
 				params: JSON.stringify({
 					attribute: ["milled_rice_equivalent_quantity"],
@@ -458,15 +988,22 @@ export const getProductionConfigs = (product) => {
 					interval: "every_12_months",
 					start_time: "2010-01-01",
 					end_time: `${year}-12-31`,
+					filters: [
+						{
+							property_name: "type",
+							operator: "eq",
+							property_value: productType,
+						},
+					],
 					group_by: "key",
 				}),
 				plotId: "productProduction1",
-				unit: "t",
+				unit: getUnit(product, "production"),
 				attribute: "sum_milled_rice_equivalent_quantity",
 			},
 			{
 				type: "stats",
-				project: product,
+				project: "rice",
 				collection: "__production__",
 				params: JSON.stringify({
 					attribute: ["milled_rice_equivalent_quantity"],
@@ -477,7 +1014,7 @@ export const getProductionConfigs = (product) => {
 					group_by: "key",
 				}),
 				plotId: "maxProduction1",
-				unit: "t",
+				unit: getUnit(product, "production"),
 				attribute: "max_milled_rice_equivalent_quantity",
 			},
 			{
@@ -493,7 +1030,7 @@ export const getProductionConfigs = (product) => {
 					group_by: "key",
 				}),
 				plotId: "productProduction2",
-				unit: "t",
+				unit: getUnit(product, "production"),
 				attribute: "sum_rice_husk_quantity",
 			},
 			{
@@ -509,7 +1046,7 @@ export const getProductionConfigs = (product) => {
 					group_by: "key",
 				}),
 				plotId: "maxProduction2",
-				unit: "t",
+				unit: getUnit(product, "production"),
 				attribute: "max_rice_husk_quantity",
 			},
 		];
@@ -530,7 +1067,7 @@ export const getProductionConfigs = (product) => {
 					group_by: "key",
 				}),
 				plotId: "productProduction1",
-				unit: "t",
+				unit: getUnit(product, "production"),
 				attribute: "sum_year_production_quantity",
 			},
 			{
@@ -546,7 +1083,7 @@ export const getProductionConfigs = (product) => {
 					group_by: "key",
 				}),
 				plotId: "maxProduction1",
-				unit: "t",
+				unit: getUnit(product, "production"),
 				attribute: "max_year_production_quantity",
 			},
 		];
@@ -567,8 +1104,24 @@ export const getProductionConfigs = (product) => {
 					group_by: "key",
 				}),
 				plotId: "productProduction1",
-				unit: "t",
+				unit: getUnit(product, "production"),
 				attribute: "sum_gross_production",
+			},
+			{
+				type: "stats",
+				project: product,
+				collection: "__production__",
+				params: JSON.stringify({
+					attribute: ["yield"],
+					stat: "sum",
+					interval: "every_12_months",
+					start_time: "2010-01-01",
+					end_time: `${year}-12-31`,
+					group_by: "key",
+				}),
+				plotId: "productProduction2",
+				unit: "t/ha",
+				attribute: "sum_yield",
 			},
 			{
 				type: "stats",
@@ -583,8 +1136,24 @@ export const getProductionConfigs = (product) => {
 					group_by: "key",
 				}),
 				plotId: "maxProduction1",
-				unit: "t",
+				unit: "t/ha",
 				attribute: "max_gross_production",
+			},
+			{
+				type: "stats",
+				project: product,
+				collection: "__production__",
+				params: JSON.stringify({
+					attribute: ["yield"],
+					stat: "max",
+					interval: "every_36500_days",
+					start_time: "2010-01-01",
+					end_time: `${year}-12-31`,
+					group_by: "key",
+				}),
+				plotId: "maxProduction2",
+				unit: "t/ha",
+				attribute: "max_yield",
 			},
 		];
 	}
@@ -604,7 +1173,7 @@ export const getProductionConfigs = (product) => {
 					group_by: "key",
 				}),
 				plotId: "productProduction1",
-				unit: "t",
+				unit: getUnit(product, "production"),
 				attribute: "sum_tonnes",
 			},
 			{
@@ -620,7 +1189,7 @@ export const getProductionConfigs = (product) => {
 					group_by: "key",
 				}),
 				plotId: "maxProduction1",
-				unit: "t",
+				unit: getUnit(product, "production"),
 				attribute: "max_tonnes",
 			},
 		];

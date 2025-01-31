@@ -23,6 +23,7 @@ const agriColors = [
 ];
 const agColorKeys = Array.from({ length: 20 }, (_, i) => `ag${i + 1}`);
 
+// Function to categorize production data by country
 const transformProductionData = (productionData, yearPicker, sumFieldName) => {
 	const timestamp = `${yearPicker}-01-01T00:00:00`;
 
@@ -65,12 +66,23 @@ const ProductsScreen = () => {
 	const selectedProduct = location.state?.selectedProduct;
 	const [startDate, setStartDate] = useState("2024-01-01");
 	const [endDate, setEndDate] = useState("2024-12-31");
-
 	const [filters, setFilters] = useState({
 		year: "2024",
 		country: "Greece",
 		product: selectedProduct || "Rice",
 	});
+
+	// Find the selected product's details from products array
+	const selectedProductDetails = useMemo(() => products.find((p) => p.text === filters.product),
+		[filters.product]);
+
+	// Get production products if they exist
+	const productionItems = useMemo(() => selectedProductDetails?.production?.products || [], [selectedProductDetails]);
+	const pricesItems = useMemo(() => selectedProductDetails?.prices?.products || [], [selectedProductDetails]);
+
+	// Replace current productionType state initialization
+	const [productionProd, setProductionProd] = useState(() => selectedProductDetails?.production?.products[0]);
+	const [priceProd, setPriceProd] = useState(() => selectedProductDetails?.prices?.products[0]);
 
 	const debouncedSetDate = useMemo(
 		() => debounce((date, setter) => {
@@ -104,7 +116,6 @@ const ProductsScreen = () => {
 		[dateMetrics.isValidDateRange, dateMetrics.differenceInDays, keys.product, keys.country, startDate, endDate],
 	);
 	console.log("Price Configs:", priceConfigs);
-	const unit = useMemo(() => priceConfigs[0]?.unit || "", [priceConfigs]);
 
 	const monthlyPriceConfigs = useMemo(
 		() => (keys.product
@@ -131,6 +142,11 @@ const ProductsScreen = () => {
 		},
 		[priceConfigs, monthlyPriceConfigs, productionConfigs],
 	);
+
+	const units = useMemo(() => ({
+		priceUnit: priceConfigs?.unit || "",
+		productionUnit: productionConfigs?.unit || "",
+	}), [priceConfigs, productionConfigs]);
 
 	const { state, dispatch } = useInit(organization, allConfigs);
 	const { isLoading, dataSets, minutesAgo } = state;
@@ -206,33 +222,15 @@ const ProductsScreen = () => {
 	}), [productionByCountry]);
 	console.log("Sum Field Types:", productionTypes);
 
-	// Replace current productionType state initialization
-	const [productionType, setProductionType] = useState("");
-
 	// Add useEffect to update productionType when productionTypes is populated
 	useEffect(() => {
-		if (productionTypes.length > 0 && !productionType) {
-			setProductionType(productionTypes[0].value);
+		if (productionTypes.length > 0 && !productionProd) {
+			setProductionProd(productionTypes[0].value);
 		}
-	}, [productionType, productionTypes, filters.product]);
+	}, [productionTypes, filters.product, productionProd]);
 
-	console.log("Selected prouction type:", productionType);
+	console.log("Selected prouction type:", productionProd);
 	console.log("Selected date:", filters.year);
-
-	const formRefDate = useRef();
-	const formContentDate = useMemo(() => [
-		{
-			customType: "date-range",
-			id: "dateRange",
-			startValue: startDate,
-			startLabel: "Start date",
-			endValue: endDate,
-			endLabel: "End date",
-			labelSize: 12,
-			onStartChange: (newValue) => handleDateChange(newValue, setStartDate),
-			onEndChange: (newValue) => handleDateChange(newValue, setEndDate),
-		},
-	], [endDate, handleDateChange, startDate]);
 
 	const yearPickerRef = useRef();
 	const yearPickerProps = useMemo(() => [
@@ -254,7 +252,7 @@ const ProductsScreen = () => {
 		},
 	], []);
 
-	const dropdownContent = useMemo(() => ([
+	const productDropdownContent = useMemo(() => ([
 		{
 			id: "product",
 			items: products,
@@ -265,6 +263,28 @@ const ProductsScreen = () => {
 				setFilters((prev) => ({ ...prev, product: event.target.value }));
 			},
 		},
+	].map((item) => ({
+		...item,
+		size: "small",
+	}))), [dispatch, filters.product]);
+
+	const productionDropdownContent = useMemo(() => [{
+		id: "productionType",
+		items: productionItems,
+		value: productionProd,
+		label: "Select Production Type",
+		onChange: (event) => {
+			dispatch({ type: "FETCH_START" }); // Add loading state
+			const selectedType = event.target.value;
+			setProductionProd(selectedType);
+		},
+	}].map((item) => ({
+		...item,
+		size: "small",
+	})), [dispatch, productionItems, productionProd]);
+
+	const priceDropdownContent = useMemo(() => ([
+
 		{
 			id: "country",
 			items: europeanCountries,
@@ -276,19 +296,35 @@ const ProductsScreen = () => {
 			},
 		},
 		{
-			id: "productionType",
-			items: productionTypes,
-			value: productionTypes[0]?.value,
-			label: "Select Production Type",
+			id: "priceProduct",
+			items: pricesItems,
+			value: priceProd,
+			label: "Select Product Type",
 			onChange: (event) => {
-				const selectedType = productionTypes.find((type) => type.text === event.target.value);
-				setProductionType(selectedType?.value || "");
+				dispatch({ type: "FETCH_START" }); // Add loading state
+				const selectedType = event.target.value;
+				setProductionProd(selectedType);
 			},
 		},
 	].map((item) => ({
 		...item,
 		size: "small",
-	}))), [dispatch, filters.country, filters.product, productionTypes]);
+	}))), [dispatch, filters.country, priceProd, pricesItems]);
+
+	const formRefDate = useRef();
+	const formContentDate = useMemo(() => [
+		{
+			customType: "date-range",
+			id: "dateRange",
+			startValue: startDate,
+			startLabel: "Start date",
+			endValue: endDate,
+			endLabel: "End date",
+			labelSize: 12,
+			onStartChange: (newValue) => handleDateChange(newValue, setStartDate),
+			onEndChange: (newValue) => handleDateChange(newValue, setEndDate),
+		},
+	], [endDate, handleDateChange, startDate]);
 
 	const europeOverview = useMemo(() => {
 		const productionData = productionByCountry.find((data) => {
@@ -296,7 +332,7 @@ const ProductsScreen = () => {
 			console.log("First Country Data:", firstCountryData);
 			const sumFieldName = Object.keys(firstCountryData[0] || {})
 				.find((key) => key.startsWith("sum_"));
-			return sumFieldName === productionType;
+			return sumFieldName === productionProd;
 		});
 		console.log("Selected Production Data:", productionData);
 
@@ -313,7 +349,7 @@ const ProductsScreen = () => {
 		console.log("Transformed Production Data:", countryData);
 		return {
 			countryData,
-			productionType: productionType.split("sum_")[1]?.replace(/_/g, " "),
+			// productionType: productionType.split("sum_")[1]?.replace(/_/g, " "),
 			charts: {
 				gauge: {
 					data: {
@@ -321,9 +357,9 @@ const ProductsScreen = () => {
 						subtitle: "EU's Annual Production",
 					},
 					shape: "bullet",
-					range: [0, 3_000],
+					range: [0, 3000],
 					color: "third",
-					suffix: ` ${productionConfigs[0]?.unit || ""}`,
+					suffix: ` ${units.productionUnit}`,
 				},
 				pie: {
 					data: isValidArray(countryData) ? [{
@@ -346,7 +382,7 @@ const ProductsScreen = () => {
 				},
 			},
 		};
-	}, [productionByCountry, filters.year, productionType, productionConfigs]);
+	}, [productionByCountry, filters.year, units.productionUnit, productionProd]);
 	console.log("Europe Overview:", europeOverview);
 	console.log("General production data:", productionByCountry);
 
@@ -356,11 +392,11 @@ const ProductsScreen = () => {
 				value: europeOverview?.countryData?.find(
 					(country) => country.label === filters.country,
 				)?.production ?? null,
-				subtitle: `${productionTypes.find((type) => type.value === productionType)?.text || ""}`,
+				// subtitle: `${productionTypes.find((type) => type.value === productionType)?.text || ""}`,
 			},
-			range: [0, 2_000],
+			range: [0, 2000],
 			color: "third",
-			suffix: ` ${unit}`,
+			suffix: ` ${units.productionUnit}`,
 			shape: "angular",
 		},
 		{
@@ -369,7 +405,7 @@ const ProductsScreen = () => {
 				subtitle: "Current Month's Average Price",
 			},
 			color: "secondary",
-			suffix: `€/${unit}`,
+			suffix: `${units.priceUnit}`,
 			shape: "angular",
 		},
 		{
@@ -381,12 +417,12 @@ const ProductsScreen = () => {
 					type: "scatter",
 					mode: "lines",
 					color: "secondary",
-					title: `${unit}`,
+					title: `${units.priceUnit}`,
 				},
 			],
 			color: "secondary",
 			xaxis: { title: "Date" },
-			yaxis: { title: `Average ${unit}` },
+			yaxis: { title: `Average ${units.priceUnit}` },
 		},
 		{
 			data: {
@@ -394,14 +430,14 @@ const ProductsScreen = () => {
 				subtitle: "Specified Period's Average Price",
 			},
 			color: "secondary",
-			suffix: `${unit}`,
+			suffix: `${units.priceUnit}`,
 			shape: "angular",
 		},
-	], [europeOverview?.countryData, productionType, productionTypes, filters.country, filters.product, unit, monthlyPrices, isValidPrice, pricesTimeline, periodPrices]);
+	], [europeOverview?.countryData, units.productionUnit, units.priceUnit, monthlyPrices, filters.product, filters.country, isValidPrice, pricesTimeline, periodPrices]);
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
-			<StickyBand dropdownContent={[dropdownContent[0]]} />
+			<StickyBand dropdownContent={productDropdownContent} />
 			<Grid item xs={12} md={6} alignItems="center" flexDirection="column">
 				<Card
 					title="EU's Annual Overview"
@@ -410,7 +446,7 @@ const ProductsScreen = () => {
 					<Grid item xs={12} md={12} display="flex" justifyContent="flex-end">
 						<StickyBand
 							sticky={false}
-							dropdownContent={[dropdownContent[2]]}
+							dropdownContent={productionDropdownContent}
 							formRef={yearPickerRef}
 							formContent={yearPickerProps}
 						/>
@@ -483,7 +519,7 @@ const ProductsScreen = () => {
 				<Card title="Product per Country" footer={cardFooter({ minutesAgo })}>
 					<StickyBand
 						sticky={false}
-						dropdownContent={[dropdownContent[1]]}
+						dropdownContent={priceDropdownContent}
 						formRef={formRefDate}
 						formContent={formContentDate}
 					/>
