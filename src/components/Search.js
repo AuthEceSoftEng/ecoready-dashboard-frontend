@@ -2,7 +2,7 @@ import { Input as MUIInput, InputAdornment, Typography } from "@mui/material";
 import { Search as SearchIcon } from "@mui/icons-material";
 import { makeStyles } from "@mui/styles";
 import { useRef, memo, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const useStyles = makeStyles(() => ({
 	search: {
@@ -22,15 +22,30 @@ const Search = ({
 	const classes = useStyles();
 	const inputRef = useRef(null);
 	const navigate = useNavigate();
+	const location = useLocation();
 	const [value, setValue] = useState(searchValue);
+	const [dropdownVisible, setDropdownVisible] = useState(true);
 
 	useEffect(() => {
 		setValue(searchValue);
 	}, [searchValue]);
 
+	// Hide dropdown and blur input when navigation occurs
+	useEffect(() => {
+		setDropdownVisible(false); // Hide the dropdown
+		inputRef.current?.blur(); // Ensure input loses focus
+	}, [location]);
+
 	return (
-    	<div style={{ position: "relative", width }}>
-		<div style={{ position: "relative", width }} onClick={() => inputRef.current?.focus()}> 
+		<div
+			style={{ position: "relative", width }}
+			onClick={() => {
+				inputRef.current?.focus(); // Focus the input
+				if (value.trim()) {
+					setDropdownVisible(true); // Open dropdown if there's text
+				}
+			}}
+		>
 		<MUIInput
 			disableUnderline
 			type="search"
@@ -45,12 +60,14 @@ const Search = ({
 					<Typography ml={1}>{"Search..."}</Typography>
 				</InputAdornment>
 			)}
-			onChange={onChange}
+			onChange={(e) => {
+				onChange(e); // Call parent onChange
+				setDropdownVisible(true); // Ensure the dropdown is visible
+			}}
 		/>
-		</div>
 
 		{/* SEARCH DROPDOWN */}
-		{results.length > 0 && (
+		{dropdownVisible && results.length > 0 && (
 			<div
 				style={{
 					position: "absolute",
