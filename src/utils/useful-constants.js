@@ -123,6 +123,7 @@ export const europeanCountries = [
 	// Region 2: BE - DE - FR - NL
 	// Region 3: BG - ES - HR - IT - PT - RO
 	{ value: "EU", text: "European Union", flag: "🇪🇺", region: "EU Average" },
+	{ value: "EU", text: "European Union", flag: "🇪🇺", region: "EU Average" },
 	{ value: "AL", text: "Albania", flag: "🇦🇱" },
 	{ value: "AT", text: "Austria", flag: "🇦🇹", region: "Region 1" },
 	{ value: "BE", text: "Belgium", flag: "🇧🇪", region: "Region 2" },
@@ -201,6 +202,18 @@ export const products = [
 	// 	description: "CONCATLL, Probio",
 	// 	relevantLLs: ["CONCATLL", "Probio"],
 	// 	image: "/product_images/poultry.jpg",
+	// },
+	// {
+	// 	value: "cereals",
+	// 	text: "Cereals",
+	// 	collections: ["prices", "production"],
+	// 	prices: { 
+	// 		products: ["Durum wheat", "Feed barley", "Feed maize", "Feed oats", "Feed rye", "Feed wheat",
+	// 		"Malting barley", "Milling oats", "Milling rye", "Milling wheat", "Triticale", "Wheat bran"
+	// 	  ] 
+	// 	},
+	// 	production: { products: [ "Barley", "Durum wheat", "Maize", "Oat", "Other cereals", "Rye", "Soft wheat", "Sorghum", "Triticale" ] },
+	// 	image: "/product_images/cereals.jpg",
 	// },
 	{
 		value: "eggs_poultry",
