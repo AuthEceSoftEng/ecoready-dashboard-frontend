@@ -1,7 +1,7 @@
 import { Input as MUIInput, InputAdornment, Typography } from "@mui/material";
 import { Search as SearchIcon } from "@mui/icons-material";
 import { makeStyles } from "@mui/styles";
-import { memo, useEffect, useState } from "react";
+import { useRef, memo, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const useStyles = makeStyles(() => ({
@@ -20,6 +20,7 @@ const Search = ({
 	results
 }) => {
 	const classes = useStyles();
+	const inputRef = useRef(null);
 	const navigate = useNavigate();
 	const [value, setValue] = useState(searchValue);
 
@@ -29,6 +30,7 @@ const Search = ({
 
 	return (
     	<div style={{ position: "relative", width }}>
+		<div style={{ position: "relative", width }} onClick={() => inputRef.current?.focus()}> 
 		<MUIInput
 			disableUnderline
 			type="search"
@@ -36,6 +38,7 @@ const Search = ({
 			name="search"
 			className={classes.search}
 			sx={{ width }}
+			inputRef={inputRef} // Attach the ref to the input field
 			startAdornment={(
 				<InputAdornment sx={{ position: "absolute", display: value ? "none" : "flex", marginLeft: "0px" }} position="end">
 					<SearchIcon />
@@ -44,6 +47,7 @@ const Search = ({
 			)}
 			onChange={onChange}
 		/>
+		</div>
 
 		{/* SEARCH DROPDOWN */}
 		{results.length > 0 && (
