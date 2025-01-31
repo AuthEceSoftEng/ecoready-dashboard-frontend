@@ -95,7 +95,7 @@ const Map = () => {
 	};
 	
 	const handleYearChange = useCallback((newValue) => {
-		console.log("New Year:", newValue);
+		//console.log("New Year:", newValue);
 		setFilters((prev) => ({ ...prev, year: newValue.$y })); // Select only the year from the resulting object
 	}, [setFilters]);
 
@@ -152,8 +152,8 @@ const Map = () => {
 	  });
 	}, [fetchConfigs, dataSets]);
 
-	console.log("STATISTICS");
-	console.log(statistics);
+	//console.log("STATISTICS");
+	//console.log(statistics);
 
 	const dropdownContent = useMemo(() => ([
 		{
@@ -176,7 +176,7 @@ const Map = () => {
 		fetch("/european_countries.json")
 			.then((response) => {
 				if (!response.ok) {
-					console.log("Response status:", response.status);
+					//console.log("Response status:", response.status);
 					throw new Error("Network response was not ok");
 				}
 
@@ -208,12 +208,12 @@ const Map = () => {
 			}));
 
 	}, [geoJsonData, statistics]);
-	console.log("Created Geodata:", enhancedGeoJsonData);
+	//console.log("Created Geodata:", enhancedGeoJsonData);
 
 	// Add effect to monitor data readiness
 	useEffect(() => {
 		if (enhancedGeoJsonData && statistics.every(statistic => (Array.isArray(statistic.values) ? statistic.values : []).length > 0)) {
-			console.log("Data is ready:", { enhancedGeoJsonData });
+			//console.log("Data is ready:", { enhancedGeoJsonData });
 			setIsDataReady(true);
 		}
 	}, [enhancedGeoJsonData, statistics]);
@@ -274,7 +274,7 @@ const Map = () => {
 		  }));
 		}, [isDataReady, enhancedGeoJsonData, statistics]);
 
-		console.log("Geodata", geodata); // Debugging output
+		//console.log("Geodata", geodata); // Debugging output
 
 	// Create markers for labs with coordinates
 	const markers = useMemo(() => (

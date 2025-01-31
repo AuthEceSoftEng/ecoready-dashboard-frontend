@@ -1,7 +1,7 @@
 import { Grid } from "@mui/material";
 import { Circle, LayerGroup, LayersControl, MapContainer, Marker, Polygon, Popup, Rectangle, TileLayer, GeoJSON } from "react-leaflet";
 import { scaleQuantize } from "d3-scale";
-import { memo, useMemo, useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 
 import colors from "../_colors.scss";
 import { formatNumber } from "../utils/data-handling-functions.js";
@@ -17,6 +17,7 @@ export const getColor = (value, range = [0, 100]) => scaleQuantize().domain(rang
 
 const TheLegendControl = ({ gdata, selectedLayerIndex }) => {
 	  if (!gdata || gdata.length === 0 || selectedLayerIndex >= gdata.length) return null;
+	  //console.log("Legend control updated with:", gdata[selectedLayerIndex]);
 
 	  const selectedLayer = gdata[selectedLayerIndex];
 	  return (
@@ -110,27 +111,6 @@ const MapComponent = ({
 	  showMinimap = false,
 	}) => {
 	  const [selectedLayerIndex, setSelectedLayerIndex] = useState(0);
-	  const mapRef = useRef(null);
-
-	  useEffect(() => {
-	    const map = mapRef.current;
-
-	    if (map) {
-	      const handleLayerChange = (event) => {
-	        const layerName = event.name;
-	        const newIndex = geodata.findIndex((metric) => metric.name === layerName);
-	        if (newIndex !== -1) {
-	          setSelectedLayerIndex(newIndex);
-	        }
-	      };
-
-	      map.on("baselayerchange", handleLayerChange);
-
-	      return () => {
-	        map.off("baselayerchange", handleLayerChange);
-	      };
-	    }
-	  }, [geodata]);
 
 	  return (
 	    <Grid container style={{ width: "100%", height: "100%" }}>
@@ -139,12 +119,27 @@ const MapComponent = ({
 	          style={{ width: "100%", height: "100%" }}
 	          center={center}
 	          zoom={zoom}
+			  whenReady={(map) => {
+			     // console.log("Map ready. Attaching baselayerchange listener.");
+				 map.target.on("baselayerchange", (event) => {
+				   // console.log("Base layer changed (whenCreated):", event.name); // Debugging
+				   const layerName = event.name;
+				   const newIndex = geodata.findIndex((metric) => metric.name === layerName);
+
+				   if (newIndex !== -1) {
+				     // console.log("Found layer:", layerName, "at index:", newIndex); // Debug
+				     setSelectedLayerIndex(newIndex);
+				   } else {
+				     console.warn("Layer not found in geodata:", layerName); // Debugging
+				   }
+				 });
+
+			   }}
 	          scrollWheelZoom={scrollWheelZoom}
 	          minZoom={2.37}
 	          maxBounds={[[-90, -180], [90, 180]]}
 	          maxBoundsViscosity={1}
 	          boundsOptions={{ padding: [50, 50], animate: true }}
-	          ref={mapRef}
 	        >
 	          {showMinimap && <MinimapControl position="bottomleft" zoom={3} center={center} />}
 	          {Object.keys(layers)
