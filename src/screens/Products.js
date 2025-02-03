@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import { useLocation } from "react-router-dom";
 import { Grid } from "@mui/material";
 import { memo, useMemo, useState, useCallback, useRef, useEffect } from "react";
@@ -22,6 +23,33 @@ const agriColors = [
 	colors.ag16, colors.ag17, colors.ag18, colors.ag19, colors.ag20,
 ];
 const agColorKeys = Array.from({ length: 20 }, (_, i) => `ag${i + 1}`);
+
+// Get relevant fields for prices and products
+const extractFields = (productObject, fieldName) => {
+	if (!productObject) return { fields: [], collections: [] };
+
+	const fields = Object.keys(productObject)
+		.filter((key) => key.toLowerCase().includes(fieldName))
+		.map((field) => ({
+			productName: productObject.text,
+			original: field,
+			text: field
+				.split("_")
+				.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+				.join(" "),
+			products: productObject[field]?.products || [],
+			productTypes: productObject[field]?.productTypes || [],
+		}));
+
+	const collections = productObject.collections?.filter((collection) => collection.toLowerCase().includes(fieldName)) || [];
+
+	return {
+		fields,
+		collections,
+		hasData: fields.length > 0,
+		needsDropdown: collections.length > 1,
+	};
+};
 
 // Function to categorize production data by country
 const transformProductionData = (productionData, yearPicker, sumFieldName) => {
@@ -77,12 +105,49 @@ const ProductsScreen = () => {
 		[filters.product]);
 
 	// Get production products if they exist
-	const productionItems = useMemo(() => selectedProductDetails?.production?.products || [], [selectedProductDetails]);
-	const pricesItems = useMemo(() => selectedProductDetails?.prices?.products || [], [selectedProductDetails]);
+	const pricesItems = useMemo(() => extractFields(selectedProductDetails, "prices") || [], [selectedProductDetails]);
+	console.log("Prices:", pricesItems);
 
-	// Replace current productionType state initialization
-	const [productionProd, setProductionProd] = useState(() => selectedProductDetails?.production?.products[0]);
-	const [priceProd, setPriceProd] = useState(() => selectedProductDetails?.prices?.products[0]);
+	const priceCategories = useMemo(() => (pricesItems.needsDropdown ? pricesItems.collections : []),
+		[pricesItems]);
+
+	const [selectedPriceCategory, setSelectedPriceCategory] = useState(priceCategories[0] ?? "");
+	console.log("Selected Price Category1:", selectedPriceCategory);
+
+	const priceProducts = useMemo(() => {
+		if (!pricesItems?.fields) return [];
+		const categoryIndex = priceCategories.indexOf(selectedPriceCategory);
+		return pricesItems.fields[categoryIndex === -1 ? 0 : categoryIndex]?.products;
+	}, [priceCategories, pricesItems.fields, selectedPriceCategory]);
+	console.log("Price Products:", priceProducts);
+
+	const priceProductTypes = useMemo(() => {
+		if (!pricesItems?.fields) return [];
+		const categoryIndex = priceCategories.indexOf(selectedPriceCategory);
+		return pricesItems.fields[categoryIndex === -1 ? 0 : categoryIndex]?.productTypes;
+	}, [priceCategories, pricesItems.fields, selectedPriceCategory]);
+	console.log("Price Product Types:", priceProductTypes);
+
+	const [priceOptions, setPriceOptions] = useState({
+		product: priceProducts?.[0] ?? null,
+		productType: priceProductTypes?.[0]?.text ?? priceProductTypes[0] ?? null,
+	});
+
+	console.log("Price Options:", priceOptions);
+
+	const productionItems = useMemo(() => extractFields(selectedProductDetails, "production") || [], [selectedProductDetails]);
+	console.log("PRoduction Items:", productionItems);
+
+	const productionProducts = useMemo(() => productionItems.fields[0]?.products ?? [],
+		[productionItems]);
+	const productionProductTypes = useMemo(() => productionItems.fields[0]?.productTypes ?? [],
+		[productionItems]);
+	console.log("Production Product Types:", productionProductTypes);
+
+	const [productionOptions, setProductionOptions] = useState({
+		product: productionProducts?.[0] ?? null,
+    productType: productionProductTypes?.[0]?.text ?? productionProductTypes?.[0] ?? null,
+	});
 
 	const debouncedSetDate = useMemo(
 		() => debounce((date, setter) => {
@@ -115,7 +180,6 @@ const ProductsScreen = () => {
 			: null),
 		[dateMetrics.isValidDateRange, dateMetrics.differenceInDays, keys.product, keys.country, startDate, endDate],
 	);
-	console.log("Price Configs:", priceConfigs);
 
 	const monthlyPriceConfigs = useMemo(
 		() => (keys.product
@@ -207,31 +271,6 @@ const ProductsScreen = () => {
 	}), [production]);
 	console.log("Production by Country:", productionByCountry);
 
-	const productionTypes = useMemo(() => productionByCountry.map((productionData) => {
-		const firstCountryData = Object.values(productionData)[0] || [];
-		const sumFieldName = Object.keys(firstCountryData[0] || {})
-			.find((key) => key.startsWith("sum_"));
-
-		return {
-			value: sumFieldName,
-			text: (sumFieldName?.split("sum_")[1]?.replace(/_/g, " ") || "")
-				.split(" ")
-				.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-				.join(" "),
-		};
-	}), [productionByCountry]);
-	console.log("Sum Field Types:", productionTypes);
-
-	// Add useEffect to update productionType when productionTypes is populated
-	useEffect(() => {
-		if (productionTypes.length > 0 && !productionProd) {
-			setProductionProd(productionTypes[0].value);
-		}
-	}, [productionTypes, filters.product, productionProd]);
-
-	console.log("Selected prouction type:", productionProd);
-	console.log("Selected date:", filters.year);
-
 	const yearPickerRef = useRef();
 	const yearPickerProps = useMemo(() => [
 		{
@@ -268,20 +307,85 @@ const ProductsScreen = () => {
 		size: "small",
 	}))), [dispatch, filters.product]);
 
-	const productionDropdownContent = useMemo(() => [{
-		id: "productionType",
-		items: productionItems,
-		value: productionProd,
-		label: "Select Production Type",
-		onChange: (event) => {
-			dispatch({ type: "FETCH_START" }); // Add loading state
-			const selectedType = event.target.value;
-			setProductionProd(selectedType);
-		},
-	}].map((item) => ({
-		...item,
-		size: "small",
-	})), [dispatch, productionItems, productionProd]);
+	const productionDropdowns = useMemo(() => {
+		const dropdowns = [];
+
+		if (productionProducts?.length > 0) {
+			dropdowns.push({
+				id: "prodProds",
+				items: productionProducts,
+				value: productionOptions.product,
+				label: "Select Product Type",
+				onChange: (event) => {
+					dispatch({ type: "FETCH_START" });
+					setProductionOptions((prev) => ({ ...prev, product: event.target.value }));
+				},
+				size: "small",
+			});
+		}
+
+		if (productionProductTypes?.length > 0) {
+			dropdowns.push({
+				id: "prodProdTypes",
+				items: productionProductTypes,
+				value: productionOptions.productType,
+				label: "Select Product Variety",
+				onChange: (event) => {
+					dispatch({ type: "FETCH_START" });
+					setProductionOptions((prev) => ({ ...prev, production: event.target.value }));
+				},
+				size: "small",
+			});
+		}
+
+		return dropdowns;
+	}, [dispatch, productionOptions.product, productionOptions.productType, productionProducts, productionProductTypes]);
+
+	const priceDropdowns = useMemo(() => {
+		const dropdowns = [];
+
+		if (priceCategories.length > 0) {
+			dropdowns.push({
+				id: "priceCategories",
+				items: priceCategories,
+				value: selectedPriceCategory,
+				label: "Select Price Category",
+				onChange: (event) => {
+					dispatch({ type: "FETCH_START" }); // Add loading state
+					setSelectedPriceCategory(event.target.value);
+				},
+				size: "small",
+			});
+		}
+
+		if (priceProducts.length > 0) {
+			dropdowns.push({
+				id: "priceProduct",
+				items: priceProducts,
+				value: priceOptions.product,
+				label: "Select Product Type",
+				onChange: (event) => {
+					dispatch({ type: "FETCH_START" }); // Add loading state
+					setPriceOptions((prev) => ({ ...prev, product: event.target.value }));
+				},
+				size: "small",
+			});
+		}
+
+		if (priceProductTypes.length > 0) {
+			dropdowns.push({
+				id: "priceProductTypes",
+				items: priceProductTypes,
+				value: priceOptions.productType,
+				label: "Select Product Type",
+				onChange: (event) => {
+					dispatch({ type: "FETCH_START" }); // Add loading state
+					setPriceOptions((prev) => ({ ...prev, productType: event.target.value }));
+				},
+				size: "small",
+			});
+		}
+	}, [dispatch, priceCategories, priceOptions.product, priceOptions.productType, priceProductTypes, priceProducts, selectedPriceCategory]);
 
 	const priceDropdownContent = useMemo(() => ([
 
@@ -295,21 +399,7 @@ const ProductsScreen = () => {
 				setFilters((prev) => ({ ...prev, country: event.target.value }));
 			},
 		},
-		{
-			id: "priceProduct",
-			items: pricesItems,
-			value: priceProd,
-			label: "Select Product Type",
-			onChange: (event) => {
-				dispatch({ type: "FETCH_START" }); // Add loading state
-				const selectedType = event.target.value;
-				setProductionProd(selectedType);
-			},
-		},
-	].map((item) => ({
-		...item,
-		size: "small",
-	}))), [dispatch, filters.country, priceProd, pricesItems]);
+	]), [filters.country, dispatch]);
 
 	const formRefDate = useRef();
 	const formContentDate = useMemo(() => [
@@ -382,7 +472,7 @@ const ProductsScreen = () => {
 				},
 			},
 		};
-	}, [productionByCountry, filters.year, units.productionUnit, productionProd]);
+	}, [productionByCountry, filters.year, units.productionUnit]);
 	console.log("Europe Overview:", europeOverview);
 	console.log("General production data:", productionByCountry);
 
@@ -446,7 +536,7 @@ const ProductsScreen = () => {
 					<Grid item xs={12} md={12} display="flex" justifyContent="flex-end">
 						<StickyBand
 							sticky={false}
-							dropdownContent={productionDropdownContent}
+							dropdownContent={productionDropdowns}
 							formRef={yearPickerRef}
 							formContent={yearPickerProps}
 						/>
@@ -515,11 +605,11 @@ const ProductsScreen = () => {
 					)}
 				</Card>
 			</Grid>
-			<Grid item xs={12} md={12} mb={2} alignItems="center" flexDirection="column">
+			{/* <Grid item xs={12} md={12} mb={2} alignItems="center" flexDirection="column">
 				<Card title="Product per Country" footer={cardFooter({ minutesAgo })}>
 					<StickyBand
 						sticky={false}
-						dropdownContent={priceDropdownContent}
+						dropdownContent={[priceDropdownContent, priceDropdowns]}
 						formRef={formRefDate}
 						formContent={formContentDate}
 					/>
@@ -580,7 +670,7 @@ const ProductsScreen = () => {
 					) : (<DataWarning message="Please Select a Valid Date Range" />
 					)}
 				</Card>
-			</Grid>
+			</Grid> */}
 		</Grid>
 	);
 };

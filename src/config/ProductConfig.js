@@ -45,6 +45,11 @@ const STATS_BASE_CONFIG = {
 	attribute: "avg_price",
 };
 
+const PRODUCTION_BASE_CONFIG = {
+	type: "stats",
+	collection: "__production__",
+};
+
 export const getPriceConfigs = (country, product, startDate, endDate, differenceInDays, productType = null, productVariety = null, collection = null) => {
 	if (product === "Rice") {
 		return [
@@ -1276,7 +1281,7 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 							property_name: "product_type",
 							operator: "eq",
 							property_value: productVariety,
-						}
+						},
 					],
 				}),
 				plotId: "pricesTimeline",
@@ -2029,9 +2034,8 @@ export const getProductionConfigs = (product, productType, productVariety = null
 	if (product === "Rice") {
 		return [
 			{
-				type: "stats",
+				...PRODUCTION_BASE_CONFIG,
 				project: "rice",
-				collection: "__production__",
 				params: JSON.stringify({
 					attribute: ["milled_rice_equivalent_quantity"],
 					stat: "sum",
@@ -2052,9 +2056,8 @@ export const getProductionConfigs = (product, productType, productVariety = null
 				attribute: "sum_milled_rice_equivalent_quantity",
 			},
 			{
-				type: "stats",
+				...PRODUCTION_BASE_CONFIG,
 				project: "rice",
-				collection: "__production__",
 				params: JSON.stringify({
 					attribute: ["milled_rice_equivalent_quantity"],
 					stat: "max",
@@ -2068,9 +2071,8 @@ export const getProductionConfigs = (product, productType, productVariety = null
 				attribute: "max_milled_rice_equivalent_quantity",
 			},
 			{
-				type: "stats",
+				...PRODUCTION_BASE_CONFIG,
 				project: "rice",
-				collection: "__production__",
 				params: JSON.stringify({
 					attribute: ["rice_husk_quantity"],
 					stat: "sum",
@@ -2091,9 +2093,8 @@ export const getProductionConfigs = (product, productType, productVariety = null
 				attribute: "sum_rice_husk_quantity",
 			},
 			{
-				type: "stats",
+				...PRODUCTION_BASE_CONFIG,
 				project: "rice",
-				collection: "__production__",
 				params: JSON.stringify({
 					attribute: ["rice_husk_quantity"],
 					stat: "max",
@@ -2149,9 +2150,8 @@ export const getProductionConfigs = (product, productType, productVariety = null
 	if (product === "Sugar") {
 		return [
 			{
-				type: "stats",
+				...PRODUCTION_BASE_CONFIG,
 				project: "sugar",
-				collection: "__production__",
 				params: JSON.stringify({
 					attribute: ["gross_production"],
 					stat: "sum",
@@ -2165,9 +2165,8 @@ export const getProductionConfigs = (product, productType, productVariety = null
 				attribute: "sum_gross_production",
 			},
 			{
-				type: "stats",
+				...PRODUCTION_BASE_CONFIG,
 				project: "sugar",
-				collection: "__production__",
 				params: JSON.stringify({
 					attribute: ["yield"],
 					stat: "sum",
@@ -2181,9 +2180,8 @@ export const getProductionConfigs = (product, productType, productVariety = null
 				attribute: "sum_yield",
 			},
 			{
-				type: "stats",
+				...PRODUCTION_BASE_CONFIG,
 				project: "sugar",
-				collection: "__production__",
 				params: JSON.stringify({
 					attribute: ["gross_production"],
 					stat: "max",
@@ -2197,9 +2195,8 @@ export const getProductionConfigs = (product, productType, productVariety = null
 				attribute: "max_gross_production",
 			},
 			{
-				type: "stats",
+				...PRODUCTION_BASE_CONFIG,
 				project: "sugar",
-				collection: "__production__",
 				params: JSON.stringify({
 					attribute: ["yield"],
 					stat: "max",
@@ -2218,9 +2215,8 @@ export const getProductionConfigs = (product, productType, productVariety = null
 	if (product === "Beef") {
 		return [
 			{
-				type: "stats",
+				...PRODUCTION_BASE_CONFIG,
 				project: "beef",
-				collection: "__production__",
 				params: JSON.stringify({
 					attribute: ["tonnes"],
 					stat: "sum",
@@ -2241,9 +2237,8 @@ export const getProductionConfigs = (product, productType, productVariety = null
 				attribute: "sum_tonnes",
 			},
 			{
-				type: "stats",
+				...PRODUCTION_BASE_CONFIG,
 				project: "beef",
-				collection: "__production__",
 				params: JSON.stringify({
 					attribute: ["tonnes"],
 					stat: "max",
@@ -2264,9 +2259,8 @@ export const getProductionConfigs = (product, productType, productVariety = null
 				attribute: "max_tonnes",
 			},
 			{
-				type: "stats",
+				...PRODUCTION_BASE_CONFIG,
 				project: "beef",
-				collection: "__production__",
 				params: JSON.stringify({
 					attribute: ["heads"],
 					stat: "sum",
@@ -2287,9 +2281,8 @@ export const getProductionConfigs = (product, productType, productVariety = null
 				attribute: "sum_heads",
 			},
 			{
-				type: "stats",
+				...PRODUCTION_BASE_CONFIG,
 				project: "beef",
-				collection: "__production__",
 				params: JSON.stringify({
 					attribute: ["heads"],
 					stat: "max",
@@ -2310,9 +2303,8 @@ export const getProductionConfigs = (product, productType, productVariety = null
 				attribute: "max_heads",
 			},
 			{
-				type: "stats",
+				...PRODUCTION_BASE_CONFIG,
 				project: "beef",
-				collection: "__production__",
 				params: JSON.stringify({
 					attribute: ["kg_per_head"],
 					stat: "sum",
@@ -2333,9 +2325,8 @@ export const getProductionConfigs = (product, productType, productVariety = null
 				attribute: "sum_kg_per_head",
 			},
 			{
-				type: "stats",
+				...PRODUCTION_BASE_CONFIG,
 				project: "beef",
-				collection: "__production__",
 				params: JSON.stringify({
 					attribute: ["kg_per_head"],
 					stat: "max",
@@ -2361,9 +2352,8 @@ export const getProductionConfigs = (product, productType, productVariety = null
 	if (product === "Pigmeat") {
 		return [
 			{
-				type: "stats",
+				...PRODUCTION_BASE_CONFIG,
 				project: "pigmeat",
-				collection: "__production__",
 				params: JSON.stringify({
 					attribute: ["tonnes"],
 					stat: "sum",
@@ -2377,9 +2367,8 @@ export const getProductionConfigs = (product, productType, productVariety = null
 				attribute: "sum_tonnes",
 			},
 			{
-				type: "stats",
+				...PRODUCTION_BASE_CONFIG,
 				project: "pigmeat",
-				collection: "__production__",
 				params: JSON.stringify({
 					attribute: ["tonnes"],
 					stat: "max",
@@ -2393,9 +2382,8 @@ export const getProductionConfigs = (product, productType, productVariety = null
 				attribute: "max_tonnes",
 			},
 			{
-				type: "stats",
+				...PRODUCTION_BASE_CONFIG,
 				project: "pigmeat",
-				collection: "__production__",
 				params: JSON.stringify({
 					attribute: ["heads"],
 					stat: "sum",
@@ -2409,9 +2397,8 @@ export const getProductionConfigs = (product, productType, productVariety = null
 				attribute: "sum_heads",
 			},
 			{
-				type: "stats",
+				...PRODUCTION_BASE_CONFIG,
 				project: "pigmeat",
-				collection: "__production__",
 				params: JSON.stringify({
 					attribute: ["heads"],
 					stat: "max",
@@ -2425,9 +2412,8 @@ export const getProductionConfigs = (product, productType, productVariety = null
 				attribute: "max_heads",
 			},
 			{
-				type: "stats",
+				...PRODUCTION_BASE_CONFIG,
 				project: "pigmeat",
-				collection: "__production__",
 				params: JSON.stringify({
 					attribute: ["kg_per_head"],
 					stat: "sum",
@@ -2441,9 +2427,8 @@ export const getProductionConfigs = (product, productType, productVariety = null
 				attribute: "sum_kg_per_head",
 			},
 			{
-				type: "stats",
+				...PRODUCTION_BASE_CONFIG,
 				project: "pigmeat",
-				collection: "__production__",
 				params: JSON.stringify({
 					attribute: ["kg_per_head"],
 					stat: "max",
@@ -2605,9 +2590,8 @@ export const getProductionConfigs = (product, productType, productVariety = null
 	if (product === "Cereals") {
 		return [
 			{
-				type: "stats",
+				...PRODUCTION_BASE_CONFIG,
 				project: "cereals",
-				collection: "__production__",
 				params: JSON.stringify({
 					attribute: ["gross_production"],
 					stat: "sum",
@@ -2628,9 +2612,8 @@ export const getProductionConfigs = (product, productType, productVariety = null
 				attribute: "sum_gross_production",
 			},
 			{
-				type: "stats",
+				...PRODUCTION_BASE_CONFIG,
 				project: "cereals",
-				collection: "__production__",
 				params: JSON.stringify({
 					attribute: ["gross_production"],
 					stat: "max",
@@ -2651,9 +2634,8 @@ export const getProductionConfigs = (product, productType, productVariety = null
 				attribute: "max_tonnes",
 			},
 			{
-				type: "stats",
+				...PRODUCTION_BASE_CONFIG,
 				project: "cereals",
-				collection: "__production__",
 				params: JSON.stringify({
 					attribute: ["yield"],
 					stat: "sum",
@@ -2674,9 +2656,8 @@ export const getProductionConfigs = (product, productType, productVariety = null
 				attribute: "sum_yield",
 			},
 			{
-				type: "stats",
+				...PRODUCTION_BASE_CONFIG,
 				project: "cereals",
-				collection: "__production__",
 				params: JSON.stringify({
 					attribute: ["yield"],
 					stat: "max",
@@ -2843,9 +2824,8 @@ export const getProductionConfigs = (product, productType, productVariety = null
 	if (product === "Sheep/Goat Meat") {
 		return [
 			{
-				type: "stats",
+				...PRODUCTION_BASE_CONFIG,
 				project: "sheep_goat_meat",
-				collection: "__production__",
 				params: JSON.stringify({
 					attribute: ["tonnes"],
 					stat: "sum",
@@ -2871,9 +2851,8 @@ export const getProductionConfigs = (product, productType, productVariety = null
 				attribute: "sum_tonnes",
 			},
 			{
-				type: "stats",
+				...PRODUCTION_BASE_CONFIG,
 				project: "sheep_goat_meat",
-				collection: "__production__",
 				params: JSON.stringify({
 					attribute: ["tonnes"],
 					stat: "max",
@@ -2887,9 +2866,8 @@ export const getProductionConfigs = (product, productType, productVariety = null
 				attribute: "max_tonnes",
 			},
 			{
-				type: "stats",
+				...PRODUCTION_BASE_CONFIG,
 				project: "sheep_goat_meat",
-				collection: "__production__",
 				params: JSON.stringify({
 					attribute: ["heads"],
 					stat: "sum",
@@ -2915,9 +2893,8 @@ export const getProductionConfigs = (product, productType, productVariety = null
 				attribute: "sum_heads",
 			},
 			{
-				type: "stats",
+				...PRODUCTION_BASE_CONFIG,
 				project: "sheep_goat_meat",
-				collection: "__production__",
 				params: JSON.stringify({
 					attribute: ["heads"],
 					stat: "max",
@@ -2931,9 +2908,8 @@ export const getProductionConfigs = (product, productType, productVariety = null
 				attribute: "max_heads",
 			},
 			{
-				type: "stats",
+				...PRODUCTION_BASE_CONFIG,
 				project: "sheep_goat_meat",
-				collection: "__production__",
 				params: JSON.stringify({
 					attribute: ["kg_per_head"],
 					stat: "sum",
@@ -2959,9 +2935,8 @@ export const getProductionConfigs = (product, productType, productVariety = null
 				attribute: "sum_kg_per_head",
 			},
 			{
-				type: "stats",
+				...PRODUCTION_BASE_CONFIG,
 				project: "sheep_goat_meat",
-				collection: "__production__",
 				params: JSON.stringify({
 					attribute: ["kg_per_head"],
 					stat: "max",

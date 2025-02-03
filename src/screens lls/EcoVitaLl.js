@@ -49,6 +49,7 @@ const EcoVItaLl = () => {
 		},
 	], [handleMonthChange]);
 
+	console.log("EcoVItaLl.js", { month, currentDate, formattedBeginningOfMonth, formattedBeginningOfHour });
 	const fetchConfigs = useMemo(
 		() => ecoVitallConfigs(currentDate, formattedBeginningOfMonth, formattedBeginningOfHour),
 		[currentDate, formattedBeginningOfMonth, formattedBeginningOfHour],
