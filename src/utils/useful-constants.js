@@ -207,14 +207,14 @@ export const products = [
 		production: { products: ["Barley", "Durum wheat", "Maize", "Oat", "Other cereals", "Rye", "Soft wheat", "Sorghum", "Triticale"] },
 		image: "/product_images/cereals.jpg",
 	},
-	// Cereals
-	{ value: "barley", text: "Barley", productionProductType: ["Barley"], priceProductType: ["Feed barley", "Malting barley"], image: "/product_images/barley.jpg" },
-	{ value: "wheat", text: "Wheat", productionProductType: ["Durum wheat", "Soft wheat"], priceProductType: ["Durum wheat", "Feed wheat", "Milling wheat"], image: "/product_images/wheat.jpg" },
-	{ value: "maize", text: "Maize", productionProductType: ["Maize"], priceProductType: ["Feed maize"], image: "/product_images/maize.jpg" },
-	{ value: "oats", text: "Oats", productionProductType: ["Oat"], priceProductType: ["Feed oats", "Milling oats"], image: "/product_images/oats.jpg" },
-	{ value: "rye", text: "Rye", productionProductType: ["Rye"], priceProductType: ["Feed rye", "Milling rye"], image: "/product_images/rye.jpg" },
-	{ value: "sorghum", text: "Sorghum", productionProductType: ["Sorghum"], image: "/product_images/sorghum.jpg" },
-	{ value: "triticale", text: "Triticale", productionProductType: ["Triticale"], priceProductType: ["Triticale"], image: "/product_images/triticale.jpg" },
+	// // Cereals
+	// { value: "barley", text: "Barley", productionProductType: ["Barley"], priceProductType: ["Feed barley", "Malting barley"], image: "/product_images/barley.jpg" },
+	// { value: "wheat", text: "Wheat", productionProductType: ["Durum wheat", "Soft wheat"], priceProductType: ["Durum wheat", "Feed wheat", "Milling wheat"], image: "/product_images/wheat.jpg" },
+	// { value: "maize", text: "Maize", productionProductType: ["Maize"], priceProductType: ["Feed maize"], image: "/product_images/maize.jpg" },
+	// { value: "oats", text: "Oats", productionProductType: ["Oat"], priceProductType: ["Feed oats", "Milling oats"], image: "/product_images/oats.jpg" },
+	// { value: "rye", text: "Rye", productionProductType: ["Rye"], priceProductType: ["Feed rye", "Milling rye"], image: "/product_images/rye.jpg" },
+	// { value: "sorghum", text: "Sorghum", productionProductType: ["Sorghum"], image: "/product_images/sorghum.jpg" },
+	// { value: "triticale", text: "Triticale", productionProductType: ["Triticale"], priceProductType: ["Triticale"], image: "/product_images/triticale.jpg" },
 	// {
 	// 	value: "eggs_poultry",
 	// 	text: "Eggs/Poultry",
@@ -433,7 +433,7 @@ export const products = [
 	{
 		value: "olive_oil",
 		text: "Olive Oil",
-		collections: ["prices", "annual_production", "monthly_production"],
+		collections: ["prices", "annual_production"],
 		prices: {
 			products: ["Crude olive-pomace", "Crude olive-pomace oil (from 5 to 10%)", "Extra virgin",
 				"Extra virgin olive oil (up to 0,8°)", "Lampante", "Lampante olive oil (2%)", "Olive-pomace oil (up to 1°)",
@@ -536,7 +536,7 @@ export const products = [
 		image: "/product_images/wine.jpg",
 	},
 ];
-products.sort((a, b) => a.value.localeCompare(b.value));
+products.sort((a, b) => a.text.localeCompare(b.text));
 
 export const years = [
 	{ value: 2010, label: "2010" },
