@@ -456,8 +456,8 @@ export const products = [
 		text: "Rice",
 		collections: ["prices", "production"],
 		prices: {
-			products: ["Andalucia", "Arbiorio Volano", "Arborio", "Arborio - Volano", "Arborio -Volano", "Ariete", "Augusto", "Avarage", "Average", "Avg", "B", "Baldo", "Baldo E Cammeo", "Balilla", "Balilla - Centauro", "Balilla Centauro", "Balilla E Centauro", "Brisures Camargue", "Caravaggio", "Carnaroli", "Carolina", "Centauro", "Cl 388", "Corpetto", "Crono", "Gleva", "Gleva Valencia", "Gloria", "Grana Verde", "J. Sendra", "L", "Leonardo", "Lido", "Lolla", "Long", "Long A", "Long B", "Longo A", "Longo B", "Loto", "Luna-Ronaldo", "Mezzagrana", "Moyen", "Not informed", "Omega", "Originario", "Originario (Comune)", "Pula", "Pula Max 1% Silicio", "Puntal", "Puntal Andalucia", "Puntal Valencia", "Ribe", "Risetto", "Risetto Parboiled", "Roma", "Roma E Barone", "Rond", "S. Andrea", "Selenio", "Sendra Andalucia", "Sendra Valencia", "Sirio Andalucia", "Sirio Valencia", "Sole", "Sole Cl", "Terra", "Thaibonnet", "Tipo Ribe", "Valencia", "Volano"],
-			productTypes: ["Indica", "Japonica", "N.A.", "Not informed"],
+			products: ["Indica", "Japonica", "N.A.", "Not informed"],
+			productTypes: ["Andalucia", "Arbiorio Volano", "Arborio", "Arborio - Volano", "Arborio -Volano", "Ariete", "Augusto", "Avarage", "Average", "Avg", "B", "Baldo", "Baldo E Cammeo", "Balilla", "Balilla - Centauro", "Balilla Centauro", "Balilla E Centauro", "Brisures Camargue", "Caravaggio", "Carnaroli", "Carolina", "Centauro", "Cl 388", "Corpetto", "Crono", "Gleva", "Gleva Valencia", "Gloria", "Grana Verde", "J. Sendra", "L", "Leonardo", "Lido", "Lolla", "Long", "Long A", "Long B", "Longo A", "Longo B", "Loto", "Luna-Ronaldo", "Mezzagrana", "Moyen", "Not informed", "Omega", "Originario", "Originario (Comune)", "Pula", "Pula Max 1% Silicio", "Puntal", "Puntal Andalucia", "Puntal Valencia", "Ribe", "Risetto", "Risetto Parboiled", "Roma", "Roma E Barone", "Rond", "S. Andrea", "Selenio", "Sendra Andalucia", "Sendra Valencia", "Sirio Andalucia", "Sirio Valencia", "Sole", "Sole Cl", "Terra", "Thaibonnet", "Tipo Ribe", "Valencia", "Volano"],
 		},
 		production: {
 			products: ["(1) Round grain paddy rice", "(2) Medium grain paddy rice", "(3) Long grain A paddy rice", "(4) Long grain B paddy rice"],
@@ -465,7 +465,6 @@ export const products = [
 				{ value: "milled_rice_equivalent_quantity", text: "Milled rice" },
 				{ value: "rice_husk_quantity", text: "Rice husk" },
 			],
-			// productTypes: [1_006_102_100, 1_006_102_300, 1_006_102_500, 1_006_102_700, 1_006_103_000, 1_006_105_000, 1_006_107_100, 1_006_107_900, 1_006_109_200, 1_006_109_400, 1_006_109_600, 1_006_109_800],
 		},
 		description: "No living labs currently working with rice",
 		image: "/product_images/rice.jpg",
