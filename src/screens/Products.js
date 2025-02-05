@@ -82,7 +82,14 @@ const transformProductionData = (productionData, yearPicker, sumFieldName) => {
 	};
 };
 
-const getEUMaxValue = (maxProd, prodTypeVal) => maxProd.flat().find((item) => item?.key === "EU" && Object.keys(item || {}).includes(`max_${prodTypeVal}`))?.[`max_${prodTypeVal}`] || 0;
+const getEUMaxValue = (maxProd, prodTypeVal) => {
+	console.log("Max Prod:", maxProd);
+	console.log("Prod Type Val:", prodTypeVal);
+	return [
+		maxProd.flat().find((item) => item?.key === "EU" && Object.keys(item || {}).includes(`max_${prodTypeVal}`))?.[`max_${prodTypeVal}`] || 0,
+	];
+};
+
 
 const ProductsScreen = () => {
 	const location = useLocation();
@@ -101,27 +108,27 @@ const ProductsScreen = () => {
 
 	// Get production products if they exist
 	const pricesItems = useMemo(() => extractFields(selectedProductDetails, "prices") || [], [selectedProductDetails]);
-	console.log("Prices:", pricesItems);
+	// console.log("Prices:", pricesItems);
 
 	const priceCategories = useMemo(() => (pricesItems.needsDropdown ? pricesItems.collections : []),
 		[pricesItems]);
 
 	const [selectedPriceCategory, setSelectedPriceCategory] = useState(priceCategories[0] ?? "");
-	console.log("Selected Price Category1:", selectedPriceCategory);
+	// console.log("Selected Price Category1:", selectedPriceCategory);
 
 	const priceProducts = useMemo(() => {
 		if (!pricesItems?.fields) return [];
 		const categoryIndex = priceCategories.indexOf(selectedPriceCategory);
 		return pricesItems.fields[categoryIndex === -1 ? 0 : categoryIndex]?.products;
 	}, [priceCategories, pricesItems.fields, selectedPriceCategory]);
-	console.log("Price Products:", priceProducts);
+	// console.log("Price Products:", priceProducts);
 
 	const priceProductTypes = useMemo(() => {
 		if (!pricesItems?.fields) return [];
 		const categoryIndex = priceCategories.indexOf(selectedPriceCategory);
 		return pricesItems.fields[categoryIndex === -1 ? 0 : categoryIndex]?.productTypes;
 	}, [priceCategories, pricesItems.fields, selectedPriceCategory]);
-	console.log("Price Product Types:", priceProductTypes);
+	// console.log("Price Product Types:", priceProductTypes);
 
 	const [priceOptions, setPriceOptions] = useState({
 		product: priceProducts?.[0] ?? null,
@@ -129,7 +136,7 @@ const ProductsScreen = () => {
 		productTypeVal: priceProductTypes?.[0]?.value ?? priceProductTypes[0] ?? null,
 	});
 
-	console.log("Price Options:", priceOptions);
+	// console.log("Price Options:", priceOptions);
 
 	const productionItems = useMemo(() => extractFields(selectedProductDetails, "production") || [], [selectedProductDetails]);
 	console.log("PRoduction Items:", productionItems);
@@ -203,17 +210,52 @@ const ProductsScreen = () => {
 			...calculateDifferenceBetweenDates(startDate, endDate),
 		};
 	}, [startDate, endDate]);
+
+	// Add ready states
+	const [isPriceConfigReady, setIsPriceConfigReady] = useState(false);
+	const [isProductionConfigReady, setIsProductionConfigReady] = useState(false);
+
+	// Add validation effects
+	useEffect(() => {
+		const isPriceReady = Boolean(
+			keys.country
+			&& filters.product
+			&& dateMetrics.isValidDateRange,
+		);
+		setIsPriceConfigReady(isPriceReady);
+	}, [keys.country, filters.product, dateMetrics.isValidDateRange]);
+
+	useEffect(() => {
+		const isProductionReady = Boolean(
+			filters.product
+			&& productionOptions.product
+			&& productionOptions.productTypeVal,
+		);
+		setIsProductionConfigReady(isProductionReady);
+	}, [filters.product, productionOptions.product, productionOptions.productTypeVal]);
+
+	// Update config calls
 	const priceConfigs = useMemo(
-		() => (dateMetrics.isValidDateRange && filters.product
+		() => (isPriceConfigReady
 			? getPriceConfigs(keys.country, filters.product, startDate, endDate, dateMetrics.differenceInDays)
 			: null),
-		[dateMetrics.isValidDateRange, dateMetrics.differenceInDays, keys.country, filters.product, startDate, endDate],
+		[isPriceConfigReady, keys.country, filters.product, startDate, endDate, dateMetrics.differenceInDays],
 	);
 
-	const monthlyPriceConfigs = useMemo(() => (filters.product ? getMonthlyPriceConfigs(keys.country, filters.product, customDate) : null), [keys.country, filters.product]);
+	const monthlyPriceConfigs = useMemo(
+		() => (isPriceConfigReady
+			? getMonthlyPriceConfigs(keys.country, filters.product, customDate)
+			: null),
+		[isPriceConfigReady, keys.country, filters.product],
+	);
 
-	const productionConfigs = useMemo(() => (filters.product ? getProductionConfigs(filters.product, productionOptions.product, productionOptions.productTypeVal)
-		: null), [filters.product, productionOptions.product, productionOptions.productTypeVal]);
+	const productionConfigs = useMemo(
+		() => (isProductionConfigReady
+			? getProductionConfigs(filters.product, productionOptions.product, productionOptions.productTypeVal)
+			: null),
+		[isProductionConfigReady, filters.product, productionOptions.product, productionOptions.productTypeVal],
+	);
+
 	console.log("Filter product:", filters.product);
 	console.log("Production options:", productionOptions);
 
@@ -230,8 +272,8 @@ const ProductsScreen = () => {
 	);
 
 	const units = useMemo(() => ({
-		priceUnit: priceConfigs?.unit || "",
-		productionUnit: productionConfigs?.unit || "",
+		priceUnit: priceConfigs?.[0].unit || "",
+		productionUnit: productionConfigs?.[0].unit || "",
 	}), [priceConfigs, productionConfigs]);
 
 	const { state, dispatch } = useInit(organization, allConfigs);
@@ -262,7 +304,6 @@ const ProductsScreen = () => {
 
 		return maxProductionKeys.map((key) => dataSets[key] || []);
 	}, [dataSets]);
-	console.log("Max Production Data:", maxProduction);
 
 	const productionByCountry = useMemo(() => production.map((productionData) => {
 		const grouped = groupByKey(productionData, "key");
@@ -298,7 +339,7 @@ const ProductsScreen = () => {
 			sublabel: "Select Year",
 			views: ["year"],
 			value: new Date(`${year}-01-01`),
-			minDate: new Date("2001-01-01"),
+			minDate: new Date("2010-01-01"),
 			maxDate: new Date("2025-12-31"),
 			onChange: (newValue) => { if (newValue) { setFilters((prev) => ({ ...prev, year: newValue.$y.toString() })); } },
 		},
@@ -360,12 +401,21 @@ const ProductsScreen = () => {
 
 	// PRODUCTION GRAPHS
 	const europeOverview = useMemo(() => {
-		const productionData = productionByCountry.find((data) => Object.values(data)[0]?.some((item) => item[`sum_${productionOptions.productTypeVal}`] !== undefined));
+		const productionData = productionOptions.productTypeVal
+			? productionByCountry.find((data) => Object.values(data)[0]?.some((item) => item[`sum_${productionOptions.productTypeVal}`] !== undefined))
+			: productionByCountry[0];
+		console.log("Production Data:", productionData);
 
-		if (!productionData || !productionOptions.productTypeVal) return null;
+		if (!productionData) return null;
 
-		const { countryData } = transformProductionData(productionData, filters.year, `sum_${productionOptions.productTypeVal}`);
-		const euMaxValue = getEUMaxValue(maxProduction, productionOptions.productTypeVal);
+		// get the sumfield
+		const firstCountry = Object.values(productionData)[0];
+		const firstItem = firstCountry?.[0] || {};
+		const sumFieldName = Object.keys(firstItem).find((key) => key.startsWith("sum_"));
+
+		const { countryData } = transformProductionData(productionData, filters.year, sumFieldName);
+		console.log("Country Data:", countryData);
+		const euMaxValue = getEUMaxValue(maxProduction, sumFieldName);
 		console.log("EU Max Value:", euMaxValue);
 
 		return {
@@ -403,8 +453,6 @@ const ProductsScreen = () => {
 			},
 		};
 	}, [productionByCountry, filters.year, maxProduction, productionOptions.productTypeVal, units.productionUnit]);
-	console.log("Europe Overview:", europeOverview);
-	console.log("General production data:", productionByCountry);
 
 	// PRICES GRAPHS
 	const priceDropdowns = useMemo(() => {

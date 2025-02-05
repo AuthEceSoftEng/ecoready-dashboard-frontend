@@ -4,15 +4,6 @@ import { products, europeanCountries } from "../utils/useful-constants.js";
 
 export const organization = "european_data";
 
-const FRUIT_VEGETABLES = new Set([
-	"abricots", "apples", "asparagus", "avocados", "beans", "cabbages",
-	"carrots", "cauliflowers", "cherries", "clementines", "courgettes",
-	"cucumbers", "egg plants, aubergines", "garlic", "kiwis", "leeks",
-	"lemons", "lettuces", "mandarins", "melons", "mushrooms, cultivated",
-	"nectarines", "onions", "oranges", "peaches", "pears", "peppers",
-	"plums", "satsumas", "strawberries", "table grapes", "tomatoes", "water melons",
-]);
-
 const UNITS = {
 	price: {
 		Rice: "€/t",
@@ -35,7 +26,7 @@ const UNITS = {
 
 const getUnit = (product, type = "price") => {
 	const unitMap = UNITS[type] || UNITS.price;
-	return unitMap[product] || (FRUIT_VEGETABLES.has(product) ? unitMap.default : "");
+	return unitMap[product] ?? unitMap.default;
 };
 
 const getPriceBaseConfig = (product) => ({
@@ -1964,13 +1955,12 @@ export const getMonthlyPriceConfigs = (country, product, customDate, productType
 
 export const getProductionConfigs = (product, productType, productVariety = null) => {
 	const year = new Date().getFullYear().toString();
-
 	if (product === "Rice") {
 		return [
 			{
 				...getProductionBaseConfig(product),
 				params: JSON.stringify({
-					attribute: ["milled_rice_equivalent_quantity"],
+					attribute: [productVariety],
 					stat: "sum",
 					interval: "every_12_months",
 					start_time: "2010-01-01",
@@ -2001,41 +1991,6 @@ export const getProductionConfigs = (product, productType, productVariety = null
 				plotId: "maxProduction1",
 				unit: getUnit(product, "production"),
 				attribute: "max_milled_rice_equivalent_quantity",
-			},
-			{
-				...getProductionBaseConfig(product),
-				params: JSON.stringify({
-					attribute: ["rice_husk_quantity"],
-					stat: "sum",
-					interval: "every_12_months",
-					start_time: "2010-01-01",
-					end_time: `${year}-12-31`,
-					filters: [
-						{
-							property_name: "product",
-							operator: "eq",
-							property_value: productType,
-						},
-					],
-					group_by: "key",
-				}),
-				plotId: "productProduction2",
-				unit: getUnit(product, "production"),
-				attribute: "sum_rice_husk_quantity",
-			},
-			{
-				...getProductionBaseConfig(product),
-				params: JSON.stringify({
-					attribute: ["rice_husk_quantity"],
-					stat: "max",
-					interval: "every_36500_days",
-					start_time: "2010-01-01",
-					end_time: `${year}-12-31`,
-					group_by: "key",
-				}),
-				plotId: "maxProduction2",
-				unit: getUnit(product, "production"),
-				attribute: "max_rice_husk_quantity",
 			},
 		];
 	}
@@ -2513,7 +2468,7 @@ export const getProductionConfigs = (product, productType, productVariety = null
 					group_by: "key",
 				}),
 				plotId: "productProduction1",
-				unit: "t",
+				unit: getUnit(product, "production"),
 				attribute: "sum_gross_production",
 			},
 			{
@@ -2534,7 +2489,7 @@ export const getProductionConfigs = (product, productType, productVariety = null
 					group_by: "key",
 				}),
 				plotId: "maxProduction1",
-				unit: "t",
+				unit: getUnit(product, "production"),
 				attribute: "max_tonnes",
 			},
 			{
