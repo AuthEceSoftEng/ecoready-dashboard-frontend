@@ -205,7 +205,7 @@ export const products = [
 				"Malting barley", "Milling oats", "Milling rye", "Milling wheat", "Triticale", "Wheat bran"],
 		},
 		production: { products: ["Barley", "Durum wheat", "Maize", "Oat", "Other cereals", "Rye", "Soft wheat", "Sorghum", "Triticale"] },
-		image: "/product_images/cereals.jpg",
+		image: "/product_images/cereals.png",
 	},
 	// // Cereals
 	// { value: "barley", text: "Barley", productionProductType: ["Barley"], priceProductType: ["Feed barley", "Malting barley"], image: "/product_images/barley.jpg" },
