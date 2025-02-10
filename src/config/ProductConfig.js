@@ -1953,14 +1953,14 @@ export const getMonthlyPriceConfigs = (country, product, customDate, productType
 	return [];
 };
 
-export const getProductionConfigs = (product, productType, productVariety = null) => {
+export const getProductionConfigs = (product, productType = null, productionType = null) => {
 	const year = new Date().getFullYear().toString();
 	if (product === "Rice") {
 		return [
 			{
 				...getProductionBaseConfig(product),
 				params: JSON.stringify({
-					attribute: [productVariety],
+					attribute: [productionType],
 					stat: "sum",
 					interval: "every_12_months",
 					start_time: "2010-01-01",
@@ -1976,12 +1976,12 @@ export const getProductionConfigs = (product, productType, productVariety = null
 				}),
 				plotId: "productProduction1",
 				unit: getUnit(product, "production"),
-				attribute: "sum_milled_rice_equivalent_quantity",
+				attribute: `sum_${productionType}`,
 			},
 			{
 				...getProductionBaseConfig(product),
 				params: JSON.stringify({
-					attribute: ["milled_rice_equivalent_quantity"],
+					attribute: [productionType],
 					stat: "max",
 					interval: "every_36500_days",
 					start_time: "2010-01-01",
@@ -1990,7 +1990,7 @@ export const getProductionConfigs = (product, productType, productVariety = null
 				}),
 				plotId: "maxProduction1",
 				unit: getUnit(product, "production"),
-				attribute: "max_milled_rice_equivalent_quantity",
+				attribute: `max_${productionType}`,
 			},
 		];
 	}
@@ -2046,20 +2046,20 @@ export const getProductionConfigs = (product, productType, productVariety = null
 				unit: getUnit(product, "production"),
 				attribute: "sum_gross_production",
 			},
-			{
-				...getProductionBaseConfig(product),
-				params: JSON.stringify({
-					attribute: ["yield"],
-					stat: "sum",
-					interval: "every_12_months",
-					start_time: "2010-01-01",
-					end_time: `${year}-12-31`,
-					group_by: "key",
-				}),
-				plotId: "productProduction2",
-				unit: "t/ha",
-				attribute: "sum_yield",
-			},
+			// {
+			// 	...getProductionBaseConfig(product),
+			// 	params: JSON.stringify({
+			// 		attribute: ["yield"],
+			// 		stat: "sum",
+			// 		interval: "every_12_months",
+			// 		start_time: "2010-01-01",
+			// 		end_time: `${year}-12-31`,
+			// 		group_by: "key",
+			// 	}),
+			// 	plotId: "productProduction2",
+			// 	unit: "t/ha",
+			// 	attribute: "sum_yield",
+			// },
 			{
 				...getProductionBaseConfig(product),
 				params: JSON.stringify({
@@ -2074,20 +2074,20 @@ export const getProductionConfigs = (product, productType, productVariety = null
 				unit: "t/ha",
 				attribute: "max_gross_production",
 			},
-			{
-				...getProductionBaseConfig(product),
-				params: JSON.stringify({
-					attribute: ["yield"],
-					stat: "max",
-					interval: "every_36500_days",
-					start_time: "2010-01-01",
-					end_time: `${year}-12-31`,
-					group_by: "key",
-				}),
-				plotId: "maxProduction2",
-				unit: "t/ha",
-				attribute: "max_yield",
-			},
+			// {
+			// 	...getProductionBaseConfig(product),
+			// 	params: JSON.stringify({
+			// 		attribute: ["yield"],
+			// 		stat: "max",
+			// 		interval: "every_36500_days",
+			// 		start_time: "2010-01-01",
+			// 		end_time: `${year}-12-31`,
+			// 		group_by: "key",
+			// 	}),
+			// 	plotId: "maxProduction2",
+			// 	unit: "t/ha",
+			// 	attribute: "max_yield",
+			// },
 		];
 	}
 
