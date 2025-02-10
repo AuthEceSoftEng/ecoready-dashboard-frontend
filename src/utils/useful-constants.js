@@ -276,41 +276,7 @@ export const products = [
 		text: "Fruits & Vegetables",
 		collections: ["prices"],
 		prices: {
-			products: [
-				"abricots",
-				"apples",
-				"asparagus",
-				"avocados",
-				"beans",
-				"cabbages",
-				"carrots",
-				"cauliflowers",
-				"cherries",
-				"clementines",
-				"courgettes",
-				"cucumbers",
-				"egg plants, aubergines",
-				"garlic",
-				"kiwis",
-				"leeks",
-				"lemons",
-				"lettuces",
-				"mandarins",
-				"melons",
-				"mushrooms, cultivated",
-				"nectarines",
-				"onions",
-				"oranges",
-				"peaches",
-				"pears",
-				"peppers",
-				"plums",
-				"satsumas",
-				"strawberries",
-				"table grapes",
-				"tomatoes",
-				"water melons",
-			],
+			products: ["abricots", "apples", "asparagus", "avocados", "beans", "cabbages", "carrots", "cauliflowers", "cherries", "clementines", "courgettes", "cucumbers", "egg plants, aubergines", "garlic", "kiwis", "leeks", "lemons", "lettuces", "mandarins", "melons", "mushrooms, cultivated", "nectarines", "onions", "oranges", "peaches", "pears", "peppers", "plums", "satsumas", "strawberries", "table grapes", "tomatoes", "water melons"]
 		},
 	},
 
@@ -461,7 +427,7 @@ export const products = [
 		},
 		production: {
 			products: ["(1) Round grain paddy rice", "(2) Medium grain paddy rice", "(3) Long grain A paddy rice", "(4) Long grain B paddy rice"],
-			productTypes: [
+			productionTypes: [
 				{ value: "milled_rice_equivalent_quantity", text: "Milled rice" },
 				{ value: "rice_husk_quantity", text: "Rice husk" },
 			],
@@ -476,7 +442,7 @@ export const products = [
 		prices: { products: ["Heavy Lamb", "Light Lamb"] },
 		production: {
 			products: ["Goat meat", "Sheepmeat"],
-			productTypes: ["Slaughterings", "Slaughterings, other than in slaughterhouses"],
+			productionTypes: ["Slaughterings", "Slaughterings, other than in slaughterhouses"],
 		},
 		description: "No living labs currently working with sheep/goat meat",
 		image: "/product_images/sheep_goat_meat.png",
@@ -485,6 +451,12 @@ export const products = [
 		value: "sugar",
 		text: "Sugar",
 		collections: ["prices", "production"],
+		// production: {
+		// 	productionTypes: [
+		// 		{ value: "gross_production", text: "Gross Production" },
+		// 		{ value: "yield", text: "Yield" },
+		// 	],
+		// },
 		description: "No living labs currently working with sugar",
 		image: "/product_images/sugar.jpg",
 	},

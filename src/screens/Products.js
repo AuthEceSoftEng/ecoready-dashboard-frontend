@@ -38,7 +38,7 @@ const extractFields = (productObject, fieldName) => {
 				.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
 				.join(" "),
 			products: productObject[field]?.products || [],
-			productTypes: productObject[field]?.productTypes || [],
+			productionTypes: productObject[field]?.productionTypes || [],
 		}));
 
 	const collections = productObject.collections?.filter((collection) => collection.toLowerCase().includes(fieldName)) || [];
@@ -49,6 +49,16 @@ const extractFields = (productObject, fieldName) => {
 		hasData: fields.length > 0,
 		needsDropdown: collections.length > 1,
 	};
+};
+
+const getProductionSumField = (productionData) => {
+	if (!productionData) return null;
+
+	const firstCountry = Object.values(productionData)[0];
+	if (!Array.isArray(firstCountry) || firstCountry.length === 0) return null;
+
+	const firstItem = firstCountry[0];
+	return Object.keys(firstItem).find((key) => key.startsWith("sum_"));
 };
 
 // Function to categorize production data by country
@@ -73,7 +83,6 @@ const transformProductionData = (productionData, yearPicker, sumFieldName) => {
 				production: matchingData?.[sumFieldName] || 0,
 			};
 		})
-		.filter((item) => item.production > 0)
 		.sort((a, b) => a.label.localeCompare(b.label));
 
 	return {
@@ -89,7 +98,6 @@ const getEUMaxValue = (maxProd, prodTypeVal) => {
 		maxProd.flat().find((item) => item?.key === "EU" && Object.keys(item || {}).includes(`max_${prodTypeVal}`))?.[`max_${prodTypeVal}`] || 0,
 	];
 };
-
 
 const ProductsScreen = () => {
 	const location = useLocation();
@@ -108,7 +116,7 @@ const ProductsScreen = () => {
 
 	// Get production products if they exist
 	const pricesItems = useMemo(() => extractFields(selectedProductDetails, "prices") || [], [selectedProductDetails]);
-	// console.log("Prices:", pricesItems);
+	console.log("Prices Items:", pricesItems);
 
 	const priceCategories = useMemo(() => (pricesItems.needsDropdown ? pricesItems.collections : []),
 		[pricesItems]);
@@ -128,12 +136,12 @@ const ProductsScreen = () => {
 		const categoryIndex = priceCategories.indexOf(selectedPriceCategory);
 		return pricesItems.fields[categoryIndex === -1 ? 0 : categoryIndex]?.productTypes;
 	}, [priceCategories, pricesItems.fields, selectedPriceCategory]);
-	// console.log("Price Product Types:", priceProductTypes);
+	console.log("Price Product Types:", priceProductTypes);
 
 	const [priceOptions, setPriceOptions] = useState({
 		product: priceProducts?.[0] ?? null,
-		productType: priceProductTypes?.[0]?.text ?? priceProductTypes[0] ?? null,
-		productTypeVal: priceProductTypes?.[0]?.value ?? priceProductTypes[0] ?? null,
+		productType: priceProductTypes?.[0]?.text ?? priceProductTypes?.[0] ?? null,
+		productTypeVal: priceProductTypes?.[0]?.value ?? priceProductTypes?.[0] ?? null,
 	});
 
 	// console.log("Price Options:", priceOptions);
@@ -143,45 +151,39 @@ const ProductsScreen = () => {
 
 	const productionProducts = useMemo(() => productionItems.fields[0]?.products ?? [],
 		[productionItems]);
-	const productionProductTypes = useMemo(() => productionItems.fields[0]?.productTypes ?? [],
+	const productionTypes = useMemo(() => productionItems.fields[0]?.productionTypes ?? [],
 		[productionItems]);
-	console.log("Production Product Types:", productionProductTypes);
+	console.log("Production Product Types:", productionTypes);
 
 	const [productionOptions, setProductionOptions] = useState({
 		product: null,
-		productType: null,
-		productTypeVal: null,
+		productionType: null,
+		productionVal: null,
 	});
 
 	const handleProductionTypeChange = useCallback((newProductType) => {
-		const selectedType = productionProductTypes?.find((type) => type.text === newProductType);
-		setProductionOptions((prev) => ({
-			...prev,
-			productType: newProductType,
-			productTypeVal: selectedType?.value ?? null,
-		}));
-	}, [productionProductTypes]);
+		setProductionOptions((prev) => {
+			const selectedType = productionTypes?.find((type) => type.text === newProductType);
+			return {
+				...prev,
+				productionType: newProductType,
+				productionVal: selectedType?.value ?? null,
+			};
+		});
+	}, [productionTypes]);
 
 	useEffect(() => {
-		if (productionProducts?.length > 0 || productionProductTypes?.length > 0) {
-			const initialType = productionProductTypes?.[0];
+		const initialProduct = productionProducts?.[0];
+		const initialType = productionTypes?.[0];
+
+		if (initialProduct || initialType) {
 			setProductionOptions({
-				product: productionProducts?.[0] ?? null,
-				productType: initialType?.text ?? null,
-				productTypeVal: initialType?.value ?? null,
+				product: initialProduct ?? null,
+				productionType: initialType?.text ?? null,
+				productionVal: initialType?.value ?? null,
 			});
 		}
-	}, [productionProducts, productionProductTypes]);
-
-	useEffect(() => {
-		const selectedType = productionProductTypes?.find((type) => type.text === productionOptions.productType);
-		if (selectedType) {
-			setProductionOptions((prev) => ({
-				...prev,
-				productTypeVal: selectedType.value,
-			}));
-		}
-	}, [productionOptions.productType, productionProductTypes]);
+	}, [productionProducts, productionTypes]);
 
 	console.log("Production Options:", productionOptions);
 
@@ -225,14 +227,17 @@ const ProductsScreen = () => {
 		setIsPriceConfigReady(isPriceReady);
 	}, [keys.country, filters.product, dateMetrics.isValidDateRange]);
 
-	useEffect(() => {
-		const isProductionReady = Boolean(
-			filters.product
+	const productionReadyStatus = useMemo(() => Boolean(
+		filters.product
 			&& productionOptions.product
-			&& productionOptions.productTypeVal,
-		);
-		setIsProductionConfigReady(isProductionReady);
-	}, [filters.product, productionOptions.product, productionOptions.productTypeVal]);
+			&& productionOptions.productionType,
+	),
+	[filters.product, productionOptions.product, productionOptions.productionType]);
+
+	// Update the effect to use memoized value
+	useEffect(() => {
+		setIsProductionConfigReady(productionReadyStatus);
+	}, [productionReadyStatus]);
 
 	// Update config calls
 	const priceConfigs = useMemo(
@@ -251,9 +256,9 @@ const ProductsScreen = () => {
 
 	const productionConfigs = useMemo(
 		() => (isProductionConfigReady
-			? getProductionConfigs(filters.product, productionOptions.product, productionOptions.productTypeVal)
+			? getProductionConfigs(filters.product, productionOptions.product, productionOptions.productionVal)
 			: null),
-		[isProductionConfigReady, filters.product, productionOptions.product, productionOptions.productTypeVal],
+		[isProductionConfigReady, filters.product, productionOptions.product, productionOptions.productionVal],
 	);
 
 	console.log("Filter product:", filters.product);
@@ -272,8 +277,8 @@ const ProductsScreen = () => {
 	);
 
 	const units = useMemo(() => ({
-		priceUnit: priceConfigs?.[0].unit || "",
-		productionUnit: productionConfigs?.[0].unit || "",
+		priceUnit: priceConfigs?.[0]?.unit || "",
+		productionUnit: productionConfigs?.[0]?.unit || "",
 	}), [priceConfigs, productionConfigs]);
 
 	const { state, dispatch } = useInit(organization, allConfigs);
@@ -312,7 +317,7 @@ const ProductsScreen = () => {
 		const result = Object.keys(grouped)
 			.filter((code) => code !== "EU")
 			.reduce((acc, countryCode) => {
-				const countryName = europeanCountries.find((country) => country.value === countryCode)?.text;
+				const countryName = europeanCountries.find((country) => country.value === countryCode || country.region === countryCode)?.text;
 				if (countryName) {
 					acc[countryName] = grouped[countryCode];
 				}
@@ -362,13 +367,12 @@ const ProductsScreen = () => {
 		},
 	].map((item) => ({
 		...item,
-		size: "small",
 	}))), [dispatch, filters.product]);
 
 	const productionDropdowns = useMemo(() => {
 		const dropdowns = [];
 
-		if (productionProducts?.length > 0) {
+		if (productionProducts?.length) {
 			dropdowns.push({
 				id: "prodProds",
 				items: productionProducts,
@@ -378,40 +382,37 @@ const ProductsScreen = () => {
 					dispatch({ type: "FETCH_START" });
 					setProductionOptions((prev) => ({ ...prev, product: event.target.value }));
 				},
-				size: "small",
 			});
 		}
 
-		if (productionProductTypes?.length > 0) {
+		if (productionTypes?.length) {
 			dropdowns.push({
 				id: "prodProdTypes",
-				items: productionProductTypes,
-				value: productionOptions.productType,
-				label: "Select Product Variety",
+				items: productionTypes,
+				value: productionOptions.productionType,
+				label: "Select Production Type",
 				onChange: (event) => {
 					dispatch({ type: "FETCH_START" });
 					handleProductionTypeChange(event.target.value);
 				},
-				size: "small",
 			});
 		}
 
 		return dropdowns;
-	}, [productionProducts, productionProductTypes, productionOptions.product, productionOptions.productType, dispatch, handleProductionTypeChange]);
+	}, [productionProducts, productionTypes, productionOptions.product, productionOptions.productionType, dispatch, handleProductionTypeChange]);
 
 	// PRODUCTION GRAPHS
 	const europeOverview = useMemo(() => {
-		const productionData = productionOptions.productTypeVal
-			? productionByCountry.find((data) => Object.values(data)[0]?.some((item) => item[`sum_${productionOptions.productTypeVal}`] !== undefined))
+		const productionData = productionOptions.productionVal
+			? productionByCountry.find((data) => Object.values(data)[0]?.some((item) => item[`sum_${productionOptions.productionVal}`] !== undefined))
 			: productionByCountry[0];
 		console.log("Production Data:", productionData);
 
 		if (!productionData) return null;
 
 		// get the sumfield
-		const firstCountry = Object.values(productionData)[0];
-		const firstItem = firstCountry?.[0] || {};
-		const sumFieldName = Object.keys(firstItem).find((key) => key.startsWith("sum_"));
+		const sumFieldName = getProductionSumField(productionData);
+		if (!sumFieldName) return null;
 
 		const { countryData } = transformProductionData(productionData, filters.year, sumFieldName);
 		console.log("Country Data:", countryData);
@@ -441,24 +442,54 @@ const ProductsScreen = () => {
 					}] : [],
 				},
 				bars: {
-					data: Object.entries(productionData).map(([countryCode, values], index) => ({
-						x: generateYearsArray(2010, 2025),
-						y: values.map((item) => item[`sum_${productionOptions.productTypeVal}`] || 0),
-						type: "bar",
-						title: countryCode,
-						color: agColorKeys[index % agColorKeys.length],
-					})),
+					data: Object.entries(productionData).map(([countryCode, values], index) => {
+						const years = generateYearsArray(2010, 2025);
+
+						// Create a map of existing data points
+						const dataMap = new Map(
+							values.map((item) => [
+								item.timestamp || item.interval_start,
+								item[sumFieldName] || 0,
+							]),
+						);
+
+						// Generate complete data array with 0s for missing years
+						const completeData = years.map((date) => {
+							const timestamp = `${date}-01-01T00:00:00`;
+							return dataMap.get(timestamp) || 0;
+						});
+
+						return {
+							x: years,
+							y: completeData,
+							type: "bar",
+							title: countryCode,
+							color: agColorKeys[index % agColorKeys.length],
+						};
+					}),
 					title: "Annual Production by Country",
+					xaxis: { showticklabels: true, tickmode: "linear", tickangle: 45 },
 				},
 			},
 		};
-	}, [productionByCountry, filters.year, maxProduction, productionOptions.productTypeVal, units.productionUnit]);
+	}, [productionOptions.productionVal, productionByCountry, filters.year, maxProduction, units.productionUnit]);
 
 	// PRICES GRAPHS
 	const priceDropdowns = useMemo(() => {
-		const dropdowns = [];
+		const dropdowns = [
+			{
+				id: "country",
+				items: europeanCountries,
+				value: filters.country,
+				label: "Select Country",
+				onChange: (event) => {
+					dispatch({ type: "FETCH_START" }); // Add loading state
+					setFilters((prev) => ({ ...prev, country: event.target.value }));
+				},
+			},
+		];
 
-		if (priceCategories.length > 0) {
+		if (priceCategories?.length) {
 			dropdowns.push({
 				id: "priceCategories",
 				items: priceCategories,
@@ -468,11 +499,10 @@ const ProductsScreen = () => {
 					dispatch({ type: "FETCH_START" }); // Add loading state
 					setSelectedPriceCategory(event.target.value);
 				},
-				size: "small",
 			});
 		}
 
-		if (priceProducts.length > 0) {
+		if (priceProducts?.length) {
 			dropdowns.push({
 				id: "priceProduct",
 				items: priceProducts,
@@ -482,11 +512,10 @@ const ProductsScreen = () => {
 					dispatch({ type: "FETCH_START" }); // Add loading state
 					setPriceOptions((prev) => ({ ...prev, product: event.target.value }));
 				},
-				size: "small",
 			});
 		}
 
-		if (priceProductTypes.length > 0) {
+		if (priceProductTypes?.length > 0) {
 			dropdowns.push({
 				id: "priceProductTypes",
 				items: priceProductTypes,
@@ -496,24 +525,9 @@ const ProductsScreen = () => {
 					dispatch({ type: "FETCH_START" }); // Add loading state
 					setPriceOptions((prev) => ({ ...prev, productType: event.target.value }));
 				},
-				size: "small",
 			});
 		}
-	}, [dispatch, priceCategories, priceOptions.product, priceOptions.productType, priceProductTypes, priceProducts, selectedPriceCategory]);
-
-	const priceDropdownContent = useMemo(() => ([
-
-		{
-			id: "country",
-			items: europeanCountries,
-			value: filters.country,
-			label: "Select Country",
-			onChange: (event) => {
-				dispatch({ type: "FETCH_START" }); // Add loading state
-				setFilters((prev) => ({ ...prev, country: event.target.value }));
-			},
-		},
-	]), [filters.country, dispatch]);
+	}, [dispatch, filters.country, priceCategories, priceOptions.product, priceOptions.productType, priceProductTypes, priceProducts, selectedPriceCategory]);
 
 	const formRefDate = useRef();
 	const formContentDate = useMemo(() => [
@@ -530,54 +544,54 @@ const ProductsScreen = () => {
 		},
 	], [endDate, handleDateChange, startDate]);
 
-	const countryOverview = useMemo(() => [
-		{
-			data: {
-				value: europeOverview?.countryData?.find(
-					(country) => country.label === filters.country,
-				)?.production ?? null,
-				// subtitle: `${productionTypes.find((type) => type.value === productionType)?.text || ""}`,
-			},
-			range: [0, 2000],
-			color: "third",
-			suffix: ` ${units.productionUnit}`,
-			shape: "angular",
-		},
-		{
-			data: {
-				value: monthlyPrices?.[0]?.avg_price ?? null,
-				subtitle: "Current Month's Average Price",
-			},
-			color: "secondary",
-			suffix: `${units.priceUnit}`,
-			shape: "angular",
-		},
-		{
-			title: `${filters.product}'s Price Timeline`,
-			data: [
-				{
-					x: isValidPrice ? pricesTimeline.map((item) => item.interval_start) : [],
-					y: isValidPrice ? pricesTimeline.map((item) => item.avg_price) : [],
-					type: "scatter",
-					mode: "lines",
-					color: "secondary",
-					title: `${units.priceUnit}`,
-				},
-			],
-			color: "secondary",
-			xaxis: { title: "Date" },
-			yaxis: { title: `Average ${units.priceUnit}` },
-		},
-		{
-			data: {
-				value: periodPrices?.[0]?.avg_price ?? null,
-				subtitle: "Specified Period's Average Price",
-			},
-			color: "secondary",
-			suffix: `${units.priceUnit}`,
-			shape: "angular",
-		},
-	], [europeOverview?.countryData, units.productionUnit, units.priceUnit, monthlyPrices, filters.product, filters.country, isValidPrice, pricesTimeline, periodPrices]);
+	// const countryOverview = useMemo(() => [
+	// 	{
+	// 		data: {
+	// 			value: europeOverview?.countryData?.find(
+	// 				(country) => country.label === filters.country,
+	// 			)?.production ?? null,
+	// 			// subtitle: `${productionTypes.find((type) => type.value === productionType)?.text || ""}`,
+	// 		},
+	// 		range: [0, 2000],
+	// 		color: "third",
+	// 		suffix: ` ${units.productionUnit}`,
+	// 		shape: "angular",
+	// 	},
+	// 	{
+	// 		data: {
+	// 			value: monthlyPrices?.[0]?.avg_price ?? null,
+	// 			subtitle: "Current Month's Average Price",
+	// 		},
+	// 		color: "secondary",
+	// 		suffix: `${units.priceUnit}`,
+	// 		shape: "angular",
+	// 	},
+	// 	{
+	// 		title: `${filters.product}'s Price Timeline`,
+	// 		data: [
+	// 			{
+	// 				x: isValidPrice ? pricesTimeline.map((item) => item.interval_start) : [],
+	// 				y: isValidPrice ? pricesTimeline.map((item) => item.avg_price) : [],
+	// 				type: "scatter",
+	// 				mode: "lines",
+	// 				color: "secondary",
+	// 				title: `${units.priceUnit}`,
+	// 			},
+	// 		],
+	// 		color: "secondary",
+	// 		xaxis: { title: "Date" },
+	// 		yaxis: { title: `Average ${units.priceUnit}` },
+	// 	},
+	// 	{
+	// 		data: {
+	// 			value: periodPrices?.[0]?.avg_price ?? null,
+	// 			subtitle: "Specified Period's Average Price",
+	// 		},
+	// 		color: "secondary",
+	// 		suffix: `${units.priceUnit}`,
+	// 		shape: "angular",
+	// 	},
+	// ], [europeOverview?.countryData, units.productionUnit, units.priceUnit, monthlyPrices, filters.product, filters.country, isValidPrice, pricesTimeline, periodPrices]);
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
@@ -653,6 +667,7 @@ const ProductsScreen = () => {
 									barmode="stack"
 									displayBar={false}
 									title={europeOverview.charts.bars.title}
+									xaxis={europeOverview.charts.bars.xaxis}
 								/>
 							)}
 						</Grid>
