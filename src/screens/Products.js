@@ -8,8 +8,10 @@ import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
 import useInit from "../utils/screen-init.js";
 import { getPriceConfigs, getMonthlyPriceConfigs, getProductionConfigs, organization } from "../config/ProductConfig.js";
-import { getCustomDateTime, calculateDates, calculateDifferenceBetweenDates,
-	debounce, findKeyByText, isValidArray, generateYearsArray, groupByKey } from "../utils/data-handling-functions.js";
+import {
+	getCustomDateTime, calculateDates, calculateDifferenceBetweenDates,
+	debounce, findKeyByText, isValidArray, generateYearsArray, groupByKey,
+} from "../utils/data-handling-functions.js";
 import { cardFooter, LoadingIndicator, StickyBand, DataWarning } from "../utils/rendering-items.js";
 import { europeanCountries, products } from "../utils/useful-constants.js";
 
@@ -147,7 +149,7 @@ const ProductsScreen = () => {
 	// console.log("Price Options:", priceOptions);
 
 	const productionItems = useMemo(() => extractFields(selectedProductDetails, "production") || [], [selectedProductDetails]);
-	console.log("PRoduction Items:", productionItems);
+	console.log("Production Items:", productionItems);
 
 	const productionProducts = useMemo(() => productionItems.fields[0]?.products ?? [],
 		[productionItems]);
@@ -156,9 +158,9 @@ const ProductsScreen = () => {
 	console.log("Production Product Types:", productionTypes);
 
 	const [productionOptions, setProductionOptions] = useState({
-		product: null,
-		productionType: null,
-		productionVal: null,
+		product: productionProducts?.[0] ?? null,
+		productionType: productionTypes?.[0]?.text ?? null,
+		productionVal: productionTypes?.[0]?.value ?? null,
 	});
 
 	const handleProductionTypeChange = useCallback((newProductType) => {
@@ -171,20 +173,6 @@ const ProductsScreen = () => {
 			};
 		});
 	}, [productionTypes]);
-
-	useEffect(() => {
-		const initialProduct = productionProducts?.[0];
-		const initialType = productionTypes?.[0];
-
-		if (initialProduct || initialType) {
-			setProductionOptions({
-				product: initialProduct ?? null,
-				productionType: initialType?.text ?? null,
-				productionVal: initialType?.value ?? null,
-			});
-		}
-	}, [productionProducts, productionTypes]);
-
 	console.log("Production Options:", productionOptions);
 
 	const debouncedSetDate = useMemo(
@@ -219,25 +207,15 @@ const ProductsScreen = () => {
 
 	// Add validation effects
 	useEffect(() => {
-		const isPriceReady = Boolean(
-			keys.country
-			&& filters.product
-			&& dateMetrics.isValidDateRange,
-		);
+		const isPriceReady = Boolean(keys.country && filters.product && dateMetrics.isValidDateRange);
 		setIsPriceConfigReady(isPriceReady);
 	}, [keys.country, filters.product, dateMetrics.isValidDateRange]);
 
-	const productionReadyStatus = useMemo(() => Boolean(
-		filters.product
-			&& productionOptions.product
-			&& productionOptions.productionType,
-	),
-	[filters.product, productionOptions.product, productionOptions.productionType]);
-
 	// Update the effect to use memoized value
 	useEffect(() => {
-		setIsProductionConfigReady(productionReadyStatus);
-	}, [productionReadyStatus]);
+		const isProductionReady = Boolean(filters.product && (productionOptions.product || productionOptions.productionType));
+		setIsProductionConfigReady(isProductionReady);
+	}, [filters.product, productionOptions.product, productionOptions.productionType]);
 
 	// Update config calls
 	const priceConfigs = useMemo(
@@ -357,11 +335,20 @@ const ProductsScreen = () => {
 			value: filters.product,
 			label: "Select Product",
 			onChange: (event) => {
+				const newProduct = event.target.value;
 				dispatch({ type: "FETCH_START" });
-				setFilters((prev) => ({ ...prev, product: event.target.value }));
+				
+				// Find the new product details and set initial production options
+				const newProductDetails = products.find((p) => p.text === newProduct);
+				const productionFields = extractFields(newProductDetails, "production").fields;
+				const initialProduct = productionFields[0]?.products?.[0] ?? null;
+				const initialType = productionFields[0]?.productionTypes?.[0] ?? null;
+
+				setFilters((prev) => ({ ...prev, product: newProduct }));
 				setProductionOptions({
-					product: null,
-					productType: null,
+					product: initialProduct,
+					productionType: initialType?.text ?? null,
+					productionVal: initialType?.value ?? null,
 				});
 			},
 		},
@@ -417,7 +404,6 @@ const ProductsScreen = () => {
 		const { countryData } = transformProductionData(productionData, filters.year, sumFieldName);
 		console.log("Country Data:", countryData);
 		const euMaxValue = getEUMaxValue(maxProduction, sumFieldName);
-		console.log("EU Max Value:", euMaxValue);
 
 		return {
 			countryData,
