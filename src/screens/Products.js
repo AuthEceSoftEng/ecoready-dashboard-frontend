@@ -40,7 +40,8 @@ const extractFields = (productObject, fieldName) => {
 				.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
 				.join(" "),
 			products: productObject[field]?.products || [],
-			productionTypes: productObject[field]?.productionTypes || [],
+			productTypes: productObject[field]?.productTypes || [],
+			productionMetrics: productObject[field]?.productionMetrics || [],
 		}));
 
 	const collections = productObject.collections?.filter((collection) => collection.toLowerCase().includes(fieldName)) || [];
@@ -153,26 +154,29 @@ const ProductsScreen = () => {
 
 	const productionProducts = useMemo(() => productionItems.fields[0]?.products ?? [],
 		[productionItems]);
-	const productionTypes = useMemo(() => productionItems.fields[0]?.productionTypes ?? [],
+	const productTypes = useMemo(() => productionItems.fields[0]?.productTypes ?? [],
 		[productionItems]);
-	console.log("Production Product Types:", productionTypes);
+	const productionMetrics = useMemo(() => productionItems.fields[0]?.productionMetrics ?? [],
+		[productionItems]);
+	console.log("Production Product Types:", productTypes);
 
 	const [productionOptions, setProductionOptions] = useState({
 		product: productionProducts?.[0] ?? null,
-		productionType: productionTypes?.[0]?.text ?? null,
-		productionVal: productionTypes?.[0]?.value ?? null,
+		productType: productTypes?.[0] ?? null,
+		productionMetricType: productionMetrics?.[0]?.text ?? null,
+		productionMetricVal: productionMetrics?.[0]?.value ?? null,
 	});
 
-	const handleProductionTypeChange = useCallback((newProductType) => {
+	const handleProductionMetricChange = useCallback((newProductType) => {
 		setProductionOptions((prev) => {
-			const selectedType = productionTypes?.find((type) => type.text === newProductType);
+			const selectedMetric = productionMetrics?.find((type) => type.text === newProductType);
 			return {
 				...prev,
-				productionType: newProductType,
-				productionVal: selectedType?.value ?? null,
+				productionMetricType: newProductType,
+				productionMetricVal: selectedMetric?.value ?? null,
 			};
 		});
-	}, [productionTypes]);
+	}, [productionMetrics]);
 	console.log("Production Options:", productionOptions);
 
 	const debouncedSetDate = useMemo(
@@ -213,9 +217,9 @@ const ProductsScreen = () => {
 
 	// Update the effect to use memoized value
 	useEffect(() => {
-		const isProductionReady = Boolean(filters.product && (productionOptions.product || productionOptions.productionType));
+		const isProductionReady = Boolean(filters.product && (productionOptions.product || productionOptions.productType || productionOptions.productionMetricVal));
 		setIsProductionConfigReady(isProductionReady);
-	}, [filters.product, productionOptions.product, productionOptions.productionType]);
+	}, [filters.product, productionOptions.product, productionOptions.productType, productionOptions.productionMetricVal]);
 
 	// Update config calls
 	const priceConfigs = useMemo(
@@ -234,9 +238,9 @@ const ProductsScreen = () => {
 
 	const productionConfigs = useMemo(
 		() => (isProductionConfigReady
-			? getProductionConfigs(filters.product, productionOptions.product, productionOptions.productionVal)
+			? getProductionConfigs(filters.product, productionOptions.product, productionOptions.productionMetricVal, productionOptions.productType)
 			: null),
-		[isProductionConfigReady, filters.product, productionOptions.product, productionOptions.productionVal],
+		[isProductionConfigReady, filters.product, productionOptions.product, productionOptions.productionMetricVal, productionOptions.productType],
 	);
 
 	console.log("Filter product:", filters.product);
@@ -337,18 +341,20 @@ const ProductsScreen = () => {
 			onChange: (event) => {
 				const newProduct = event.target.value;
 				dispatch({ type: "FETCH_START" });
-				
+
 				// Find the new product details and set initial production options
 				const newProductDetails = products.find((p) => p.text === newProduct);
 				const productionFields = extractFields(newProductDetails, "production").fields;
 				const initialProduct = productionFields[0]?.products?.[0] ?? null;
-				const initialType = productionFields[0]?.productionTypes?.[0] ?? null;
+				const initialType = productionFields[0]?.productTypes?.[0] ?? null;
+				const initialMetric = productionFields[0]?.productionMetrics?.[0] ?? null;
 
 				setFilters((prev) => ({ ...prev, product: newProduct }));
 				setProductionOptions({
-					product: initialProduct,
-					productionType: initialType?.text ?? null,
-					productionVal: initialType?.value ?? null,
+					product: initialProduct ?? null,
+					productType: initialType ?? null,
+					productionMetricType: initialMetric?.text ?? null,
+					productionMetricVal: initialMetric?.value ?? null,
 				});
 			},
 		},
@@ -372,21 +378,34 @@ const ProductsScreen = () => {
 			});
 		}
 
-		if (productionTypes?.length) {
+		if (productTypes?.length) {
 			dropdowns.push({
 				id: "prodProdTypes",
-				items: productionTypes,
-				value: productionOptions.productionType,
+				items: productTypes,
+				value: productionOptions.productType,
+				label: "Select Product Type",
+				onChange: (event) => {
+					dispatch({ type: "FETCH_START" });
+					setProductionOptions((prev) => ({ ...prev, productType: event.target.value }));
+				},
+			});
+		}
+
+		if (productionMetrics?.length) {
+			dropdowns.push({
+				id: "prodProdMtrx",
+				items: productionMetrics,
+				value: productionOptions.productionMetricType,
 				label: "Select Production Type",
 				onChange: (event) => {
 					dispatch({ type: "FETCH_START" });
-					handleProductionTypeChange(event.target.value);
+					handleProductionMetricChange(event.target.value);
 				},
 			});
 		}
 
 		return dropdowns;
-	}, [productionProducts, productionTypes, productionOptions.product, productionOptions.productionType, dispatch, handleProductionTypeChange]);
+	}, [productionProducts, productTypes, productionOptions.product, productionOptions.productType, productionOptions.productionMetricType, dispatch, productionMetrics, handleProductionMetricChange]);
 
 	// PRODUCTION GRAPHS
 	const europeOverview = useMemo(() => {
@@ -588,50 +607,51 @@ const ProductsScreen = () => {
 					footer={cardFooter({ minutesAgo })}
 				>
 					<Grid item xs={12} md={12} display="flex" justifyContent="flex-end">
-						<StickyBand
-							sticky={false}
-							dropdownContent={productionDropdowns}
-							formRef={yearPickerRef}
-							formContent={yearPickerProps}
-						/>
+						<StickyBand sticky={false} dropdownContent={productionDropdowns} formRef={yearPickerRef} formContent={yearPickerProps} />
 					</Grid>
 					{isLoading ? (
 						<LoadingIndicator />
 					) : (
 						<Grid container display="flex" direction="row" justifyContent="space-evenly" sx={{ flex: 1 }}>
-							<Grid item xs={12} sm={12} md={12} justifyContent="center" alignItems="center">
-								{europeOverview?.charts.gauge.data.value && (
-									<Plot
-										showLegend
-										scrollZoom
-										height={europeOverview.charts.gauge.shape === "bullet" ? "115px" : "200px"}
-										data={[{
-											type: "indicator",
-											mode: "gauge+number",
-											value: europeOverview.charts.gauge.data.value,
-											range: europeOverview.charts.gauge.range,
-											color: europeOverview.charts.gauge.color,
-											shape: europeOverview.charts.gauge.shape,
-											indicator: "primary",
-											textColor: "primary",
-											suffix: europeOverview.charts.gauge.suffix,
-										}]}
-										title={europeOverview.charts.gauge.data.subtitle}
-									/>
-								)}
-							</Grid>
-							<Grid item xs={12} sm={12} md={12} justifyContent="center" alignItems="center">
-								{europeOverview?.charts.pie.data.length > 0 && (
-									<Plot
-										scrollZoom
-										showLegend
-										displayBar={false}
-										height="295px"
-										title={`${filters.year}'s Production by Country`}
-										data={europeOverview.charts.pie.data}
-									/>
-								)}
-							</Grid>
+							{(!europeOverview?.charts.gauge.data.value || !europeOverview?.charts.pie.data.length) ? (
+								<DataWarning message="No Available Data for the Specified Options Combination" />
+							) : (
+								<>
+									<Grid item xs={12} sm={12} md={12} justifyContent="center" alignItems="center">
+										{europeOverview?.charts.gauge.data.value && (
+											<Plot
+												showLegend
+												scrollZoom
+												height={europeOverview.charts.gauge.shape === "bullet" ? "115px" : "200px"}
+												data={[{
+													type: "indicator",
+													mode: "gauge+number",
+													value: europeOverview.charts.gauge.data.value,
+													range: europeOverview.charts.gauge.range,
+													color: europeOverview.charts.gauge.color,
+													shape: europeOverview.charts.gauge.shape,
+													indicator: "primary",
+													textColor: "primary",
+													suffix: europeOverview.charts.gauge.suffix,
+												}]}
+												title={europeOverview.charts.gauge.data.subtitle}
+											/>
+										)}
+									</Grid>
+									<Grid item xs={12} sm={12} md={12} justifyContent="center" alignItems="center">
+										{europeOverview?.charts.pie.data.length > 0 && (
+											<Plot
+												scrollZoom
+												showLegend
+												displayBar={false}
+												height="295px"
+												title={`${filters.year}'s Production by Country`}
+												data={europeOverview.charts.pie.data}
+											/>
+										)}
+									</Grid>
+								</>
+							)}
 						</Grid>
 					)}
 				</Card>
@@ -645,7 +665,7 @@ const ProductsScreen = () => {
 						<LoadingIndicator />
 					) : (
 						<Grid item xs={12} sm={12} justifyContent="center" alignItems="center" sx={{ flex: 1 }}>
-							{europeOverview?.charts.bars.data && (
+							{europeOverview?.charts.bars.data ? (
 								<Plot
 									scrollZoom
 									height="461px"
@@ -655,19 +675,14 @@ const ProductsScreen = () => {
 									title={europeOverview.charts.bars.title}
 									xaxis={europeOverview.charts.bars.xaxis}
 								/>
-							)}
+							) : (<DataWarning message="No Available Data for the Specified Options Combination" />)}
 						</Grid>
 					)}
 				</Card>
 			</Grid>
 			{/* <Grid item xs={12} md={12} mb={2} alignItems="center" flexDirection="column">
 				<Card title="Product per Country" footer={cardFooter({ minutesAgo })}>
-					<StickyBand
-						sticky={false}
-						dropdownContent={[priceDropdownContent, priceDropdowns]}
-						formRef={formRefDate}
-						formContent={formContentDate}
-					/>
+					<StickyBand sticky={false} dropdownContent={[priceDropdownContent, priceDropdowns]} formRef={formRefDate} formContent={formContentDate} />
 					{dateMetrics.isValidDateRange ? (
 						isLoading ? (
 							<LoadingIndicator />
