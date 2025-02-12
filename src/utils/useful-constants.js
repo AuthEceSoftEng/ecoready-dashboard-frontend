@@ -180,10 +180,10 @@ export const products = [
 		},
 		production: {
 			products: ["Bull", "Bullock", "Calf", "Cow", "Heifer", "Young cattle"],
-			productionTypes: [
+			productionMetrics: [
 				{ value: "tonnes", text: "Tonnes" },
 				{ value: "heads", text: "Heads" },
-				{ value: "kg_per_head", text: "KgPerHead" },
+				{ value: "kg_per_head", text: "Kg/Head" },
 			],
 		},
 		description: "No living labs currently working with beef",
@@ -199,7 +199,7 @@ export const products = [
 		},
 		production: {
 			products: ["Barley", "Durum wheat", "Maize", "Oat", "Other cereals", "Rye", "Soft wheat", "Sorghum", "Triticale"],
-			productionTypes: [
+			productionMetrics: [
 				{ value: "gross_production", text: "Gross Production" },
 				{ value: "yield", text: "Yield" },
 			],
@@ -226,10 +226,10 @@ export const products = [
 		},
 		production: {
 			products: ["Boiling hen", "Broiler", "Chicken", "Duck", "Goose", "Guinea fowl", "Other poultry", "Poultry meat", "Turkey"],
-			productionTypes: [
+			productionMetrics: [
 				{ value: "tonnes", text: "Tonnes" },
 				{ value: "heads", text: "Heads" },
-				{ value: "kg_per_head", text: "KgPerHead" },
+				{ value: "kg_per_head", text: "Kg/Head" },
 			],
 		},
 		description: "CONCATLL, Probio",
@@ -262,68 +262,24 @@ export const products = [
 			productTypes: ["Non-retail buying price", "Retail buying price", "Selling price"],
 		},
 		production: {
-			productionTypes: [
+			productionMetrics: [
 				{ value: "tonnes", text: "Tonnes" },
 				{ value: "heads", text: "Heads" },
-				{ value: "kg_per_head", text: "KgPerHead" },
+				{ value: "kg_per_head", text: "Kg/Head" },
 			],
 		},
 		description: "No living labs currently working with pigmeat",
 		image: "/product_images/pigmeat.png",
 	},
-	// Fruits and Vegetables
-	// { value: "abricots", text: "Abricots", image: "/product_images/abricots.png" },
-	// { value: "apples", text: "Apples", image: "/product_images/apples.jpg" },
-	// { value: "asparagus", text: "Asparagus", image: "/product_images/asparagus.jpg" },
-	// { value: "avocados", text: "Avocados", image: "/product_images/avocados.jpg" },
-	// { value: "beans", text: "Beans", image: "/product_images/beans.png" },
-	// { value: "cabbages", text: "Cabbages", image: "/product_images/cabbages.jpg" },
-	// { value: "carrots", text: "Carrots", image: "/product_images/carrots.jpg" },
-	// { value: "cauliflowers", text: "Cauliflowers", image: "/product_images/cauliflowers.jpg" },
-	// { value: "cherries", text: "Cherries", image: "/product_images/cherries.jpg" },
-	// { value: "clementines", text: "Clementines", image: "/product_images/clementines.jpg" },
-	// { value: "courgettes", text: "Courgettes", image: "/product_images/courgettes.jpg" },
-	// { value: "cucumbers", text: "Cucumbers", image: "/product_images/cucumbers.jpg" },
-	// { value: "egg plants, aubergines", text: "Egg plants", image: "/product_images/eggplants.jpg" },
-	// { value: "garlic", text: "Garlic", image: "/product_images/garlic.jpg" },
-	// { value: "kiwis", text: "Kiwis", image: "/product_images/kiwis.jpg" },
-	// { value: "leeks", text: "Leeks", image: "/product_images/leeks.jpg" },
-	// { value: "lemons", text: "Lemons", image: "/product_images/lemons.jpg" },
-	// { value: "lettuces", text: "Lettuces", image: "/product_images/lettuces.jpg" },
-	// { value: "mandarins", text: "Mandarins", image: "/product_images/mandarins.jpg" },
-	// { value: "melons", text: "Melons", image: "/product_images/melons.jpg" },
-	// { value: "mushrooms, cultivated", text: "Mushrooms", image: "/product_images/mushrooms.jpg" },
-	// { value: "nectarines", text: "Nectarines", image: "/product_images/nectarines.jpg" },
-	// { value: "onions", text: "Onions", image: "/product_images/onions.jpg" },
-	// { value: "oranges", text: "Oranges", image: "/product_images/oranges.jpg" },
-	// { value: "peaches", text: "Peaches", image: "/product_images/peaches.jpg" },
-	// { value: "pears", text: "Pears", image: "/product_images/pears.jpg" },
-	// { value: "peppers", text: "Peppers", image: "/product_images/peppers.jpg" },
-	// { value: "plums", text: "Plums", image: "/product_images/plums.jpg" },
-	// { value: "satsumas", text: "Satsumas", image: "/product_images/satsumas.jpg" },
-	// { value: "strawberries", text: "Strawberries", image: "/product_images/strawberries.jpg" },
-	// { value: "table grapes", text: "Grapes", image: "/product_images/grapes.jpg" },
-	// { value: "tomatoes", text: "Tomatoes", image: "/product_images/tomatoes.jpg" },
-	// { value: "water melons", text: "Watermelons", image: "/product_images/watermelons.jpg" },
-	// {
-	// 	value: "milk_dairy",
-	// 	text: "Milk/Dairy",
-	// 	collections: ["dairy_prices", "dairy_production", "raw_milk_prices"],
-	// 	dairy_prices: { products: ["Butter", "Cheese", "Cream", "Milk", "Milk powder", "Whey powder", "Yoghurt"] },
-	// 	dairy_production: { products: ["Drinking milk", "Skimmed milk powder"] },
-	// 	raw_milk_prices: { products: ["SMP", "BUTTER"] },
-	// 	description: "EcoReadyMasuria (milk)",
-	// 	image: "/product_images/milk_dairy.jpg",
-	// },
 	{
 		value: "milk_dairy",
 		text: "Dairy",
 		collections: ["dairy_prices", "dairy_production"],
 		prices: {
-			products: ["Butter", "Cheese", "Cream", "Milk powder", "Whey powder", "Yoghurt"],
+			products: ["BUTTER", "BUTTEROIL", "CHEDDAR", "CREAM", "DRINKING MILK", "EDAM", "EMMENTAL", "GOUDA", "SMP", "WHEYPOWDER", "WMP"],
 		},
 		production: {
-			products: ["Butter", "Cheese", "Cream", "Whey powder", "Yoghurt"],
+			products: ["Drinking milk", "Skimmed milk powder"],
 		},
 		description: "Dairy products derived from milk processing",
 		image: "/product_images/dairy.jpg",
@@ -331,34 +287,13 @@ export const products = [
 	{
 		value: "milk_dairy",
 		text: "Milk",
-		collections: ["raw_milk_prices", "milk_production"],
+		collections: ["raw_milk_prices"],
 		prices: {
-			products: ["SMP", "BUTTER"],
-		},
-		production: {
-			products: ["Drinking milk", "Skimmed milk powder"],
+			products: ["Organic raw milk", "Raw milk"],
 		},
 		description: "EcoReadyMasuria (milk)",
 		image: "/product_images/milk.jpg",
 	},
-	// {
-	// 	value: "oilseeds_protein_crops",
-	// 	text: "Oilseeds /Protein Crops",
-	// 	collections: ["oilseeds_prices", "oilseeds_production", "protein_crops_prices"],
-	// 	oilseeds_prices: {
-	// 		porducts: ["Crude rape oil", "Crude soya bean oil", "Crude sunflower oil", "Rapeseed", "Rapeseed meal", "Soya beans", "Soya meal", "Sunflower seed", "Sunflower seed meal"],
-	// 		productTypes: ["30-35% protein content", "40-50% protein content", "Above 35% protein content", "Below 30% protein content", "Below 40% protein content", "From dehulled seeds", "High-oleic", "N.A.", "Standard"],
-	// 	},
-	// 	oilseeds_production: {
-	// 		porducts: ["Broad/field beans", "Field peas", "Linseed", "Lupins", "Rapeseed", "Soybean", "Sunflower seed"],
-	// 	},
-	// 	protein_crops_prices: {
-	// 		products: ["Alfalfa", "Broad beans", "Chickpeas", "Lentils", "Lupins", "Peas"],
-	// 		productTypes: ["Bales", "Feed", "Food", "Not Defined", "Pellets"],
-	// 	},
-	// 	description: "EcoReadyMasuria (sunflower), Esappin (rapeseed)",
-	// 	image: "/product_images/oilseeds_protein.jpg",
-	// },
 	{
 		value: "oilseeds_protein_crops",
 		text: "Oilseeds",
@@ -368,7 +303,7 @@ export const products = [
 			productTypes: ["30-35% protein content", "40-50% protein content", "Above 35% protein content", "Below 30% protein content", "Below 40% protein content", "From dehulled seeds", "High-oleic", "N.A.", "Standard"],
 		},
 		production: {
-			products: ["Linseed", "Rapeseed", "Soybean", "Sunflower seed"],
+			products: ["Broad/field beans", "Field peas", "Linseed", "Lupins", "Rapeseed", "Soybean", "Sunflower seed"],
 		},
 		description: "EcoReadyMasuria (sunflower), Esappin (rapeseed)",
 		image: "/product_images/oilseeds.jpg",
@@ -382,7 +317,7 @@ export const products = [
 			productTypes: ["Bales", "Feed", "Food", "Not Defined", "Pellets"],
 		},
 		production: {
-			products: ["Broad/field beans", "Field peas", "Lupins"],
+			products: ["Broad/field beans", "Field peas", "Linseed", "Lupins", "Rapeseed", "Soybean", "Sunflower seed"],
 		},
 		description: "Protein rich crops for sustainable agriculture",
 		image: "/product_images/protein_crops.jpg",
@@ -418,7 +353,7 @@ export const products = [
 		},
 		production: {
 			products: ["(1) Round grain paddy rice", "(2) Medium grain paddy rice", "(3) Long grain A paddy rice", "(4) Long grain B paddy rice"],
-			productionTypes: [
+			productionMetrics: [
 				{ value: "milled_rice_equivalent_quantity", text: "Milled rice" },
 				{ value: "rice_husk_quantity", text: "Rice husk" },
 			],
@@ -433,7 +368,12 @@ export const products = [
 		prices: { products: ["Heavy Lamb", "Light Lamb"] },
 		production: {
 			products: ["Goat meat", "Sheepmeat"],
-			productionTypes: ["Slaughterings", "Slaughterings, other than in slaughterhouses"],
+			productTypes: ["Slaughterings", "Slaughterings, other than in slaughterhouses"],
+			productionMetrics: [
+				{ value: "tonnes", text: "Tonnes" },
+				{ value: "heads", text: "Heads" },
+				{ value: "kg_per_head", text: "Kg/Head" },
+			],
 		},
 		description: "No living labs currently working with sheep/goat meat",
 		image: "/product_images/sheep_goat_meat.png",
@@ -443,7 +383,7 @@ export const products = [
 		text: "Sugar",
 		collections: ["prices", "production"],
 		production: {
-			productionTypes: [
+			productionMetrics: [
 				{ value: "gross_production", text: "Gross Production" },
 				{ value: "yield", text: "Yield" },
 			],
@@ -494,7 +434,7 @@ export const products = [
 				"Valencia vino tinto sin DOP/IGP",
 				"Verona Vino bianco DOP",
 				"Verona Vino bianco senza DOP/IGP",
-			]
+			],
 		},
 		description: "No living labs currently working with wine",
 		image: "/product_images/wine.jpg",
