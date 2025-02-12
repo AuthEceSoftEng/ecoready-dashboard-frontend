@@ -323,6 +323,7 @@ const ProductsScreen = () => {
 	const yearPickerProps = useMemo(() => [
 		{
 			customType: "date-picker",
+			width: "150px",
 			sublabel: "Select Year",
 			views: ["year"],
 			value: new Date(`${year}-01-01`),
@@ -368,6 +369,7 @@ const ProductsScreen = () => {
 		if (productionProducts?.length) {
 			dropdowns.push({
 				id: "prodProds",
+				width: "150px",
 				items: productionProducts,
 				value: productionOptions.product,
 				label: "Select Product Type",
@@ -381,6 +383,7 @@ const ProductsScreen = () => {
 		if (productTypes?.length) {
 			dropdowns.push({
 				id: "prodProdTypes",
+				width: "150px",
 				items: productTypes,
 				value: productionOptions.productType,
 				label: "Select Product Type",
@@ -394,6 +397,7 @@ const ProductsScreen = () => {
 		if (productionMetrics?.length) {
 			dropdowns.push({
 				id: "prodProdMtrx",
+				width: "150px",
 				items: productionMetrics,
 				value: productionOptions.productionMetricType,
 				label: "Select Production Type",

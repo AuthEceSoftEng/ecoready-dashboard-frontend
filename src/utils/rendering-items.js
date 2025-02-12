@@ -64,7 +64,7 @@ export const StickyBand = ({ sticky = true, dropdownContent = [], formRef, formC
 			</Grid>
 		)}
 		{dropdownContent.map((dropdown, index) => (
-			<Grid key={index} item sx={{ display: "flex", justifyContent: "flex-end", minWidth: "fit-content", flexShrink: 0 }} xs={6} sm={4} md={1}>
+			<Grid key={index} item sx={{ display: "flex", justifyContent: "flex-end", minWidth: "fit-content", flexShrink: 0 }} xs={6} sm={2} md={1}>
 				<Dropdown
 					id={dropdown.id}
 					multiple={dropdown.multiple}
@@ -80,18 +80,7 @@ export const StickyBand = ({ sticky = true, dropdownContent = [], formRef, formC
 			</Grid>
 		))}
 		{formContent && (
-			<Grid
-				item
-				sx={{
-					display: "flex",
-					justifyContent: "flex-start",
-					minWidth: "fit-content",
-					flexShrink: 0,
-				}}
-				xs={6}
-				sm={6}
-				md={formContent.customType === "date-range" ? 2 : 1}
-			>
+			<Grid item sx={{ display: "flex", justifyContent: "flex-start", minWidth: "fit-content", flexShrink: 0 }} xs={6} sm={2} md={formContent.customType === "date-range" ? 2 : 1}>
 				<Form ref={formRef} content={formContent} />
 			</Grid>
 		)}
