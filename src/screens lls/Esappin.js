@@ -221,42 +221,50 @@ const Esappin = () => {
 			<Grid item xs={12} md={12} alignItems="center" flexDirection="column" padding={0}>
 				<Card title={`${monthNames[dateRange.month].text}'s Overview`} footer={cardFooter({ minutesAgo })}>
 					<Grid container display="flex" direction="row" justifyContent="space-evenly" padding={0} spacing={1}>
-						{monthlyOverview.map((plotData, index) => (
-							<Grid
-								key={index}
-								item
-								xs={12}
-								sm={12}
-								md={plotData.shape === "bullet" ? 6 : 4}
-								justifyContent="center"
-								alignItems="center"
-							>
-								{plotData.data.value
-									? isLoading ? (<LoadingIndicator />
-									) : (
-										<Plot
-											showLegend
-											scrollZoom
-											height={plotData.shape === "bullet" ? "120px" : "200px"}
-											data={[
-												{
-													type: "indicator",
-													mode: "gauge+number",
-													value: plotData.data.value,
-													range: plotData.range,
-													color: plotData.color,
-													shape: plotData.shape,
-													indicator: "primary",
-													textColor: "primary",
-													suffix: plotData.suffix,
-												},
-											]}
-											displayBar={false}
-											title={plotData.data.subtitle}
-										/>
-									) : (<DataWarning />)}
+						{monthlyOverview.some((plot) => plot.data.value) ? (
+							monthlyOverview.map((plotData, index) => (
+								<Grid
+									key={index}
+									item
+									xs={12}
+									sm={12}
+									md={plotData.shape === "bullet" ? 6 : 4}
+									justifyContent="center"
+									alignItems="center"
+								>
+									{plotData.data.value ? (
+										isLoading ? (
+											<LoadingIndicator />
+										) : (
+											<Plot
+												showLegend
+												scrollZoom
+												height={plotData.shape === "bullet" ? "120px" : "200px"}
+												data={[
+													{
+														type: "indicator",
+														mode: "gauge+number",
+														value: plotData.data.value,
+														range: plotData.range,
+														color: plotData.color,
+														shape: plotData.shape,
+														indicator: "primary",
+														textColor: "primary",
+														suffix: plotData.suffix,
+													},
+												]}
+												displayBar={false}
+												title={plotData.data.subtitle}
+											/>
+										)
+									) : null}
+								</Grid>
+							))
+						) : (
+							<Grid item xs={12}>
+								<DataWarning />
 							</Grid>
-						))}
+						)}
 					</Grid>
 				</Card>
 			</Grid>
