@@ -158,6 +158,15 @@ const ProductsScreen = () => {
 	}, [productionMetrics]);
 	// console.log("Production Options:", productionOptions);
 
+	useEffect(() => {
+	    if (selectedProduct) {
+	        setFilters((prev) => ({
+	            ...prev,
+	            product: selectedProduct,
+	        }));
+	    }
+	}, [selectedProduct]);
+
 	const debouncedSetDate = useMemo(
 		() => debounce((date, setter) => {
 			const { currentDate } = calculateDates(date);
