@@ -1,4 +1,4 @@
-import { useState, memo } from "react";
+import { useState, useMemo, memo } from "react";
 import { styled } from "@mui/material/styles";
 import { AppBar, Toolbar, Typography, Menu, MenuItem, IconButton, Button, Paper, Breadcrumbs, Box } from "@mui/material";
 import { Link, useNavigate, useLocation } from "react-router-dom";
@@ -10,6 +10,7 @@ import { makeStyles } from "@mui/styles";
 import { Image } from "mui-image";
 
 import { jwt, capitalize } from "../utils/index.js"; // , isFuzzyMatch
+import { products, labs } from "../utils/useful-constants.js";
 import logo from "../assets/images/logo.png";
 // import inspectionIcon from "../assets/icons/inspection.png";
 // import servicesIcon from "../assets/icons/services.png";
@@ -87,6 +88,27 @@ const Header = ({ isAuthenticated }) => {
 	// const [anchorElServices, setAnchorElServices] = useState(null);
 	const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = useState(null);
 	const [searchFilter, setSearchFilter] = useState("");
+	const [searchResults, setSearchResults] = useState([]);
+
+	const searchData = 	useMemo(() => [
+	    ...products.map((product) => ({
+	      type: "product",
+	      name: product.text,
+	      link: `/products?selected=${product.value}`,
+	    })),
+	    ...products.map((product) => ({
+	      type: "map",
+	      name: `${product.text} Map`,
+	      link: `/map?selected=${product.value}`,
+	    })),
+	    ...labs.flatMap((lab) =>
+	      lab.products.map((product) => ({
+	        type: "lab",
+	        name: `${lab.title} (Relevant: ${product})`,
+	        link: lab.path,
+	      }))
+	    ),
+	  ], [products, labs]); // Memoize to avoid unnecessary recalculations
 
 	// const isMenuOpenServices = Boolean(anchorElServices);
 	const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
@@ -101,7 +123,19 @@ const Header = ({ isAuthenticated }) => {
 	};
 
 	const handleSearchChange = (event) => {
-		setSearchFilter(event.target.value);
+		const query = event.target.value.toLowerCase();
+		setSearchFilter(query);
+
+		if (query.length === 0) {
+			setSearchResults([]);
+			return;
+		}
+
+		const filteredResults = searchData.filter((item) =>
+			item.name.toLowerCase().includes(query)
+		);
+
+		setSearchResults(filteredResults);
 	};
 
 	const CrumpLink = styled(Link)(({ theme }) => ({ display: "flex", color: theme.palette.primary.main }));
@@ -219,7 +253,7 @@ const Header = ({ isAuthenticated }) => {
 									width: { xs: "108px", sm: "200px", md: "300px" },
 								}}
 							>
-								<Search value={searchFilter} onChange={handleSearchChange} />
+								<Search value={searchFilter} onChange={handleSearchChange} results={searchResults} />
 							</Box>
 							<Box sx={{ display: { xs: "none", sm: "none", md: "flex" }, height: "100%", py: 1 }}>
 								{buttons.map((button) => (

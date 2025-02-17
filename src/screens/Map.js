@@ -87,6 +87,16 @@ const Map = () => {
 		product: selectedProduct || "Rice",
 		metric: "price",
 	});
+
+	useEffect(() => {
+	    if (selectedProduct) {
+	        setFilters((prev) => ({
+	            ...prev,
+	            product: selectedProduct,
+	        }));
+	    }
+	}, [selectedProduct]);
+
 	const [isDataReady, setIsDataReady] = useState(false);
 
 	const handleToggleLegend = () => {
