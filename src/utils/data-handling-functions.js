@@ -5,6 +5,8 @@ export const initialState = {
 	minutesAgo: 0,
 	pageRefreshTime: new Date(),
 	isLoading: false,
+	isPriceLoading: false,
+	isProductionLoading: false,
 	warning: null,
 	error: null,
 };
@@ -15,17 +17,60 @@ export const reducer = (state, action) => {
 			return {
 				...state,
 				isLoading: true,
+				isPriceLoading: true,
+				isProductionLoading: true,
 				warning: null,
 				error: null,
 				dataSets: {},
 			};
 		}
 
-		case "FETCH_SUCCESS": {
-			const { plotId, response } = action.payload;
+		case "FETCH_PRICE_START": {
 			return {
 				...state,
 				isLoading: false,
+				isPriceLoading: true,
+				isProductionLoading: false,
+				warning: null,
+				error: null,
+				dataSets: {
+					...state.dataSets,
+					// Clear only price-related datasets
+					pricesTimeline: undefined,
+					periodPrices: undefined,
+					monthlyPrices: undefined,
+					maxPrice: undefined,
+				},
+			};
+		}
+
+		case "FETCH_PRODUCTION_START": {
+			return {
+				...state,
+				isLoading: false,
+				isPriceLoading: false,
+				isProductionLoading: true,
+				warning: null,
+				error: null,
+				dataSets: {
+					...state.dataSets,
+					// Clear only production-related datasets
+					productProduction: undefined,
+					maxProduction: undefined,
+				},
+			};
+		}
+
+		case "FETCH_SUCCESS": {
+			const { plotId, response } = action.payload;
+			const isPriceData = plotId.toLowerCase().includes("price");
+			const isProductionData = plotId.toLowerCase().includes("production");
+
+			return {
+				...state,
+				isLoading: false,
+				isPriceLoading: isPriceData ? false : state.isPriceLoading,
+				isProductionLoading: isProductionData ? false : state.isProductionLoading,
 				error: null,
 				dataSets: {
 					...state.dataSets,

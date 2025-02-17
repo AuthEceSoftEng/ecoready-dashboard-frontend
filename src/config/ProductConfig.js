@@ -16,10 +16,10 @@ const UNITS = {
 	},
 	production: {
 		Wine: "HL",
-		Dairy: "1000 tonnes",
+		Dairy: "kTonnes",
 		heads: "heads",
 		kg_per_head: "kg/head",
-		default: "tonnes",
+		default: "Tonnes",
 	},
 };
 
@@ -43,7 +43,11 @@ const getProductionBaseConfig = (product) => ({
 	plotId: "productProduction",
 });
 
-export const getPriceConfigs = (country, product, startDate, endDate, differenceInDays, productType = null, productVariety = null, collection = null) => {
+export const getPriceConfigs = (product, startDate, endDate, differenceInDays, productType = null, productVariety = null, collection = null) => {
+	console.log("product", product);
+	console.log("productType", productType);
+	console.log("productVariety", productVariety);
+
 	if (product === "Rice") {
 		return [
 			{
@@ -52,11 +56,6 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 					attribute: ["price"],
 					stat: "avg",
 					filters: [
-						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
 						{
 							property_name: "type",
 							operator: "eq",
@@ -82,11 +81,6 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 					attribute: ["price"],
 					stat: "avg",
 					filters: [
-						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
 						{
 							property_name: "type",
 							operator: "eq",
@@ -118,11 +112,6 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 					stat: "avg",
 					filters: [
 						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
-						{
 							property_name: "product",
 							operator: "eq",
 							property_value: productType,
@@ -143,11 +132,6 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 					stat: "avg",
 					filters: [
 						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
-						{
 							property_name: "product",
 							operator: "eq",
 							property_value: productType,
@@ -167,11 +151,6 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 					attribute: ["price"],
 					stat: "max",
 					filters: [
-						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
 						{
 							property_name: "product",
 							operator: "eq",
@@ -264,11 +243,6 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 					stat: "avg",
 					filters: [
 						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
-						{
 							property_name: "description",
 							operator: "eq",
 							property_value: productType,
@@ -289,11 +263,6 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 					stat: "avg",
 					filters: [
 						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
-						{
 							property_name: "description",
 							operator: "eq",
 							property_value: productType,
@@ -313,11 +282,6 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 					attribute: ["price"],
 					stat: "max",
 					filters: [
-						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
 						{
 							property_name: "description",
 							operator: "eq",
@@ -344,11 +308,6 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 					stat: "avg",
 					filters: [
 						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
-						{
 							property_name: "product",
 							operator: "eq",
 							property_value: productType,
@@ -369,11 +328,6 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 					stat: "avg",
 					filters: [
 						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
-						{
 							property_name: "product",
 							operator: "eq",
 							property_value: productType,
@@ -392,13 +346,13 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 				params: JSON.stringify({
 					attribute: ["price"],
 					stat: "max",
-					filters: [
-						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
-					],
+					// filters: [
+					// 	{
+					// 		property_name: "product",
+					// 		operator: "eq",
+					// 		property_value: productType,
+					// 	},
+					// 	],
 					group_by: "key",
 					interval: `every_${differenceInDays}_days`,
 					start_time: startDate,
@@ -419,11 +373,6 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 					attribute: ["price"],
 					stat: "avg",
 					filters: [
-						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
 						{
 							property_name: "category",
 							operator: "eq",
@@ -446,11 +395,6 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 					stat: "avg",
 					filters: [
 						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
-						{
 							property_name: "category",
 							operator: "eq",
 							property_value: productType,
@@ -471,11 +415,6 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 					attribute: ["price"],
 					stat: "max",
 					filters: [
-						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
 						{
 							property_name: "category",
 							operator: "eq",
@@ -502,13 +441,13 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 					params: JSON.stringify({
 						attribute: ["price"],
 						stat: "avg",
-						filters: [
-							{
-								property_name: "key",
-								operator: "eq",
-								property_value: country,
-							},
-						],
+						// filters: [
+						// 	{
+						// 		property_name: "key",
+						// 		operator: "eq",
+						// 		property_value: country,
+						// 	},
+						// ],
 						group_by: "key",
 						interval: `every_${differenceInDays}_days`,
 						start_time: startDate,
@@ -523,13 +462,13 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 					params: JSON.stringify({
 						attribute: ["price"],
 						stat: "avg",
-						filters: [
-							{
-								property_name: "key",
-								operator: "eq",
-								property_value: country,
-							},
-						],
+						// filters: [
+						// 	{
+						// 		property_name: "key",
+						// 		operator: "eq",
+						// 		property_value: country,
+						// 	},
+						// ],
 						group_by: "key",
 						interval: "every_1_days",
 						start_time: startDate,
@@ -544,13 +483,13 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 					params: JSON.stringify({
 						attribute: ["price"],
 						stat: "max",
-						filters: [
-							{
-								property_name: "key",
-								operator: "eq",
-								property_value: country,
-							},
-						],
+						// filters: [
+						// 	{
+						// 		property_name: "key",
+						// 		operator: "eq",
+						// 		property_value: country,
+						// 	},
+						// ],
 						group_by: "key",
 						interval: `every_${differenceInDays}_days`,
 						start_time: startDate,
@@ -570,11 +509,6 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 					attribute: ["price"],
 					stat: "avg",
 					filters: [
-						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
 						{
 							property_name: "category",
 							operator: "eq",
@@ -602,11 +536,6 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 					stat: "avg",
 					filters: [
 						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
-						{
 							property_name: "category",
 							operator: "eq",
 							property_value: productType,
@@ -632,11 +561,6 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 					attribute: ["price"],
 					stat: "max",
 					filters: [
-						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
 						{
 							property_name: "category",
 							operator: "eq",
@@ -669,11 +593,6 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 					stat: "avg",
 					filters: [
 						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
-						{
 							property_name: "farming_method",
 							operator: "eq",
 							property_value: productType,
@@ -695,11 +614,6 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 					stat: "avg",
 					filters: [
 						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
-						{
 							property_name: "farming_method",
 							operator: "eq",
 							property_value: productType,
@@ -720,11 +634,6 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 					attribute: ["price"],
 					stat: "max",
 					filters: [
-						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
 						{
 							property_name: "farming_method",
 							operator: "eq",
@@ -751,20 +660,15 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 					attribute: ["price"],
 					stat: "avg",
 					filters: [
-						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
-						{
-							property_name: "product_name",
-							operator: "eq",
-							property_value: productType,
-						},
+						// {
+						// 	property_name: "product_name",
+						// 	operator: "eq",
+						// 	property_value: productType,
+						// },
 						{
 							property_name: "price_type",
 							operator: "eq",
-							property_value: productVariety,
+							property_value: productType,
 						},
 					],
 					group_by: "key",
@@ -782,20 +686,15 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 					attribute: ["price"],
 					stat: "avg",
 					filters: [
-						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
-						{
-							property_name: "product_name",
-							operator: "eq",
-							property_value: productType,
-						},
+						// {
+						// 	property_name: "product_name",
+						// 	operator: "eq",
+						// 	property_value: productType,
+						// },
 						{
 							property_name: "price_type",
 							operator: "eq",
-							property_value: productVariety,
+							property_value: productType,
 						},
 					],
 					group_by: "key",
@@ -813,20 +712,15 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 					attribute: ["price"],
 					stat: "max",
 					filters: [
-						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
-						{
-							property_name: "product_name",
-							operator: "eq",
-							property_value: productType,
-						},
+						// {
+						// 	property_name: "product_name",
+						// 	operator: "eq",
+						// 	property_value: productType,
+						// },
 						{
 							property_name: "price_type",
 							operator: "eq",
-							property_value: productVariety,
+							property_value: productType,
 						},
 					],
 					group_by: "key",
@@ -849,11 +743,6 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 					stat: "avg",
 					filters: [
 						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
-						{
 							property_name: "product_name",
 							operator: "eq",
 							property_value: productType,
@@ -874,11 +763,6 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 					stat: "avg",
 					filters: [
 						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
-						{
 							property_name: "product_name",
 							operator: "eq",
 							property_value: productType,
@@ -898,11 +782,6 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 					attribute: ["price"],
 					stat: "max",
 					filters: [
-						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
 						{
 							property_name: "product_name",
 							operator: "eq",
@@ -933,11 +812,6 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 					end_time: endDate,
 					filters: [
 						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
-						{
 							property_name: "product",
 							operator: "eq",
 							property_value: productType,
@@ -953,15 +827,10 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 				params: JSON.stringify({
 					attribute: ["price"],
 					stat: "avg",
-					interval: `every_${differenceInDays}_days`,
+					interval: "every_1_days",
 					start_time: startDate,
 					end_time: endDate,
 					filters: [
-						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
 						{
 							property_name: "product",
 							operator: "eq",
@@ -982,11 +851,6 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 					start_time: startDate,
 					end_time: endDate,
 					filters: [
-						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
 						{
 							property_name: "product",
 							operator: "eq",
@@ -1013,11 +877,6 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 					end_time: endDate,
 					filters: [
 						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
-						{
 							property_name: "product",
 							operator: "eq",
 							property_value: productType,
@@ -1033,15 +892,10 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 				params: JSON.stringify({
 					attribute: ["price"],
 					stat: "avg",
-					interval: `every_${differenceInDays}_days`,
+					interval: "every_1_days",
 					start_time: startDate,
 					end_time: endDate,
 					filters: [
-						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
 						{
 							property_name: "product",
 							operator: "eq",
@@ -1062,11 +916,6 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 					start_time: startDate,
 					end_time: endDate,
 					filters: [
-						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
 						{
 							property_name: "product",
 							operator: "eq",
@@ -1093,11 +942,6 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 					end_time: endDate,
 					filters: [
 						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
-						{
 							property_name: "product",
 							operator: "eq",
 							property_value: productType,
@@ -1123,11 +967,6 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 					end_time: endDate,
 					filters: [
 						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
-						{
 							property_name: "product",
 							operator: "eq",
 							property_value: productType,
@@ -1152,11 +991,6 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 					start_time: startDate,
 					end_time: endDate,
 					filters: [
-						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
 						{
 							property_name: "product",
 							operator: "eq",
@@ -1188,11 +1022,6 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 					end_time: endDate,
 					filters: [
 						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
-						{
 							property_name: "product",
 							operator: "eq",
 							property_value: productType,
@@ -1218,11 +1047,6 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 					end_time: endDate,
 					filters: [
 						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
-						{
 							property_name: "product",
 							operator: "eq",
 							property_value: productType,
@@ -1247,11 +1071,6 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 					start_time: startDate,
 					end_time: endDate,
 					filters: [
-						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
 						{
 							property_name: "product",
 							operator: "eq",
@@ -1283,11 +1102,6 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 					end_time: endDate,
 					filters: [
 						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
-						{
 							property_name: "category",
 							operator: "eq",
 							property_value: productType,
@@ -1308,11 +1122,6 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 					end_time: endDate,
 					filters: [
 						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
-						{
 							property_name: "category",
 							operator: "eq",
 							property_value: productType,
@@ -1332,11 +1141,6 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 					start_time: startDate,
 					end_time: endDate,
 					filters: [
-						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
 						{
 							property_name: "category",
 							operator: "eq",
@@ -1362,11 +1166,6 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 					end_time: endDate,
 					filters: [
 						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
-						{
 							property_name: "product",
 							operator: "eq",
 							property_value: productType,
@@ -1385,11 +1184,6 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 					start_time: startDate,
 					end_time: endDate,
 					filters: [
-						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
 						{
 							property_name: "product",
 							operator: "eq",
@@ -1410,11 +1204,6 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 					end_time: endDate,
 					filters: [
 						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
-						{
 							property_name: "product",
 							operator: "eq",
 							property_value: productType,
@@ -1430,8 +1219,10 @@ export const getPriceConfigs = (country, product, startDate, endDate, difference
 	return [];
 };
 
-export const getMonthlyPriceConfigs = (country, product, customDate, productType = null, productVariety = null, collection = null) => {
+export const getMonthlyPriceConfigs = (product, customDate, productType = null, productVariety = null, collection = null) => {
 	const { currentDate, formattedBeginningOfMonth } = calculateDates(customDate);
+	console.log("currentDate", currentDate);
+	console.log("formattedBeginningOfMonth", formattedBeginningOfMonth);
 
 	if (product === "Rice") {
 		return [
@@ -1444,11 +1235,6 @@ export const getMonthlyPriceConfigs = (country, product, customDate, productType
 					start_time: formattedBeginningOfMonth,
 					end_time: currentDate,
 					filters: [
-						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
 						{
 							property_name: "type",
 							operator: "eq",
@@ -1475,11 +1261,6 @@ export const getMonthlyPriceConfigs = (country, product, customDate, productType
 					attribute: ["price"],
 					stat: "avg",
 					filters: [
-						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
 						{
 							property_name: "product",
 							operator: "eq",
@@ -1532,11 +1313,6 @@ export const getMonthlyPriceConfigs = (country, product, customDate, productType
 					stat: "avg",
 					filters: [
 						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
-						{
 							property_name: "description",
 							operator: "eq",
 							property_value: productType,
@@ -1560,11 +1336,6 @@ export const getMonthlyPriceConfigs = (country, product, customDate, productType
 					attribute: ["price"],
 					stat: "avg",
 					filters: [
-						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
 						{
 							property_name: "product",
 							operator: "eq",
@@ -1595,11 +1366,6 @@ export const getMonthlyPriceConfigs = (country, product, customDate, productType
 					end_time: currentDate,
 					filters: [
 						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
-						{
 							property_name: "category",
 							operator: "eq",
 							property_value: productVariety,
@@ -1624,13 +1390,13 @@ export const getMonthlyPriceConfigs = (country, product, customDate, productType
 						interval: "every_1_months",
 						start_time: formattedBeginningOfMonth,
 						end_time: currentDate,
-						filters: [
-							{
-								property_name: "key",
-								operator: "eq",
-								property_value: country,
-							},
-						],
+						// filters: [
+						// 	{
+						// 		property_name: "key",
+						// 		operator: "eq",
+						// 		property_value: country,
+						// 	},
+						// ],
 					}),
 					plotId: "monthlyPrices",
 					unit: getUnit(product),
@@ -1649,11 +1415,6 @@ export const getMonthlyPriceConfigs = (country, product, customDate, productType
 					start_time: formattedBeginningOfMonth,
 					end_time: currentDate,
 					filters: [
-						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
 						{
 							property_name: "category",
 							operator: "eq",
@@ -1676,11 +1437,6 @@ export const getMonthlyPriceConfigs = (country, product, customDate, productType
 					attribute: ["price"],
 					stat: "avg",
 					filters: [
-						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
 						{
 							property_name: "farming_method",
 							operator: "eq",
@@ -1706,20 +1462,15 @@ export const getMonthlyPriceConfigs = (country, product, customDate, productType
 					attribute: ["price"],
 					stat: "avg",
 					filters: [
-						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
-						{
-							property_name: "product_name",
-							operator: "eq",
-							property_value: productType,
-						},
+						// {
+						// 	property_name: "product_name",
+						// 	operator: "eq",
+						// 	property_value: productType,
+						// },
 						{
 							property_name: "price_type",
 							operator: "eq",
-							property_value: productVariety,
+							property_value: productType,
 						},
 					],
 					group_by: "key",
@@ -1740,11 +1491,6 @@ export const getMonthlyPriceConfigs = (country, product, customDate, productType
 					attribute: ["price"],
 					stat: "avg",
 					filters: [
-						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
 						{
 							property_name: "product_name",
 							operator: "eq",
@@ -1771,11 +1517,6 @@ export const getMonthlyPriceConfigs = (country, product, customDate, productType
 					stat: "avg",
 					filters: [
 						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
-						{
 							property_name: "product",
 							operator: "eq",
 							property_value: productType,
@@ -1801,11 +1542,6 @@ export const getMonthlyPriceConfigs = (country, product, customDate, productType
 					stat: "avg",
 					filters: [
 						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
-						{
 							property_name: "product",
 							operator: "eq",
 							property_value: productType,
@@ -1830,11 +1566,6 @@ export const getMonthlyPriceConfigs = (country, product, customDate, productType
 					attribute: ["price"],
 					stat: "avg",
 					filters: [
-						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
 						{
 							property_name: "product",
 							operator: "eq",
@@ -1866,11 +1597,6 @@ export const getMonthlyPriceConfigs = (country, product, customDate, productType
 					stat: "avg",
 					filters: [
 						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
-						{
 							property_name: "product",
 							operator: "eq",
 							property_value: productType,
@@ -1901,11 +1627,6 @@ export const getMonthlyPriceConfigs = (country, product, customDate, productType
 					stat: "avg",
 					filters: [
 						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
-						{
 							property_name: "category",
 							operator: "eq",
 							property_value: productType,
@@ -1930,11 +1651,6 @@ export const getMonthlyPriceConfigs = (country, product, customDate, productType
 					stat: "avg",
 					filters: [
 						{
-							property_name: "key",
-							operator: "eq",
-							property_value: country,
-						},
-						{
 							property_name: "product",
 							operator: "eq",
 							property_value: productType,
@@ -1955,10 +1671,6 @@ export const getMonthlyPriceConfigs = (country, product, customDate, productType
 
 export const getProductionConfigs = (product, productType = null, productionMetric = null, productionType = null) => {
 	const year = new Date().getFullYear().toString();
-	console.log("product", product);
-	console.log("productType", productType);
-	console.log("productionMetric", productionMetric);
-
 	if (product === "Beef") {
 		return [
 			{
