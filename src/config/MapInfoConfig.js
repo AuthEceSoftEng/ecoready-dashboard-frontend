@@ -1,5 +1,6 @@
-export const organization = "european_data";
 import { products } from "../utils/useful-constants.js";
+
+export const organization = "european_data";
 
 export const mapInfoConfigs = (country, product, year) => {
 	if (product === "rice") {
@@ -8,7 +9,7 @@ export const mapInfoConfigs = (country, product, year) => {
 				type: "stats",
 				project: "rice",
 				collection: "__prices__",
-				params: JSON.stringify({ attribute: ["price"], stat: "avg", interval: `every_12_months`, start_time: `${year}-01-01`, end_time: `${year}-12-31`, group_by: "key", }),
+				params: JSON.stringify({ attribute: ["price"], stat: "avg", interval: "every_12_months", start_time: `${year}-01-01`, end_time: `${year}-12-31`, group_by: "key" }),
 				attributename: "avg_price",
 				metric: "Average Price",
 				unit: "€/t",
@@ -18,7 +19,7 @@ export const mapInfoConfigs = (country, product, year) => {
 				type: "stats",
 				project: "rice",
 				collection: "__production__",
-				params: JSON.stringify({ attribute: ["milled_rice_equivalent_quantity"], stat: "sum", interval: "every_12_months", start_time: `${year}-01-01`, end_time: `${year}-12-31`, group_by: "key", }),
+				params: JSON.stringify({ attribute: ["milled_rice_equivalent_quantity"], stat: "sum", interval: "every_12_months", start_time: `${year}-01-01`, end_time: `${year}-12-31`, group_by: "key" }),
 				attributename: "sum_milled_rice_equivalent_quantity",
 				metric: "Milled Rice Quantity",
 				unit: "t",
@@ -28,7 +29,7 @@ export const mapInfoConfigs = (country, product, year) => {
 				type: "stats",
 				project: "rice",
 				collection: "__production__",
-				params: JSON.stringify({ attribute: ["rice_husk_quantity"], stat: "sum", interval: "every_12_months", start_time: `${year}-01-01`, end_time: `${year}-12-31`, group_by: "key", }),
+				params: JSON.stringify({ attribute: ["rice_husk_quantity"], stat: "sum", interval: "every_12_months", start_time: `${year}-01-01`, end_time: `${year}-12-31`, group_by: "key" }),
 				attributename: "sum_rice_husk_quantity",
 				metric: "Rice Husk Quantity",
 				unit: "t",
@@ -36,13 +37,14 @@ export const mapInfoConfigs = (country, product, year) => {
 			},
 		];
 	}
-	else if (product === "beef") {
+
+	if (product === "beef") {
 		return [
 			{
 				type: "stats",
 				project: "beef",
 				collection: "__carcass_prices__",
-				params: JSON.stringify({ attribute: ["price"], stat: "avg", interval: "every_12_months", start_time: `${year}-01-01`, end_time: `${year}-12-31`, group_by: "key", }),
+				params: JSON.stringify({ attribute: ["price"], stat: "avg", interval: "every_12_months", start_time: `${year}-01-01`, end_time: `${year}-12-31`, group_by: "key" }),
 				attributename: "avg_price",
 				metric: "Average Carcass Price",
 				unit: "€/100kg",
@@ -52,7 +54,7 @@ export const mapInfoConfigs = (country, product, year) => {
 				type: "stats",
 				project: "beef",
 				collection: "__production__",
-				params: JSON.stringify({ attribute: ["tonnes"], stat: "sum", interval: "every_12_months", start_time: `${year}-01-01`, end_time: `${year}-12-31`, group_by: "key", }),
+				params: JSON.stringify({ attribute: ["tonnes"], stat: "sum", interval: "every_12_months", start_time: `${year}-01-01`, end_time: `${year}-12-31`, group_by: "key" }),
 				attributename: "sum_tonnes",
 				metric: "Production",
 				unit: "t",
@@ -60,13 +62,14 @@ export const mapInfoConfigs = (country, product, year) => {
 			},
 		];
 	}
-	else if (product === "wine") {
+
+	if (product === "wine") {
 		return [
 			{
 				type: "stats",
 				project: "wine",
 				collection: "__prices__",
-				params: JSON.stringify({ attribute: ["price"], stat: "avg", interval: `every_12_months`, start_time: `${year}-01-01`, end_time: `${year}-12-31`, group_by: "key", }),
+				params: JSON.stringify({ attribute: ["price"], stat: "avg", interval: "every_12_months", start_time: `${year}-01-01`, end_time: `${year}-12-31`, group_by: "key" }),
 				attributename: "avg_price",
 				metric: "Average Price",
 				unit: "€/HL.",
@@ -74,13 +77,14 @@ export const mapInfoConfigs = (country, product, year) => {
 			},
 		];
 	}
-	else if (product === "olive_oil") {
+
+	if (product === "olive_oil") {
 		return [
 			{
 				type: "stats",
 				project: "olive_oil",
 				collection: "__prices__",
-				params: JSON.stringify({ attribute: ["price"], stat: "avg", interval: `every_12_months`, start_time: `${year}-01-01`, end_time: `${year}-12-31`, group_by: "key", }),
+				params: JSON.stringify({ attribute: ["price"], stat: "avg", interval: "every_12_months", start_time: `${year}-01-01`, end_time: `${year}-12-31`, group_by: "key" }),
 				attributename: "avg_price",
 				metric: "Average Price",
 				unit: "€/100kg",
@@ -90,7 +94,7 @@ export const mapInfoConfigs = (country, product, year) => {
 				type: "stats",
 				project: "olive_oil",
 				collection: "__annual_production__",
-				params: JSON.stringify({ attribute: ["year_production_quantity"], stat: "sum", interval: "every_12_months", start_time: `${year}-01-01`, end_time: `${year}-12-31`, group_by: "key", }),
+				params: JSON.stringify({ attribute: ["year_production_quantity"], stat: "sum", interval: "every_12_months", start_time: `${year}-01-01`, end_time: `${year}-12-31`, group_by: "key" }),
 				attributename: "sum_year_production_quantity",
 				metric: "Production",
 				unit: "t",
@@ -98,100 +102,102 @@ export const mapInfoConfigs = (country, product, year) => {
 			},
 		];
 	}
-	else if (product === "sugar") {
+
+	if (product === "sugar") {
 		return [
 			{
 				type: "stats",
 				project: "sugar",
 				collection: "__prices__",
-				params: JSON.stringify({ attribute: ["price"], stat: "avg", interval: `every_12_months`, start_time: `${year}-01-01`, end_time: `${year}-12-31`, group_by: "key", }),
+				params: JSON.stringify({ attribute: ["price"], stat: "avg", interval: "every_12_months", start_time: `${year}-01-01`, end_time: `${year}-12-31`, group_by: "key" }),
 				attributename: "avg_price",
 				metric: "Average Price",
 				unit: "€/t",
 				plotId: "productPrices",
-				perRegion: true
+				perRegion: true,
 			},
 			{
 				type: "stats",
 				project: "sugar",
 				collection: "__production__",
-				params: JSON.stringify({ attribute: ["gross_production"], stat: "sum", interval: "every_12_months", start_time: `${year}-01-01`, end_time: `${year}-12-31`, group_by: "key", }),
+				params: JSON.stringify({ attribute: ["gross_production"], stat: "sum", interval: "every_12_months", start_time: `${year}-01-01`, end_time: `${year}-12-31`, group_by: "key" }),
 				attributename: "sum_gross_production",
 				metric: "Gross Production",
 				unit: "t",
 				plotId: "productProduction1",
-				perRegion: true
+				perRegion: true,
 			},
 		];
 	}
-	else if (product === "abricots" || product === "apples" || product === "asparagus" || product === "avocados" || product === "beans" || product === "cabbages" || 
-			product === "carrots" || product === "cauliflowers" || product === "cherries" || product === "clementines" || product === "courgettes" || 
-			product === "cucumbers" || product === "egg plants, aubergines" || product === "garlic" || product === "kiwis" || product === "leeks" || 
-			product === "lemons" || product === "lettuces" || product === "mandarins" || product === "melons" || product === "mushrooms, cultivated" || 
-			product === "nectarines" || product === "onions" || product === "oranges" || product === "peaches" || product === "pears" || product === "peppers" || 
-			product === "plums" || product === "satsumas" || product === "strawberries" || product === "table grapes" || product === "tomatoes" || product === "water melons") {
+
+	if (product === "abricots" || product === "apples" || product === "asparagus" || product === "avocados" || product === "beans" || product === "cabbages"
+		|| product === "carrots" || product === "cauliflowers" || product === "cherries" || product === "clementines" || product === "courgettes"
+		|| product === "cucumbers" || product === "egg plants, aubergines" || product === "garlic" || product === "kiwis" || product === "leeks"
+		|| product === "lemons" || product === "lettuces" || product === "mandarins" || product === "melons" || product === "mushrooms, cultivated"
+		|| product === "nectarines" || product === "onions" || product === "oranges" || product === "peaches" || product === "pears" || product === "peppers"
+		|| product === "plums" || product === "satsumas" || product === "strawberries" || product === "table grapes" || product === "tomatoes" || product === "water melons") {
 		return [
 			{
 				type: "stats",
 				project: "fruit_vegetables",
 				collection: "__prices__",
-				params: JSON.stringify({ attribute: ["price"], stat: "avg", interval: `every_12_months`, start_time: `${year}-01-01`, end_time: `${year}-12-31`, group_by: "key", filters: [{property_name: "product", operator: "eq", property_value: product}]}),
+				params: JSON.stringify({ attribute: ["price"], stat: "avg", interval: "every_12_months", start_time: `${year}-01-01`, end_time: `${year}-12-31`, group_by: "key", filters: [{ property_name: "product", operator: "eq", property_value: product }] }),
 				attributename: "avg_price",
 				metric: "Average Price",
 				unit: "€/100kg",
-				plotId: "productPrices"
-			}
+				plotId: "productPrices",
+			},
 		];
 	}
-	else if (product === "barley" || product === "wheat" || product === "maize" || product === "oats" || product === "rye" || product === "sorghum" || product === "triticale") {
-		const productnames = products.find(item => item.value === product)?.priceProductType || [];
-		const cropnames = products.find(item => item.value === product)?.productionProductType || [];
+
+	if (product === "barley" || product === "wheat" || product === "maize" || product === "oats" || product === "rye" || product === "sorghum" || product === "triticale") {
+		const productnames = products.find((item) => item.value === product)?.priceProductType || [];
+		const cropnames = products.find((item) => item.value === product)?.productionProductType || [];
 
 		const productData = productnames.map((productname, index) => ({
-			  type: "stats",
-			  project: "cereals",
-			  collection: "__prices__",
-			  params: JSON.stringify({
-			    attribute: ["price"],
-			    stat: "avg",
-			    interval: "every_12_months",
-			    start_time: `${year}-01-01`,
-			    end_time: `${year}-12-31`,
-			    group_by: "key",
-			    filters: [{ property_name: "product_name", operator: "eq", property_value: productname }]
-			  }),
-			  attributename: "avg_price",
-			  metric: `Average Price (${productname})`, // Include productname in the metric
-			  unit: "€/t",
-			  plotId: `productPrices${index + 1}` // Add an index to the plotId
-			}));
+			type: "stats",
+			project: "cereals",
+			collection: "__prices__",
+			params: JSON.stringify({
+				attribute: ["price"],
+				stat: "avg",
+				interval: "every_12_months",
+				start_time: `${year}-01-01`,
+				end_time: `${year}-12-31`,
+				group_by: "key",
+				filters: [{ property_name: "product_name", operator: "eq", property_value: productname }],
+			}),
+			attributename: "avg_price",
+			metric: `Average Price (${productname})`, // Include productname in the metric
+			unit: "€/t",
+			plotId: `productPrices${index + 1}`, // Add an index to the plotId
+		}));
 
 		const cropData = cropnames.map((cropname, index) => ({
-			  type: "stats",
-			  project: "cereals",
-			  collection: "__production__",
-			  params: JSON.stringify({
-			    attribute: ["gross_production"],
-			    stat: "sum",
-			    interval: "every_12_months",
-			    start_time: `${year}-01-01`,
-			    end_time: `${year}-12-31`,
-			    group_by: "key",
-			    filters: [{ property_name: "crop", operator: "eq", property_value: cropname }]
-			  }),
-			  attributename: "sum_gross_production",
-			  metric: `Gross Production (${cropname})`, // Include cropname in the metric
-			  unit: "t",
-			  plotId: `productProduction${index + 1}`, // Add an index to the plotId
-			  perRegion: false
-			}));
+			type: "stats",
+			project: "cereals",
+			collection: "__production__",
+			params: JSON.stringify({
+				attribute: ["gross_production"],
+				stat: "sum",
+				interval: "every_12_months",
+				start_time: `${year}-01-01`,
+				end_time: `${year}-12-31`,
+				group_by: "key",
+				filters: [{ property_name: "crop", operator: "eq", property_value: cropname }],
+			}),
+			attributename: "sum_gross_production",
+			metric: `Gross Production (${cropname})`, // Include cropname in the metric
+			unit: "t",
+			plotId: `productProduction${index + 1}`, // Add an index to the plotId
+			perRegion: false,
+		}));
 
 		return [...productData, ...cropData];
 	}
-	else {
-		// TODO: Perform error handling
-		return [{type: "error"}, {type: "error"}, {type: "error"}];
-	}
+
+	// TODO: Perform error handling
+	return [{ type: "error" }, { type: "error" }, { type: "error" }];
 };
 
 export default mapInfoConfigs;
