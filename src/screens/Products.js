@@ -159,12 +159,9 @@ const ProductsScreen = () => {
 	// console.log("Production Options:", productionOptions);
 
 	useEffect(() => {
-	    if (selectedProduct) {
-	        setFilters((prev) => ({
-	            ...prev,
-	            product: selectedProduct,
-	        }));
-	    }
+		if (selectedProduct) {
+			setGlobalProduct(selectedProduct);
+		}
 	}, [selectedProduct]);
 
 	const debouncedSetDate = useMemo(
