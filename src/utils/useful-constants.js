@@ -169,7 +169,10 @@ export const products = [
 	{
 		value: "beef",
 		text: "Beef",
-		collections: ["carcass_prices", "live_animal_prices", "production"],
+		collections: [
+			{ value: "carcass_prices", text: "Carcass" },
+			{ value: "live_animal_prices", text: "Live Animal" },
+		],
 		carcass_prices: {
 			products: ["Adult male indicative price", "Bulls",
 				"Calves slaughtered <8M", "Cows", "Heifers", "Steers", "Young bulls", "Young cattle"],
@@ -256,7 +259,7 @@ export const products = [
 	{
 		value: "pigmeat",
 		text: "Pigmeat",
-		collections: ["carcass_prices", "cuts_prices", "production"],
+		collections: [{ value: "carcass_prices", text: "Carcass" }, { value: "cuts_prices", text: "Cuts" }],
 		cuts_prices: {
 			products: ["Belly", "Ham", "Loin", "Minced Meat", "Shoulder"],
 			productTypes: ["Non-retail buying price", "Retail buying price", "Selling price"],
@@ -311,14 +314,14 @@ export const products = [
 	{
 		value: "oilseeds_protein_crops",
 		text: "Protein Crops",
-		collections: ["protein_crops_prices", "protein_crops_production"],
+		collections: ["protein_crops_prices"],
 		prices: {
 			products: ["Alfalfa", "Broad beans", "Chickpeas", "Lentils", "Lupins", "Peas"],
 			productTypes: ["Bales", "Feed", "Food", "Not Defined", "Pellets"],
 		},
-		production: {
-			products: ["Broad/field beans", "Field peas", "Linseed", "Lupins", "Rapeseed", "Soybean", "Sunflower seed"],
-		},
+		// production: {
+		// 	products: ["Broad/field beans", "Field peas", "Linseed", "Lupins", "Rapeseed", "Soybean", "Sunflower seed"],
+		// },
 		description: "Protein rich crops for sustainable agriculture",
 		image: "/product_images/protein_crops.jpg",
 	},

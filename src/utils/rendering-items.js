@@ -7,18 +7,12 @@ import Form from "../components/Form.js";
 import { timeUtils } from "./timer-manager.js";
 
 export const cardFooter = ({ minutesAgo }) => (
-
 	<Grid sx={{ width: "95%", borderTop: "2px solid lightgrey" }}>
-
 		<Typography variant="body" component="p" sx={{ marginTop: "5px" }}>
-
 			{"🕗 "}
 			{timeUtils.formatMinutesAgo(minutesAgo)}
-
 		</Typography>
-
 	</Grid>
-
 );
 
 export const LoadingIndicator = ({ message = "Loading data...", minHeight = "200px" }) => (
@@ -87,17 +81,25 @@ export const StickyBand = ({ sticky = true, dropdownContent = [], formRef, formC
 	</Grid>
 );
 
-export const DataWarning = ({ message = "No Data Available for the Specified Time Period..." }) => (
+export const DataWarning = ({
+	message = "No Data Available for the Specified Time Period...",
+	xs = 12,
+	sm = 12,
+	md = 12,
+	minHeight = "200px",
+	justify = "center",
+	align = "center",
+}) => (
 	<Grid
 		item
-		xs={12}
+		{...{ xs, sm, md }}
 		sx={{
 			display: "flex",
-			justifyContent: "center",
-			alignItems: "center",
-			minHeight: "200px",
+			justifyContent: justify,
+			alignItems: align,
+			minHeight,
 		}}
 	>
-		<Typography variant="h6" sx={{ fontWeight: "bold" }}>{message}</Typography>
+		<Typography variant="h6" fontWeight="bold" sx={{ textAlign: "center" }}>{message}</Typography>
 	</Grid>
 );
