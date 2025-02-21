@@ -1,5 +1,4 @@
-/* eslint-disable consistent-return */
-import { useEffect, useReducer, useRef, useCallback, useMemo } from "react";
+import { useEffect, useReducer, useRef, useCallback } from "react";
 
 import fetchAllData from "../api/fetch-data.js";
 
@@ -12,53 +11,36 @@ const useInit = (organization, fetchConfigs) => {
 	const { success, warning, error } = useSnackbar();
 	const [state, dispatch] = useReducer(reducer, initialState);
 
-	// Memoize snackbar callbacks
-	const snackbarCallbacks = useMemo(() => ({
-		success,
-		warning,
-		error,
-	}), [success, warning, error]);
+	const refs = useRef({ success, warning, error });
 
-	// Single ref object instead of multiple refs
-	const refs = useRef({
-		success: snackbarCallbacks.success,
-		warning: snackbarCallbacks.warning,
-		error: snackbarCallbacks.error,
-	});
-
-	// Update refs when callbacks change
 	useEffect(() => {
-		refs.current = snackbarCallbacks;
-	}, [snackbarCallbacks]);
+		refs.current = { success, warning, error };
+	}, [success, warning, error]);
 
 	const handleFetchResponse = useCallback((promiseStatus) => {
 		// ensure that there are no 500 errors or empty responses
 		const hasIssues = promiseStatus.some(
 			(item) => item?.response?.success === false
-            || (Array.isArray(item?.response) && item.response.length === 0),
+				|| (Array.isArray(item?.response) && item.response.length === 0),
 		);
 
 		// Map through each response and dispatch individually
 		for (const [index, item] of promiseStatus.entries()) {
 			const plotId = fetchConfigs[index].plotId;
-			if (hasIssues) {
-				dispatch({
-					type: "FETCH_WARNING",
-					payload: {
-						plotId,
-						response: item.response,
-					},
-					warning: "Some plots may be empty due to no matching data",
-				});
-			} else {
-				dispatch({
-					type: "FETCH_SUCCESS",
-					payload: {
-						plotId,
-						response: item.response,
-					},
-				});
-			}
+			// Determine if this is a price or production request based on plotId
+			const dataType = plotId.toLowerCase().includes("price") ? "price"
+				: plotId.toLowerCase().includes("production") ? "production"
+					: "general";
+
+			dispatch({
+				type: hasIssues ? "FETCH_WARNING" : "FETCH_SUCCESS",
+				payload: {
+					plotId,
+					response: item.response,
+					dataType, // Add dataType to payload
+				},
+				...(hasIssues && { warning: "Some plots may be empty due to no matching data" }),
+			});
 		}
 
 		// Show appropriate snackbar message
@@ -69,11 +51,23 @@ const useInit = (organization, fetchConfigs) => {
 		}
 	}, [fetchConfigs]);
 
-	const updateData = useCallback(async () => {
+	const updateData = useCallback(async (configs = fetchConfigs) => {
+		if (!configs?.length) return;
+
 		try {
-			dispatch({ type: "FETCH_START" });
-			const promiseStatus = await fetchAllData(dispatch, organization, fetchConfigs);
-			handleFetchResponse(promiseStatus);
+			// Determine if we're fetching specific data types
+			const isPriceOnly = configs.every((config) => config.plotId.toLowerCase().includes("price"));
+			const isProductionOnly = configs.every((config) => config.plotId.toLowerCase().includes("production"));
+
+			// Dispatch appropriate start action
+			dispatch({
+				type: isPriceOnly ? "FETCH_PRICE_START"
+					: isProductionOnly ? "FETCH_PRODUCTION_START"
+						: "FETCH_START",
+			});
+
+			const promiseStatus = await fetchAllData(dispatch, organization, configs);
+			handleFetchResponse(promiseStatus, configs);
 		} catch (error_) {
 			dispatch({
 				type: "FETCH_ERROR",
@@ -85,28 +79,20 @@ const useInit = (organization, fetchConfigs) => {
 			console.error("Error fetching data:", error_);
 			refs.current.error(`Error fetching data: ${error_.message}`);
 		}
-	}, [organization, fetchConfigs, handleFetchResponse]);
+	}, [organization, handleFetchResponse, fetchConfigs]);
 
 	useEffect(() => {
-		if (!fetchConfigs) {
-			dispatch({
-				type: "FETCH_START",
-			});
-			return;
-		}
-
-		const timerManager = new TimerManager(updateData, () => {
-			dispatch({ type: "UPDATE_MINUTES_AGO" });
-		});
+		const timerManager = new TimerManager(
+			() => updateData(fetchConfigs),
+			() => dispatch({ type: "UPDATE_MINUTES_AGO" }),
+		);
 
 		timerManager.start();
 
-		return () => {
-			timerManager.stop();
-		};
+		return () => { timerManager.stop(); };
 	}, [updateData, fetchConfigs]);
 
-	return { state, dispatch };
+	return { state, dispatch, updateData };
 };
 
 export default useInit;

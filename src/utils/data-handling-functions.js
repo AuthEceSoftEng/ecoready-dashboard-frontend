@@ -11,6 +11,13 @@ export const initialState = {
 	error: null,
 };
 
+const updateLoadingStates = (state, dataType) => ({
+	...state,
+	isLoading: dataType === "general" ? false : state.isLoading,
+	isPriceLoading: dataType === "price" ? false : state.isPriceLoading,
+	isProductionLoading: dataType === "production" ? false : state.isProductionLoading,
+});
+
 export const reducer = (state, action) => {
 	switch (action.type) {
 		case "FETCH_START": {
@@ -28,14 +35,11 @@ export const reducer = (state, action) => {
 		case "FETCH_PRICE_START": {
 			return {
 				...state,
-				isLoading: false,
 				isPriceLoading: true,
-				isProductionLoading: false,
 				warning: null,
 				error: null,
 				dataSets: {
 					...state.dataSets,
-					// Clear only price-related datasets
 					pricesTimeline: undefined,
 					periodPrices: undefined,
 					monthlyPrices: undefined,
@@ -47,14 +51,11 @@ export const reducer = (state, action) => {
 		case "FETCH_PRODUCTION_START": {
 			return {
 				...state,
-				isLoading: false,
-				isPriceLoading: false,
 				isProductionLoading: true,
 				warning: null,
 				error: null,
 				dataSets: {
 					...state.dataSets,
-					// Clear only production-related datasets
 					productProduction: undefined,
 					maxProduction: undefined,
 				},
@@ -62,15 +63,9 @@ export const reducer = (state, action) => {
 		}
 
 		case "FETCH_SUCCESS": {
-			const { plotId, response } = action.payload;
-			const isPriceData = plotId.toLowerCase().includes("price");
-			const isProductionData = plotId.toLowerCase().includes("production");
-
+			const { plotId, response, dataType } = action.payload;
 			return {
-				...state,
-				isLoading: false,
-				isPriceLoading: isPriceData ? false : state.isPriceLoading,
-				isProductionLoading: isProductionData ? false : state.isProductionLoading,
+				...updateLoadingStates(state, dataType),
 				error: null,
 				dataSets: {
 					...state.dataSets,
@@ -82,10 +77,9 @@ export const reducer = (state, action) => {
 		}
 
 		case "FETCH_WARNING": {
-			const { plotId, response } = action.payload;
+			const { plotId, response, dataType } = action.payload;
 			return {
-				...state,
-				isLoading: false,
+				...updateLoadingStates(state, dataType),
 				warning: action.payload?.warning || "Some values may be missing",
 				dataSets: {
 					...state.dataSets,
@@ -200,33 +194,35 @@ export const getSumValuesByProperty = (groupedObject, property) => {
 	return sumValues;
 };
 
+const formatDate = (date) => date.toISOString().slice(0, 19);
+
 export const calculateDates = (now = new Date(), offsetHours = null) => {
-	// Use provided offset or timezone offset (negative because getTimezoneOffset returns opposite sign)
 	const offset = offsetHours ?? -(now.getTimezoneOffset() / 60);
-	const offsetMs = offset * 3_600_000; // Convert hours to milliseconds (60 * 60 * 1000)
+	const offsetMs = offset * 3_600_000;
+
+	const applyOffset = (date) => {
+		const newDate = new Date(date);
+		newDate.setTime(newDate.getTime() + offsetMs);
+		return newDate;
+	};
 
 	const year = now.getFullYear();
 	const month = now.getMonth();
 	const day = now.getDate();
 
-	// Create dates with offset
-	const currentDateTime = new Date(now.getTime() + offsetMs);
-	const monthStart = new Date(year, month, 1);
-	monthStart.setTime(monthStart.getTime() + offsetMs);
-
+	const currentDateTime = applyOffset(now);
+	const monthStart = applyOffset(new Date(year, month, 1));
+	const dayStart = applyOffset(new Date(year, month, day));
 	const hourStart = new Date(now);
 	hourStart.setMinutes(180, 0, 0);
-
-	const dayStart = new Date(year, month, day);
-	dayStart.setTime(dayStart.getTime() + offsetMs);
 
 	return {
 		year,
 		month,
-		currentDate: currentDateTime.toISOString().slice(0, 19),
-		formattedBeginningOfMonth: monthStart.toISOString().slice(0, 19),
-		formattedBeginningOfDay: dayStart.toISOString().slice(0, 19),
-		formattedBeginningOfHour: hourStart.toISOString().slice(0, 19),
+		currentDate: formatDate(currentDateTime),
+		formattedBeginningOfMonth: formatDate(monthStart),
+		formattedBeginningOfDay: formatDate(dayStart),
+		formattedBeginningOfHour: formatDate(hourStart),
 	};
 };
 
@@ -270,23 +266,29 @@ export const findKeyByText = (array, text) => {
 export const isValidArray = (arr) => Array.isArray(arr) && arr.length > 0;
 
 export const formatNumber = (num, suffix = "") => {
-	// Round up to next product of 10
-	const roundUpToNextProduct = Math.ceil(num / 10) * 10;
-	const magnitude = 10 ** Math.floor(Math.log10(roundUpToNextProduct));
-	const rounded = Math.ceil(roundUpToNextProduct / magnitude) * magnitude;
+	const roundToNextTen = (n) => {
+		const magnitude = 10 ** Math.floor(Math.log10(n));
+		return Math.ceil(n / magnitude) * magnitude;
+	};
 
-	// Format with K, M, B suffixes
-	const lookup = [
-		{ value: 1e9, symbol: "B" },
-		{ value: 1e6, symbol: "M" },
-		{ value: 1e3, symbol: "K" },
-	];
-	const item = lookup.find((division) => num >= division.value);
-	const formatted = item ? (num / item.value).toFixed(2) + item.symbol : rounded.toString();
+	const formatWithSuffix = (n) => {
+		const divisions = [
+			{ value: 1e9, symbol: "B" },
+			{ value: 1e6, symbol: "M" },
+			{ value: 1e3, symbol: "K" },
+		];
+
+		const division = divisions.find((d) => n >= d.value);
+		return division
+			? (n / division.value).toFixed(2) + division.symbol
+			: roundToNextTen(n).toString();
+	};
+
+	const rounded = roundToNextTen(Math.ceil(num / 10) * 10);
 
 	return {
 		[`roundUpToNextProduct${suffix}`]: rounded,
-		[`formattedNumber${suffix}`]: formatted,
+		[`formattedNumber${suffix}`]: formatWithSuffix(num),
 	};
 };
 

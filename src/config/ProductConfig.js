@@ -44,10 +44,7 @@ const getProductionBaseConfig = (product) => ({
 });
 
 export const getPriceConfigs = (product, startDate, endDate, differenceInDays, productType = null, productVariety = null, collection = null) => {
-	console.log("product", product);
-	console.log("productType", productType);
-	console.log("productVariety", productVariety);
-
+	console.log("getPriceConfigs", product, startDate, endDate, differenceInDays, productType, productVariety, collection);
 	if (product === "Rice") {
 		return [
 			{
@@ -100,6 +97,19 @@ export const getPriceConfigs = (product, startDate, endDate, differenceInDays, p
 				plotId: "pricesTimeline",
 				unit: getUnit(product),
 			},
+			{
+				...getPriceBaseConfig(product),
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "max",
+					group_by: "key",
+					interval: `every_${differenceInDays}_days`,
+					start_time: startDate,
+					end_time: endDate,
+				}),
+				plotId: "maxPrice",
+				unit: getUnit(product),
+			},
 		];
 	}
 
@@ -150,13 +160,6 @@ export const getPriceConfigs = (product, startDate, endDate, differenceInDays, p
 				params: JSON.stringify({
 					attribute: ["price"],
 					stat: "max",
-					filters: [
-						{
-							property_name: "product",
-							operator: "eq",
-							property_value: productType,
-						},
-					],
 					group_by: "key",
 					interval: `every_${differenceInDays}_days`,
 					start_time: startDate,
@@ -216,13 +219,6 @@ export const getPriceConfigs = (product, startDate, endDate, differenceInDays, p
 				params: JSON.stringify({
 					attribute: ["price"],
 					stat: "max",
-					filters: [
-						{
-							property_name: "key",
-							operator: "eq",
-							property_value: region,
-						},
-					],
 					group_by: "key",
 					interval: `every_${differenceInDays}_days`,
 					start_time: startDate,
@@ -281,13 +277,6 @@ export const getPriceConfigs = (product, startDate, endDate, differenceInDays, p
 				params: JSON.stringify({
 					attribute: ["price"],
 					stat: "max",
-					filters: [
-						{
-							property_name: "description",
-							operator: "eq",
-							property_value: productType,
-						},
-					],
 					group_by: "key",
 					interval: `every_${differenceInDays}_days`,
 					start_time: startDate,
@@ -346,13 +335,6 @@ export const getPriceConfigs = (product, startDate, endDate, differenceInDays, p
 				params: JSON.stringify({
 					attribute: ["price"],
 					stat: "max",
-					// filters: [
-					// 	{
-					// 		property_name: "product",
-					// 		operator: "eq",
-					// 		property_value: productType,
-					// 	},
-					// 	],
 					group_by: "key",
 					interval: `every_${differenceInDays}_days`,
 					start_time: startDate,
@@ -364,7 +346,7 @@ export const getPriceConfigs = (product, startDate, endDate, differenceInDays, p
 		];
 	}
 
-	if (product === "Beef") { // needs configuration in the main screen
+	if (product === "Beef") {
 		return [
 			{
 				...getPriceBaseConfig(product),
@@ -389,7 +371,7 @@ export const getPriceConfigs = (product, startDate, endDate, differenceInDays, p
 			},
 			{
 				...getPriceBaseConfig(product),
-				collection: `__${productType}__`, // Note different collection
+				collection: `__${collection}__`, // Note different collection
 				params: JSON.stringify({
 					attribute: ["price"],
 					stat: "avg",
@@ -410,17 +392,10 @@ export const getPriceConfigs = (product, startDate, endDate, differenceInDays, p
 			},
 			{
 				...getPriceBaseConfig(product),
-				collection: `__${productType}__`,
+				collection: `__${collection}__`,
 				params: JSON.stringify({
 					attribute: ["price"],
 					stat: "max",
-					filters: [
-						{
-							property_name: "category",
-							operator: "eq",
-							property_value: productType,
-						},
-					],
 					group_by: "key",
 					interval: `every_${differenceInDays}_days`,
 					start_time: startDate,
@@ -441,13 +416,6 @@ export const getPriceConfigs = (product, startDate, endDate, differenceInDays, p
 					params: JSON.stringify({
 						attribute: ["price"],
 						stat: "avg",
-						// filters: [
-						// 	{
-						// 		property_name: "key",
-						// 		operator: "eq",
-						// 		property_value: country,
-						// 	},
-						// ],
 						group_by: "key",
 						interval: `every_${differenceInDays}_days`,
 						start_time: startDate,
@@ -462,13 +430,6 @@ export const getPriceConfigs = (product, startDate, endDate, differenceInDays, p
 					params: JSON.stringify({
 						attribute: ["price"],
 						stat: "avg",
-						// filters: [
-						// 	{
-						// 		property_name: "key",
-						// 		operator: "eq",
-						// 		property_value: country,
-						// 	},
-						// ],
 						group_by: "key",
 						interval: "every_1_days",
 						start_time: startDate,
@@ -483,13 +444,6 @@ export const getPriceConfigs = (product, startDate, endDate, differenceInDays, p
 					params: JSON.stringify({
 						attribute: ["price"],
 						stat: "max",
-						// filters: [
-						// 	{
-						// 		property_name: "key",
-						// 		operator: "eq",
-						// 		property_value: country,
-						// 	},
-						// ],
 						group_by: "key",
 						interval: `every_${differenceInDays}_days`,
 						start_time: startDate,
@@ -560,18 +514,6 @@ export const getPriceConfigs = (product, startDate, endDate, differenceInDays, p
 				params: JSON.stringify({
 					attribute: ["price"],
 					stat: "max",
-					filters: [
-						{
-							property_name: "category",
-							operator: "eq",
-							property_value: productType,
-						},
-						{
-							property_name: "price_type",
-							operator: "eq",
-							property_value: productVariety,
-						},
-					],
 					group_by: "key",
 					interval: `every_${differenceInDays}_days`,
 					start_time: startDate,
@@ -633,13 +575,6 @@ export const getPriceConfigs = (product, startDate, endDate, differenceInDays, p
 				params: JSON.stringify({
 					attribute: ["price"],
 					stat: "max",
-					filters: [
-						{
-							property_name: "farming_method",
-							operator: "eq",
-							property_value: productType,
-						},
-					],
 					group_by: "key",
 					interval: `every_${differenceInDays}_days`,
 					start_time: startDate,
@@ -711,18 +646,6 @@ export const getPriceConfigs = (product, startDate, endDate, differenceInDays, p
 				params: JSON.stringify({
 					attribute: ["price"],
 					stat: "max",
-					filters: [
-						// {
-						// 	property_name: "product_name",
-						// 	operator: "eq",
-						// 	property_value: productType,
-						// },
-						{
-							property_name: "price_type",
-							operator: "eq",
-							property_value: productType,
-						},
-					],
 					group_by: "key",
 					interval: `every_${differenceInDays}_days`,
 					start_time: startDate,
@@ -781,13 +704,6 @@ export const getPriceConfigs = (product, startDate, endDate, differenceInDays, p
 				params: JSON.stringify({
 					attribute: ["price"],
 					stat: "max",
-					filters: [
-						{
-							property_name: "product_name",
-							operator: "eq",
-							property_value: productType,
-						},
-					],
 					group_by: "key",
 					interval: `every_${differenceInDays}_days`,
 					start_time: startDate,
@@ -817,6 +733,7 @@ export const getPriceConfigs = (product, startDate, endDate, differenceInDays, p
 							property_value: productType,
 						},
 					],
+					group_by: "key",
 				}),
 				plotId: "periodPrices",
 				unit: getUnit(product),
@@ -837,6 +754,7 @@ export const getPriceConfigs = (product, startDate, endDate, differenceInDays, p
 							property_value: productType,
 						},
 					],
+					group_by: "key",
 				}),
 				plotId: "pricesTimeline",
 				unit: getUnit(product),
@@ -846,17 +764,11 @@ export const getPriceConfigs = (product, startDate, endDate, differenceInDays, p
 				collection: "__raw_milk_prices__",
 				params: JSON.stringify({
 					attribute: ["price"],
-					stat: "avg",
+					stat: "max",
 					interval: `every_${differenceInDays}_days`,
 					start_time: startDate,
 					end_time: endDate,
-					filters: [
-						{
-							property_name: "product",
-							operator: "eq",
-							property_value: productType,
-						},
-					],
+					group_by: "key",
 				}),
 				plotId: "maxPrice",
 				unit: getUnit(product),
@@ -882,6 +794,7 @@ export const getPriceConfigs = (product, startDate, endDate, differenceInDays, p
 							property_value: productType,
 						},
 					],
+					group_by: "key",
 				}),
 				plotId: "periodPrices",
 				unit: getUnit(product),
@@ -902,6 +815,7 @@ export const getPriceConfigs = (product, startDate, endDate, differenceInDays, p
 							property_value: productType,
 						},
 					],
+					group_by: "key",
 				}),
 				plotId: "pricesTimeline",
 				unit: getUnit(product),
@@ -911,17 +825,11 @@ export const getPriceConfigs = (product, startDate, endDate, differenceInDays, p
 				collection: "__dairy_prices__",
 				params: JSON.stringify({
 					attribute: ["price"],
-					stat: "avg",
+					stat: "max",
 					interval: `every_${differenceInDays}_days`,
 					start_time: startDate,
 					end_time: endDate,
-					filters: [
-						{
-							property_name: "product",
-							operator: "eq",
-							property_value: productType,
-						},
-					],
+					group_by: "key",
 				}),
 				plotId: "maxPrice",
 				unit: getUnit(product),
@@ -952,6 +860,7 @@ export const getPriceConfigs = (product, startDate, endDate, differenceInDays, p
 							property_value: productVariety,
 						},
 					],
+					group_by: "key",
 				}),
 				plotId: "periodPrices",
 				unit: getUnit(product),
@@ -977,6 +886,7 @@ export const getPriceConfigs = (product, startDate, endDate, differenceInDays, p
 							property_value: productVariety,
 						},
 					],
+					group_by: "key",
 				}),
 				plotId: "pricesTimeline",
 				unit: getUnit(product),
@@ -986,22 +896,11 @@ export const getPriceConfigs = (product, startDate, endDate, differenceInDays, p
 				collection: "__oilseeds_prices__",
 				params: JSON.stringify({
 					attribute: ["price"],
-					stat: "avg",
+					stat: "max",
 					interval: `every_${differenceInDays}_days`,
 					start_time: startDate,
 					end_time: endDate,
-					filters: [
-						{
-							property_name: "product",
-							operator: "eq",
-							property_value: productType,
-						},
-						{
-							property_name: "product_type",
-							operator: "eq",
-							property_value: productVariety,
-						},
-					],
+					group_by: "key",
 				}),
 				plotId: "maxPrice",
 				unit: getUnit(product),
@@ -1032,6 +931,7 @@ export const getPriceConfigs = (product, startDate, endDate, differenceInDays, p
 							property_value: productVariety,
 						},
 					],
+					group_by: "key",
 				}),
 				plotId: "periodPrices",
 				unit: getUnit(product),
@@ -1057,6 +957,7 @@ export const getPriceConfigs = (product, startDate, endDate, differenceInDays, p
 							property_value: productVariety,
 						},
 					],
+					group_by: "key",
 				}),
 				plotId: "pricesTimeline",
 				unit: getUnit(product),
@@ -1070,18 +971,7 @@ export const getPriceConfigs = (product, startDate, endDate, differenceInDays, p
 					interval: `every_${differenceInDays}_days`,
 					start_time: startDate,
 					end_time: endDate,
-					filters: [
-						{
-							property_name: "product",
-							operator: "eq",
-							property_value: productType,
-						},
-						{
-							property_name: "product_type",
-							operator: "eq",
-							property_value: productVariety,
-						},
-					],
+					group_by: "key",
 				}),
 				plotId: "maxPrice",
 				unit: getUnit(product),
@@ -1107,6 +997,7 @@ export const getPriceConfigs = (product, startDate, endDate, differenceInDays, p
 							property_value: productType,
 						},
 					],
+					group_by: "key",
 				}),
 				plotId: "periodPrices",
 				unit: getUnit(product),
@@ -1127,6 +1018,7 @@ export const getPriceConfigs = (product, startDate, endDate, differenceInDays, p
 							property_value: productType,
 						},
 					],
+					group_by: "key",
 				}),
 				plotId: "pricesTimeline",
 				unit: getUnit(product),
@@ -1140,13 +1032,7 @@ export const getPriceConfigs = (product, startDate, endDate, differenceInDays, p
 					interval: `every_${differenceInDays}_days`,
 					start_time: startDate,
 					end_time: endDate,
-					filters: [
-						{
-							property_name: "category",
-							operator: "eq",
-							property_value: productType,
-						},
-					],
+					group_by: "key",
 				}),
 				plotId: "maxPrice",
 				unit: getUnit(product),
@@ -1171,6 +1057,7 @@ export const getPriceConfigs = (product, startDate, endDate, differenceInDays, p
 							property_value: productType,
 						},
 					],
+					group_by: "key",
 				}),
 				plotId: "periodPrices",
 				unit: getUnit(product),
@@ -1190,6 +1077,7 @@ export const getPriceConfigs = (product, startDate, endDate, differenceInDays, p
 							property_value: productType,
 						},
 					],
+					group_by: "key",
 				}),
 				plotId: "pricesTimeline",
 				unit: getUnit(product),
@@ -1202,13 +1090,7 @@ export const getPriceConfigs = (product, startDate, endDate, differenceInDays, p
 					interval: `every_${differenceInDays}_days`,
 					start_time: startDate,
 					end_time: endDate,
-					filters: [
-						{
-							property_name: "product",
-							operator: "eq",
-							property_value: productType,
-						},
-					],
+					group_by: "key",
 				}),
 				plotId: "maxPrice",
 				unit: getUnit(product),
@@ -1221,8 +1103,6 @@ export const getPriceConfigs = (product, startDate, endDate, differenceInDays, p
 
 export const getMonthlyPriceConfigs = (product, customDate, productType = null, productVariety = null, collection = null) => {
 	const { currentDate, formattedBeginningOfMonth } = calculateDates(customDate);
-	console.log("currentDate", currentDate);
-	console.log("formattedBeginningOfMonth", formattedBeginningOfMonth);
 
 	if (product === "Rice") {
 		return [
@@ -1357,7 +1237,7 @@ export const getMonthlyPriceConfigs = (product, customDate, productType = null, 
 		return [
 			{
 				...getPriceBaseConfig(product),
-				collection: `__${productType}__`,
+				collection: `__${collection}__`,
 				params: JSON.stringify({
 					attribute: ["price"],
 					stat: "avg",
@@ -1701,13 +1581,6 @@ export const getProductionConfigs = (product, productType = null, productionMetr
 					interval: "every_36500_days",
 					start_time: "2010-01-01",
 					end_time: `${year}-12-31`,
-					filters: [
-						{
-							property_name: "category",
-							operator: "eq",
-							property_value: productType,
-						},
-					],
 					group_by: "key",
 				}),
 				plotId: "maxProduction",
@@ -1748,13 +1621,6 @@ export const getProductionConfigs = (product, productType = null, productionMetr
 					interval: "every_36500_days",
 					start_time: "2010-01-01",
 					end_time: `${year}-12-31`,
-					filters: [
-						{
-							property_name: "category",
-							operator: "eq",
-							property_value: productType,
-						},
-					],
 					group_by: "key",
 				}),
 				plotId: "maxProduction",
@@ -1827,13 +1693,6 @@ export const getProductionConfigs = (product, productType = null, productionMetr
 					interval: "every_36500_days",
 					start_time: "2010-01-01",
 					end_time: `${year}-12-31`,
-					filters: [
-						{
-							property_name: "animal",
-							operator: "eq",
-							property_value: productType,
-						},
-					],
 					group_by: "key",
 				}),
 				plotId: "maxProduction",
@@ -1915,13 +1774,6 @@ export const getProductionConfigs = (product, productType = null, productionMetr
 					interval: "every_36500_days",
 					start_time: "2010-01-01",
 					end_time: `${year}-12-31`,
-					filters: [
-						{
-							property_name: "crop",
-							operator: "eq",
-							property_value: productType,
-						},
-					],
 					group_by: "key",
 				}),
 				plotId: "maxProduction",
@@ -1942,13 +1794,13 @@ export const getProductionConfigs = (product, productType = null, productionMetr
 					interval: "every_12_months",
 					start_time: "2010-01-01",
 					end_time: `${year}-12-31`,
-					filters: [
-						{
-							property_name: "crop",
-							operator: "eq",
-							property_value: productType,
-						},
-					],
+					// filters: [
+					// 	{
+					// 		property_name: "crop",
+					// 		operator: "eq",
+					// 		property_value: productType,
+					// 	},
+					// ],
 					group_by: "key",
 				}),
 				unit: getUnit(product, "production"),
@@ -1963,13 +1815,6 @@ export const getProductionConfigs = (product, productType = null, productionMetr
 					interval: "every_36500_days",
 					start_time: "2010-01-01",
 					end_time: `${year}-12-31`,
-					filters: [
-						{
-							property_name: "crop",
-							operator: "eq",
-							property_value: productType,
-						},
-					],
 					group_by: "key",
 				}),
 				plotId: "maxProduction",

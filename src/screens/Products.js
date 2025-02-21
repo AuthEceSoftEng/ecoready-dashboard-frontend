@@ -44,7 +44,11 @@ const extractFields = (productObject, fieldName) => {
 			productionMetrics: productObject[field]?.productionMetrics || [],
 		}));
 
-	const collections = productObject.collections?.filter((collection) => collection.toLowerCase().includes(fieldName)) || [];
+	const collections = Array.isArray(productObject.collections)
+		? productObject.collections.filter((collection) => (typeof collection === "string"
+			? collection.toLowerCase().includes(fieldName)
+			: collection.value.toLowerCase().includes(fieldName)))
+		: Object.values(productObject.collections || {}).filter((collection) => collection.value.toLowerCase().includes(fieldName));
 
 	return { fields, collections, hasData: fields.length > 0, needsDropdown: collections.length > 1 };
 };
@@ -99,6 +103,7 @@ const transformProductionData = (productionData, yearPicker, sumFieldName) => {
 const getMaxValue = (maxProd, prodTypeVal, country = "EU") => [
 	maxProd.flat().find((item) => item?.key === country && Object.keys(item || {}).includes(`max_${prodTypeVal}`))?.[`max_${prodTypeVal}`] || 0,
 ];
+
 const ProductsScreen = () => {
 	const location = useLocation();
 	const selectedProduct = location.state?.selectedProduct;
@@ -108,20 +113,16 @@ const ProductsScreen = () => {
 
 	// Find the selected product's details from products array
 	const selectedProductDetails = useMemo(() => products.find((p) => p.text === globalProduct), [globalProduct]);
+	console.log("Selected Product Details:", selectedProductDetails);
 
 	const pricesItems = useMemo(() => extractFields(selectedProductDetails, "prices") || [], [selectedProductDetails]);
 	console.log("Prices Items:", pricesItems);
 
-	const priceCategories = useMemo(() => (pricesItems.needsDropdown ? pricesItems.collections : []), [pricesItems]);
-
-	const [selectedPriceCategory, setSelectedPriceCategory] = useState(priceCategories[0] ?? "");
-	console.log("Selected Price Category1:", selectedPriceCategory);
-
+	const priceCollections = useMemo(() => (pricesItems.needsDropdown ? pricesItems.collections : []), [pricesItems]);
+	const [selectedPriceCollection, setSelectedPriceCollection] = useState(priceCollections?.[0] ?? "");
 	const priceProducts = useMemo(() => pricesItems.fields[0]?.products ?? [], [pricesItems.fields]);
-	console.log("Price Products:", priceProducts);
 
 	const priceProductTypes = useMemo(() => pricesItems.fields[0]?.productTypes ?? [], [pricesItems]);
-	console.log("Price Product Types:", priceProductTypes);
 
 	const [priceOptions, setPriceOptions] = useState({
 		country: "Greece",
@@ -129,7 +130,28 @@ const ProductsScreen = () => {
 		productType: "Avg" ?? null,
 		productVar: priceProductTypes?.[0]?.value ?? priceProductTypes?.[0] ?? null,
 	});
-	console.log("Price Options:", priceOptions);
+
+	useEffect(() => {
+		setSelectedPriceCollection(priceCollections?.[0] ?? "");
+	}, [priceCollections]);
+
+	useEffect(() => {
+		// Update price product when priceProducts changes
+		if (priceProducts?.length) {
+			setPriceOptions((prev) => ({ ...prev, product: priceProducts[0]?.text ?? null }));
+		}
+	}, [priceProducts]);
+
+	useEffect(() => {
+		// Update price product type when priceProductTypes changes
+		if (priceProductTypes?.length) {
+			setPriceOptions((prev) => ({
+				...prev,
+				productType: priceProductTypes[0]?.text ?? null,
+				productVar: priceProductTypes[0]?.value ?? priceProductTypes[0] ?? null,
+			}));
+		}
+	}, [priceProductTypes]);
 
 	const productionItems = useMemo(() => extractFields(selectedProductDetails, "production") || [], [selectedProductDetails]);
 	// console.log("Production Items:", productionItems);
@@ -146,6 +168,10 @@ const ProductsScreen = () => {
 		productionMetricVal: productionMetrics?.[0]?.value ?? null,
 	});
 
+	// Add ready states
+	const [isPriceConfigReady, setIsPriceConfigReady] = useState(false);
+	const [isProductionConfigReady, setIsProductionConfigReady] = useState(false);
+
 	const handleProductionMetricChange = useCallback((newProductType) => {
 		setProductionOptions((prev) => {
 			const selectedMetric = productionMetrics?.find((type) => type.text === newProductType);
@@ -159,9 +185,7 @@ const ProductsScreen = () => {
 	// console.log("Production Options:", productionOptions);
 
 	useEffect(() => {
-		if (selectedProduct) {
-			setGlobalProduct(selectedProduct);
-		}
+		if (selectedProduct) { setGlobalProduct(selectedProduct); }
 	}, [selectedProduct]);
 
 	const debouncedSetDate = useMemo(
@@ -185,40 +209,6 @@ const ProductsScreen = () => {
 		};
 	}, [startDate, endDate]);
 
-	// Add ready states
-	const [isPriceConfigReady, setIsPriceConfigReady] = useState(false);
-	const [isProductionConfigReady, setIsProductionConfigReady] = useState(false);
-
-	// Add validation effects
-	useEffect(() => {
-		const isPriceReady = Boolean(globalProduct && dateMetrics.isValidDateRange && Object.values(priceOptions).some(Boolean));
-		setIsPriceConfigReady(isPriceReady);
-	}, [globalProduct, dateMetrics.isValidDateRange, priceOptions]);
-	console.log("Is Price Configs Ready:", isPriceConfigReady);
-
-	useEffect(() => {
-		const isProductionReady = Boolean(globalProduct && Object.values(productionOptions).some(Boolean));
-		setIsProductionConfigReady(isProductionReady);
-	}, [globalProduct, productionOptions]);
-
-	// Separate price configs
-	const priceConfigs = useMemo(
-		() => {
-			if (!isPriceConfigReady) return [];
-			const configs = [];
-			if (getPriceConfigs) {
-				configs.push(...getPriceConfigs(globalProduct, startDate, endDate, dateMetrics.differenceInDays, priceOptions.product, priceOptions.productType));
-			}
-
-			if (getMonthlyPriceConfigs) {
-				configs.push(...getMonthlyPriceConfigs(globalProduct, customDate, priceOptions.product, priceOptions.productType));
-			}
-
-			return configs;
-		},
-		[isPriceConfigReady, globalProduct, startDate, endDate, dateMetrics.differenceInDays, priceOptions.product, priceOptions.productType],
-	);
-
 	// Separate production configs
 	const productionConfigs = useMemo(
 		() => {
@@ -229,9 +219,29 @@ const ProductsScreen = () => {
 			productionOptions.productionMetricVal, productionOptions.productType],
 	);
 
+	// Separate price configs
+	const priceConfigs = useMemo(
+		() => {
+			if (!isPriceConfigReady) return [];
+			const configs = [];
+			if (getPriceConfigs) {
+				configs.push(
+					...getPriceConfigs(globalProduct, startDate, endDate, dateMetrics.differenceInDays, priceOptions.product, priceOptions.productType, selectedPriceCollection?.value),
+				);
+			}
+
+			if (getMonthlyPriceConfigs) {
+				configs.push(...getMonthlyPriceConfigs(globalProduct, customDate, priceOptions.product, priceOptions.productType, selectedPriceCollection?.value));
+			}
+
+			return configs;
+		},
+		[isPriceConfigReady, globalProduct, startDate, endDate, dateMetrics.differenceInDays, priceOptions.product, priceOptions.productType, selectedPriceCollection?.value],
+	);
+
 	// Create separate useInit hooks for price and production
-	const priceState = useInit(organization, priceConfigs);
 	const productionState = useInit(organization, productionConfigs);
+	const priceState = useInit(organization, priceConfigs);
 
 	// Combine states for components that need both
 	const combinedState = {
@@ -259,8 +269,25 @@ const ProductsScreen = () => {
 		}, [priceState, productionState]),
 	};
 
-	console.log("Filter product:", globalProduct);
-	// console.log("Production options:", productionOptions);
+	// Add validation effects
+	useEffect(() => {
+		const isPriceReady = Boolean(
+			globalProduct
+			&& dateMetrics.isValidDateRange
+			&& Object.values(priceOptions).some(Boolean)
+			&& !priceState.state.error,
+		);
+		setIsPriceConfigReady(isPriceReady);
+	}, [globalProduct, dateMetrics.isValidDateRange, priceOptions, priceState.state.error]);
+
+	useEffect(() => {
+		const isProductionReady = Boolean(
+			globalProduct
+			&& Object.values(productionOptions).some(Boolean)
+			&& !productionState.state.error,
+		);
+		setIsProductionConfigReady(isProductionReady);
+	}, [globalProduct, productionOptions, productionState.state.error]);
 
 	const units = useMemo(() => ({
 		priceUnit: priceConfigs?.[0]?.unit || "",
@@ -268,18 +295,43 @@ const ProductsScreen = () => {
 	}), [priceConfigs, productionConfigs]);
 
 	const { isPriceLoading, isProductionLoading, dataSets, minutesAgo } = state;
-	console.log("DATATATATATASETS:", dataSets);
+	console.log("DATASETS:", dataSets);
 
 	const pricesTimeline = useMemo(() => dataSets?.pricesTimeline || [], [dataSets]);
 	const periodPrices = useMemo(() => dataSets?.periodPrices || [], [dataSets]);
 	const monthlyPrices = useMemo(() => dataSets?.monthlyPrices || [], [dataSets]);
+	const maxPrices = useMemo(() => dataSets?.maxPrice || [], [dataSets]);
 	const isValidPrice = useMemo(() => isValidArray(pricesTimeline), [pricesTimeline]);
 	const isValidPeriodPrices = useMemo(() => isValidArray(periodPrices), [periodPrices]);
 	const isValidMonthlyPrices = useMemo(() => isValidArray(monthlyPrices), [monthlyPrices]);
-	const maxPrice = useMemo(() => dataSets?.maxPrice?.[0]?.avg_price, [dataSets]);
+	const maxPrice = useMemo(() => {
+		// Ensure maxPrices is an array
+		const maxPricesArray = Array.isArray(maxPrices) ? maxPrices : [maxPrices].filter(Boolean);
 
-	const existingCountries = useMemo(() => getUniqueCountries(periodPrices), [periodPrices]);
-	console.log("Existing Countries:", existingCountries);
+		if (maxPricesArray.length === 0) return 100; // Default value if empty
+
+		// Filter out undefined/null values and get max
+		const validPrices = maxPricesArray
+			.filter((item) => item && typeof item.max_price === "number")
+			.map((item) => item.max_price);
+
+		// If no valid prices found, return default
+		if (validPrices.length === 0) return 100;
+
+		return Math.max(...validPrices);
+	}, [maxPrices]);
+
+	const existingCountries = useMemo(() => getUniqueCountries(pricesTimeline), [pricesTimeline]);
+
+	useEffect(() => {
+		// Only update if we have countries but no country is selected
+		if (existingCountries?.length && !priceOptions.country) {
+			setPriceOptions((prev) => ({
+				...prev,
+				country: existingCountries[0].text,
+			}));
+		}
+	}, [existingCountries, priceOptions.country]);
 
 	const productDropdownContent = useMemo(() => ([
 		{
@@ -295,8 +347,10 @@ const ProductsScreen = () => {
 				const newProductDetails = products.find((p) => p.text === newProduct);
 				const productionFields = extractFields(newProductDetails, "production").fields;
 				const priceFields = extractFields(newProductDetails, "prices").fields;
+				console.log("Price Fields:", priceFields);
 
-				const initialPriceProduct = priceFields[0]?.products?.[0] ?? null;
+				const initialPriceProduct = priceFields[0]?.products?.[0]?.text
+					?? priceFields[0]?.products?.[0] ?? null;
 				const initialPriceType = priceFields[0]?.productTypes?.[0] ?? null;
 
 				const initialProduct = productionFields[0]?.products?.[0] ?? null;
@@ -304,12 +358,13 @@ const ProductsScreen = () => {
 				const initialMetric = productionFields[0]?.productionMetrics?.[0] ?? null;
 
 				setGlobalProduct(newProduct);
+
 				// Update price options
 				setPriceOptions({
-					country: existingCountries?.[0]?.text ?? null,
-					product: initialPriceProduct ?? null,
+					product: initialPriceProduct,
 					productType: initialPriceType?.text ?? initialPriceType ?? null,
 					productVar: initialPriceType?.value ?? initialPriceType ?? null,
+					country: null,
 				});
 				setProductionOptions((prev) => ({
 					...prev,
@@ -322,7 +377,23 @@ const ProductsScreen = () => {
 		},
 	].map((item) => ({
 		...item,
-	}))), [dispatch, existingCountries, globalProduct]);
+	}))), [dispatch, globalProduct]);
+
+	useEffect(() => {
+		if (selectedProductDetails) {
+			const priceFields = extractFields(selectedProductDetails, "prices").fields;
+
+			setPriceOptions((prev) => ({
+				...prev,
+				product: priceFields[0]?.products?.[0]?.text
+					?? priceFields[0]?.products?.[0] ?? prev.product,
+				productType: priceFields[0]?.productTypes?.[0]?.text
+					?? priceFields[0]?.productTypes?.[0] ?? prev.productType,
+				productVar: priceFields[0]?.productTypes?.[0]?.value
+					?? priceFields[0]?.productTypes?.[0] ?? prev.productVar,
+			}));
+		}
+	}, [selectedProductDetails]);
 
 	// PRODUCTION GRAPHS
 	const production = useMemo(() => {
@@ -395,7 +466,7 @@ const ProductsScreen = () => {
 				value: productionOptions.product,
 				label: "Select Product Type",
 				onChange: (event) => {
-					dispatch({ type: "FETCH_PRODUCTION_START" });
+					productionState.dispatch({ type: "FETCH_PRODUCTION_START" });
 					setProductionOptions((prev) => ({ ...prev, product: event.target.value }));
 				},
 			});
@@ -430,24 +501,41 @@ const ProductsScreen = () => {
 		}
 
 		return dropdowns;
-	}, [productionProducts, productTypes, productionMetrics, productionOptions.product, productionOptions.productType, productionOptions.productionMetricType, dispatch, productionState, handleProductionMetricChange]);
+	}, [productionProducts, productTypes, productionMetrics, productionOptions.product, productionOptions.productType, productionOptions.productionMetricType, productionState, handleProductionMetricChange]);
 
 	const europeOverview = useMemo(() => {
 		const productionData = productionOptions.productionVal
 			? productionByCountry.find((data) => Object.values(data)[0]?.some((item) => item[`sum_${productionOptions.productionVal}`] !== undefined))
 			: productionByCountry[0];
-		console.log("Production Data:", productionData);
 
-		if (!productionData) return null;
+		// Early return with specific warnings if no production data
+		if (!productionData) {
+			return {
+				charts: {
+					gauge: { warning: "No production data available for the selected options" },
+					pie: { warning: "No production distribution data available for the selected options" },
+					bars: { warning: "No historical production data available for the selected options" },
+				},
+			};
+		}
 
-		// get the sumfield
+		// Get the sumfield and validate
 		const sumFieldName = getProductionSumField(productionData);
-		if (!sumFieldName) return null;
+		if (!sumFieldName) {
+			return {
+				charts: {
+					gauge: { warning: "Unable to determine production metrics for the selected options" },
+					pie: { warning: "Unable to determine production distribution metrics" },
+					bars: { warning: "Unable to determine historical production metrics" },
+				},
+			};
+		}
 
 		const { countryData } = transformProductionData(productionData, productionOptions.year, sumFieldName);
-		console.log("Country Data:", countryData);
 		const euMaxValue = getMaxValue(maxProduction, sumFieldName);
 		const countryMaxValue = getMaxValue(maxProduction, sumFieldName, priceOptions.country);
+
+		const totalProduction = countryData.reduce((sum, data) => sum + data.production, 0);
 
 		return {
 			countryData,
@@ -455,13 +543,14 @@ const ProductsScreen = () => {
 			charts: {
 				gauge: {
 					data: {
-						value: countryData.reduce((sum, data) => sum + data.production, 0),
+						value: totalProduction,
 						subtitle: "EU's Annual Production",
 					},
 					shape: "bullet",
 					range: [0, euMaxValue],
 					color: "third",
 					suffix: ` ${units.productionUnit}`,
+					warning: totalProduction === 0 ? `No production data available for ${productionOptions.year}` : null,
 				},
 				pie: {
 					data: isValidArray(countryData) ? [{
@@ -471,20 +560,19 @@ const ProductsScreen = () => {
 						type: "pie",
 						sort: false,
 					}] : [],
+					warning: !isValidArray(countryData) || countryData.every((item) => item.production === 0)
+						? `No production distribution data available for ${productionOptions.year}`
+						: null,
 				},
 				bars: {
 					data: Object.entries(productionData).map(([countryCode, values], index) => {
 						const years = generateYearsArray(2010, 2025);
-
-						// Create a map of existing data points
 						const dataMap = new Map(
 							values.map((item) => [
 								item.timestamp || item.interval_start,
 								item[sumFieldName] || 0,
 							]),
 						);
-
-						// Generate complete data array with 0s for missing years
 						const completeData = years.map((date) => {
 							const timestamp = `${date}-01-01T00:00:00`;
 							return dataMap.get(timestamp) || 0;
@@ -500,22 +588,15 @@ const ProductsScreen = () => {
 					}),
 					title: "Annual Production by Country",
 					xaxis: { showticklabels: true, tickmode: "linear", tickangle: 45 },
+					warning: Object.entries(productionData).length === 0 ? "No historical production data available" : null,
 				},
 			},
 		};
-	}, [productionOptions.productionVal, productionByCountry, productionOptions.year, priceOptions.country, maxProduction, units.productionUnit]);
+	}, [productionByCountry, priceOptions.country, maxProduction, units.productionUnit, productionOptions]);
 
 	// PRICES GRAPHS
 	const priceDropdowns = useMemo(() => {
-		const dropdowns = [
-			{
-				id: "country",
-				items: existingCountries,
-				value: priceOptions.country,
-				label: "Select Country",
-				onChange: (event) => { setPriceOptions((prev) => ({ ...prev, country: event.target.value })); },
-			},
-		];
+		const dropdowns = [];
 
 		if (priceProducts?.length) {
 			dropdowns.push({
@@ -525,30 +606,43 @@ const ProductsScreen = () => {
 				label: "Select Product Type",
 				onChange: (event) => {
 					priceState.dispatch({ type: "FETCH_PRICE_START" });
-					setPriceOptions((prev) => ({ ...prev, product: event.target.value }));
-					if (existingCountries?.length) {
-						setPriceOptions((prev) => ({ ...prev, country: existingCountries[0].text }));
-					}
+					setPriceOptions((prev) => {
+						// Check if current country still exists in new selection
+						const currentCountryExists = existingCountries?.some((country) => country.text === prev.country);
+
+						return {
+							...prev,
+							product: event.target.value,
+							country: currentCountryExists ? prev.country : existingCountries?.[0]?.text ?? null,
+						};
+					});
 				},
 			});
 		}
 
-		if (priceCategories?.length) {
+		if (priceCollections?.length) {
 			dropdowns.push({
 				id: "priceCategory",
-				items: priceCategories,
-				value: selectedPriceCategory,
+				items: priceCollections,
+				value: selectedPriceCollection.text,
 				label: "Select Product Category",
 				onChange: (event) => {
 					priceState.dispatch({ type: "FETCH_PRICE_START" });
-					setSelectedPriceCategory(event.target.value);
-					if (existingCountries?.length) {
-						setPriceOptions((prev) => ({ ...prev, country: existingCountries[0].text }));
-					}
+					const selectedCollection = priceCollections.find((category) => category.text === event.target.value);
+					setSelectedPriceCollection(selectedCollection);
+					setPriceOptions((prev) => {
+						const currentCountryExists = existingCountries?.some((country) => country.text === prev.country);
+
+						return {
+							...prev,
+							country: currentCountryExists ? prev.country : existingCountries?.[0]?.text ?? null,
+						};
+					});
 				},
 			});
 		}
 
+		// Then add product types if available
 		if (priceProductTypes?.length) {
 			dropdowns.push({
 				id: "productType",
@@ -557,16 +651,36 @@ const ProductsScreen = () => {
 				label: "Select Product Variety",
 				onChange: (event) => {
 					priceState.dispatch({ type: "FETCH_PRICE_START" });
-					setPriceOptions((prev) => ({ ...prev, productType: event.target.value }));
-					if (existingCountries?.length) {
-						setPriceOptions((prev) => ({ ...prev, country: existingCountries[0].text }));
-					}
+					setPriceOptions((prev) => {
+						// Check if current country still exists in new selection
+						const currentCountryExists = existingCountries?.some((country) => country.text === prev.country);
+
+						return {
+							...prev,
+							productType: event.target.value,
+							productVar: priceProductTypes.find((type) => type.text === event.target.value)?.value ?? event.target.value,
+							country: currentCountryExists ? prev.country : existingCountries?.[0]?.text ?? null,
+						};
+					});
+				},
+			});
+		}
+
+		// Finally add country selection if there are countries available
+		if (existingCountries?.length) {
+			dropdowns.push({
+				id: "country",
+				items: existingCountries,
+				value: priceOptions.country,
+				label: "Select Country",
+				onChange: (event) => {
+					setPriceOptions((prev) => ({ ...prev, country: event.target.value }));
 				},
 			});
 		}
 
 		return dropdowns;
-	}, [existingCountries, priceOptions.country, priceOptions.product, priceOptions.productType, priceProducts, priceCategories, priceProductTypes, priceState, selectedPriceCategory]);
+	}, [existingCountries, priceOptions.country, priceOptions.product, priceOptions.productType, priceProducts, priceCollections, priceProductTypes, priceState, selectedPriceCollection]);
 
 	const formRefDate = useRef();
 	const formContentDate = useMemo(() => [
@@ -641,129 +755,135 @@ const ProductsScreen = () => {
 			<StickyBand dropdownContent={productDropdownContent} />
 			{/* PRODUCTION CARDS */}
 			<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1} sx={{ minHeight: "500px" }}>
-				<Grid
-					item
-					xs={12}
-					md={6}
-					alignItems="center"
-					sx={{
-						display: "flex",
-						"& > *": { // This targets the Card component
-							flex: 1,
-							height: "100%",
-							display: "flex",
-							flexDirection: "column",
-						},
-					}}
-				>
-					<Card
-						title="EU's Annual Overview"
-						footer={cardFooter({ minutesAgo })}
-						sx={{ display: "flex", flexDirection: "column" }}
-					>
-						<Grid item xs={12} md={12} display="flex" justifyContent="flex-end">
-							<StickyBand sticky={false} dropdownContent={productionDropdowns} formRef={yearPickerRef} formContent={yearPickerProps} />
-						</Grid>
-						{isProductionLoading ? (
-							<LoadingIndicator />
-						) : (
-							<Grid container display="flex" direction="row" justifyContent="space-evenly" sx={{ flex: 1 }}>
-								{(!europeOverview?.charts.gauge.data.value || !europeOverview?.charts.pie.data.length) ? (
-									<DataWarning message="No Available Data for the Specified Options Combination" />
+				{dataSets.productProduction ? (
+					<>
+						<Grid
+							item
+							xs={12}
+							md={6}
+							alignItems="center"
+							sx={{
+								display: "flex",
+								"& > *": { // This targets the Card component
+									flex: 1,
+									height: "100%",
+									display: "flex",
+									flexDirection: "column",
+								},
+							}}
+						>
+							<Card
+								title="EU's Annual Overview"
+								footer={cardFooter({ minutesAgo })}
+								sx={{ display: "flex", flexDirection: "column" }}
+							>
+								<Grid item xs={12} md={12} display="flex" justifyContent="flex-end">
+									<StickyBand sticky={false} dropdownContent={productionDropdowns} formRef={yearPickerRef} formContent={yearPickerProps} />
+								</Grid>
+								{dataSets.productProduction.length === 0 ? (
+									<DataWarning message="No Available Production Data for the Specified Options Combination" />
+								) : isProductionLoading ? (<LoadingIndicator />
 								) : (
-									<>
-										<Grid item xs={12} sm={12} md={12} justifyContent="center" alignItems="center">
-											{europeOverview?.charts.gauge.data.value && (
-												<Plot
-													showLegend
-													scrollZoom
-													height={europeOverview.charts.gauge.shape === "bullet" ? "115px" : "200px"}
-													data={[{
-														type: "indicator",
-														mode: "gauge+number",
-														value: europeOverview.charts.gauge.data.value,
-														range: europeOverview.charts.gauge.range,
-														color: europeOverview.charts.gauge.color,
-														shape: europeOverview.charts.gauge.shape,
-														indicator: "primary",
-														textColor: "primary",
-														suffix: europeOverview.charts.gauge.suffix,
-													}]}
-													title={europeOverview.charts.gauge.data.subtitle}
-												/>
-											)}
+									<Grid container display="flex" direction="row" justifyContent="space-evenly" sx={{ flex: 1 }}>
+										<Grid container display="flex" direction="row" justifyContent="space-evenly" sx={{ flex: 1 }}>
+											<Grid item xs={12} sm={12} md={12} justifyContent="center" alignItems="center">
+												{europeOverview?.charts.gauge.warning ? (
+													<DataWarning message={europeOverview.charts.gauge.warning} />
+												) : (
+													<Plot
+														showLegend
+														scrollZoom
+														height={europeOverview.charts.gauge.shape === "bullet" ? "115px" : "200px"}
+														data={[{
+															type: "indicator",
+															mode: "gauge+number",
+															value: europeOverview.charts.gauge.data.value,
+															range: europeOverview.charts.gauge.range,
+															color: europeOverview.charts.gauge.color,
+															shape: europeOverview.charts.gauge.shape,
+															indicator: "primary",
+															textColor: "primary",
+															suffix: europeOverview.charts.gauge.suffix,
+														}]}
+														title={europeOverview.charts.gauge.data.subtitle}
+													/>
+												)}
+											</Grid>
+											<Grid item xs={12} sm={12} md={12} justifyContent="center" alignItems="center">
+												{europeOverview?.charts.pie.warning ? (
+													<DataWarning message={europeOverview.charts.pie.warning} />
+												) : (
+													<Plot
+														scrollZoom
+														showLegend
+														displayBar={false}
+														height="295px"
+														title={`${productionOptions.year}'s Production by Country`}
+														data={europeOverview.charts.pie.data}
+													/>
+												)}
+											</Grid>
 										</Grid>
-										<Grid item xs={12} sm={12} md={12} justifyContent="center" alignItems="center">
-											{europeOverview?.charts.pie.data.length > 0 && (
-												<Plot
-													scrollZoom
-													showLegend
-													displayBar={false}
-													height="295px"
-													title={`${productionOptions.year}'s Production by Country`}
-													data={europeOverview.charts.pie.data}
-												/>
-											)}
-										</Grid>
-									</>
+									</Grid>
 								)}
-							</Grid>
-						)}
-					</Card>
-				</Grid>
-				<Grid
-					item
-					xs={12}
-					md={6}
-					alignItems="center"
-					sx={{
-						display: "flex",
-						"& > *": {
-							flex: 1,
-							height: "100%",
-							display: "flex",
-							flexDirection: "column",
-						},
-					}}
-				>
-					<Card
-						title="Production per Year"
-						footer={cardFooter({ minutesAgo })}
-						sx={{ display: "flex", flexDirection: "column" }}
-					>
-						{isProductionLoading ? (
-							<LoadingIndicator />
-						) : (
-							<Grid item xs={12} sm={12} justifyContent="center" alignItems="center" sx={{ flex: 1 }}>
-								{europeOverview?.charts.bars.data ? (
-									<Plot
-										scrollZoom
-										data={[...europeOverview.charts.bars.data].reverse()}
-										barmode="stack"
-										displayBar={false}
-										title={europeOverview.charts.bars.title}
-										xaxis={europeOverview.charts.bars.xaxis}
-									/>
-								) : (<DataWarning message="No Available Data for the Specified Options Combination" />)}
-							</Grid>
-						)}
-					</Card>
-				</Grid>
+							</Card>
+						</Grid>
+						<Grid
+							item
+							xs={12}
+							md={6}
+							alignItems="center"
+							sx={{
+								display: "flex",
+								"& > *": {
+									flex: 1,
+									height: "100%",
+									display: "flex",
+									flexDirection: "column",
+								},
+							}}
+						>
+							<Card
+								title="Production per Year"
+								footer={cardFooter({ minutesAgo })}
+								sx={{ display: "flex", flexDirection: "column" }}
+							>
+								{!dataSets.productProduction || dataSets.productProduction.length === 0 ? (
+									<DataWarning message="No Available Data for the Specified Options Combination" />
+								) : isProductionLoading ? (
+									<LoadingIndicator />
+								) : (
+									<Grid item xs={12} sm={12} justifyContent="center" alignItems="center" sx={{ flex: 1 }}>
+										{europeOverview?.charts.bars.data ? (
+											<Plot
+												scrollZoom
+												height="459px"
+												data={[...europeOverview.charts.bars.data].reverse()}
+												barmode="stack"
+												displayBar={false}
+												title={europeOverview.charts.bars.title}
+												xaxis={europeOverview.charts.bars.xaxis}
+											/>
+										) : (<DataWarning message="No Available Data for the Specified Options Combination" />)}
+									</Grid>
+								)}
+							</Card>
+						</Grid>
+					</>
+				) : (<DataWarning message="No Available Production Data for the Specified Product" />
+				)}
 			</Grid>
 			{/* PRICE CARDS */}
 			<Grid item xs={12} md={12} mb={2} alignItems="center" flexDirection="column">
 				<Card title="Product per Country" footer={cardFooter({ minutesAgo })}>
 					<StickyBand sticky={false} dropdownContent={priceDropdowns} formRef={formRefDate} formContent={formContentDate} />
-					{dateMetrics.isValidDateRange ? (
-						isPriceLoading ? (
-							<LoadingIndicator />
+					{existingCountries.length > 0 ? dateMetrics.isValidDateRange ? (
+						isPriceLoading && !state.warning ? (<LoadingIndicator />
 						) : (
 							<Grid container display="flex" direction="row" justifyContent="space-evenly" padding={0} spacing={1}>
 								{countryOverview.map((plotData, index) => {
 									const isTimelinePlot = index === countryOverview.length - 2;
-									const isValidData = isTimelinePlot
-										? (isValidPrice && plotData.data)
-										: (plotData.data?.value && plotData.data.value !== "");
+									const isValidData = isTimelinePlot ? (isValidPrice && plotData.data) : (plotData.data?.value && plotData.data.value !== "");
 
 									return isValidData ? (
 										<Grid
@@ -804,11 +924,12 @@ const ProductsScreen = () => {
 												/>
 											)}
 										</Grid>
-									) : (<DataWarning message="No Available Data for the Specified Options Combination" />);
+									) : (<DataWarning md={6} message="No Available Data for the Specified Options Combination" />);
 								})}
 							</Grid>
 						)
 					) : (<DataWarning message="Please Select a Valid Date Range" />
+					) : (<DataWarning message="No Available Pricing Data For the Specific Product" />
 					)}
 				</Card>
 			</Grid>
