@@ -123,7 +123,6 @@ export const europeanCountries = [
 	// Region 2: BE - DE - FR - NL
 	// Region 3: BG - ES - HR - IT - PT - RO
 	{ value: "EU", text: "European Union", flag: "🇪🇺", region: "EU Average" },
-	{ value: "EU", text: "European Union", flag: "🇪🇺", region: "EU Average" },
 	{ value: "AL", text: "Albania", flag: "🇦🇱" },
 	{ value: "AT", text: "Austria", flag: "🇦🇹", region: "Region 1" },
 	{ value: "BE", text: "Belgium", flag: "🇧🇪", region: "Region 2" },
@@ -260,6 +259,7 @@ export const products = [
 		value: "pigmeat",
 		text: "Pigmeat",
 		collections: [{ value: "carcass_prices", text: "Carcass" }, { value: "cuts_prices", text: "Cuts" }],
+		carcass_prices: [],
 		cuts_prices: {
 			products: ["Belly", "Ham", "Loin", "Minced Meat", "Shoulder"],
 			productTypes: ["Non-retail buying price", "Retail buying price", "Selling price"],

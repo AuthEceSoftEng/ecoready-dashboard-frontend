@@ -18,36 +18,34 @@ const useInit = (organization, fetchConfigs) => {
 	}, [success, warning, error]);
 
 	const handleFetchResponse = useCallback((promiseStatus) => {
-		// ensure that there are no 500 errors or empty responses
-		const hasIssues = promiseStatus.some(
-			(item) => item?.response?.success === false
-				|| (Array.isArray(item?.response) && item.response.length === 0),
-		);
+		// Check if we have any responses
+		if (promiseStatus.length === 0) {
+			dispatch({
+				type: "FETCH_ERROR",
+				payload: { error: "No data received" },
+			});
+			return;
+		}
 
-		// Map through each response and dispatch individually
+		// Process each response individually
 		for (const [index, item] of promiseStatus.entries()) {
 			const plotId = fetchConfigs[index].plotId;
-			// Determine if this is a price or production request based on plotId
 			const dataType = plotId.toLowerCase().includes("price") ? "price"
 				: plotId.toLowerCase().includes("production") ? "production"
 					: "general";
 
+			// Check if response is empty or has issues
+			const isEmpty = !item?.response || (Array.isArray(item?.response) && item.response.length === 0);
+
 			dispatch({
-				type: hasIssues ? "FETCH_WARNING" : "FETCH_SUCCESS",
+				type: isEmpty ? "FETCH_WARNING" : "FETCH_SUCCESS",
 				payload: {
 					plotId,
-					response: item.response,
-					dataType, // Add dataType to payload
+					response: isEmpty ? [] : item.response,
+					dataType,
+					warning: isEmpty ? `No data available for ${plotId}` : null,
 				},
-				...(hasIssues && { warning: "Some plots may be empty due to no matching data" }),
 			});
-		}
-
-		// Show appropriate snackbar message
-		if (hasIssues) {
-			refs.current.warning("Some plots may be empty due to no matching data");
-		} else {
-			refs.current.success("All data fetched successfully");
 		}
 	}, [fetchConfigs]);
 
