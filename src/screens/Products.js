@@ -1002,7 +1002,7 @@ const ProductsScreen = () => {
 												title={europeOverview.charts.bars.title}
 												xaxis={europeOverview.charts.bars.xaxis}
 											/>
-										) : (<DataWarning message="No Available Data for the Specified Options Combination" />)}
+										) : (<DataWarning message="No Available Data for the Specified Options' Combination" />)}
 									</Grid>
 								)}
 							</Card>
@@ -1035,7 +1035,7 @@ const ProductsScreen = () => {
 										justifyContent="center"
 										alignItems="center"
 									>
-										{isProductionGauge && isProductionLoading ? (<LoadingIndicator />
+										{isProductionGauge && isProductionLoading && !plotData.warning ? (<LoadingIndicator />
 										) : plotData.warning ? (<DataWarning message={plotData.warning} />
 										) : isTimelinePlot ? (<Plot scrollZoom data={plotData.data} xaxis={plotData.xaxis} yaxis={plotData.yaxis} />
 										) : (
