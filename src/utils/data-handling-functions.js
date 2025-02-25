@@ -13,9 +13,9 @@ export const initialState = {
 
 const updateLoadingStates = (state, dataType) => ({
 	...state,
-	isLoading: dataType === "general" ? false : state.isLoading,
-	isPriceLoading: dataType === "price" ? false : state.isPriceLoading,
-	isProductionLoading: dataType === "production" ? false : state.isProductionLoading,
+	isLoading: state.isProductionLoading && state.isPriceLoading,
+	isProductionLoading: dataType === "general" ? false : (dataType === "production" ? false : state.isProductionLoading),
+	isPriceLoading: dataType === "general" ? false : (dataType === "price" ? false : state.isPriceLoading),
 });
 
 export const reducer = (state, action) => {
@@ -65,6 +65,7 @@ export const reducer = (state, action) => {
 		case "FETCH_SUCCESS": {
 			const { plotId, response, dataType } = action.payload;
 			return {
+				...state,
 				...updateLoadingStates(state, dataType),
 				error: null,
 				dataSets: {
@@ -77,10 +78,11 @@ export const reducer = (state, action) => {
 		}
 
 		case "FETCH_WARNING": {
-			const { plotId, response, dataType } = action.payload;
+			const { plotId, response, dataType, warning } = action.payload;
 			return {
+				...state,
 				...updateLoadingStates(state, dataType),
-				warning: action.payload?.warning || "Some values may be missing",
+				warning,
 				dataSets: {
 					...state.dataSets,
 					[plotId]: response,
