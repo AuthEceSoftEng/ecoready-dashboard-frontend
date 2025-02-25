@@ -191,10 +191,9 @@ const ProductsScreen = () => {
 	const productionConfigs = useMemo(
 		() => {
 			if (!isProductionConfigReady) return [];
-			return getProductionConfigs(globalProduct, productionOptions.product, productionOptions.productionMetricVal, productionOptions.productType) || [];
+			return getProductionConfigs(globalProduct, startDate, endDate, dateMetrics.differenceInDays, productionOptions.product, productionOptions.productionMetricVal, productionOptions.productType) || [];
 		},
-		[isProductionConfigReady, globalProduct, productionOptions.product,
-			productionOptions.productionMetricVal, productionOptions.productType],
+		[isProductionConfigReady, globalProduct, startDate, endDate, dateMetrics.differenceInDays, productionOptions.product, productionOptions.productionMetricVal, productionOptions.productType],
 	);
 
 	// Separate price configs
@@ -821,9 +820,11 @@ const ProductsScreen = () => {
 			// Production gauge
 			{
 				data: {
-					value: europeOverview?.countryData?.find((country) => (globalProduct === "Sugar"
-						? country.label === priceOptions.country
-						: country.label === priceOptions.country))?.production ?? null,
+					value: dataSets?.periodProduction
+						?.find((item) => item.key === (globalProduct === "Sugar"
+							? priceOptions.country // For Sugar, use region directly as key
+							: existingCountries.find((c) => c.text === priceOptions.country)?.value)) // For others, lookup country value
+						?.[Object.keys(dataSets.periodProduction[0] || {}).find((key) => key.startsWith("sum_"))] ?? null,
 					subtitle: globalProduct === "Sugar"
 						? "Region's Period Production"
 						: "Country's Period Production",
@@ -832,9 +833,11 @@ const ProductsScreen = () => {
 				color: "third",
 				suffix: `${units.productionUnit}`,
 				shape: "angular",
-				warning: europeOverview?.countryData?.find((country) => (globalProduct === "Sugar"
-					? country.label === priceOptions.country
-					: country.label === priceOptions.country))?.production
+				warning: dataSets?.periodProduction
+					?.find((item) => item.key === (globalProduct === "Sugar"
+						? priceOptions.country
+						: existingCountries.find((c) => c.text === priceOptions.country)?.value))
+					?.[Object.keys(dataSets.periodProduction[0] || {}).find((key) => key.startsWith("sum_"))]
 					? null
 					: `No production data available for ${priceOptions.country}`,
 			},
@@ -891,10 +894,7 @@ const ProductsScreen = () => {
 					: null,
 			},
 		];
-	}, [existingCountries, europeOverview?.countryData, europeOverview?.countryMaxValue,
-		units.productionUnit, units.priceUnit, isValidMonthlyPrices, monthlyPrices,
-		globalProduct, isValidPrice, pricesTimeline, isValidPeriodPrices, periodPrices,
-		priceOptions.country]);
+	}, [globalProduct, existingCountries, dataSets.periodProduction, europeOverview?.countryMaxValue, units.productionUnit, units.priceUnit, priceOptions.country, isValidMonthlyPrices, monthlyPrices, isValidPrice, pricesTimeline, isValidPeriodPrices, periodPrices]);
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
@@ -987,8 +987,7 @@ const ProductsScreen = () => {
 							}}
 						>
 							<Card title="Production per Year" footer={cardFooter({ minutesAgo })} sx={{ display: "flex", flexDirection: "column" }}>
-								{isProductionLoading ? (
-									<LoadingIndicator />
+								{isProductionLoading ? (<LoadingIndicator />
 								) : !dataSets.productProduction || dataSets.productProduction.length === 0 ? (
 									<DataWarning message="No Available Data for the Specified Options Combination" />
 								) : (
@@ -1018,65 +1017,54 @@ const ProductsScreen = () => {
 				<Card title="Product per Country" footer={cardFooter({ minutesAgo })}>
 					<StickyBand sticky={false} dropdownContent={priceDropdowns} formRef={formRefDate} formContent={formContentDate} />
 					{state.isLoading ? (<LoadingIndicator />
-					) : existingCountries.length > 0 ? (
-						dateMetrics.isValidDateRange ? (
-							isPriceLoading ? (
-								<LoadingIndicator />
-							) : (
-								<Grid container display="flex" direction="row" justifyContent="space-evenly" padding={0} spacing={1}>
-									{countryOverview.map((plotData, index) => {
-										const isTimelinePlot = index === countryOverview.length - 2;
-
-										return (
-											<Grid
-												key={index}
-												item
-												height="200px"
-												xs={12}
-												sm={12}
-												md={index === countryOverview.length - 1 ? 3 : index === countryOverview.length - 2 ? 9 : 4}
-												justifyContent="center"
-												alignItems="center"
-											>
-												{plotData.warning ? (
-													<DataWarning message={plotData.warning} />
-												) : isTimelinePlot ? (
-													<Plot
-														scrollZoom
-														data={plotData.data}
-														xaxis={plotData.xaxis}
-														yaxis={plotData.yaxis}
-													/>
-												) : (
-													<Plot
-														showLegend
-														scrollZoom
-														height={plotData.shape === "bullet" ? "120px" : "200px"}
-														data={[{
-															type: "indicator",
-															mode: "gauge+number",
-															value: plotData.data.value,
-															range: plotData.range ?? [0, maxPrice],
-															color: plotData.color,
-															shape: plotData.shape,
-															indicator: "primary",
-															textColor: "primary",
-															suffix: plotData.suffix,
-														}]}
-														displayBar={false}
-														title={plotData.data.subtitle}
-													/>
-												)}
-											</Grid>
-										);
-									})}
-								</Grid>
-							)
-						) : (
-							<DataWarning message="Please Select a Valid Date Range" />
-						)
+					) : existingCountries.length > 0 ? (dateMetrics.isValidDateRange ? (isPriceLoading ? (<LoadingIndicator />
 					) : (
-						<DataWarning message="No Available Pricing Data For the Specified Options' Combination" />
+						<Grid container display="flex" direction="row" justifyContent="space-evenly" padding={0} spacing={1}>
+							{countryOverview.map((plotData, index) => {
+								const isTimelinePlot = index === countryOverview.length - 2;
+								const isProductionGauge = index === 0;
+
+								return (
+									<Grid
+										key={index}
+										item
+										height="200px"
+										xs={12}
+										sm={12}
+										md={index === countryOverview.length - 1 ? 3 : index === countryOverview.length - 2 ? 9 : 4}
+										justifyContent="center"
+										alignItems="center"
+									>
+										{isProductionGauge && isProductionLoading ? (<LoadingIndicator />
+										) : plotData.warning ? (<DataWarning message={plotData.warning} />
+										) : isTimelinePlot ? (<Plot scrollZoom data={plotData.data} xaxis={plotData.xaxis} yaxis={plotData.yaxis} />
+										) : (
+											<Plot
+												showLegend
+												scrollZoom
+												height={plotData.shape === "bullet" ? "120px" : "200px"}
+												data={[{
+													type: "indicator",
+													mode: "gauge+number",
+													value: plotData.data.value,
+													range: plotData.range ?? [0, maxPrice],
+													color: plotData.color,
+													shape: plotData.shape,
+													indicator: "primary",
+													textColor: "primary",
+													suffix: plotData.suffix,
+												}]}
+												displayBar={false}
+												title={plotData.data.subtitle}
+											/>
+										)}
+									</Grid>
+								);
+							})}
+						</Grid>
+					)
+					) : (<DataWarning message="Please Select a Valid Date Range" />)
+					) : (<DataWarning message="No Available Pricing Data For the Specified Options' Combination" />
 					)}
 				</Card>
 			</Grid>
