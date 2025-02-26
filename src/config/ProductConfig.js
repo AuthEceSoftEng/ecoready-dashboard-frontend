@@ -32,12 +32,14 @@ const getInterval = (days = null) => ({
 	custom: days ? `every_${days}_days` : null,
 });
 
-const getPriceBaseConfig = (globalProduct) => ({
-	type: "stats",
-	collection: "__prices__",
-	project: findKeyByText(products, globalProduct),
-	unit: getUnit(globalProduct),
-	attribute: "avg_price",
+const createParams = (attribute, stat, startDate, endDate, interval, filters = []) => ({
+	attribute: Array.isArray(attribute) ? attribute : [attribute],
+	stat,
+	interval,
+	start_time: startDate,
+	end_time: endDate,
+	group_by: "key",
+	...(filters.length > 0 && { filters }),
 });
 
 const getProductionBaseConfig = (globalProduct) => ({
@@ -48,13 +50,6 @@ const getProductionBaseConfig = (globalProduct) => ({
 	unit: getUnit(globalProduct, "production"),
 });
 
-const createPriceConfig = (baseConfig, params, plotId, unit) => ({
-	...baseConfig,
-	params: JSON.stringify(params),
-	plotId,
-	unit,
-});
-
 const createProductionConfig = (globalProduct, baseConfig, params, plotId = null) => ({
 	...baseConfig,
 	...(plotId && { plotId }),
@@ -63,14 +58,19 @@ const createProductionConfig = (globalProduct, baseConfig, params, plotId = null
 	unit: getUnit(params.attribute[0], "production"),
 });
 
-const createParams = (attribute, stat, startDate, endDate, interval, filters = []) => ({
-	attribute: Array.isArray(attribute) ? attribute : [attribute],
-	stat,
-	interval,
-	start_time: startDate,
-	end_time: endDate,
-	group_by: "key",
-	...(filters.length > 0 && { filters }),
+const getPriceBaseConfig = (globalProduct) => ({
+	type: "stats",
+	collection: "__prices__",
+	project: findKeyByText(products, globalProduct),
+	unit: getUnit(globalProduct),
+	attribute: "avg_price",
+});
+
+const createPriceConfig = (baseConfig, params, plotId, unit) => ({
+	...baseConfig,
+	params: JSON.stringify(params),
+	plotId,
+	unit,
 });
 
 const createPriceConfigs = (globalProduct, baseConfig, startDate, endDate, differenceInDays, filters = []) => {
@@ -246,7 +246,6 @@ export const getMonthlyPriceConfigs = (globalProduct, customDate, product = null
 		},
 		"Fruits & Vegetables": {
 			filters: [{ property_name: "product", operator: "eq", property_value: product }],
-			plotId: "periodPrices",
 		},
 		Beef: {
 			collection: `__${collection}__`,
