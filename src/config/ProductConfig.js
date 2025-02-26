@@ -29,7 +29,7 @@ const getInterval = (days = null) => ({
 	daily: "every_1_days",
 	monthly: "every_1_months",
 	annually: "every_12_months",
-	custom: `every_${days}_days`,
+	custom: days ? `every_${days}_days` : null,
 });
 
 const getPriceBaseConfig = (globalProduct) => ({
@@ -40,81 +40,6 @@ const getPriceBaseConfig = (globalProduct) => ({
 	attribute: "avg_price",
 });
 
-const createPriceConfig = (baseConfig, params, plotId, unit) => ({
-	...baseConfig,
-	params: JSON.stringify(params),
-	plotId,
-	unit,
-});
-
-const createPriceParams = (startDate, endDate, interval, filters = []) => ({
-	attribute: ["price"],
-	stat: "avg",
-	group_by: "key",
-	start_time: startDate,
-	end_time: endDate,
-	...(filters.length > 0 && { filters }),
-});
-
-const createPriceConfigs = (globalProduct, baseConfig, startDate, endDate, differenceInDays, filters = []) => {
-	const unit = getUnit(globalProduct);
-	const interval = getInterval(differenceInDays);
-	const baseParams = createPriceParams(startDate, endDate, interval, filters);
-
-	return [
-		// Period prices config
-		createPriceConfig(
-			baseConfig,
-			{
-				...baseParams,
-				interval: interval.custom,
-			},
-			"periodPrices",
-			unit,
-		),
-		// Timeline config
-		createPriceConfig(
-			baseConfig,
-			{
-				...baseParams,
-				interval: interval.daily,
-			},
-			"pricesTimeline",
-			unit,
-		),
-		// Max price config
-		createPriceConfig(
-			baseConfig,
-			{
-				...baseParams,
-				stat: "max",
-				interval: interval.custom,
-				filters: [],
-			},
-			"maxPrice",
-			unit,
-		),
-	];
-};
-
-const createMonthlyPriceConfigs = (globalProduct, dates, filters = [], collection = null, plotId = "monthlyPrices") => {
-	const baseConfig = {
-		...getPriceBaseConfig(globalProduct),
-		...(collection && { collection }),
-		params: JSON.stringify({
-			attribute: ["price"],
-			stat: "avg",
-			interval: "every_1_months",
-			start_time: dates.formattedBeginningOfMonth,
-			end_time: dates.currentDate,
-			group_by: "key",
-			...(filters.length > 0 && { filters }),
-		}),
-		plotId,
-	};
-	return [baseConfig];
-};
-
 const getProductionBaseConfig = (globalProduct) => ({
 	type: "stats",
 	collection: "__production__",
@@ -122,6 +47,88 @@ const getProductionBaseConfig = (globalProduct) => ({
 	plotId: "productProduction",
 	unit: getUnit(globalProduct, "production"),
 });
+
+const createPriceConfig = (baseConfig, params, plotId, unit) => ({
+	...baseConfig,
+	params: JSON.stringify(params),
+	plotId,
+	unit,
+});
+
+const createProductionConfig = (globalProduct, baseConfig, params, plotId = null) => ({
+	...baseConfig,
+	...(plotId && { plotId }),
+	params: JSON.stringify(params),
+	attribute: plotId?.includes("max") ? `max_${params.attribute[0]}` : `sum_${params.attribute[0]}`,
+	unit: getUnit(params.attribute[0], "production"),
+});
+
+const createParams = (attribute, stat, startDate, endDate, interval, filters = []) => ({
+	attribute: Array.isArray(attribute) ? attribute : [attribute],
+	stat,
+	interval,
+	start_time: startDate,
+	end_time: endDate,
+	group_by: "key",
+	...(filters.length > 0 && { filters }),
+});
+
+const createPriceConfigs = (globalProduct, baseConfig, startDate, endDate, differenceInDays, filters = []) => {
+	const unit = getUnit(globalProduct);
+	const interval = getInterval(differenceInDays);
+	const baseParams = createParams("price", "avg", startDate, endDate, interval, filters);
+
+	const configs = [
+		{ interval: interval.custom, plotId: "periodPrices", filters },
+		{ interval: interval.daily, plotId: "pricesTimeline", filters },
+		{ interval: interval.custom, plotId: "maxPrice", stat: "max", filters: [] },
+	];
+
+	return configs.map((config) => createPriceConfig(baseConfig, { ...baseParams, ...config }, config.plotId, unit));
+};
+
+const createMonthlyPriceConfigs = (globalProduct, dates, filters = [], collection = null, plotId = "monthlyPrices") => {
+	const baseConfig = {
+		...getPriceBaseConfig(globalProduct),
+		...(collection && { collection }),
+		params: JSON.stringify(createParams(
+			"price",
+			"avg",
+			dates.formattedBeginningOfMonth,
+			dates.currentDate,
+			"every_1_months",
+			filters,
+		)),
+		plotId,
+	};
+	return [baseConfig];
+};
+
+const createProductionConfigs = (globalProduct, startDate, endDate, differenceInDays, productionMetric, filters = [], collection = null) => {
+	const year = new Date().getFullYear().toString();
+	const baseConfig = {
+		...getProductionBaseConfig(globalProduct),
+		...(collection && { collection }),
+	};
+	const interval = getInterval(differenceInDays);
+
+	const configs = [
+		{
+			params: createParams(productionMetric, "sum", "2010-01-01", `${year}-12-31`, interval.annually, filters),
+			plotId: "productProduction",
+		},
+		{
+			params: createParams(productionMetric, "sum", startDate, endDate, interval.custom, filters),
+			plotId: "periodProduction",
+		},
+		{
+			params: createParams(productionMetric, "max", "2010-01-01", `${year}-12-31`, getInterval(36_500).custom),
+			plotId: "maxProduction",
+		},
+	];
+
+	return configs.map((config) => createProductionConfig(globalProduct, baseConfig, config.params, config.plotId));
+};
 
 export const getPriceConfigs = (globalProduct, startDate, endDate, differenceInDays, product = null, productType = null, collection = null) => {
 	const baseConfig = getPriceBaseConfig(globalProduct);
@@ -300,550 +307,58 @@ export const getMonthlyPriceConfigs = (globalProduct, customDate, product = null
 };
 
 export const getProductionConfigs = (globalProduct, startDate, endDate, differenceInDays, product = null, productionMetric = null, productionType = null) => {
-	const year = new Date().getFullYear().toString();
-	if (globalProduct === "Beef") {
-		return [
-			{
-				...getProductionBaseConfig(globalProduct),
-				params: JSON.stringify({
-					attribute: [productionMetric],
-					stat: "sum",
-					interval: "every_12_months",
-					start_time: "2010-01-01",
-					end_time: `${year}-12-31`,
-					filters: [
-						{
-							property_name: "category",
-							operator: "eq",
-							property_value: product,
-						},
-					],
-					group_by: "key",
-				}),
-				unit: getUnit(productionMetric, "production"),
-				attribute: `sum_${productionMetric}`,
-			},
-			{
-				...getProductionBaseConfig(globalProduct),
-				params: JSON.stringify({
-					attribute: [productionMetric],
-					stat: "sum",
-					interval: `every_${differenceInDays}_days`,
-					start_time: startDate,
-					end_time: endDate,
-					filters: [
-						{
-							property_name: "category",
-							operator: "eq",
-							property_value: product,
-						},
-					],
-					group_by: "key",
-				}),
-				unit: getUnit(productionMetric, "production"),
-				plotId: "periodProduction",
-				attribute: `sum_${productionMetric}`,
-			},
-			{
-				...getProductionBaseConfig(globalProduct),
-				params: JSON.stringify({
-					attribute: [productionMetric],
-					stat: "max",
-					interval: "every_36500_days",
-					start_time: "2010-01-01",
-					end_time: `${year}-12-31`,
-					group_by: "key",
-				}),
-				plotId: "maxProduction",
-				attribute: "max_tonnes",
-			},
-		];
-	}
+	const productConfigs = {
+		Beef: {
+			metric: productionMetric,
+			filters: [{ property_name: "category", operator: "eq", property_value: product }],
+		},
+		Dairy: {
+			collection: "__dairy_production__",
+			metric: "production",
+			filters: [{ property_name: "category", operator: "eq", property_value: product }],
+		},
+		Pigmeat: {
+			metric: productionMetric,
+			filters: [],
+		},
+		Poultry: {
+			collection: "__poultry_production__",
+			metric: productionMetric,
+			filters: [{ property_name: "animal", operator: "eq", property_value: product }],
+		},
+		"Sheep/Goat Meat": {
+			metric: productionMetric,
+			filters: [
+				{ property_name: "meat", operator: "eq", property_value: product },
+				{ property_name: "item", operator: "eq", property_value: productionType },
+			],
+		},
+		Cereals: {
+			metric: productionMetric,
+			filters: [{ property_name: "crop", operator: "eq", property_value: product }],
+		},
+		Oilseeds: {
+			collection: "__oilseeds_production__",
+			metric: "gross_production",
+			attributePrefix: "gross_production",
+		},
+		"Olive Oil": {
+			collection: "__annual_production__",
+			metric: "year_production_quantity",
+			attributePrefix: "year_production_quantity",
+		},
+		Rice: {
+			metric: productionMetric,
+			filters: [{ property_name: "product", operator: "eq", property_value: product }],
+		},
+		Sugar: {
+			metric: productionMetric,
+			filters: [],
+		},
+	};
 
-	if (globalProduct === "Dairy") {
-		return [
-			{
-				...getProductionBaseConfig(globalProduct),
-				collection: "__dairy_production__",
-				params: JSON.stringify({
-					attribute: ["production"],
-					stat: "sum",
-					interval: "every_12_months",
-					start_time: "2010-01-01",
-					end_time: `${year}-12-31`,
-					filters: [
-						{
-							property_name: "category",
-							operator: "eq",
-							property_value: product,
-						},
-					],
-					group_by: "key",
-				}),
-				attribute: "sum_production",
-			},
-			{
-				...getProductionBaseConfig(globalProduct),
-				collection: "__dairy_production__",
-				params: JSON.stringify({
-					attribute: ["production"],
-					stat: "sum",
-					interval: `every_${differenceInDays}_days`,
-					start_time: startDate,
-					end_time: endDate,
-					filters: [
-						{
-							property_name: "category",
-							operator: "eq",
-							property_value: product,
-						},
-					],
-					group_by: "key",
-				}),
-				plotId: "periodProduction",
-				attribute: "sum_production",
-			},
-			{
-				...getProductionBaseConfig(globalProduct),
-				collection: "__dairy_production__",
-				params: JSON.stringify({
-					attribute: ["production"],
-					stat: "max",
-					interval: "every_36500_days",
-					start_time: "2010-01-01",
-					end_time: `${year}-12-31`,
-					group_by: "key",
-				}),
-				plotId: "maxProduction",
-				attribute: "max_tonnes",
-			},
-		];
-	}
+	const config = productConfigs[globalProduct];
+	if (!config) return [];
 
-	if (globalProduct === "Pigmeat") {
-		return [
-			{
-				...getProductionBaseConfig(globalProduct),
-				params: JSON.stringify({
-					attribute: [productionMetric],
-					stat: "sum",
-					interval: "every_12_months",
-					start_time: "2010-01-01",
-					end_time: `${year}-12-31`,
-					group_by: "key",
-				}),
-				unit: getUnit(productionMetric, "production"),
-				attribute: `sum_${productionMetric}`,
-			},
-			{
-				...getProductionBaseConfig(globalProduct),
-				params: JSON.stringify({
-					attribute: [productionMetric],
-					stat: "sum",
-					interval: `every_${differenceInDays}_days`,
-					start_time: startDate,
-					end_time: endDate,
-					group_by: "key",
-				}),
-				unit: getUnit(productionMetric, "production"),
-				plotId: "periodProduction",
-				attribute: `sum_${productionMetric}`,
-			},
-			{
-				...getProductionBaseConfig(globalProduct),
-				params: JSON.stringify({
-					attribute: [productionMetric],
-					stat: "max",
-					interval: "every_36500_days",
-					start_time: "2010-01-01",
-					end_time: `${year}-12-31`,
-					group_by: "key",
-				}),
-				plotId: "maxProduction",
-				attribute: `max_${productionMetric}`,
-			},
-		];
-	}
-
-	if (globalProduct === "Poultry") {
-		return [
-			{
-				...getProductionBaseConfig(globalProduct),
-				collection: "__poultry_production__",
-				params: JSON.stringify({
-					attribute: [productionMetric],
-					stat: "sum",
-					interval: "every_12_months",
-					start_time: "2010-01-01",
-					end_time: `${year}-12-31`,
-					filters: [
-						{
-							property_name: "animal",
-							operator: "eq",
-							property_value: product,
-						},
-					],
-					group_by: "key",
-				}),
-				unit: getUnit(productionMetric, "production"),
-				attribute: `sum_${productionMetric}`,
-			},
-			{
-				...getProductionBaseConfig(globalProduct),
-				collection: "__poultry_production__",
-				params: JSON.stringify({
-					attribute: [productionMetric],
-					stat: "sum",
-					interval: `every_${differenceInDays}_days`,
-					start_time: startDate,
-					end_time: endDate,
-					filters: [
-						{
-							property_name: "animal",
-							operator: "eq",
-							property_value: product,
-						},
-					],
-					group_by: "key",
-				}),
-				unit: getUnit(productionMetric, "production"),
-				plotId: "periodProduction",
-				attribute: `sum_${productionMetric}`,
-			},
-			{
-				...getProductionBaseConfig(globalProduct),
-				collection: "__poultry_production__",
-				params: JSON.stringify({
-					attribute: [productionMetric],
-					stat: "max",
-					interval: "every_36500_days",
-					start_time: "2010-01-01",
-					end_time: `${year}-12-31`,
-					group_by: "key",
-				}),
-				plotId: "maxProduction",
-				attribute: `max_${productionMetric}`,
-			},
-		];
-	}
-
-	if (globalProduct === "Sheep/Goat Meat") {
-		return [
-			{
-				...getProductionBaseConfig(globalProduct),
-				params: JSON.stringify({
-					attribute: [productionMetric],
-					stat: "sum",
-					interval: "every_12_months",
-					start_time: "2010-01-01",
-					end_time: `${year}-12-31`,
-					filters: [
-						{
-							property_name: "meat",
-							operator: "eq",
-							property_value: product,
-						},
-						{
-							property_name: "item",
-							operator: "eq",
-							property_value: productionType,
-						},
-					],
-					group_by: "key",
-				}),
-				unit: getUnit(productionMetric, "production"),
-				attribute: `sum_${productionMetric}`,
-			},
-			{
-				...getProductionBaseConfig(globalProduct),
-				params: JSON.stringify({
-					attribute: [productionMetric],
-					stat: "sum",
-					interval: `every_${differenceInDays}_days`,
-					start_time: startDate,
-					end_time: endDate,
-					filters: [
-						{
-							property_name: "meat",
-							operator: "eq",
-							property_value: product,
-						},
-						{
-							property_name: "item",
-							operator: "eq",
-							property_value: productionType,
-						},
-					],
-					group_by: "key",
-				}),
-				unit: getUnit(productionMetric, "production"),
-				plotId: "periodProduction",
-				attribute: `sum_${productionMetric}`,
-			},
-			{
-				...getProductionBaseConfig(globalProduct),
-				params: JSON.stringify({
-					attribute: [productionMetric],
-					stat: "max",
-					interval: "every_36500_days",
-					start_time: "2010-01-01",
-					end_time: `${year}-12-31`,
-					group_by: "key",
-				}),
-				plotId: "maxProduction",
-				attribute: `max_${productionMetric}`,
-			},
-		];
-	}
-
-	if (globalProduct === "Cereals") {
-		return [
-			{
-				...getProductionBaseConfig(globalProduct),
-				params: JSON.stringify({
-					attribute: [productionMetric],
-					stat: "sum",
-					interval: "every_12_months",
-					start_time: "2010-01-01",
-					end_time: `${year}-12-31`,
-					filters: [
-						{
-							property_name: "crop",
-							operator: "eq",
-							property_value: product,
-						},
-					],
-					group_by: "key",
-				}),
-				attribute: `sum_${productionMetric}`,
-			},
-			{
-				...getProductionBaseConfig(globalProduct),
-				params: JSON.stringify({
-					attribute: [productionMetric],
-					stat: "sum",
-					interval: `every_${differenceInDays}_days`,
-					start_time: startDate,
-					end_time: endDate,
-					filters: [
-						{
-							property_name: "crop",
-							operator: "eq",
-							property_value: product,
-						},
-					],
-					group_by: "key",
-				}),
-				plotId: "periodProduction",
-				attribute: `sum_${productionMetric}`,
-			},
-			{
-				...getProductionBaseConfig(globalProduct),
-				params: JSON.stringify({
-					attribute: [productionMetric],
-					stat: "max",
-					interval: "every_36500_days",
-					start_time: "2010-01-01",
-					end_time: `${year}-12-31`,
-					group_by: "key",
-				}),
-				plotId: "maxProduction",
-				attribute: `max_${productionMetric}`,
-			},
-		];
-	}
-
-	if (globalProduct === "Oilseeds" || product === "Protein Crops") {
-		return [
-			{
-				...getProductionBaseConfig(globalProduct),
-				collection: "__oilseeds_production__",
-				params: JSON.stringify({
-					attribute: ["gross_production"],
-					stat: "sum",
-					interval: "every_12_months",
-					start_time: "2010-01-01",
-					end_time: `${year}-12-31`,
-					group_by: "key",
-				}),
-				attribute: "sum_gross_production",
-			},
-			{
-				...getProductionBaseConfig(globalProduct),
-				collection: "__oilseeds_production__",
-				params: JSON.stringify({
-					attribute: ["gross_production"],
-					stat: "sum",
-					interval: `every_${differenceInDays}_days`,
-					start_time: startDate,
-					end_time: endDate,
-					group_by: "key",
-				}),
-				plotId: "periodProduction",
-				attribute: "sum_gross_production",
-			},
-			{
-				...getProductionBaseConfig(globalProduct),
-				collection: "__oilseeds_production__",
-				params: JSON.stringify({
-					attribute: ["gross_production"],
-					stat: "max",
-					interval: "every_36500_days",
-					start_time: "2010-01-01",
-					end_time: `${year}-12-31`,
-					group_by: "key",
-				}),
-				plotId: "maxProduction",
-				attribute: "max_gross_production",
-			},
-		];
-	}
-
-	if (globalProduct === "Olive Oil") {
-		return [
-			{
-				...getProductionBaseConfig(globalProduct),
-				collection: "__annual_production__",
-				params: JSON.stringify({
-					attribute: ["year_production_quantity"],
-					stat: "sum",
-					interval: "every_12_months",
-					start_time: "2010-01-01",
-					end_time: `${year}-12-31`,
-					group_by: "key",
-				}),
-				attribute: "sum_year_production_quantity",
-			},
-			{
-				...getProductionBaseConfig(globalProduct),
-				collection: "__annual_production__",
-				params: JSON.stringify({
-					attribute: ["year_production_quantity"],
-					stat: "sum",
-					interval: `every_${differenceInDays}_days`,
-					start_time: startDate,
-					end_time: endDate,
-					group_by: "key",
-				}),
-				plotId: "periodProduction",
-				attribute: "sum_year_production_quantity",
-			},
-			{
-				...getProductionBaseConfig(globalProduct),
-				collection: "__annual_production__",
-				params: JSON.stringify({
-					attribute: ["year_production_quantity"],
-					stat: "max",
-					interval: "every_36500_days",
-					start_time: "2010-01-01",
-					end_time: `${year}-12-31`,
-					group_by: "key",
-				}),
-				plotId: "maxProduction",
-				attribute: "max_year_production_quantity",
-			},
-		];
-	}
-
-	if (globalProduct === "Rice") {
-		return [
-			{
-				...getProductionBaseConfig(globalProduct),
-				params: JSON.stringify({
-					attribute: [productionMetric],
-					stat: "sum",
-					interval: "every_12_months",
-					start_time: "2010-01-01",
-					end_time: `${year}-12-31`,
-					filters: [
-						{
-							property_name: "product",
-							operator: "eq",
-							property_value: product,
-						},
-					],
-					group_by: "key",
-				}),
-				attribute: `sum_${productionMetric}`,
-			},
-			{
-				...getProductionBaseConfig(globalProduct),
-				params: JSON.stringify({
-					attribute: [productionMetric],
-					stat: "sum",
-					interval: `every_${differenceInDays}_days`,
-					start_time: startDate,
-					end_time: endDate,
-					filters: [
-						{
-							property_name: "product",
-							operator: "eq",
-							property_value: product,
-						},
-					],
-					group_by: "key",
-				}),
-				plotId: "periodProduction",
-				attribute: `sum_${productionMetric}`,
-			},
-			{
-				...getProductionBaseConfig(globalProduct),
-				params: JSON.stringify({
-					attribute: [productionMetric],
-					stat: "max",
-					interval: "every_36500_days",
-					start_time: "2010-01-01",
-					end_time: `${year}-12-31`,
-					group_by: "key",
-				}),
-				plotId: "maxProduction",
-				attribute: `max_${productionMetric}`,
-			},
-		];
-	}
-
-	if (globalProduct === "Sugar") {
-		return [
-			{
-				...getProductionBaseConfig(globalProduct),
-				params: JSON.stringify({
-					attribute: [productionMetric],
-					stat: "sum",
-					interval: "every_12_months",
-					start_time: "2010-01-01",
-					end_time: `${year}-12-31`,
-					group_by: "key",
-				}),
-				attribute: `sum_${productionMetric}`,
-			},
-			{
-				...getProductionBaseConfig(globalProduct),
-				params: JSON.stringify({
-					attribute: [productionMetric],
-					stat: "sum",
-					interval: `every_${differenceInDays}_days`,
-					start_time: startDate,
-					end_time: endDate,
-					group_by: "key",
-				}),
-				plotId: "periodProduction",
-				attribute: `sum_${productionMetric}`,
-			},
-			{
-				...getProductionBaseConfig(globalProduct),
-				params: JSON.stringify({
-					attribute: [productionMetric],
-					stat: "max",
-					interval: "every_36500_days",
-					start_time: "2010-01-01",
-					end_time: `${year}-12-31`,
-					group_by: "key",
-				}),
-				plotId: "maxProduction",
-				attribute: `max_${productionMetric}`,
-			},
-		];
-	}
-
-	return [];
+	return createProductionConfigs(globalProduct, startDate, endDate, differenceInDays, config.metric, config.filters, config.collection);
 };
