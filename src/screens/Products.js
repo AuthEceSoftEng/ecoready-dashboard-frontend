@@ -99,14 +99,10 @@ const ProductsScreen = () => {
 
 	// Find the selected product's details from products array
 	const selectedProductDetails = useMemo(() => products.find((p) => p.text === globalProduct), [globalProduct]);
-	console.log("Selected Product Details:", selectedProductDetails);
 
 	const pricesItems = useMemo(() => extractFields(selectedProductDetails, "prices") || [], [selectedProductDetails]);
-	console.log("Prices Items:", pricesItems);
-
 	const priceCollections = useMemo(() => (pricesItems.needsDropdown ? pricesItems.collections : []), [pricesItems]);
 	const [selectedPriceCollection, setSelectedPriceCollection] = useState(priceCollections?.[0] ?? "");
-	console.log("Selected Price Collection:", selectedPriceCollection);
 	const collectionOptions = useMemo(() => selectedProductDetails?.[selectedPriceCollection?.value] ?? null, [selectedProductDetails, selectedPriceCollection]);
 
 	const [priceOptions, setPriceOptions] = useState({
