@@ -2,7 +2,7 @@ import { products } from "../utils/useful-constants.js";
 
 export const organization = "european_data";
 
-export const mapInfoConfigs = (country, product, year) => {
+export const mapInfoConfigs = (product, year) => {
 	if (product === "rice") {
 		return [
 			{
@@ -59,6 +59,51 @@ export const mapInfoConfigs = (country, product, year) => {
 				metric: "Production",
 				unit: "t",
 				plotId: "productProduction1",
+			},
+		];
+	}
+
+	if (product === "pigmeat") {
+		return [
+			{
+				type: "stats",
+				project: "pigmeat",
+				collection: "__carcass_prices__",
+				params: JSON.stringify({ attribute: ["price"], stat: "avg", interval: "every_12_months", start_time: `${year}-01-01`, end_time: `${year}-12-31`, group_by: "key" }),
+				attributename: "avg_price",
+				metric: "Average Carcass Price",
+				unit: "€/100kg",
+				plotId: "productPrices",
+			},
+			{
+				type: "stats",
+				project: "pigmeat",
+				collection: "__production__",
+				params: JSON.stringify({ attribute: ["tonnes"], stat: "sum", interval: "every_12_months", start_time: `${year}-01-01`, end_time: `${year}-12-31`, group_by: "key" }),
+				attributename: "sum_tonnes",
+				metric: "Production (tonnes)",
+				unit: "t",
+				plotId: "productProduction1",
+			},
+			{
+				type: "stats",
+				project: "pigmeat",
+				collection: "__production__",
+				params: JSON.stringify({ attribute: ["heads"], stat: "sum", interval: "every_12_months", start_time: `${year}-01-01`, end_time: `${year}-12-31`, group_by: "key" }),
+				attributename: "sum_heads",
+				metric: "Production (heads)",
+				unit: "heads",
+				plotId: "productProduction2",
+			},
+			{
+				type: "stats",
+				project: "pigmeat",
+				collection: "__production__",
+				params: JSON.stringify({ attribute: ["kg_per_head"], stat: "sum", interval: "every_12_months", start_time: `${year}-01-01`, end_time: `${year}-12-31`, group_by: "key" }),
+				attributename: "sum_kg_per_head",
+				metric: "Production (kg/head)",
+				unit: "kg/head",
+				plotId: "productProduction3",
 			},
 		];
 	}
