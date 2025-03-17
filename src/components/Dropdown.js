@@ -1,7 +1,5 @@
-import { MenuItem, Select, FormControl, InputLabel } from "@mui/material";
+import { MenuItem, Select, FormControl, InputLabel, ListSubheader } from "@mui/material";
 import { makeStyles } from "@mui/styles";
-
-import Checkbox from "./Checkbox.js";
 
 const useStyles = makeStyles((theme) => ({
 	primary_filled: {
@@ -137,7 +135,7 @@ const Dropdown = ({
 	height = "",
 	items = [],
 	value,
-	multiple = false,
+	subheader = false,
 	onChange,
 }) => {
 	const classes = useStyles();
@@ -168,7 +166,6 @@ const Dropdown = ({
 			<Select
 				id={id}
 				labelId={`${id}-label`}
-				multiple={multiple}
 				value={value}
 				label={placeholder}
 				className={classes[`${background}_${(filled ? "filled" : "outlined")}`]}
@@ -191,19 +188,34 @@ const Dropdown = ({
 				}}
 				onChange={onChange}
 			>
-				{items.map((item, index) => (
-					<MenuItem key={index} value={typeof item === "string" ? item : item.text}>
-						{multiple && (
-							<Checkbox
-								id={index}
-								checked={Array.isArray(value) && value.includes(typeof item === "string" ? item : item.text)}
-								color={background}
-								size="small"
-							/>
-						)}
+				{items.flatMap((item, index) => (subheader && item.subheader ? [
+					<ListSubheader
+						key={`header-${index}`}
+						sx={{
+							fontWeight: "bold",
+							borderTop: "1px solid rgba(0, 0, 0, 0.12)",
+							color: "black!important",
+						}}
+					>
+						{typeof item === "string" ? item : item.text}
+					</ListSubheader>,
+					...(item.prices.products || []).map((product, prodIndex) => (
+						<MenuItem
+							key={`item-${index}-${prodIndex}`}
+							value={product}
+							sx={{
+								pl: 4, // Adds left padding to indent the items
+								backgroundColor: "rgba(0, 0, 0, 0.02)",
+							}}
+						>
+							{product}
+						</MenuItem>
+					)),
+				] : (
+					<MenuItem key={`item-${index}`} value={typeof item === "string" ? item : item.text}>
 						{typeof item === "string" ? item : item.text}
 					</MenuItem>
-				))}
+				)))}
 			</Select>
 		</FormControl>
 	);
