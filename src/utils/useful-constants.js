@@ -224,7 +224,7 @@ export const products = [
 		text: "Poultry",
 		collections: ["poultry_prices", "poultry_production"],
 		prices: {
-			products: ["Non-retail buying prices", "Retail buying prices", "Selling price"],
+			products: ["Selling price", "Non-retail buying prices", "Retail buying prices"],
 		},
 		production: {
 			products: ["Boiling hen", "Broiler", "Chicken", "Duck", "Goose", "Guinea fowl", "Other poultry", "Poultry meat", "Turkey"],
@@ -249,6 +249,7 @@ export const products = [
 	{
 		value: "fruit_vegetables",
 		text: "Fruits & Vegetables",
+		subheader: true,
 		collections: ["prices"],
 		prices: {
 			products: ["abricots", "apples", "asparagus", "avocados", "beans", "cabbages", "carrots", "cauliflowers", "cherries", "clementines", "courgettes", "cucumbers", "egg plants, aubergines", "garlic", "kiwis", "leeks", "lemons", "lettuces", "mandarins", "melons", "mushrooms, cultivated", "nectarines", "onions", "oranges", "peaches", "pears", "peppers", "plums", "satsumas", "strawberries", "table grapes", "tomatoes", "water melons"],
@@ -262,7 +263,7 @@ export const products = [
 		carcass_prices: [],
 		cuts_prices: {
 			products: ["Belly", "Ham", "Loin", "Minced Meat", "Shoulder"],
-			productTypes: ["Non-retail buying price", "Retail buying price", "Selling price"],
+			productTypes: ["Selling price", "Non-retail buying price", "Retail buying price"],
 		},
 		production: {
 			productionMetrics: [
@@ -281,9 +282,6 @@ export const products = [
 		prices: {
 			products: ["BUTTER", "BUTTEROIL", "CHEDDAR", "CREAM", "DRINKING MILK", "EDAM", "EMMENTAL", "GOUDA", "SMP", "WHEYPOWDER", "WMP"],
 		},
-		production: {
-			products: ["Drinking milk", "Skimmed milk powder"],
-		},
 		description: "Dairy products derived from milk processing",
 		image: "/product_images/dairy.jpg",
 	},
@@ -293,6 +291,9 @@ export const products = [
 		collections: ["raw_milk_prices"],
 		prices: {
 			products: ["Organic raw milk", "Raw milk"],
+		},
+		production: {
+			products: ["Drinking milk", "Skimmed milk powder"],
 		},
 		description: "EcoReadyMasuria (milk)",
 		image: "/product_images/milk.jpg",
@@ -314,6 +315,7 @@ export const products = [
 	{
 		value: "oilseeds_protein_crops",
 		text: "Protein Crops",
+		subheader: true,
 		collections: ["protein_crops_prices"],
 		prices: {
 			products: ["Alfalfa", "Broad beans", "Chickpeas", "Lentils", "Lupins", "Peas"],

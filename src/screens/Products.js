@@ -9,14 +9,17 @@ import Plot from "../components/Plot.js";
 import useInit from "../utils/screen-init.js";
 import { getPriceConfigs, getMonthlyPriceConfigs, getProductionConfigs, organization } from "../config/ProductConfig.js";
 import {
-	getCustomDateTime, calculateDates, calculateDifferenceBetweenDates,
+	extractFields, getCustomDateTime, calculateDates, calculateDifferenceBetweenDates,
 	debounce, isValidArray, generateYearsArray, groupByKey,
+	findKeyByText,
 } from "../utils/data-handling-functions.js";
 import { cardFooter, LoadingIndicator, StickyBand, DataWarning } from "../utils/rendering-items.js";
 import { europeanCountries, products } from "../utils/useful-constants.js";
 
 const customDate = getCustomDateTime(2024, 12);
 const { year } = calculateDates(customDate);
+
+const currentYear = new Date().getFullYear();
 
 const agriColors = [
 	colors.ag1, colors.ag2, colors.ag3, colors.ag4, colors.ag5,
@@ -25,33 +28,6 @@ const agriColors = [
 	colors.ag16, colors.ag17, colors.ag18, colors.ag19, colors.ag20,
 ];
 const agColorKeys = Array.from({ length: 20 }, (_, i) => `ag${i + 1}`);
-
-// Get relevant fields for prices and products
-const extractFields = (productObject, fieldName) => {
-	if (!productObject) return { fields: [], collections: [] };
-
-	const fields = Object.keys(productObject)
-		.filter((key) => key.toLowerCase().includes(fieldName))
-		.map((field) => ({
-			productName: productObject.text,
-			original: field,
-			text: field
-				.split("_")
-				.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-				.join(" "),
-			products: productObject[field]?.products || [],
-			productTypes: productObject[field]?.productTypes || [],
-			productionMetrics: productObject[field]?.productionMetrics || [],
-		}));
-
-	const collections = Array.isArray(productObject.collections)
-		? productObject.collections.filter((collection) => (typeof collection === "string"
-			? collection.toLowerCase().includes(fieldName)
-			: collection.value.toLowerCase().includes(fieldName)))
-		: Object.values(productObject.collections || {}).filter((collection) => collection.value.toLowerCase().includes(fieldName));
-
-	return { fields, collections, hasData: fields.length > 0, needsDropdown: collections.length > 1 };
-};
 
 const getProductionSumField = (productionData) => {
 	if (!productionData) return null;
@@ -98,7 +74,7 @@ const ProductsScreen = () => {
 	const [globalProduct, setGlobalProduct] = useState(selectedProduct || "Rice");
 
 	// Find the selected product's details from products array
-	const selectedProductDetails = useMemo(() => products.find((p) => p.text === globalProduct), [globalProduct]);
+	const selectedProductDetails = findKeyByText(products, globalProduct, true);
 
 	const pricesItems = useMemo(() => extractFields(selectedProductDetails, "prices") || [], [selectedProductDetails]);
 	const priceCollections = useMemo(() => (pricesItems.needsDropdown ? pricesItems.collections : []), [pricesItems]);
@@ -474,7 +450,7 @@ const ProductsScreen = () => {
 			views: ["year"],
 			value: new Date(`${year}-01-01`),
 			minDate: new Date("2010-01-01"),
-			maxDate: new Date("2025-12-31"),
+			maxDate: new Date(`${currentYear}-01-01`),
 			onChange: (newValue) => { if (newValue) { setProductionOptions((prev) => ({ ...prev, year: newValue.$y.toString() })); } },
 		},
 	], []);
