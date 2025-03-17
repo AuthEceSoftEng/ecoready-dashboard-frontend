@@ -255,14 +255,9 @@ export const calculateDifferenceBetweenDates = (startDate, endDate) => {
 	return { differenceInDays, differenceInHours };
 };
 
-export const getProductCollections = (products, productValue) => {
-	const product = products.find((p) => p.value === productValue);
-	return product?.collections || [];
-};
-
-export const findKeyByText = (array, text) => {
+export const findKeyByText = (array, text, details = false) => {
 	const found = array.find((item) => item.text === text);
-	return found?.value || text;
+	return details ? found : (found?.value || text);
 };
 
 export const isValidArray = (arr) => Array.isArray(arr) && arr.length > 0;
@@ -298,3 +293,29 @@ export const generateYearsArray = (startYear, endYear) => Array.from(
 	{ length: endYear - startYear + 1 },
 	(_, index) => startYear + index,
 );
+
+export const extractFields = (productObject, fieldName) => {
+	if (!productObject) return { fields: [], collections: [] };
+
+	const fields = Object.keys(productObject)
+		.filter((key) => key.toLowerCase().includes(fieldName))
+		.map((field) => ({
+			productName: productObject.text,
+			original: field,
+			text: field
+				.split("_")
+				.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+				.join(" "),
+			products: productObject[field]?.products || [],
+			productTypes: productObject[field]?.productTypes || [],
+			productionMetrics: productObject[field]?.productionMetrics || [],
+		}));
+
+	const collections = Array.isArray(productObject.collections)
+		? productObject.collections.filter((collection) => (typeof collection === "string"
+			? collection.toLowerCase().includes(fieldName)
+			: collection.value.toLowerCase().includes(fieldName)))
+		: Object.values(productObject.collections || {}).filter((collection) => collection.value.toLowerCase().includes(fieldName));
+
+	return { fields, collections, hasData: fields.length > 0, needsDropdown: collections.length > 1 };
+};
