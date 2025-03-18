@@ -278,9 +278,10 @@ export const products = [
 	{
 		value: "milk_dairy",
 		text: "Dairy",
+		subheader: true,
 		collections: ["dairy_prices", "dairy_production"],
 		prices: {
-			products: ["BUTTER", "BUTTEROIL", "CHEDDAR", "CREAM", "DRINKING MILK", "EDAM", "EMMENTAL", "GOUDA", "SMP", "WHEYPOWDER", "WMP"],
+			products: ["BUTTER", "BUTTEROIL", "CHEDDAR", "CREAM", "EDAM", "EMMENTAL", "GOUDA", "SMP", "WHEYPOWDER", "WMP"], // "DRINKING MILK",
 		},
 		description: "Dairy products derived from milk processing",
 		image: "/product_images/dairy.jpg",

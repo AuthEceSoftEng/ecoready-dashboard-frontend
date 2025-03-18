@@ -2,7 +2,8 @@ import { products } from "../utils/useful-constants.js";
 
 export const organization = "european_data";
 
-export const mapInfoConfigs = (product, year) => {
+export const mapInfoConfigs = (prod, year) => {
+	const product = prod.toLowerCase();
 	if (product === "rice") {
 		return [
 			{
@@ -48,7 +49,17 @@ export const mapInfoConfigs = (product, year) => {
 				attributename: "avg_price",
 				metric: "Average Carcass Price",
 				unit: "€/100kg",
-				plotId: "productPrices",
+				plotId: "productPrices1",
+			},
+			{
+				type: "stats",
+				project: "beef",
+				collection: "__live_animal_prices__",
+				params: JSON.stringify({ attribute: ["price"], stat: "avg", interval: "every_12_months", start_time: `${year}-01-01`, end_time: `${year}-12-31`, group_by: "key" }),
+				attributename: "avg_price",
+				metric: "Average Animal Price",
+				unit: "€/100kg",
+				plotId: "productPrices2",
 			},
 			{
 				type: "stats",
@@ -56,9 +67,29 @@ export const mapInfoConfigs = (product, year) => {
 				collection: "__production__",
 				params: JSON.stringify({ attribute: ["tonnes"], stat: "sum", interval: "every_12_months", start_time: `${year}-01-01`, end_time: `${year}-12-31`, group_by: "key" }),
 				attributename: "sum_tonnes",
-				metric: "Production",
+				metric: "Production (tonnes)",
 				unit: "t",
 				plotId: "productProduction1",
+			},
+			{
+				type: "stats",
+				project: "beef",
+				collection: "__production__",
+				params: JSON.stringify({ attribute: ["heads"], stat: "sum", interval: "every_12_months", start_time: `${year}-01-01`, end_time: `${year}-12-31`, group_by: "key" }),
+				attributename: "sum_heads",
+				metric: "Production (heads)",
+				unit: "",
+				plotId: "productProduction2",
+			},
+			{
+				type: "stats",
+				project: "beef",
+				collection: "__production__",
+				params: JSON.stringify({ attribute: ["kg_per_head"], stat: "sum", interval: "every_12_months", start_time: `${year}-01-01`, end_time: `${year}-12-31`, group_by: "key" }),
+				attributename: "sum_kg_per_head",
+				metric: "Production (kg/head)",
+				unit: "kg/head",
+				plotId: "productProduction3",
 			},
 		];
 	}
@@ -92,7 +123,7 @@ export const mapInfoConfigs = (product, year) => {
 				params: JSON.stringify({ attribute: ["heads"], stat: "sum", interval: "every_12_months", start_time: `${year}-01-01`, end_time: `${year}-12-31`, group_by: "key" }),
 				attributename: "sum_heads",
 				metric: "Production (heads)",
-				unit: "heads",
+				unit: "",
 				plotId: "productProduction2",
 			},
 			{
@@ -106,6 +137,44 @@ export const mapInfoConfigs = (product, year) => {
 				plotId: "productProduction3",
 			},
 		];
+	}
+
+	if (product === "poultry") {
+		return [
+			{
+				type: "stats",
+				project: "eggs_poultry",
+				collection: "__poultry_prices__",
+				params: JSON.stringify({ attribute: ["price"], stat: "avg", interval: "every_12_months", start_time: `${year}-01-01`, end_time: `${year}-12-31`, filters: [{ property_name: "price_type", operator: "eq", property_value: "Selling price" }], group_by: "key" }),
+				attributename: "avg_price",
+				metric: "Average Selling Price",
+				unit: "€/100kg",
+				plotId: "productPrices",
+			},
+			{
+				type: "stats",
+				project: "eggs_poultry",
+				collection: "__poultry_production__",
+				params: JSON.stringify({ attribute: ["tonnes"], stat: "sum", interval: "every_12_months", start_time: `${year}-01-01`, end_time: `${year}-12-31`, filters: [{ property_name: "animal", operator: "eq", property_value: "Poultry meat" }], group_by: "key" }),
+				attributename: "sum_tonnes",
+				metric: "Poultry Meat Production",
+				unit: "t",
+				plotId: "productProduction",
+			},
+		];
+	}
+
+	if (product === "eggs") {
+		return ["Barn", "Cage", "Free range", "Organic"].map((farmingMethod, index) => ({
+			type: "stats",
+			project: "eggs_poultry",
+			collection: "__egg_prices__",
+			params: JSON.stringify({ attribute: ["price"], stat: "avg", interval: "every_12_months", start_time: `${year}-01-01`, end_time: `${year}-12-31`, filters: [{ property_name: "farming_method", operator: "eq", property_value: farmingMethod }], group_by: "key" }),
+			attributename: "avg_price",
+			metric: `Average Selling Price (${farmingMethod})`,
+			unit: "€/100kg",
+			plotId: `productPrices${index + 1}`,
+		}));
 	}
 
 	if (product === "wine") {
@@ -123,7 +192,7 @@ export const mapInfoConfigs = (product, year) => {
 		];
 	}
 
-	if (product === "olive_oil") {
+	if (product === "olive oil") {
 		return [
 			{
 				type: "stats",
@@ -175,22 +244,73 @@ export const mapInfoConfigs = (product, year) => {
 		];
 	}
 
-	if (product === "abricots" || product === "apples" || product === "asparagus" || product === "avocados" || product === "beans" || product === "cabbages"
-		|| product === "carrots" || product === "cauliflowers" || product === "cherries" || product === "clementines" || product === "courgettes"
-		|| product === "cucumbers" || product === "egg plants, aubergines" || product === "garlic" || product === "kiwis" || product === "leeks"
-		|| product === "lemons" || product === "lettuces" || product === "mandarins" || product === "melons" || product === "mushrooms, cultivated"
-		|| product === "nectarines" || product === "onions" || product === "oranges" || product === "peaches" || product === "pears" || product === "peppers"
-		|| product === "plums" || product === "satsumas" || product === "strawberries" || product === "table grapes" || product === "tomatoes" || product === "water melons") {
+	const fruitVegetables = new Set([
+		"abricots", "apples", "asparagus", "avocados", "beans", "cabbages",
+		"carrots", "cauliflowers", "cherries", "clementines", "courgettes",
+		"cucumbers", "egg plants, aubergines", "garlic", "kiwis", "leeks",
+		"lemons", "lettuces", "mandarins", "melons", "mushrooms, cultivated",
+		"nectarines", "onions", "oranges", "peaches", "pears", "peppers",
+		"plums", "satsumas", "strawberries", "table grapes", "tomatoes", "water melons",
+	]);
+
+	if (fruitVegetables.has(prod)) {
+		return [{
+			type: "stats",
+			project: "fruit_vegetables",
+			collection: "__prices__",
+			params: JSON.stringify({
+				attribute: ["price"],
+				stat: "avg",
+				interval: "every_12_months",
+				start_time: `${year}-01-01`,
+				end_time: `${year}-12-31`,
+				group_by: "key",
+				filters: [{ property_name: "product", operator: "eq", property_value: prod }],
+			}),
+			attributename: "avg_price",
+			metric: "Average Price",
+			unit: "€/100kg",
+			plotId: "productPrices",
+		}];
+	}
+
+	const dairyProducts = new Set(["butter", "butteroil", "cheddar", "cream", "edam", "emmental", "gouda", "smp", "wheypowder", "wmp"]); // "drinking milk",
+
+	if (dairyProducts.has(prod)) {
+		const dairyType = prod.toUpperCase();
+		return [{
+			type: "stats",
+			project: "milk_dairy",
+			collection: "__dairy_prices__",
+			params: JSON.stringify({ attribute: ["price"], stat: "avg", interval: "every_12_months", start_time: `${year}-01-01`, end_time: `${year}-12-31`, filters: [{ property_name: "product", operator: "eq", property_value: dairyType }], group_by: "key" }),
+			attributename: "avg_price",
+			metric: `Average Selling Price (${product})`,
+			unit: "€/100kg",
+			plotId: "productPrices",
+		}];
+	}
+
+	if (product === "milk") {
 		return [
 			{
 				type: "stats",
-				project: "fruit_vegetables",
-				collection: "__prices__",
-				params: JSON.stringify({ attribute: ["price"], stat: "avg", interval: "every_12_months", start_time: `${year}-01-01`, end_time: `${year}-12-31`, group_by: "key", filters: [{ property_name: "product", operator: "eq", property_value: product }] }),
+				project: "milk_dairy",
+				collection: "__raw_milk_prices__",
+				params: JSON.stringify({ attribute: ["price"], stat: "avg", interval: "every_12_months", start_time: `${year}-01-01`, end_time: `${year}-12-31`, group_by: "key" }),
 				attributename: "avg_price",
 				metric: "Average Price",
 				unit: "€/100kg",
 				plotId: "productPrices",
+			},
+			{
+				type: "stats",
+				project: "milk_dairy",
+				collection: "__dairy_production__",
+				params: JSON.stringify({ attribute: ["production"], stat: "sum", interval: "every_12_months", start_time: `${year}-01-01`, end_time: `${year}-12-31`, group_by: "key" }),
+				attributename: "sum_production",
+				metric: "Production",
+				unit: "t",
+				plotId: "productProduction",
 			},
 		];
 	}
@@ -239,6 +359,31 @@ export const mapInfoConfigs = (product, year) => {
 		}));
 
 		return [...productData, ...cropData];
+	}
+
+	const proteinCrops = new Set(["Alfalfa", "Broad beans", "Chickpeas", "Lentils", "Lupins", "Peas"]);
+	const formattedProd = prod.charAt(0).toUpperCase() + prod.slice(1).toLowerCase();
+	if (proteinCrops.has(formattedProd)) {
+		return [
+			{
+				type: "stats",
+				project: "oilseeds_protein_crops",
+				collection: "__protein_crops_prices__",
+				params: JSON.stringify({
+					attribute: ["price"],
+					stat: "avg",
+					interval: "every_12_months",
+					start_time: `${year}-01-01`,
+					end_time: `${year}-12-31`,
+					filters: [{ property_name: "product", operator: "eq", property_value: formattedProd }],
+					group_by: "key",
+				}),
+				attributename: "avg_price",
+				metric: "Average Price",
+				unit: "€/t",
+				plotId: "productPrices",
+			},
+		];
 	}
 
 	// TODO: Perform error handling

@@ -10,8 +10,12 @@ import useInit from "../utils/screen-init.js";
 import { mapInfoConfigs, organization } from "../config/MapInfoConfig.js";
 import { LoadingIndicator, StickyBand } from "../utils/rendering-items.js";
 import { europeanCountries, products, labs } from "../utils/useful-constants.js";
-import { findKeyByText } from "../utils/data-handling-functions.js";
+import { findKeyByText, extractFields } from "../utils/data-handling-functions.js";
 
+const excludedProducts = new Set(["Oilseeds", "Cereals", "Sheep/Goat Meat"]);
+const mapProducts = products.filter((product) => !excludedProducts.has(product.text)).map((product) => product);
+
+const currentYear = new Date().getFullYear();
 // Extract popup component
 const PopupContent = memo(({ title, onClick }) => (
 	<div>
@@ -85,17 +89,22 @@ const Map = () => {
 	const [filters, setFilters] = useState({
 		year: "2024",
 		product: selectedProduct || "Rice",
-		metric: "price",
 	});
+	console.log("Product", filters.product);
 
 	useEffect(() => {
-	    if (selectedProduct) {
-	        setFilters((prev) => ({
-	            ...prev,
-	            product: selectedProduct,
-	        }));
-	    }
+		if (selectedProduct) {
+			setFilters((prev) => ({
+				...prev,
+				product: selectedProduct,
+			}));
+		}
 	}, [selectedProduct]);
+
+	// const selectedProductDetails = findKeyByText(products, filters.product, true);
+
+	// const pricesItems = useMemo(() => extractFields(selectedProductDetails, "prices") || [], [selectedProductDetails]);
+	// const priceCollections = useMemo(() => (pricesItems.needsDropdown ? pricesItems.collections : []), [pricesItems]);
 
 	const [isDataReady, setIsDataReady] = useState(false);
 
@@ -104,46 +113,35 @@ const Map = () => {
 	};
 
 	const handleYearChange = useCallback((newValue) => {
-		// console.log("New Year:", newValue);
 		setFilters((prev) => ({ ...prev, year: newValue.$y })); // Select only the year from the resulting object
-	}, [setFilters]);
+	}, []);
 
 	const keys = useMemo(() => ({
 		product: findKeyByText(products, filters.product),
 	}), [filters.product]);
+	console.log("Keys", keys);
 
-	const formRefDate = useRef();
-
-	const formContentDate = useMemo(() => [
+	const yearPickerRef = useRef();
+	const yearPickerProps = useMemo(() => [
 		{
 			customType: "date-picker",
-			id: "yearPicker",
-			value: filters.year,
+			width: "150px",
 			sublabel: "Select Year",
 			views: ["year"],
-			minDate: new Date(2000, 0, 1),
-			maxDate: new Date(2024, 11, 31),
-			background: "third",
-			labelSize: 12,
+			value: new Date(`${filters.year}-01-01`),
+			minDate: new Date("2010-01-01"),
+			maxDate: new Date(`${currentYear}-01-01`),
 			onChange: handleYearChange,
 		},
 	], [filters.year, handleYearChange]);
 
 	const fetchConfigs = useMemo(
-		() => (keys.product
-			? mapInfoConfigs(keys.country, keys.product, filters.year) : null),
-		[keys.product, keys.country, filters.year],
+		() => (mapInfoConfigs(filters.product, filters.year)),
+		[filters.year, filters.product],
 	);
 
 	const { state, dispatch } = useInit(organization, fetchConfigs);
 	const { isLoading, dataSets } = state;
-	//	console.log("-------------------");
-	//	console.log("-------------------");
-	//	console.log(isLoading);
-	//	console.log(dataSets);
-	//	console.log(fetchConfigs);
-	//	console.log("-------------------");
-	//	console.log("-------------------");
 
 	const statistics = useMemo(() => {
 		if (!fetchConfigs || !dataSets) return [];
@@ -161,15 +159,13 @@ const Map = () => {
 		});
 	}, [fetchConfigs, dataSets]);
 
-	// console.log("STATISTICS");
-	// console.log(statistics);
-
 	const dropdownContent = useMemo(() => ([
 		{
 			id: "product",
-			items: products,
+			items: mapProducts,
 			label: "Select Product",
 			value: filters.product,
+			subheader: true,
 			onChange: (event) => {
 				dispatch({ type: "FETCH_START" }); // Add loading state
 				setFilters((prev) => ({ ...prev, product: event.target.value }));
@@ -177,8 +173,22 @@ const Map = () => {
 		},
 	].map((item) => ({
 		...item,
-		size: "small",
 	}))), [dispatch, filters.product]); // Add dispatch to dependencies
+
+	// const productTypeDropdownContent = useMemo(() => ([
+	// 	{
+	// 		id: "product",
+	// 		items: products?.prices.products || [],
+	// 		label: "Select Product Type",
+	// 		value: filters.product,
+	// 		onChange: (event) => {
+	// 			dispatch({ type: "FETCH_START" }); // Add loading state
+	// 			setFilters((prev) => ({ ...prev, product: event.target.value }));
+	// 		},
+	// 	},
+	// ].map((item) => ({
+	// 	...item,
+	// }))), [dispatch, filters.product]); // Add dispatch to dependencies
 
 	useEffect(() => {
 		// Load the GeoJSON file from the public directory
@@ -220,8 +230,11 @@ const Map = () => {
 
 	// Add effect to monitor data readiness
 	useEffect(() => {
-		if (enhancedGeoJsonData && statistics.every((statistic) => (Array.isArray(statistic.values) ? statistic.values : []).length > 0)) {
-			// console.log("Data is ready:", { enhancedGeoJsonData });
+		if (
+			enhancedGeoJsonData
+			&& statistics.every((statistic) => (Array.isArray(statistic.values) ? statistic.values : []).length > 0)
+		) {
+			console.log("Data is ready:", { enhancedGeoJsonData });
 			setIsDataReady(true);
 		}
 	}, [enhancedGeoJsonData, statistics]);
@@ -242,6 +255,7 @@ const Map = () => {
 
 			return {
 				name: statistic.metric,
+				type: statistic.metric.includes("Price") ? "price" : "production",
 				data: {
 					...enhancedGeoJsonData[index],
 					features: enhancedGeoJsonData[index]?.features?.map((feature) => ({
@@ -270,7 +284,6 @@ const Map = () => {
 			};
 		});
 	}, [isDataReady, enhancedGeoJsonData, statistics]);
-
 	// console.log("Geodata", geodata); // Debugging output
 
 	// Create markers for labs with coordinates
@@ -317,11 +330,11 @@ const Map = () => {
 				<StickyBand
 					sticky={false}
 					dropdownContent={dropdownContent}
-					formRef={formRefDate}
-					formContent={formContentDate}
+					formRef={yearPickerRef}
+					formContent={yearPickerProps}
 					toggleContent={(
 						<div style={{ display: "flex", alignItems: "center" }}>
-							<label style={{ marginRight: "8px", fontWeight: "bold" }}>{"Show Living Labs:"}</label>
+							<label htmlFor="legend-switch" style={{ marginRight: "8px", fontWeight: "bold" }}>{"Show Living Labs:"}</label>
 							<Switch
 								id="legend-switch"
 								checked={showLegend}
@@ -335,11 +348,9 @@ const Map = () => {
 			</Grid>
 
 			{/* Main Content (Map) */}
-			<Grid item style={{ flexGrow: 1, width: "100%", height: "calc(100% - 47px)" }}>
-				{isLoading || !isDataReady ? (
-					<LoadingIndicator />
-				) : (
-					<MapComponent key={JSON.stringify(geodata)} {...mapConfig} geodata={geodata} markers={markers} showLegend={showLegend} />
+			<Grid item style={{ flexGrow: 1, width: "100%", height: "calc(100% - 47px)", borderRadius: "8px", overflow: "hidden" }}>
+				{isLoading || !isDataReady ? (<LoadingIndicator />
+				) : (<MapComponent {...mapConfig} geodata={geodata} markers={markers} showLegend={showLegend} />
 				)}
 			</Grid>
 		</Grid>

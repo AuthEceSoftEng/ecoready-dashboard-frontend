@@ -199,7 +199,7 @@ const Dropdown = ({
 					>
 						{typeof item === "string" ? item : item.text}
 					</ListSubheader>,
-					...(item.prices.products || []).map((product, prodIndex) => (
+					...((item.prices?.products || []).map((product) => product.toLowerCase()) || []).map((product, prodIndex) => (
 						<MenuItem
 							key={`item-${index}-${prodIndex}`}
 							value={product}

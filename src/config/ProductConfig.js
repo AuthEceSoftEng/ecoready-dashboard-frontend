@@ -50,67 +50,30 @@ const getProductionBaseConfig = (globalProduct) => ({
 	unit: getUnit(globalProduct, "production"),
 });
 
-const createProductionConfig = (globalProduct, baseConfig, params, plotId = null) => ({
+const createProductionConfig = (baseConfig, params, plotId = null) => ({
 	...baseConfig,
 	...(plotId && { plotId }),
 	params: JSON.stringify(params),
 	attribute: plotId?.includes("max") ? `max_${params.attribute[0]}` : `sum_${params.attribute[0]}`,
-	unit: getUnit(params.attribute[0], "production"),
 });
 
-const getPriceBaseConfig = (globalProduct) => ({
-	type: "stats",
-	collection: "__prices__",
-	project: findKeyByText(products, globalProduct),
-	unit: getUnit(globalProduct),
-	attribute: "avg_price",
-});
-
-const createPriceConfig = (baseConfig, params, plotId, unit) => ({
-	...baseConfig,
-	params: JSON.stringify(params),
-	plotId,
-	unit,
-});
-
-const createPriceConfigs = (globalProduct, baseConfig, startDate, endDate, differenceInDays, filters = []) => {
-	const unit = getUnit(globalProduct);
-	const interval = getInterval(differenceInDays);
-	const baseParams = createParams("price", "avg", startDate, endDate, interval, filters);
-
-	const configs = [
-		{ interval: interval.custom, plotId: "periodPrices", filters },
-		{ interval: interval.daily, plotId: "pricesTimeline", filters },
-		{ interval: interval.custom, plotId: "maxPrice", stat: "max", filters: [] },
-	];
-
-	return configs.map((config) => createPriceConfig(baseConfig, { ...baseParams, ...config }, config.plotId, unit));
-};
-
-const createMonthlyPriceConfigs = (globalProduct, dates, filters = [], collection = null, plotId = "monthlyPrices") => {
-	const baseConfig = {
-		...getPriceBaseConfig(globalProduct),
-		...(collection && { collection }),
-		params: JSON.stringify(createParams(
-			"price",
-			"avg",
-			dates.formattedBeginningOfMonth,
-			dates.currentDate,
-			"every_1_months",
-			filters,
-		)),
-		plotId,
-	};
-	return [baseConfig];
-};
-
-const createProductionConfigs = (globalProduct, startDate, endDate, differenceInDays, productionMetric, filters = [], collection = null) => {
+const createProductionConfigs = (globalProduct, startDate, endDate, differenceInDays, productionMetric, map, filters = [], collection = null) => {
 	const year = new Date().getFullYear().toString();
 	const baseConfig = {
 		...getProductionBaseConfig(globalProduct),
 		...(collection && { collection }),
 	};
 	const interval = getInterval(differenceInDays);
+
+	if (map) {
+		const mapConfigs = [
+			{
+				params: createParams(productionMetric, "sum", startDate, endDate, interval.annually, filters),
+				plotId: "productProduction",
+			},
+		];
+		return mapConfigs.map((config) => createProductionConfig(baseConfig, config.params, config.plotId));
+	}
 
 	const configs = [
 		{
@@ -127,10 +90,101 @@ const createProductionConfigs = (globalProduct, startDate, endDate, differenceIn
 		},
 	];
 
-	return configs.map((config) => createProductionConfig(globalProduct, baseConfig, config.params, config.plotId));
+	return configs.map((config) => createProductionConfig(baseConfig, config.params, config.plotId));
 };
 
-export const getPriceConfigs = (globalProduct, startDate, endDate, differenceInDays, product = null, productType = null, collection = null) => {
+export const getProductionConfigs = (globalProduct, startDate, endDate, differenceInDays, product = null, productionMetric = null, productionType = null, map = false) => {
+	const productConfigs = {
+		Beef: {
+			metric: map ? "tonnes" : productionMetric,
+			filters: [{ property_name: "category", operator: "eq", property_value: product }],
+		},
+		Milk: {
+			collection: "__dairy_production__",
+			metric: "production",
+			filters: [{ property_name: "category", operator: "eq", property_value: product }],
+		},
+		Pigmeat: {
+			metric: map ? "tonnes" : productionMetric,
+			filters: [],
+		},
+		Poultry: {
+			collection: "__poultry_production__",
+			metric: map ? "tonnes" : productionMetric,
+			filters: [{ property_name: "animal", operator: "eq", property_value: product }],
+		},
+		"Sheep/Goat Meat": {
+			metric: map ? "tonnes" : productionMetric,
+			filters: [
+				{ property_name: "meat", operator: "eq", property_value: product },
+				{ property_name: "item", operator: "eq", property_value: productionType },
+			],
+		},
+		Cereals: {
+			metric: map ? "gross_production" : productionMetric,
+			filters: [{ property_name: "crop", operator: "eq", property_value: product }],
+		},
+		Oilseeds: {
+			collection: "__oilseeds_production__",
+			metric: "gross_production",
+			attributePrefix: "gross_production",
+		},
+		"Olive Oil": {
+			collection: "__annual_production__",
+			metric: "year_production_quantity",
+			attributePrefix: "year_production_quantity",
+		},
+		Rice: {
+			metric: productionMetric,
+			filters: [{ property_name: "product", operator: "eq", property_value: product }],
+		},
+		Sugar: {
+			metric: map ? "gross_production" : productionMetric,
+			filters: [],
+		},
+	};
+
+	const config = productConfigs[globalProduct];
+	if (!config) return [];
+
+	return createProductionConfigs(globalProduct, startDate, endDate, differenceInDays, config.metric, map, config.filters, config.collection);
+};
+
+const getPriceBaseConfig = (globalProduct) => ({
+	type: "stats",
+	collection: "__prices__",
+	project: findKeyByText(products, globalProduct),
+	unit: getUnit(globalProduct),
+	attribute: "avg_price",
+});
+
+const createPriceConfig = (baseConfig, params, plotId, unit) => ({
+	...baseConfig,
+	params: JSON.stringify(params),
+	plotId,
+	unit,
+});
+
+const createPriceConfigs = (globalProduct, baseConfig, startDate, endDate, differenceInDays, map, filters = []) => {
+	const unit = getUnit(globalProduct);
+	const interval = getInterval(differenceInDays);
+	const baseParams = createParams("price", "avg", startDate, endDate, interval, filters);
+
+	if (map) {
+		const mapConfigs = [{ interval: interval.annually, plotId: "productPrices", filters }];
+		return mapConfigs.map((config) => createPriceConfig(baseConfig, { ...baseParams, ...config }, config.plotId, unit));
+	}
+
+	const configs = [
+		{ interval: interval.custom, plotId: "periodPrices", filters },
+		{ interval: interval.daily, plotId: "pricesTimeline", filters },
+		{ interval: interval.custom, plotId: "maxPrice", stat: "max", filters: [] },
+	];
+
+	return configs.map((config) => createPriceConfig(baseConfig, { ...baseParams, ...config }, config.plotId, unit));
+};
+
+export const getPriceConfigs = (globalProduct, startDate, endDate, differenceInDays, product = null, productType = null, collection = null, map = false) => {
 	const baseConfig = getPriceBaseConfig(globalProduct);
 
 	// Product-specific configurations
@@ -221,7 +275,24 @@ export const getPriceConfigs = (globalProduct, startDate, endDate, differenceInD
 		...(productConfig.collection && { collection: productConfig.collection }),
 	};
 
-	return createPriceConfigs(globalProduct, finalBaseConfig, startDate, endDate, differenceInDays, productConfig.filters);
+	return createPriceConfigs(globalProduct, finalBaseConfig, startDate, endDate, differenceInDays, map, productConfig.filters);
+};
+
+const createMonthlyPriceConfigs = (globalProduct, dates, filters = [], collection = null, plotId = "monthlyPrices") => {
+	const baseConfig = {
+		...getPriceBaseConfig(globalProduct),
+		...(collection && { collection }),
+		params: JSON.stringify(createParams(
+			"price",
+			"avg",
+			dates.formattedBeginningOfMonth,
+			dates.currentDate,
+			"every_1_months",
+			filters,
+		)),
+		plotId,
+	};
+	return [baseConfig];
 };
 
 export const getMonthlyPriceConfigs = (globalProduct, customDate, product = null, productType = null, collection = null) => {
@@ -305,59 +376,119 @@ export const getMonthlyPriceConfigs = (globalProduct, customDate, product = null
 	return createMonthlyPriceConfigs(globalProduct, dates, productConfig.filters, productConfig.collection, productConfig.plotId);
 };
 
-export const getProductionConfigs = (globalProduct, startDate, endDate, differenceInDays, product = null, productionMetric = null, productionType = null) => {
+const createMapParams = (attribute, stat, year, filters = []) => ({
+	attribute: Array.isArray(attribute) ? attribute : [attribute],
+	stat,
+	interval: getInterval().annually,
+	start_time: `${year}-01-01`,
+	end_time: `${year}-12-31`,
+	group_by: "key",
+	...(filters.length > 0 && { filters }),
+});
+
+const createMapConfig = (project, collection, params, attributename, metric, unit, plotId, perRegion = false) => ({
+	type: "stats",
+	project,
+	collection,
+	params: JSON.stringify(params),
+	attributename,
+	metric,
+	unit,
+	plotId,
+	...(perRegion && { perRegion }),
+});
+
+export const getMapInfoConfigs = (globalProduct, year, productType, map = true) => {
 	const productConfigs = {
-		Beef: {
-			metric: productionMetric,
-			filters: [{ property_name: "category", operator: "eq", property_value: product }],
-		},
-		Dairy: {
-			collection: "__dairy_production__",
-			metric: "production",
-			filters: [{ property_name: "category", operator: "eq", property_value: product }],
-		},
-		Pigmeat: {
-			metric: productionMetric,
-			filters: [],
-		},
-		Poultry: {
-			collection: "__poultry_production__",
-			metric: productionMetric,
-			filters: [{ property_name: "animal", operator: "eq", property_value: product }],
-		},
-		"Sheep/Goat Meat": {
-			metric: productionMetric,
-			filters: [
-				{ property_name: "meat", operator: "eq", property_value: product },
-				{ property_name: "item", operator: "eq", property_value: productionType },
+		Rice:
+			[
+				{
+					collection: "__prices__",
+					params: createMapParams(["price"], "avg", year),
+					attributename: "avg_price",
+					metric: "Average Price",
+					unit: getUnit(globalProduct),
+					plotId: "productPrices",
+				},
+				{
+					collection: "__production__",
+					params: createMapParams(["milled_rice_equivalent_quantity"], "sum", year),
+					attributename: "sum_milled_rice_equivalent_quantity",
+					metric: "Milled Rice Quantity",
+					unit: getUnit(globalProduct, "production"),
+					plotId: "productProduction1",
+				},
+				{
+					collection: "__production__",
+					params: createMapParams(["rice_husk_quantity"], "sum", year),
+					attributename: "sum_rice_husk_quantity",
+					metric: "Rice Husk Quantity",
+					unit: getUnit(globalProduct, "production"),
+					plotId: "productProduction2",
+				},
 			],
-		},
-		Cereals: {
-			metric: productionMetric,
-			filters: [{ property_name: "crop", operator: "eq", property_value: product }],
-		},
-		Oilseeds: {
-			collection: "__oilseeds_production__",
-			metric: "gross_production",
-			attributePrefix: "gross_production",
-		},
-		"Olive Oil": {
-			collection: "__annual_production__",
-			metric: "year_production_quantity",
-			attributePrefix: "year_production_quantity",
-		},
-		Rice: {
-			metric: productionMetric,
-			filters: [{ property_name: "product", operator: "eq", property_value: product }],
-		},
-		Sugar: {
-			metric: productionMetric,
-			filters: [],
+
+		Beef:
+			[
+				{
+					collection: "__carcass_prices__",
+					params: createMapParams(["price"], "avg", year),
+					attributename: "avg_price",
+					metric: "Average Carcass Price",
+					unit: "€/100kg",
+					plotId: "productPrices",
+				},
+				{
+					collection: "__production__",
+					params: createMapParams(["tonnes"], "sum", year),
+					attributename: "sum_tonnes",
+					metric: "Production",
+					unit: "t",
+					plotId: "productProduction1",
+				},
+			],
+
+		Cereals: (year, product) => {
+			const productnames = products.find((item) => item.value === product)?.priceProductType || [];
+			const cropnames = products.find((item) => item.value === product)?.productionProductType || [];
+
+			const priceConfigs = productnames.map((productname, index) => ({
+				collection: "__prices__",
+				params: createMapParams(["price"], "avg", year, [
+					{ property_name: "product_name", operator: "eq", property_value: productname },
+				]),
+				attributename: "avg_price",
+				metric: `Average Price (${productname})`,
+				unit: "€/t",
+				plotId: `productPrices${index + 1}`,
+			}));
+
+			const productionConfigs = cropnames.map((cropname, index) => ({
+				collection: "__production__",
+				params: createMapParams(["gross_production"], "sum", year, [
+					{ property_name: "crop", operator: "eq", property_value: cropname },
+				]),
+				attributename: "sum_gross_production",
+				metric: `Gross Production (${cropname})`,
+				unit: "t",
+				plotId: `productProduction${index + 1}`,
+			}));
+
+			return [...priceConfigs, ...productionConfigs];
 		},
 	};
+	const config = productConfigs[product];
+	if (!config) return [{ type: "error" }];
 
-	const config = productConfigs[globalProduct];
-	if (!config) return [];
-
-	return createProductionConfigs(globalProduct, startDate, endDate, differenceInDays, config.metric, config.filters, config.collection);
+	const baseConfigs = config(year, product);
+	return baseConfigs.map((cfg) => createMapConfig(
+		product === "cereals" ? "cereals" : product,
+		cfg.collection,
+		cfg.params,
+		cfg.attributename,
+		cfg.metric,
+		cfg.unit,
+		cfg.plotId,
+		cfg.perRegion,
+	));
 };
