@@ -11,12 +11,17 @@ export const initialState = {
 	error: null,
 };
 
-const updateLoadingStates = (state, dataType) => ({
-	...state,
-	isLoading: state.isProductionLoading && state.isPriceLoading,
-	isProductionLoading: dataType === "general" ? false : (dataType === "production" ? false : state.isProductionLoading),
-	isPriceLoading: dataType === "general" ? false : (dataType === "price" ? false : state.isPriceLoading),
-});
+const updateLoadingStates = (state, dataType) => {
+	const newProductionLoading = dataType === "general" ? false : (dataType === "production" ? false : state.isProductionLoading);
+	const newPriceLoading = dataType === "general" ? false : (dataType === "price" ? false : state.isPriceLoading);
+
+	return {
+		...state,
+		isProductionLoading: newProductionLoading,
+		isPriceLoading: newPriceLoading,
+		isLoading: newProductionLoading && newPriceLoading,
+	};
+};
 
 export const reducer = (state, action) => {
 	switch (action.type) {
