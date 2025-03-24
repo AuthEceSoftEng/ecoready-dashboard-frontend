@@ -19,7 +19,7 @@ const useStyles = makeStyles((theme) => ({
 		backgroundColor: theme.palette.primary.main,
 		color: "white",
 		overflow: "auto",
-		transition: "all 0.5s ease-in-out", // Add smooth transition
+		transition: "all 0.5s ease-in-out",
 		zIndex: 1000,
 	},
 	toggleButton: {
@@ -28,12 +28,35 @@ const useStyles = makeStyles((theme) => ({
 		right: "0",
 		zIndex: 1000,
 		color: "white",
-		padding: "4px", // Adjust padding to make the button smaller
-		minWidth: "30px", // Set a smaller minimum width
-		minHeight: "30px", // Set a smaller minimum height
+		padding: "4px",
+		minWidth: "30px",
+		minHeight: "30px",
 		transition: "transform 0.3s ease-in-out",
 	},
 }));
+
+const IconRenderer = ({ icon, text, size = "25px" }) => (
+	typeof icon === "string"
+		? <Image src={icon} alt={text} fit="contain" width={size} />
+		: <span style={{ fontSize: size, display: "flex", alignItems: "center", color: "white" }}>{icon}</span>
+);
+
+const LogoRenderer = ({ logo, title, size = "20px", borderRadius = "8px" }) => (
+	<div
+		style={{
+			width: size,
+			height: size,
+			borderRadius,
+			overflow: "hidden",
+			marginRight: "8px",
+			display: "flex",
+			alignItems: "center",
+			justifyContent: "center",
+		}}
+	>
+		<Image src={logo} alt={title} fit="contain" width={size} height={size} />
+	</div>
+);
 
 const ButtonWithText = ({ text, icon, more, handler }) => (
 	<span key={text}>
@@ -54,9 +77,7 @@ const ButtonWithText = ({ text, icon, more, handler }) => (
 					}}
 					onClick={(event) => handler(event)}
 				>
-					{icon && (typeof icon === "string"
-						? <Image src={icon} alt={text} fit="contain" width="25px" />
-						: <span style={{ fontSize: "25px", display: "flex", alignItems: "center", color: "white" }}>{icon}</span>)}
+					{icon && <IconRenderer icon={icon} text={text} />}
 					<Typography
 						align="center"
 						color="white.main"
@@ -76,9 +97,7 @@ const ButtonWithText = ({ text, icon, more, handler }) => (
 				key={text}
 				title={(
 					<Grid item sx={{ width: "100%", display: "flex", flexDirection: "row", justifyContent: "flex-start" }}>
-						{icon && (typeof icon === "string"
-							? <Image src={icon} alt={text} fit="contain" width="25px" />
-							: <span style={{ fontSize: "25px", display: "flex", alignItems: "center", color: "white" }}>{icon}</span>)}
+						{icon && <IconRenderer icon={icon} text={text} />}
 						<Typography
 							align="center"
 							color="white.main"
@@ -100,7 +119,7 @@ const ButtonWithText = ({ text, icon, more, handler }) => (
 								color="white"
 								sx={{
 									justifyContent: "flex-start",
-									marginLeft: "30px",
+									marginLeft: "20px",
 									"&:hover": {
 										backgroundColor: "rgba(255, 255, 255, 0.1)",
 										transition: "background-color 0.3s ease",
@@ -108,6 +127,7 @@ const ButtonWithText = ({ text, icon, more, handler }) => (
 								}}
 								onClick={el.handler}
 							>
+								{el.logo && <LogoRenderer logo={el.logo} title={el.title} />}
 								<Typography sx={{ textTransform: "capitalize", textAlign: "left" }}>{el.title}</Typography>
 							</Button>
 						))}
@@ -216,10 +236,10 @@ const Sidebar = ({ isSmall: sidebarIsSmall, onToggleSidebar }) => {
 		>
 			{buttons.find((button) => button.text === "Living Labs").more.map((moreButton) => (
 				<MenuItem key={moreButton.title} onClick={() => { handleServicesMenuClose(); moreButton.handler(); }}>
-					{moreButton.logo && (
-						<Image src={moreButton.logo} alt={moreButton.title} fit="contain" width="25px" />
-					)}
-					<p style={{ marginLeft: "5px" }}>{moreButton.title}</p>
+					{moreButton.logo && <LogoRenderer logo={moreButton.logo} title={moreButton.title} />}
+					<Typography sx={{ marginLeft: "5px" }}>
+						{moreButton.title}
+					</Typography>
 				</MenuItem>
 			))}
 		</Menu>
