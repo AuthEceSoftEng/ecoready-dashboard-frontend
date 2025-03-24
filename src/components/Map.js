@@ -166,30 +166,15 @@ const MapComponent = ({
 					{geodata.filter((metric) => !metric.hiddable).map((metric) => (
 						<GeoJSON key={`${metric.name}-${metric.range[0]}-${metric.range[1]}`} data={metric.data} style={metric.style} onEachFeature={metric.action} />
 					))}
-
-					{geodata.some((metric) => metric.hiddable && metric.type === "production") && (
-						<LayersControl position="topright" collapsed={false}>
-							{geodata
-								.filter((metric) => metric.hiddable && metric.type === "production")
-								.map((metric) => (
-									<LayersControl.BaseLayer key={`${metric.name}-${metric.range[0]}-${metric.range[1]}`} name={metric.name} checked={isInitialRender ? metric.defaultChecked : activeLayer === metric.name}>
-										<GeoJSON data={metric.data} style={metric.style} onEachFeature={metric.action} />
-									</LayersControl.BaseLayer>
-								))}
-						</LayersControl>
-					)}
-
-					{geodata.some((metric) => metric.hiddable && metric.type === "price") && (
-						<LayersControl position="topright" collapsed={false}>
-							{geodata
-								.filter((metric) => metric.hiddable && metric.type === "price")
-								.map((metric) => (
-									<LayersControl.BaseLayer key={`${metric.name}-${metric.range[0]}-${metric.range[1]}`} name={metric.name} checked={isInitialRender ? metric.defaultChecked : activeLayer === metric.name}>
-										<GeoJSON data={metric.data} style={metric.style} onEachFeature={metric.action} />
-									</LayersControl.BaseLayer>
-								))}
-						</LayersControl>
-					)}
+					<LayersControl position="topright" collapsed={false}>
+						{geodata
+							.filter((metric) => metric.hiddable)
+							.map((metric) => (
+								<LayersControl.BaseLayer key={`${metric.name}-${metric.range[0]}-${metric.range[1]}`} name={metric.name} checked={isInitialRender ? metric.defaultChecked : activeLayer === metric.name}>
+									<GeoJSON data={metric.data} style={metric.style} onEachFeature={metric.action} />
+								</LayersControl.BaseLayer>
+							))}
+					</LayersControl>
 
 					{showLegend && markers.some((marker) => marker.hiddable) && (
 						<LayersControl position="bottomright" collapsed={false}>
