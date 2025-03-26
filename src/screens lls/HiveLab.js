@@ -24,7 +24,7 @@ const HiveLab = () => {
 	);
 
 	const { state } = useInit(organization, fetchConfigs);
-	const { isLoading, dataSets, minutesAgo } = state;
+	const { dataSets, minutesAgo } = state;
 
 	const annualYield = useMemo(() => (
 		dataSets.honeyYield ? dataSets.honeyYield.reduce((sum, item) => sum + item.honey_yield, 0).toFixed(2) : "N/A"
