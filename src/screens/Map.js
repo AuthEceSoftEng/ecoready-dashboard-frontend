@@ -10,7 +10,7 @@ import useInit from "../utils/screen-init.js";
 import { mapInfoConfigs, organization } from "../config/MapInfoConfig.js";
 import { LoadingIndicator, StickyBand } from "../utils/rendering-items.js";
 import { europeanCountries, products, labs } from "../utils/useful-constants.js";
-import { findKeyByText, extractFields } from "../utils/data-handling-functions.js";
+import { findKeyByText } from "../utils/data-handling-functions.js";
 
 const excludedProducts = new Set(["Oilseeds", "Cereals", "Sheep/Goat Meat"]);
 const mapProducts = products.filter((product) => !excludedProducts.has(product.text)).map((product) => product);
@@ -90,7 +90,7 @@ const Map = () => {
 		year: "2024",
 		product: selectedProduct || "Rice",
 	});
-	console.log("Product", filters.product);
+	// console.log("Product", filters.product);
 
 	useEffect(() => {
 		if (selectedProduct) {
