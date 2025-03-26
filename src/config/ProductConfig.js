@@ -398,7 +398,7 @@ const createMapConfig = (project, collection, params, attributename, metric, uni
 	...(perRegion && { perRegion }),
 });
 
-export const getMapInfoConfigs = (globalProduct, year, productType, map = true) => {
+export const getMapInfoConfigs = (globalProduct, year) => {
 	const productConfigs = {
 		Rice:
 			[
@@ -477,12 +477,12 @@ export const getMapInfoConfigs = (globalProduct, year, productType, map = true) 
 			return [...priceConfigs, ...productionConfigs];
 		},
 	};
-	const config = productConfigs[product];
+	const config = productConfigs[globalProduct];
 	if (!config) return [{ type: "error" }];
 
-	const baseConfigs = config(year, product);
+	const baseConfigs = config(year, globalProduct);
 	return baseConfigs.map((cfg) => createMapConfig(
-		product === "cereals" ? "cereals" : product,
+		globalProduct === "cereals" ? "cereals" : globalProduct,
 		cfg.collection,
 		cfg.params,
 		cfg.attributename,
