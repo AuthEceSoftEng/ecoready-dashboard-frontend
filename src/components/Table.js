@@ -61,7 +61,7 @@ const Table = (props) => {
 			onChange={(event) => onChange(event.target.value)}
 		/>
 	), []);
-	
+
 	const PreviousComponent = useCallback((prps) => (
 		<Button variant="outlined" size="small" {...prps} className={classes.paginationButton}>
 			<NavigateBefore />
@@ -85,25 +85,25 @@ const Table = (props) => {
 	const getThProps = useCallback(() => ({
 		style: {
 			backgroundColor: theme.palette.common.white, // Set header cell background to white
-			color: theme.palette.text.primary,          // Ensure text is neutral
-			textAlign: "center",                        // Center align the text
-			padding: theme.spacing(1),                 // Add padding for better appearance
+			color: theme.palette.text.primary, // Ensure text is neutral
+			textAlign: "center", // Center align the text
+			padding: theme.spacing(1), // Add padding for better appearance
 		},
 	}), [theme.palette.common.white, theme.palette.text.primary, theme.spacing]);
 
-	  // Custom row background color
-	  const getTdProps = useCallback(() => ({
-	    style: {
-	      backgroundColor: theme.palette.common.white,
-	      color: theme.palette.text.primary,
-	      textAlign: "center",
-	      verticalAlign: "middle",
-	      borderBottom: `1px solid ${theme.palette.divider}`, // Add only bottom borders for horizontal lines
-		  borderLeft: "none",                        // Ensure no vertical borders
-		  borderRight: "none",                       // Ensure no vertical borders
-	    },
-	  }), [theme.palette.common.white, theme.palette.text.primary, theme.palette.divider]);
-	
+	// Custom row background color
+	const getTdProps = useCallback(() => ({
+		style: {
+			backgroundColor: theme.palette.common.white,
+			color: theme.palette.text.primary,
+			textAlign: "center",
+			verticalAlign: "middle",
+			borderBottom: `1px solid ${theme.palette.divider}`, // Add only bottom borders for horizontal lines
+			borderLeft: "none", // Ensure no vertical borders
+			borderRight: "none", // Ensure no vertical borders
+		},
+	}), [theme.palette.common.white, theme.palette.text.primary, theme.palette.divider]);
+
 	const getTableProps = useCallback(() => ({
 		style: {
 			backgroundColor: theme.palette.common.white,
@@ -127,7 +127,9 @@ const Table = (props) => {
 			>
 				{pageSizeOptions.map((option, i) => (
 					<MenuItem key={i} value={option}>
-						<Typography sx={{ color: theme.palette.text.primary }}> {/* Set text color explicitly */}
+						<Typography sx={{ color: theme.palette.text.primary }}>
+							{" "}
+							{/* Set text color explicitly */}
 							{`${option} ${rowsText}`}
 						</Typography>
 					</MenuItem>
