@@ -82,6 +82,7 @@ const LivOrganic = () => {
 				subtitle: "Max Temperature",
 			},
 			color: "primary",
+			suffix: "°C",
 			shape: "angular",
 		},
 		{
@@ -90,6 +91,7 @@ const LivOrganic = () => {
 				subtitle: "Min Temperature",
 			},
 			color: "third",
+			suffix: "°C",
 			shape: "angular",
 		},
 		{
