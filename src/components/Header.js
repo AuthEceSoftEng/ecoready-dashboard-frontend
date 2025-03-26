@@ -90,25 +90,23 @@ const Header = ({ isAuthenticated }) => {
 	const [searchFilter, setSearchFilter] = useState("");
 	const [searchResults, setSearchResults] = useState([]);
 
-	const searchData = 	useMemo(() => [
-	    ...products.map((product) => ({
-	      type: "product",
-	      name: product.text,
-	      link: `/products?selected=${product.value}`,
-	    })),
-	    ...products.map((product) => ({
-	      type: "map",
-	      name: `${product.text} Map`,
-	      link: `/map?selected=${product.value}`,
-	    })),
-	    ...labs.flatMap((lab) =>
-	      lab.products.map((product) => ({
-	        type: "lab",
-	        name: `${lab.title} (Relevant: ${product})`,
-	        link: lab.path,
-	      }))
-	    ),
-	  ], [products, labs]); // Memoize to avoid unnecessary recalculations
+	const searchData = useMemo(() => [
+		...products.map((product) => ({
+			type: "product",
+			name: product.text,
+			link: `/products?selected=${product.value}`,
+		})),
+		...products.map((product) => ({
+			type: "map",
+			name: `${product.text} Map`,
+			link: `/map?selected=${product.value}`,
+		})),
+		...labs.flatMap((lab) => lab.products.map((product) => ({
+			type: "lab",
+			name: `${lab.title} (Relevant: ${product})`,
+			link: lab.path,
+		}))),
+	], [products, labs]); // Memoize to avoid unnecessary recalculations
 
 	// const isMenuOpenServices = Boolean(anchorElServices);
 	const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
@@ -131,9 +129,7 @@ const Header = ({ isAuthenticated }) => {
 			return;
 		}
 
-		const filteredResults = searchData.filter((item) =>
-			item.name.toLowerCase().includes(query)
-		);
+		const filteredResults = searchData.filter((item) => item.name.toLowerCase().includes(query));
 
 		setSearchResults(filteredResults);
 	};
@@ -243,51 +239,51 @@ const Header = ({ isAuthenticated }) => {
 					</Box>
 					<Box className={classes.grow} style={{ height: "100%" }} />
 					{isAuthenticated
-					&& (
-						<>
-							<Box
-								sx={{
-									display: { xs: "flex", sm: "flex", md: "flex" },
-									alignItems: "center",
-									ml: 2,
-									width: { xs: "108px", sm: "200px", md: "300px" },
-								}}
-							>
-								<Search value={searchFilter} onChange={handleSearchChange} results={searchResults} />
-							</Box>
-							<Box sx={{ display: { xs: "none", sm: "none", md: "flex" }, height: "100%", py: 1 }}>
-								{buttons.map((button) => (
-									<ButtonWithText
-										key={button.text}
-										icon={button.icon}
-										text={button.text}
-										handler={button.handler}
-										more={button.more}
-									/>
-								))}
-							</Box>
-							<Box sx={{ display: { xs: "flex", sm: "flex", md: "none" } }}>
-								<IconButton onClick={handleMobileMenuOpen}>
-									<MoreIcon sx={{ color: "primary.main" }} />
-								</IconButton>
-							</Box>
-						</>
-					)}
+						&& (
+							<>
+								<Box
+									sx={{
+										display: { xs: "flex", sm: "flex", md: "flex" },
+										alignItems: "center",
+										ml: 2,
+										width: { xs: "108px", sm: "200px", md: "300px" },
+									}}
+								>
+									<Search value={searchFilter} results={searchResults} onChange={handleSearchChange} />
+								</Box>
+								<Box sx={{ display: { xs: "none", sm: "none", md: "flex" }, height: "100%", py: 1 }}>
+									{buttons.map((button) => (
+										<ButtonWithText
+											key={button.text}
+											icon={button.icon}
+											text={button.text}
+											handler={button.handler}
+											more={button.more}
+										/>
+									))}
+								</Box>
+								<Box sx={{ display: { xs: "flex", sm: "flex", md: "none" } }}>
+									<IconButton onClick={handleMobileMenuOpen}>
+										<MoreIcon sx={{ color: "primary.main" }} />
+									</IconButton>
+								</Box>
+							</>
+						)}
 				</Toolbar>
 			</AppBar>
 			{isAuthenticated
-			&& (
-				<Paper elevation={0} className={classes.root}>
-					<Breadcrumbs className="header-container">{crumps.map((e, ind) => <div key={`crump_${ind}`}>{e}</div>)}</Breadcrumbs>
-				</Paper>
-			)}
+				&& (
+					<Paper elevation={0} className={classes.root}>
+						<Breadcrumbs className="header-container">{crumps.map((e, ind) => <div key={`crump_${ind}`}>{e}</div>)}</Breadcrumbs>
+					</Paper>
+				)}
 			{isAuthenticated
-			&& (
-				<>
-					{renderMobileMenu}
-					{/* {renderServicesMenu} */}
-				</>
-			)}
+				&& (
+					<>
+						{renderMobileMenu}
+						{/* {renderServicesMenu} */}
+					</>
+				)}
 		</>
 	);
 };
