@@ -105,6 +105,16 @@ export const reducer = (state, action) => {
 			};
 		}
 
+		case "CACHE_RESTORE": {
+			return {
+				...state,
+				isLoading: false,
+				dataSets: action.payload.dataSets,
+				minutesAgo: action.payload.minutesAgo,
+				isCached: true, // Optional flag to indicate data is from cache
+			};
+		}
+
 		case "UPDATE_MINUTES_AGO": {
 			if (!state.pageRefreshTime) return state;
 
