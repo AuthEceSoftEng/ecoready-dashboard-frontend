@@ -7,10 +7,46 @@ import { TimerManager } from "./timer-manager.js";
 
 import { useSnackbar } from "./index.js";
 
-// Cache storage
+// Cache storage with memory estimate
 const responseCache = {};
-// Cache lifetime in milliseconds (5 minutes)
+const cacheSizes = {}; // Track size of each cache entry in bytes (estimated)
+const MAX_CACHE_SIZE_BYTES = 50 * 1024 * 1024; // 50MB max cache size
+let currentCacheSize = 0;
 const CACHE_LIFETIME = 25 * 60 * 1000;
+
+// Roughly estimate object size in bytes
+const estimateObjectSize = (obj) => JSON.stringify(obj).length * 2;
+
+// Helper to enforce cache size limits
+const enforceMemoryLimit = (newEntrySize, newKey) => {
+	// If adding this entry wouldn't exceed the limit, we're fine
+	if (currentCacheSize + newEntrySize <= MAX_CACHE_SIZE_BYTES) {
+		return true;
+	}
+
+	// Need to clear space - sort keys by last access time
+	const sortedKeys = Object.keys(responseCache)
+		.filter((key) => key !== newKey)
+		.sort((a, b) => responseCache[a].timestamp - responseCache[b].timestamp);
+
+	// Remove oldest entries until we have enough space
+	let removedSize = 0;
+
+	for (const key of sortedKeys) {
+		if (currentCacheSize + newEntrySize - removedSize <= MAX_CACHE_SIZE_BYTES) {
+			break; // We've cleared enough space
+		}
+
+		removedSize += cacheSizes[key] || 0;
+		console.log(`Removing cache entry ${key} to free up ${cacheSizes[key] || 0} bytes`);
+
+		delete responseCache[key];
+		delete cacheSizes[key];
+	}
+
+	currentCacheSize -= removedSize;
+	return true;
+};
 
 const useInit = (organization, fetchConfigs) => {
 	const { success, warning, error } = useSnackbar();
@@ -126,11 +162,22 @@ const useInit = (organization, fetchConfigs) => {
 	useEffect(() => {
 		// Only cache when data is loaded and we have a valid key
 		if (!state.isLoading && cacheKey && state.dataSets && Object.keys(state.dataSets).length > 0) {
+			// Estimate size of this data
+			const dataSize = estimateObjectSize(state.dataSets);
+
+			// Enforce memory limit before adding
+			enforceMemoryLimit(dataSize, cacheKey);
+
 			responseCache[cacheKey] = {
 				timestamp: Date.now(),
 				dataSets: state.dataSets,
 			};
-			console.log("Cached data for:", cacheKey);
+
+			// Track size and update total
+			cacheSizes[cacheKey] = dataSize;
+			currentCacheSize += dataSize;
+
+			console.log(`Cached data for: ${cacheKey} (${dataSize} bytes, total: ${currentCacheSize} bytes)`);
 		}
 	}, [state.isLoading, state.dataSets, cacheKey]);
 

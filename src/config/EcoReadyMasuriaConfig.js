@@ -1,9 +1,6 @@
-// import { calculateDifferenceBetweenDates } from "../utils/data-handling-functions.js";
-
 export	const organization = "ecoready_masuria";
 
 const ecoReadyMasuriaConfigs = (stationName, year) => [
-// const daysBetween = calculateDifferenceBetweenDates(formattedBeginningOfMonth, formattedBeginningOfHour);
 
 	{
 		type: "data",
