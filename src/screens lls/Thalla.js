@@ -16,6 +16,16 @@ const REGIONS = [
 	{ value: "Thiva", text: "Thiva" },
 ];
 
+// Define sensor ranges once to avoid repetition
+const SENSOR_RANGES = {
+	temperature: [-35, 45],
+	windSpeed: [0, 21],
+	rain: [0, 2000],
+};
+
+// Helper function to get value from dataset
+const getDatasetValue = (dataset, key) => (dataset?.[0] ? dataset[0][key] : null);
+
 const THALLA = () => {
 	const [startDate, setStartDate] = useState("2024-06-01");
 	const [endDate, setEndDate] = useState("2024-06-30");
@@ -47,7 +57,6 @@ const THALLA = () => {
 			onChange: (event) => {
 				setRegion(event.target.value);
 			},
-
 		},
 	], [region]);
 
@@ -58,6 +67,8 @@ const THALLA = () => {
 			customType: "date-range",
 			id: "dateRange",
 			width: "350px",
+			minDate: new Date(2024, 0, 1),
+			maxDate: new Date(2024, 8, 30),
 			startValue: startDate,
 			startLabel: "Start date",
 			endValue: endDate,
@@ -68,7 +79,8 @@ const THALLA = () => {
 		},
 	], [endDate, handleDateChange, startDate]);
 
-	const isValidDateRange = useMemo(() => startDate && endDate && new Date(startDate) <= new Date(endDate), [startDate, endDate]);
+	const isValidDateRange = useMemo(() => startDate && endDate && new Date(startDate) <= new Date(endDate),
+		[startDate, endDate]);
 
 	const { differenceInDays } = calculateDifferenceBetweenDates(startDate, endDate);
 
@@ -83,84 +95,166 @@ const THALLA = () => {
 	const metrics = useMemo(() => dataSets?.metrics || [], [dataSets]);
 	const isValidData = useMemo(() => metrics.length > 0, [metrics]);
 
-	// Pre-compute data transformations
-	const chartData = useMemo(() => {
-		if (!isValidData) return [];
-		const timestamps = metrics.map((item) => item.timestamp);
-		return {
-			timestamps,
-			maxTemp: metrics.map((item) => item.max_temperature),
-			meanTemp: metrics.map((item) => item.mean_temperature),
-			minTemp: metrics.map((item) => item.min_temperature),
-			windSpeed: metrics.map((item) => item.wind_speed),
-			rain: metrics.map((item) => item.rain),
-		};
-	}, [metrics, isValidData]);
+	// Pre-compute chart data transformations
+	const chartData = useMemo(() => ({
+		timestamps: metrics.map((item) => item.timestamp) || [],
+		maxTemp: metrics.map((item) => item.max_temperature) || [],
+		meanTemp: metrics.map((item) => item.mean_temperature) || [],
+		minTemp: metrics.map((item) => item.min_temperature) || [],
+		windSpeed: metrics.map((item) => item.wind_speed) || [],
+		rain: metrics.map((item) => item.rain) || [],
+	}), [metrics]);
+
+	// Pre-define gauge configuration
+	const gaugeConfigs = useMemo(() => [
+		{
+			data: {
+				value: getDatasetValue(dataSets?.maxMaxTemperature, "max_max_temperature"),
+				subtitle: "Max Temperature",
+			},
+			suffix: "°C",
+			color: "goldenrod",
+			range: SENSOR_RANGES.temperature,
+		},
+		{
+			data: {
+				value: getDatasetValue(dataSets?.meanMeanTemperature, "avg_mean_temperature"),
+				subtitle: "Average Temperature",
+			},
+			suffix: "°C",
+			color: "primary",
+			range: SENSOR_RANGES.temperature,
+		},
+		{
+			data: {
+				value: getDatasetValue(dataSets?.minMinTemperature, "min_min_temperature"),
+				subtitle: "Min Temperature",
+			},
+			suffix: "°C",
+			color: "third",
+			range: SENSOR_RANGES.temperature,
+		},
+		{
+			data: {
+				value: getDatasetValue(dataSets?.meanWindSpeed, "avg_wind_speed"),
+				subtitle: "Average Wind Speed",
+			},
+			range: SENSOR_RANGES.windSpeed,
+			color: "primary",
+			shape: "bullet",
+			suffix: "Bft",
+		},
+		{
+			data: {
+				value: getDatasetValue(dataSets?.rainSum, "sum_rain"),
+				subtitle: "Rain Sum",
+			},
+			range: SENSOR_RANGES.rain,
+			color: "third",
+			shape: "bullet",
+			suffix: "mm",
+		},
+	], [dataSets]);
+
+	// Pre-define chart configurations
+	const chartConfigs = useMemo(() => [
+		{
+			title: "Temperature Evolution Per Day",
+			data: [
+				{
+					x: chartData.timestamps,
+					y: chartData.maxTemp,
+					type: "bar",
+					title: "Max",
+					color: "primary",
+				},
+				{
+					x: chartData.timestamps,
+					y: chartData.meanTemp,
+					type: "bar",
+					title: "Avg",
+					color: "secondary",
+				},
+				{
+					x: chartData.timestamps,
+					y: chartData.minTemp,
+					type: "bar",
+					title: "Min",
+					color: "third",
+				},
+			],
+			xaxis: { title: "Days" },
+			yaxis: { title: "Temperature (°C)" },
+		},
+		{
+			title: `${differenceInDays}-day Temperature Distribution`,
+			data: [
+				{
+					y: chartData.maxTemp,
+					type: "box",
+					title: "Max Temperature",
+					color: "primary",
+				},
+				{
+					y: chartData.meanTemp,
+					type: "box",
+					title: "Mean Temperature",
+					color: "secondary",
+				},
+				{
+					y: chartData.minTemp,
+					type: "box",
+					title: "Min Temperature",
+					color: "third",
+				},
+			],
+			xaxis: { title: "Days" },
+			yaxis: { title: "Temperature (°C)" },
+		},
+		{
+			title: "Wind Speed",
+			data: [
+				{
+					x: chartData.timestamps,
+					y: chartData.windSpeed,
+					type: "scatter",
+					mode: "lines+markers",
+					title: "Wind Speed",
+					color: "primary",
+				},
+			],
+			xaxis: { title: "Days" },
+			yaxis: { title: "Wind Speed (Bft)" },
+		},
+		{
+			title: "Daily Rain Sum",
+			data: [
+				{
+					x: chartData.timestamps,
+					y: chartData.rain,
+					type: "bar",
+					title: "Rain",
+					color: "third",
+				},
+			],
+			xaxis: { title: "Days" },
+			yaxis: { title: "Rain (mm)" },
+		},
+	], [chartData, differenceInDays]);
 
 	return (
-		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
+		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
 			<StickyBand dropdownContent={dropdownContent} formRef={formRefDate} formContent={formContentDate} />
+
 			{isValidDateRange ? (
 				<>
+					{/* Overview Card */}
 					<Grid item xs={12} md={12} alignItems="center" flexDirection="column">
 						<Card title={`${differenceInDays}-day Overview`} footer={cardFooter({ minutesAgo })}>
 							{isLoading ? (<LoadingIndicator />
 							) : (
 								<Grid container display="flex" direction="row" justifyContent="space-evenly" padding={0} spacing={1}>
-									{[
-										{
-											data: {
-												value: dataSets?.maxMaxTemperature?.[0]
-													? dataSets.maxMaxTemperature[0].max_max_temperature
-													: null,
-												subtitle: "Max Temperature",
-											},
-											color: "goldenrod",
-
-										},
-										{
-											data: {
-												value: dataSets?.meanMeanTemperature?.[0]
-													? dataSets.meanMeanTemperature[0].avg_mean_temperature
-													: null,
-												subtitle: "Average Temperature",
-											},
-											color: "primary",
-										},
-										{
-											data: {
-												value: dataSets?.minMinTemperature?.[0]
-													? dataSets.minMinTemperature[0].min_min_temperature
-													: null,
-												subtitle: "Min Temperature",
-											},
-											color: "third",
-										},
-										{
-											data: {
-												value: dataSets?.meanWindSpeed?.[0]
-													? dataSets.meanWindSpeed[0].avg_wind_speed
-													: null,
-												subtitle: "Average Wind Speed",
-											},
-											range: [0, 21],
-											color: "primary",
-											shape: "bullet",
-											suffix: "Bft",
-										},
-										{
-											data: {
-												value: dataSets?.rainSum?.[0]
-													? dataSets.rainSum[0].sum_rain
-													: null,
-												subtitle: "Rain Sum",
-											},
-											range: [0, 2000],
-											color: "third",
-											shape: "bullet",
-											suffix: "mm",
-										},
-									].map((plotData, index) => (
+									{gaugeConfigs.map((plotData, index) => (
 										<Grid
 											key={index}
 											item
@@ -180,7 +274,7 @@ const THALLA = () => {
 															type: "indicator",
 															mode: "gauge+number",
 															value: plotData.data.value,
-															range: plotData.range ?? [-35, 45],
+															range: plotData.range,
 															color: plotData.color,
 															shape: plotData.shape,
 															indicator: "primary",
@@ -191,115 +285,41 @@ const THALLA = () => {
 													displayBar={false}
 													title={plotData.data.subtitle}
 												/>
-											) : (<DataWarning />)}
+											) : (<DataWarning minHeight={plotData.shape === "bullet" ? "120px" : "200px"} />
+											)}
 										</Grid>
 									))}
 								</Grid>
 							)}
 						</Card>
 					</Grid>
-					{[
-						{
-							title: "Temperature Evolution Per Day",
-							data: [
-								{
-									x: chartData.timestamps,
-									y: chartData.maxTemp,
-									type: "bar",
-									title: "Max",
-									color: "primary",
-								},
-								{
-									x: chartData.timestamps,
-									y: chartData.meanTemp,
-									type: "bar",
-									title: "Avg",
-									color: "secondary",
-								},
-								{
-									x: chartData.timestamps,
-									y: chartData.minTemp,
-									type: "bar",
-									title: "Min",
-									color: "third",
-								},
-							],
-							xaxis: { title: "Days" },
-							yaxis: { title: "Temperature (°C)" },
-						},
-						{
-							title: `${differenceInDays}-day Temperature Distribution`,
-							data: [
-								{
-									y: chartData.maxTemp,
-									type: "box",
-									title: "Max	Temperature",
-									color: "primary",
-								},
-								{
-									y: chartData.meanTemp,
-									type: "box",
-									title: "Mean Temperature",
-									color: "secondary",
-								},
-								{
-									y: chartData.minTemp,
-									type: "box",
-									title: "Min Temperature",
-									color: "third",
-								},
-							],
-							xaxis: { title: "Days" },
-							yaxis: { title: "Temperature (°C)" },
-						},
-						{
-							title: "Wind Speed",
-							data: [
-								{
-									x: chartData.timestamps,
-									y: chartData.windSpeed,
-									type: "scatter",
-									mode: "lines+markers",
-									title: "Wind Speed",
-									color: "primary",
-								},
-							],
-							xaxis: { title: "Days" },
-						},
-						{
-							title: "Daily Rain Sum",
-							data: [
-								{
-									x: chartData.timestamps,
-									y: chartData.rain,
-									type: "bar",
-									title: "Rain",
-									color: "third",
-								},
-							],
-							xaxis: { title: "Days" },
-						},
-					].map((card, index) => (
+
+					{/* Chart Cards */}
+					{chartConfigs.map((card, index) => (
 						<Grid key={index} item xs={12} sm={12} md={6} mb={1}>
 							<Card title={card.title} footer={cardFooter({ minutesAgo })}>
-								{isValidData
-									? isLoading ? (<LoadingIndicator />
-									) : (
-										<Plot
-											scrollZoom
-											data={card.data}
-											showLegend={index === 0}
-											height="300px"
-											xaxis={card.xaxis}
-											yaxis={card.yaxis}
-										/>
-									) : (<DataWarning />
-									)}
+								{isLoading ? (
+									<LoadingIndicator minHeight="300px" />
+								) : isValidData ? (
+									<Plot
+										scrollZoom
+										data={card.data}
+										showLegend={index === 0}
+										height="300px"
+										xaxis={card.xaxis}
+										yaxis={card.yaxis}
+									/>
+								) : (
+									<DataWarning minHeight="300px" message="No data available for selected period" />
+								)}
 							</Card>
 						</Grid>
 					))}
 				</>
-			) : (<DataWarning message="Please Select a Valid Date Range" />
+			) : (
+				<Grid item xs={12}>
+					<DataWarning message="Please select a valid date range" />
+				</Grid>
 			)}
 		</Grid>
 	);

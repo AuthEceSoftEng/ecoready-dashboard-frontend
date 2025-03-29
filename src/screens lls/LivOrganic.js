@@ -246,19 +246,20 @@ const LivOrganic = () => {
 					{graphConfigs.map((card, index) => (
 						<Grid key={index} item xs={12} sm={12} md={6} mb={index === graphConfigs.length - 1 ? 1 : 0}>
 							<Card title={card.title} footer={cardFooter({ minutesAgo })}>
-								{isValidData
-									? isLoading ? (<LoadingIndicator />
-									) : (
-										<Plot
-											scrollZoom
-											data={card.data}
-											showLegend={index === 0}
-											height="300px"
-											xaxis={card.xaxis}
-											yaxis={card.yaxis}
-										/>
-									) : (<DataWarning />
-									)}
+								{isLoading ? (
+									<LoadingIndicator minHeight="300px" message={`Loading ${card.title.toLowerCase()}...`} />
+								) : isValidData ? (
+									<Plot
+										scrollZoom
+										data={card.data}
+										showLegend={index === 0}
+										height="300px"
+										xaxis={card.xaxis}
+										yaxis={card.yaxis}
+									/>
+								) : (
+									<DataWarning minHeight="300px" />
+								)}
 							</Card>
 						</Grid>
 					))}

@@ -1,89 +1,72 @@
-export	const organization = "livorganic";
+export const organization = "livorganic";
 
-export const livOrganicConfigs = (startDate, endDate, differenceInDays) => [
-	{
-		type: "data",
+export const livOrganicConfigs = (startDate, endDate, differenceInDays) => {
+	// Common configuration
+	const baseConfig = {
 		project: "livorganic_project",
 		collection: "weather_data",
+	};
+
+	// Calculate interval once
+	const interval = differenceInDays ? `every_${Math.max(differenceInDays, 1)}_days` : "every_1_days";
+
+	// Time filters for data queries
+	const timeFilters = [
+		{
+			property_name: "timestamp",
+			operator: "gte",
+			property_value: startDate,
+		},
+		{
+			property_name: "timestamp",
+			operator: "lte",
+			property_value: endDate,
+		},
+	];
+
+	// Base stats params
+	const baseStatsParams = {
+		interval,
+		start_time: startDate,
+		end_time: endDate,
+		group_by: "key",
+	};
+
+	// Function to create stats config objects
+	const createStatsConfig = (attribute, stat, plotId) => ({
+		...baseConfig,
+		type: "stats",
 		params: JSON.stringify({
-			attributes: [
-				"timestamp", "max_temperature",
-				"min_temperature", "precipitation", "solar_radiation",
-			],
-			filters: [
-				{
-					property_name: "timestamp",
-					operator: "gte",
-					property_value: startDate,
+			attribute: [attribute],
+			stat,
+			...baseStatsParams,
+		}),
+		plotId,
+	});
+
+	return [
+		// Data config
+		{
+			...baseConfig,
+			type: "data",
+			params: JSON.stringify({
+				attributes: [
+					"timestamp", "max_temperature",
+					"min_temperature", "precipitation", "solar_radiation",
+				],
+				filters: timeFilters,
+				order_by: {
+					field: "timestamp",
+					order: "asc",
 				},
-				{
-					property_name: "timestamp",
-					operator: "lte",
-					property_value: endDate,
-				},
-			],
-			order_by: {
-				field: "timestamp",
-				order: "asc",
-			},
-		}),
-		plotId: "metrics",
-	},
-	{
-		type: "stats",
-		project: "livorganic_project",
-		collection: "weather_data",
-		params: JSON.stringify({
-			attribute: ["max_temperature"],
-			stat: "max",
-			interval: differenceInDays ? `every_${Math.max(differenceInDays, 1)}_days` : "every_1_days",
-			start_time: startDate,
-			end_time: endDate,
-			group_by: "key",
-		}),
-		plotId: "maxMaxTemperature",
-	},
-	{
-		type: "stats",
-		project: "livorganic_project",
-		collection: "weather_data",
-		params: JSON.stringify({
-			attribute: ["min_temperature"],
-			stat: "min",
-			interval: differenceInDays ? `every_${Math.max(differenceInDays, 1)}_days` : "every_1_days",
-			start_time: startDate,
-			end_time: endDate,
-			group_by: "key",
-		}),
-		plotId: "minMinTemperature",
-	},
-	{
-		type: "stats",
-		project: "livorganic_project",
-		collection: "weather_data",
-		params: JSON.stringify({
-			attribute: ["precipitation"],
-			stat: "avg",
-			interval: differenceInDays ? `every_${Math.max(differenceInDays, 1)}_days` : "every_1_days",
-			start_time: startDate,
-			end_time: endDate,
-			group_by: "key",
-		}),
-		plotId: "meanPrecipitation",
-	},
-	{
-		type: "stats",
-		project: "livorganic_project",
-		collection: "weather_data",
-		params: JSON.stringify({
-			attribute: ["solar_radiation"],
-			stat: "avg",
-			interval: differenceInDays ? `every_${Math.max(differenceInDays, 1)}_days` : "every_1_days",
-			start_time: startDate,
-			end_time: endDate,
-			group_by: "key",
-		}),
-		plotId: "meanSolarRadiation",
-	},
-];
+			}),
+			plotId: "metrics",
+		},
+		// Stats configs
+		createStatsConfig("max_temperature", "max", "maxMaxTemperature"),
+		createStatsConfig("min_temperature", "min", "minMinTemperature"),
+		createStatsConfig("precipitation", "avg", "meanPrecipitation"),
+		createStatsConfig("solar_radiation", "avg", "meanSolarRadiation"),
+	];
+};
 

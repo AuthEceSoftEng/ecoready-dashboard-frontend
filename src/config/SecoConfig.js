@@ -1,136 +1,73 @@
-export	const organization = "seco_collab";
+export const organization = "seco_collab";
 
-const secoConfigs = (currentDate, formattedBeginningOfMonth, formattedBeginningOfDay) => [
-	{
-		type: "data",
+const secoConfigs = (currentDate, formattedBeginningOfMonth, formattedBeginningOfDay) => {
+	// Common configuration for all requests
+	const baseConfig = {
 		project: "seco_collab_project",
 		collection: "environmental_data",
+	};
+
+	// Metrics to monitor
+	const metrics = [
+		{ attribute: "m_temp01", name: "Temperature" },
+		{ attribute: "m_hum01", name: "Humidity" },
+		{ attribute: "a_co2", name: "Co2" },
+	];
+
+	// Date ranges
+	const dateRanges = {
+		today: {
+			start_time: formattedBeginningOfDay,
+			end_time: currentDate,
+		},
+		month: {
+			start_time: formattedBeginningOfMonth,
+			end_time: currentDate,
+		},
+	};
+
+	// Factory functions to create config objects
+	const createDataConfig = () => ({
+		...baseConfig,
+		type: "data",
 		params: JSON.stringify({
-			attributes: ["timestamp", "m_temp01", "m_hum01", "a_co2"],
+			attributes: ["timestamp", ...metrics.map((m) => m.attribute)],
 			order_by: {
 				field: "timestamp",
 				order: "asc",
 			},
 		}),
 		plotId: "overview",
-	},
-	{
+	});
+
+	const createStatsConfig = (metric, stat, timeframe, plotIdPrefix) => ({
+		...baseConfig,
 		type: "stats",
-		project: "seco_collab_project",
-		collection: "environmental_data",
 		params: JSON.stringify({
-			attribute: ["m_temp01"],
-			stat: "avg",
+			attribute: [metric.attribute],
+			stat,
 			interval: "every_1_days",
-			start_time: `${formattedBeginningOfDay}`,
-			end_time: `${currentDate}`,
+			...dateRanges[timeframe],
 		}),
-		plotId: "todayTemperature",
-	},
-	{
-		type: "stats",
-		project: "seco_collab_project",
-		collection: "environmental_data",
-		params: JSON.stringify({
-			attribute: ["m_hum01"],
-			stat: "avg",
-			interval: "every_1_days",
-			start_time: `${formattedBeginningOfDay}`,
-			end_time: `${currentDate}`,
-		}),
-		plotId: "todayHumidity",
-	},
-	{
-		type: "stats",
-		project: "seco_collab_project",
-		collection: "environmental_data",
-		params: JSON.stringify({
-			attribute: ["a_co2"],
-			stat: "avg",
-			interval: "every_1_days",
-			start_time: `${formattedBeginningOfDay}`,
-			end_time: `${currentDate}`,
-		}),
-		plotId: "todayCo2",
-	},
-	{
-		type: "stats",
-		project: "seco_collab_project",
-		collection: "environmental_data",
-		params: JSON.stringify({
-			attribute: ["m_temp01"],
-			stat: "max",
-			interval: "every_1_days",
-			start_time: `${formattedBeginningOfMonth}`,
-			end_time: `${currentDate}`,
-		}),
-		plotId: "monthMaxTemperature",
-	},
-	{
-		type: "stats",
-		project: "seco_collab_project",
-		collection: "environmental_data",
-		params: JSON.stringify({
-			attribute: ["m_hum01"],
-			stat: "max",
-			interval: "every_1_days",
-			start_time: `${formattedBeginningOfMonth}`,
-			end_time: `${currentDate}`,
-		}),
-		plotId: "monthMaxHumidity",
-	},
-	{
-		type: "stats",
-		project: "seco_collab_project",
-		collection: "environmental_data",
-		params: JSON.stringify({
-			attribute: ["a_co2"],
-			stat: "max",
-			interval: "every_1_days",
-			start_time: `${formattedBeginningOfMonth}`,
-			end_time: `${currentDate}`,
-		}),
-		plotId: "monthMaxCo2",
-	},
-	{
-		type: "stats",
-		project: "seco_collab_project",
-		collection: "environmental_data",
-		params: JSON.stringify({
-			attribute: ["m_temp01"],
-			stat: "min",
-			interval: "every_1_days",
-			start_time: `${formattedBeginningOfMonth}`,
-			end_time: `${currentDate}`,
-		}),
-		plotId: "monthMinTemperature",
-	},
-	{
-		type: "stats",
-		project: "seco_collab_project",
-		collection: "environmental_data",
-		params: JSON.stringify({
-			attribute: ["m_hum01"],
-			stat: "min",
-			interval: "every_1_days",
-			start_time: `${formattedBeginningOfMonth}`,
-			end_time: `${currentDate}`,
-		}),
-		plotId: "monthMinHumidity",
-	},
-	{
-		type: "stats",
-		project: "seco_collab_project",
-		collection: "environmental_data",
-		params: JSON.stringify({
-			attribute: ["a_co2"],
-			stat: "min",
-			interval: "every_1_days",
-			start_time: `${formattedBeginningOfMonth}`,
-			end_time: `${currentDate}`,
-		}),
-		plotId: "monthMinCo2",
-	},
-];
+		plotId: `${plotIdPrefix}${metric.name}`,
+	});
+
+	// Create configs array
+	const configs = [
+		// Overview data
+		createDataConfig(),
+
+		// Today's averages
+		...metrics.map((metric) => createStatsConfig(metric, "avg", "today", "today")),
+
+		// Monthly maximums
+		...metrics.map((metric) => createStatsConfig(metric, "max", "month", "monthMax")),
+
+		// Monthly minimums
+		...metrics.map((metric) => createStatsConfig(metric, "min", "month", "monthMin")),
+	];
+
+	return configs;
+};
 
 export default secoConfigs;

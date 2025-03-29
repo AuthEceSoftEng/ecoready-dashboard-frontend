@@ -3,16 +3,14 @@ import { memo, useMemo } from "react";
 
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
-// import Form from "../components/Form.js";
 import useInit from "../utils/screen-init.js";
 import secoConfigs, { organization } from "../config/SecoConfig.js";
 import { getCustomDateTime, calculateDates } from "../utils/data-handling-functions.js";
-import { monthNames } from "../utils/useful-constants.js";
 import { cardFooter, LoadingIndicator, StickyBand, DataWarning } from "../utils/rendering-items.js";
 
 const SecoCollab = () => {
 	const customDate = useMemo(() => getCustomDateTime(2024, 8), []);
-	const { month, currentDate, formattedBeginningOfMonth, formattedBeginningOfDay } =	useMemo(
+	const { currentDate, formattedBeginningOfMonth, formattedBeginningOfDay } = useMemo(
 		() => calculateDates(customDate), [customDate],
 	);
 
@@ -110,12 +108,23 @@ const SecoCollab = () => {
 		},
 	], [dataSets]);
 
+	const overviewData = useMemo(() => {
+		if (!dataSets.overview?.length) return { timestamps: [] };
+
+		return {
+			timestamps: dataSets.overview.map((item) => item.timestamp),
+			temperature: dataSets.overview.map((item) => item.m_temp01),
+			humidity: dataSets.overview.map((item) => item.m_hum01),
+			co2: dataSets.overview.map((item) => item.a_co2),
+		};
+	}, [dataSets.overview]);
+
 	const timelineOverview = useMemo(() => [
 		{
 			data: [
 				{
-					x: dataSets.overview?.map((item) => item.timestamp) ?? [],
-					y: dataSets.overview?.map((item) => item.m_temp01) ?? [],
+					x: overviewData.timestamps,
+					y: overviewData.temperature,
 					type: "scatter",
 					mode: "lines",
 					color: "goldenrod",
@@ -127,8 +136,8 @@ const SecoCollab = () => {
 		{
 			data: [
 				{
-					x: dataSets.overview?.map((item) => item.timestamp) ?? [],
-					y: dataSets.overview?.map((item) => item.m_hum01) ?? [],
+					x: overviewData.timestamps,
+					y: overviewData.humidity,
 					type: "scatter",
 					mode: "lines",
 					color: "third",
@@ -140,8 +149,8 @@ const SecoCollab = () => {
 		{
 			data: [
 				{
-					x: dataSets.overview?.map((item) => item.timestamp) ?? [],
-					y: dataSets.overview?.map((item) => item.a_co2) ?? [],
+					x: overviewData.timestamps,
+					y: overviewData.co2,
 					type: "scatter",
 					mode: "markers",
 					color: "secondary",
@@ -150,43 +159,48 @@ const SecoCollab = () => {
 			],
 			yaxis: { title: "Co2" },
 		},
-	], [dataSets]);
+	], [overviewData]);
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
 			<Grid item xs={12} md={12} alignItems="center" flexDirection="row" mt={2}>
 				<Card title="Today's Overview" footer={cardFooter({ minutesAgo })}>
 					{isLoading ? (<LoadingIndicator />
-					) : (
-						<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
+					) : dailyOverview.some((plot) => plot.value !== null) ? (
+						<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
 							{dailyOverview.map((plot, index) => (
 								<Grid key={index} item xs={12} md={4} justifyContent="center" sx={{ height: "200px" }}>
-									<Plot
-										scrollZoom
-										data={[
-											{
-												type: "indicator",
-												mode: "gauge+number",
-												value: plot.value,
-												range: [plot.min, plot.max],
-												color: plot.color,
-												shape: "angular",
-												indicator: "primary",
-												textColor: "primary",
-												suffix: plot.symbol,
-											},
-										]}
-										displayBar={false}
-										title={plot.subtitle}
-									/>
+									{plot.value === null ? (
+										<DataWarning minHeight="200px" />
+									) : (
+										<Plot
+											scrollZoom
+											data={[
+												{
+													type: "indicator",
+													mode: "gauge+number",
+													value: plot.value,
+													range: [plot.min, plot.max],
+													color: plot.color,
+													shape: "angular",
+													indicator: "primary",
+													textColor: "primary",
+													suffix: plot.symbol,
+												},
+											]}
+											displayBar={false}
+											title={plot.subtitle}
+										/>
+									)}
 								</Grid>
 							))}
 						</Grid>
+					) : (<DataWarning message="No overview data available" />
 					)}
 				</Card>
 			</Grid>
-			<Grid item xs={12} md={12} alignItems="center" flexDirection="column" mt={2}>
-				<Card title={`${monthNames[month].text}'s Max vs Min Values`} footer={cardFooter({ minutesAgo })}>
+			<Grid item xs={12} md={12} alignItems="center" flexDirection="column">
+				<Card title="Monthly Max vs Min Values" footer={cardFooter({ minutesAgo })}>
 					{isLoading ? (<LoadingIndicator />
 					) : (
 						<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
@@ -207,7 +221,7 @@ const SecoCollab = () => {
 					)}
 				</Card>
 			</Grid>
-			<Grid item xs={12} md={12} alignItems="center" flexDirection="column" mt={2} mb={1}>
+			<Grid item xs={12} md={12} alignItems="center" flexDirection="column" mb={1}>
 				<Card title="Timeline's Overview" footer={cardFooter({ minutesAgo })}>
 					{isLoading ? (<LoadingIndicator />
 					) : (

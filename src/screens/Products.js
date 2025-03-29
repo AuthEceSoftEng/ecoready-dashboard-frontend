@@ -869,128 +869,134 @@ const ProductsScreen = () => {
 	}, [globalProduct, existingCountries, dataSets.periodProduction, europeOverview?.countryMaxValue, units.productionUnit, units.priceUnit, priceOptions.country, isValidMonthlyPrices, monthlyPrices, isValidPrice, pricesTimeline, isValidPeriodPrices, periodPrices]);
 
 	return (
-		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
+		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
 			<StickyBand dropdownContent={productDropdownContent} />
 			{/* PRODUCTION CARDS */}
-			<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1} sx={{ minHeight: "500px" }}>
-				{state.isLoading ? (<LoadingIndicator />
-				) : dataSets.productProduction ? (
-					<>
-						<Grid
-							item
-							xs={12}
-							md={6}
-							alignItems="center"
-							sx={{
-								display: "flex",
-								"& > *": {
-									flex: 1,
-									height: "100%",
+			<Grid item xs={12} md={12} alignItems="center" flexDirection="column">
+				<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2} sx={{ minHeight: "500px" }}>
+					{state.isLoading ? (
+						<Grid item xs={12}><LoadingIndicator /></Grid>
+					) : dataSets.productProduction ? (
+						<>
+							<Grid
+								item
+								xs={12}
+								md={6}
+								alignItems="center"
+								sx={{
 									display: "flex",
-									flexDirection: "column",
-								},
-							}}
-						>
-							<Card title="EU's Annual Overview" footer={cardFooter({ minutesAgo })} sx={{ display: "flex", flexDirection: "column" }}>
-								<Grid item xs={12} md={12} display="flex" justifyContent="flex-end">
-									<StickyBand sticky={false} dropdownContent={productionDropdowns} formRef={yearPickerRef} formContent={yearPickerProps} />
-								</Grid>
-								{isProductionLoading ? (<LoadingIndicator />
-								) : dataSets.productProduction.length === 0 ? (
-									<DataWarning message="No Available Production Data for the Specified Options Combination" />
-								) : (
-									<Grid container display="flex" direction="row" justifyContent="space-evenly" sx={{ flex: 1 }}>
+									"& > *": {
+										flex: 1,
+										height: "100%",
+										display: "flex",
+										flexDirection: "column",
+									},
+								}}
+							>
+								<Card title="EU's Annual Overview" footer={cardFooter({ minutesAgo })} sx={{ display: "flex", flexDirection: "column" }}>
+									<Grid item xs={12} md={12} display="flex" justifyContent="flex-end">
+										<StickyBand sticky={false} dropdownContent={productionDropdowns} formRef={yearPickerRef} formContent={yearPickerProps} />
+									</Grid>
+									{isProductionLoading ? (<LoadingIndicator />
+									) : dataSets.productProduction.length === 0 ? (
+										<DataWarning message="No Available Production Data for the Specified Options Combination" />
+									) : (
 										<Grid container display="flex" direction="row" justifyContent="space-evenly" sx={{ flex: 1 }}>
-											<Grid item xs={12} sm={12} md={12} justifyContent="center" alignItems="center">
-												{isProductionLoading ? (<LoadingIndicator />
-												) : europeOverview?.charts.gauge.warning ? (<DataWarning message={europeOverview.charts.gauge.warning} />
-												) : (
-													<Plot
-														showLegend
-														scrollZoom
-														height={europeOverview.charts.gauge.shape === "bullet" ? "115px" : "200px"}
-														data={[{
-															type: "indicator",
-															mode: "gauge+number",
-															value: europeOverview.charts.gauge.data.value,
-															range: europeOverview.charts.gauge.range,
-															color: europeOverview.charts.gauge.color,
-															shape: europeOverview.charts.gauge.shape,
-															indicator: "primary",
-															textColor: "primary",
-															suffix: europeOverview.charts.gauge.suffix,
-														}]}
-														title={europeOverview.charts.gauge.data.subtitle}
-													/>
-												)}
-											</Grid>
-											<Grid item xs={12} sm={12} md={12} justifyContent="center" alignItems="center">
-												{isProductionLoading ? (<LoadingIndicator />
-												) : europeOverview?.charts.pie.warning ? (<DataWarning message={europeOverview.charts.pie.warning} />
-												) : (
-													<Plot
-														scrollZoom
-														showLegend
-														displayBar={false}
-														height="295px"
-														title={`${productionOptions.year}'s Production by Country`}
-														data={europeOverview.charts.pie.data}
-													/>
-												)}
+											<Grid container display="flex" direction="row" justifyContent="space-evenly" sx={{ flex: 1 }}>
+												<Grid item xs={12} sm={12} md={12} justifyContent="center" alignItems="center">
+													{europeOverview?.charts.gauge.warning ? (
+														<DataWarning message={europeOverview.charts.gauge.warning} />
+													) : (
+														<Plot
+															showLegend
+															scrollZoom
+															height={europeOverview.charts.gauge.shape === "bullet" ? "115px" : "200px"}
+															data={[{
+																type: "indicator",
+																mode: "gauge+number",
+																value: europeOverview.charts.gauge.data.value,
+																range: europeOverview.charts.gauge.range,
+																color: europeOverview.charts.gauge.color,
+																shape: europeOverview.charts.gauge.shape,
+																indicator: "primary",
+																textColor: "primary",
+																suffix: europeOverview.charts.gauge.suffix,
+															}]}
+															title={europeOverview.charts.gauge.data.subtitle}
+														/>
+													)}
+												</Grid>
+												<Grid item xs={12} sm={12} md={12} justifyContent="center" alignItems="center">
+													{europeOverview?.charts.pie.warning ? (
+														<DataWarning message={europeOverview.charts.pie.warning} />
+													) : (
+														<Plot
+															scrollZoom
+															showLegend
+															displayBar={false}
+															height="295px"
+															title={`${productionOptions.year}'s Production by Country`}
+															data={europeOverview.charts.pie.data}
+														/>
+													)}
+												</Grid>
 											</Grid>
 										</Grid>
-									</Grid>
-								)}
-							</Card>
-						</Grid>
-						<Grid
-							item
-							xs={12}
-							md={6}
-							alignItems="center"
-							sx={{
-								display: "flex",
-								"& > *": {
-									flex: 1,
-									height: "100%",
+									)}
+								</Card>
+							</Grid>
+							<Grid
+								item
+								xs={12}
+								md={6}
+								alignItems="center"
+								sx={{
 									display: "flex",
-									flexDirection: "column",
-								},
-							}}
-						>
-							<Card title="Production per Year" footer={cardFooter({ minutesAgo })} sx={{ display: "flex", flexDirection: "column" }}>
-								{isProductionLoading ? (<LoadingIndicator />
-								) : !dataSets.productProduction || dataSets.productProduction.length === 0 ? (
-									<DataWarning message="No Available Data for the Specified Options Combination" />
-								) : (
-									<Grid item xs={12} sm={12} justifyContent="center" alignItems="center" sx={{ flex: 1 }}>
-										{europeOverview?.charts.bars.data ? (
-											<Plot
-												scrollZoom
-												height="459px"
-												data={[...europeOverview.charts.bars.data].reverse()}
-												barmode="stack"
-												displayBar={false}
-												title={europeOverview.charts.bars.title}
-												xaxis={europeOverview.charts.bars.xaxis}
-											/>
-										) : (<DataWarning message="No Available Data for the Specified Options' Combination" />)}
-									</Grid>
-								)}
-							</Card>
+									"& > *": {
+										flex: 1,
+										height: "100%",
+										display: "flex",
+										flexDirection: "column",
+									},
+								}}
+							>
+								<Card title="Production per Year" footer={cardFooter({ minutesAgo })} sx={{ display: "flex", flexDirection: "column" }}>
+									{isProductionLoading ? (<LoadingIndicator />
+									) : !dataSets.productProduction || dataSets.productProduction.length === 0 ? (
+										<DataWarning message="No Available Data for the Specified Options Combination" />
+									) : (
+										<Grid item xs={12} sm={12} justifyContent="center" alignItems="center" sx={{ flex: 1 }}>
+											{europeOverview?.charts.bars.data ? (
+												<Plot
+													scrollZoom
+													height="459px"
+													data={[...europeOverview.charts.bars.data].reverse()}
+													barmode="stack"
+													displayBar={false}
+													title={europeOverview.charts.bars.title}
+													xaxis={europeOverview.charts.bars.xaxis}
+												/>
+											) : (<DataWarning message="No Available Data for the Specified Options' Combination" />)}
+										</Grid>
+									)}
+								</Card>
+							</Grid>
+						</>
+					) : (
+						<Grid item xs={12}>
+							<DataWarning message="No Available Production Data for the Specified Product" />
 						</Grid>
-					</>
-				) : (
-					<DataWarning message="No Available Production Data for the Specified Product" />
-				)}
+					)}
+				</Grid>
 			</Grid>
+
 			{/* PRICE CARDS */}
 			<Grid item xs={12} md={12} mb={2} alignItems="center" flexDirection="column">
 				<Card title="Product per Country" footer={cardFooter({ minutesAgo })}>
 					<StickyBand sticky={false} dropdownContent={priceDropdowns} formRef={formRefDate} formContent={formContentDate} />
-					{state.isLoading ? (<LoadingIndicator />
-					) : existingCountries.length > 0 ? (dateMetrics.isValidDateRange ? (isPriceLoading ? (<LoadingIndicator />
-					) : (
+					{state.isLoading || isPriceLoading ? (<LoadingIndicator />
+					) : existingCountries.length === 0 ? (<DataWarning message="No Available Pricing Data For the Specified Options' Combination" />
+					) : dateMetrics.isValidDateRange ? (
 						<Grid container display="flex" direction="row" justifyContent="space-evenly" padding={0} spacing={1}>
 							{countryOverview.map((plotData, index) => {
 								const isTimelinePlot = index === countryOverview.length - 2;
@@ -1007,9 +1013,10 @@ const ProductsScreen = () => {
 										justifyContent="center"
 										alignItems="center"
 									>
-										{isProductionGauge && isProductionLoading && !plotData.warning ? (<LoadingIndicator />
+										{isProductionGauge && isProductionLoading ? (<LoadingIndicator />
 										) : plotData.warning ? (<DataWarning message={plotData.warning} />
-										) : isTimelinePlot ? (<Plot scrollZoom data={plotData.data} xaxis={plotData.xaxis} yaxis={plotData.yaxis} />
+										) : isTimelinePlot ? (
+											<Plot scrollZoom data={plotData.data} xaxis={plotData.xaxis} yaxis={plotData.yaxis} />
 										) : (
 											<Plot
 												showLegend
@@ -1034,9 +1041,7 @@ const ProductsScreen = () => {
 								);
 							})}
 						</Grid>
-					)
-					) : (<DataWarning message="Please Select a Valid Date Range" />)
-					) : (<DataWarning message="No Available Pricing Data For the Specified Options' Combination" />
+					) : (<DataWarning message="Please Select a Valid Date Range" />
 					)}
 				</Card>
 			</Grid>

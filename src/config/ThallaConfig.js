@@ -1,134 +1,85 @@
-export	const organization = "thalla";
+export const organization = "thalla";
 
-export const thallaConfigs = (region, startDate, endDate, differenceInDays) => [
-	{
-		type: "data",
+export const thallaConfigs = (region, startDate, endDate, differenceInDays) => {
+	// Common configuration
+	const baseConfig = {
 		project: "thalla_project",
 		collection: "weather_data",
+	};
+
+	// Time filter applied to all queries
+	const timeFilter = [
+		{
+			property_name: "key",
+			operator: "eq",
+			property_value: region,
+		},
+		{
+			property_name: "timestamp",
+			operator: "gte",
+			property_value: startDate,
+		},
+		{
+			property_name: "timestamp",
+			operator: "lte",
+			property_value: endDate,
+		},
+	];
+
+	// Stats common parameters
+	const statsBaseParams = {
+		interval: `every_${differenceInDays}_days`,
+		start_time: startDate,
+		end_time: endDate,
+		filters: [{
+			property_name: "key",
+			operator: "eq",
+			property_value: region,
+		}],
+		group_by: "key",
+	};
+
+	// Function to create stats config objects
+	const createStatsConfig = (attribute, stat, plotId) => ({
+		...baseConfig,
+		type: "stats",
+		params: JSON.stringify({
+			attribute: [attribute],
+			stat,
+			...statsBaseParams,
+		}),
+		plotId,
+	});
+
+	// Data metrics configuration
+	const dataConfig = {
+		...baseConfig,
+		type: "data",
 		params: JSON.stringify({
 			attributes: [
 				"timestamp", "key", "max_temperature",
 				"min_temperature", "mean_temperature",
 				"rain", "wind_speed",
 			],
-			filters: [
-				{
-					property_name: "key",
-					operator: "eq",
-					property_value: region,
-				},
-				{
-					property_name: "timestamp",
-					operator: "gte",
-					property_value: startDate,
-				},
-				{
-					property_name: "timestamp",
-					operator: "lte",
-					property_value: endDate,
-				},
-			],
+			filters: timeFilter,
 			order_by: {
 				field: "timestamp",
 				order: "asc",
 			},
 		}),
 		plotId: "metrics",
-	},
-	{
-		type: "stats",
-		project: "thalla_project",
-		collection: "weather_data",
-		params: JSON.stringify({
-			attribute: ["mean_temperature"],
-			stat: "avg",
-			interval: `every_${differenceInDays}_days`,
-			start_time: startDate,
-			end_time: endDate,
-			filters: [{
-				property_name: "key",
-				operator: "eq",
-				property_value: region,
-			}],
-			group_by: "key",
-		}),
-		plotId: "meanMeanTemperature",
-	},
-	{
-		type: "stats",
-		project: "thalla_project",
-		collection: "weather_data",
-		params: JSON.stringify({
-			attribute: ["max_temperature"],
-			stat: "max",
-			interval: `every_${differenceInDays}_days`,
-			start_time: startDate,
-			end_time: endDate,
-			filters: [{
-				property_name: "key",
-				operator: "eq",
-				property_value: region,
-			}],
-			group_by: "key",
-		}),
-		plotId: "maxMaxTemperature",
-	},
-	{
-		type: "stats",
-		project: "thalla_project",
-		collection: "weather_data",
-		params: JSON.stringify({
-			attribute: ["min_temperature"],
-			stat: "min",
-			interval: `every_${differenceInDays}_days`,
-			start_time: startDate,
-			end_time: endDate,
-			filters: [{
-				property_name: "key",
-				operator: "eq",
-				property_value: region,
-			}],
-			group_by: "key",
-		}),
-		plotId: "minMinTemperature",
-	},
-	{
-		type: "stats",
-		project: "thalla_project",
-		collection: "weather_data",
-		params: JSON.stringify({
-			attribute: ["rain"],
-			stat: "sum",
-			interval: `every_${differenceInDays}_days`,
-			start_time: startDate,
-			end_time: endDate,
-			filters: [{
-				property_name: "key",
-				operator: "eq",
-				property_value: region,
-			}],
-			group_by: "key",
-		}),
-		plotId: "rainSum",
-	},
-	{
-		type: "stats",
-		project: "thalla_project",
-		collection: "weather_data",
-		params: JSON.stringify({
-			attribute: ["wind_speed"],
-			stat: "avg",
-			interval: `every_${differenceInDays}_days`,
-			start_time: startDate,
-			end_time: endDate,
-			filters: [{
-				property_name: "key",
-				operator: "eq",
-				property_value: region,
-			}],
-			group_by: "key",
-		}),
-		plotId: "meanWindSpeed",
-	},
-];
+	};
+
+	// Stats configurations
+	const statsConfigs = [
+		createStatsConfig("mean_temperature", "avg", "meanMeanTemperature"),
+		createStatsConfig("max_temperature", "max", "maxMaxTemperature"),
+		createStatsConfig("min_temperature", "min", "minMinTemperature"),
+		createStatsConfig("rain", "sum", "rainSum"),
+		createStatsConfig("wind_speed", "avg", "meanWindSpeed"),
+	];
+
+	// Return all configurations
+	return [dataConfig, ...statsConfigs];
+};
 
