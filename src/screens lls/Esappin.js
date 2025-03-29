@@ -5,36 +5,33 @@ import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
 import useInit from "../utils/screen-init.js";
 import esappinConfigs, { organization } from "../config/EsappinConfig.js";
-import { getCustomDateTime, debounce, findKeyByText } from "../utils/data-handling-functions.js";
+import { getCustomDateTime, debounce, findKeyByText, isValidArray } from "../utils/data-handling-functions.js";
 import { monthNames } from "../utils/useful-constants.js";
 import { cardFooter, LoadingIndicator, StickyBand, DataWarning } from "../utils/rendering-items.js";
 
 const PRODUCTS = [
+	{ value: "Erdbeeren", text: "Erdbeeren" },
+	{ value: "Gerstefeld G1", text: "Gerstefeld G1" },
 	{ value: "Rapsfeld B1", text: "Rapsfeld B1" },
 	{ value: "Rapsfeld B2", text: "Rapsfeld B2" },
 	{ value: "Rapsfeld H1", text: "Rapsfeld H1" },
 	{ value: "Rapsfeld H2", text: "Rapsfeld H2" },
-	{ value: "Erdbeeren", text: "Erdbeeren" },
-	{ value: "Gerstefeld G1", text: "Gerstefeld G1" },
 ];
 
-const getMonthDetails = (month) => {
-	const paddedMonth = String(monthNames[month].no).padStart(2, "0");
-	const lastDay = new Date(2024, monthNames[month].no, 0).getDate();
-	return {
-		paddedMonth,
-		lastDay,
-		dateRange: {
-			month,
-			startDate: `2024-${paddedMonth}-01`,
-			endDate: `2024-${paddedMonth}-${lastDay}`,
-		},
-	};
-};
-
-const isValidArray = (arr) => Array.isArray(arr) && arr.length > 0;
-
 const Esappin = () => {
+	const getMonthDetails = useMemo(() => (month) => {
+		const paddedMonth = String(monthNames[month].no).padStart(2, "0");
+		const lastDay = new Date(2024, monthNames[month].no, 0).getDate();
+		return {
+			paddedMonth,
+			lastDay,
+			dateRange: {
+				month,
+				startDate: `2024-${paddedMonth}-01`,
+				endDate: `2024-${paddedMonth}-${lastDay}`,
+			},
+		};
+	}, []);
 	const customDate = useMemo(() => getCustomDateTime(2024, 10), []);
 	const [dateRange, setDateRange] = useState(
 		() => getMonthDetails(customDate.getMonth()).dateRange,
@@ -53,23 +50,24 @@ const Esappin = () => {
 		const newMonth = newValue.$d.getMonth();
 
 		debouncedSetMonth(getMonthDetails(newMonth).dateRange, setDateRange);
-	}, [debouncedSetMonth]);
+	}, [debouncedSetMonth, getMonthDetails]);
 
 	const year = customDate.getFullYear();
 
 	const [product, setProduct] = useState(PRODUCTS[0].text);
 
-	const dropdownContent = [{
+	const handleProductChange = useCallback((event) => {
+		setProduct(event.target.value);
+	}, []);
+
+	const dropdownContent = useMemo(() => [{
 		id: "product",
 		size: "small",
 		label: "Select field",
 		value: product,
 		items: PRODUCTS,
-		onChange: (event) => {
-			setProduct(event.target.value);
-		},
-
-	}];
+		onChange: handleProductChange,
+	}], [product, handleProductChange]);
 
 	const formRefDate = useRef();
 	const formContentDate = useMemo(() => [
@@ -111,26 +109,33 @@ const Esappin = () => {
 		};
 	}, [metrics, isValidData]);
 
+	const indicatorValues = useMemo(() => {
+		const maxTemp = dataSets?.maxMaxTemperature && Array.isArray(dataSets.maxMaxTemperature)
+			? dataSets.maxMaxTemperature[0]?.max_max_temperature : null;
+
+		const minTemp = dataSets?.minMinTemperature && Array.isArray(dataSets.minMinTemperature)
+			? dataSets.minMinTemperature[0]?.min_min_temperature : null;
+
+		const precipSum = dataSets?.precipitationSum && Array.isArray(dataSets.precipitationSum)
+			? dataSets.precipitationSum.find((item) => item.key === product)?.sum_precipitation_sum : null;
+
+		return { maxTemp, minTemp, precipSum };
+	}, [dataSets, product]);
+
 	const monthlyOverview = useMemo(() => [
 		{
 			data: {
-				value: dataSets?.maxMaxTemperature && Array.isArray(dataSets.maxMaxTemperature)
-					? dataSets.maxMaxTemperature[0]?.max_max_temperature
-					: null,
+				value: indicatorValues.maxTemp,
 				subtitle: "Max Temperature",
 			},
-
 			range: [-35, 45],
 			color: "goldenrod",
 			shape: "angular",
 			suffix: "°C",
-
 		},
 		{
 			data: {
-				value: dataSets?.minMinTemperature && Array.isArray(dataSets.minMinTemperature)
-					? dataSets.minMinTemperature[0]?.min_min_temperature
-					: null,
+				value: indicatorValues.minTemp,
 				subtitle: "Min Temperature",
 			},
 			range: [-35, 45],
@@ -140,9 +145,7 @@ const Esappin = () => {
 		},
 		{
 			data: {
-				value: dataSets?.precipitationSum && Array.isArray(dataSets.precipitationSum)
-					? dataSets.precipitationSum.find((item) => item.key === product)?.sum_precipitation_sum
-					: null,
+				value: indicatorValues.precipSum,
 				subtitle: "Precipitation Sum",
 			},
 			range: [0, 500],
@@ -150,7 +153,7 @@ const Esappin = () => {
 			shape: "bullet",
 			suffix: "mm",
 		},
-	], [dataSets, product]);
+	], [indicatorValues]);
 
 	const charts = useMemo(() => [
 		{
@@ -218,10 +221,26 @@ const Esappin = () => {
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
 			<StickyBand dropdownContent={dropdownContent} formContent={formContentDate} formRef={formRefDate} />
+
+			{/* Monthly Overview Card */}
 			<Grid item xs={12} md={12} alignItems="center" flexDirection="column" padding={0}>
-				<Card title={`${monthNames[dateRange.month].text}'s Overview`} footer={cardFooter({ minutesAgo })}>
+				<Card title="Monthly Overview" footer={cardFooter({ minutesAgo })}>
 					<Grid container display="flex" direction="row" justifyContent="space-evenly" padding={0} spacing={1}>
-						{monthlyOverview.some((plot) => plot.data.value) ? (
+						{isLoading ? (
+							monthlyOverview.map((plotData, index) => (
+								<Grid
+									key={index}
+									item
+									xs={12}
+									sm={12}
+									md={plotData.shape === "bullet" ? 6 : 4}
+									justifyContent="center"
+									alignItems="center"
+								>
+									<LoadingIndicator minHeight={plotData.shape === "bullet" ? "120px" : "200px"} />
+								</Grid>
+							))
+						) : monthlyOverview.some((plot) => plot.data.value) ? (
 							monthlyOverview.map((plotData, index) => (
 								<Grid
 									key={index}
@@ -233,63 +252,61 @@ const Esappin = () => {
 									alignItems="center"
 								>
 									{plotData.data.value ? (
-										isLoading ? (
-											<LoadingIndicator />
-										) : (
-											<Plot
-												showLegend
-												scrollZoom
-												height={plotData.shape === "bullet" ? "120px" : "200px"}
-												data={[
-													{
-														type: "indicator",
-														mode: "gauge+number",
-														value: plotData.data.value,
-														range: plotData.range,
-														color: plotData.color,
-														shape: plotData.shape,
-														indicator: "primary",
-														textColor: "primary",
-														suffix: plotData.suffix,
-													},
-												]}
-												displayBar={false}
-												title={plotData.data.subtitle}
-											/>
-										)
-									) : null}
+										<Plot
+											showLegend
+											scrollZoom
+											height={plotData.shape === "bullet" ? "120px" : "200px"}
+											data={[
+												{
+													type: "indicator",
+													mode: "gauge+number",
+													value: plotData.data.value,
+													range: plotData.range,
+													color: plotData.color,
+													shape: plotData.shape,
+													indicator: "primary",
+													textColor: "primary",
+													suffix: plotData.suffix,
+												},
+											]}
+											displayBar={false}
+											title={plotData.data.subtitle}
+										/>
+									) : (
+										<DataWarning minHeight={plotData.shape === "bullet" ? "120px" : "200px"} />
+									)}
 								</Grid>
 							))
 						) : (
 							<Grid item xs={12}>
-								<DataWarning />
+								<DataWarning minHeight="200px" />
 							</Grid>
 						)}
 					</Grid>
 				</Card>
 			</Grid>
-			{isValidData ? (
-				<>
-					{charts.map((card, index) => (
-						<Grid key={index} item xs={12} sm={12} md={6} mb={index === charts.length - 1 ? 2 : 0}>
-							<Card title={card.title} footer={cardFooter({ minutesAgo })}>
-								{isLoading ? (<LoadingIndicator />
-								) : (
-									<Plot
-										scrollZoom
-										data={card.data}
-										title={dateRange.month ? `${monthNames[dateRange.month].text} ${year}` : ""}
-										showLegend={index === 0 || 3}
-										height="300px"
-										xaxis={card?.xaxis}
-										yaxis={card?.yaxis}
-									/>
-								)}
-							</Card>
-						</Grid>
-					))}
-				</>
-			) : (<DataWarning />)}
+
+			{/* Chart Cards */}
+			{charts.map((card, index) => (
+				<Grid key={index} item xs={12} sm={12} md={6} mb={index === charts.length - 1 ? 2 : 0}>
+					<Card title={card.title} footer={cardFooter({ minutesAgo })}>
+						{isLoading ? (<LoadingIndicator minHeight="300px" />
+						) : isValidData ? (
+							<Plot
+								scrollZoom
+								data={card.data}
+								title={dateRange.month ? `${monthNames[dateRange.month].text} ${year}` : ""}
+								showLegend={index === 0 || index === 3}
+								height="300px"
+								xaxis={card?.xaxis}
+								yaxis={card?.yaxis}
+							/>
+						) : (
+							<DataWarning minHeight="300px" />
+						)}
+					</Card>
+				</Grid>
+			))}
 		</Grid>
 	);
 };

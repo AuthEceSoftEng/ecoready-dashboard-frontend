@@ -59,8 +59,9 @@ const TheLegendControl = ({ gdata, selectedLayerIndex }) => {
 
 const Legend = ({ min, max, unit, colorscale = choroplethColors }) => {
 	const mean = (min + max) / 2;
-	const { roundUpToNextProductMax, formattedNumberMax } = formatNumber(max, "Max");
-	const { roundUpToNextProductMean, formattedNumberMean } = formatNumber(mean, "Mean");
+
+	const { formattedNumberMax } = formatNumber(max, "Max");
+	const { formattedNumberMean } = formatNumber(mean, "Mean");
 
 	/* <h4 style={{ margin: "0 10px 0 0" }}>{title}</h4> */
 	return (

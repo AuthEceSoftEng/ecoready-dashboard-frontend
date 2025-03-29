@@ -5,7 +5,6 @@ import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
 import useInit from "../utils/screen-init.js";
 import { probioConfigs, organization } from "../config/ProbioConfig.js";
-// import { monthNames } from "../utils/useful-constants.js";
 import { calculateDates, debounce } from "../utils/data-handling-functions.js";
 import { cardFooter, StickyBand, LoadingIndicator, DataWarning } from "../utils/rendering-items.js";
 
@@ -36,6 +35,8 @@ const Probio = () => {
 			customType: "date-range",
 			id: "dateRange",
 			type: "desktop",
+			minDate: new Date(2023, 0, 1),
+			maxDate: new Date(2024, 11, 31),
 			startValue: startDate,
 			startLabel: "Start date",
 			endValue: endDate,
@@ -58,31 +59,25 @@ const Probio = () => {
 	const metrics = useMemo(() => dataSets?.metrics || [], [dataSets]);
 	const isValidData = useMemo(() => metrics.length > 0, [metrics]);
 
+	const chartData = useMemo(() => ({
+		timestamps: metrics.map((item) => item.timestamp),
+		tempMax: metrics.map((item) => item.air_temperature_max),
+		tempAvg: metrics.map((item) => item.air_temperature_avg),
+		tempMin: metrics.map((item) => item.air_temperature_min),
+		pressure: metrics.map((item) => item.air_pressure),
+		humidity: metrics.map((item) => item.air_humidity),
+		tempAvg100: metrics.map((item) => item.air_temperature_avg * 100),
+		tempAvg10: metrics.map((item) => item.air_temperature_avg * 10),
+		humidity10: metrics.map((item) => item.air_humidity * 10),
+	}), [metrics]);
+
 	const graphConfigs = useMemo(() => [
 		{
 			title: "Temperature Evolution Per Day",
 			data: [
-				{
-					x: metrics.map((item) => item.timestamp),
-					y: metrics.map((item) => item.air_temperature_max),
-					type: "bar",
-					title: "Max",
-					color: "primary",
-				},
-				{
-					x: metrics.map((item) => item.timestamp),
-					y: metrics.map((item) => item.air_temperature_avg),
-					type: "bar",
-					title: "Avg",
-					color: "secondary",
-				},
-				{
-					x: metrics.map((item) => item.timestamp),
-					y: metrics.map((item) => item.air_temperature_min),
-					type: "bar",
-					title: "Min",
-					color: "third",
-				},
+				{ x: chartData.timestamps, y: chartData.tempMax, type: "bar", title: "Max", color: "primary" },
+				{ x: chartData.timestamps, y: chartData.tempAvg, type: "bar", title: "Avg", color: "secondary" },
+				{ x: chartData.timestamps, y: chartData.tempMin, type: "bar", title: "Min", color: "third" },
 			],
 			xaxis: { title: "Days" },
 			yaxis: { title: "Temperature (°C)" },
@@ -90,99 +85,37 @@ const Probio = () => {
 		{
 			title: "Air Temperature Vs Pressure Correlation",
 			data: [
-				{
-					x: metrics.map((item) => item.timestamp),
-					y: metrics.map((item) => item.air_temperature_avg * 100),
-					type: "scatter",
-					mode: "lines",
-					title: "Avg Temperature / 100",
-					color: "secondary",
-				},
-				{
-					x: metrics.map((item) => item.timestamp),
-					y: metrics.map((item) => item.air_pressure),
-					type: "scatter",
-					mode: "lines",
-					title: "Air Pressure",
-					color: "third",
-				},
+				{ x: chartData.timestamps, y: chartData.tempAvg100, type: "scatter", mode: "lines", title: "Avg Temperature / 100", color: "secondary" },
+				{ x: chartData.timestamps, y: chartData.pressure, type: "scatter", mode: "lines", title: "Air Pressure", color: "third" },
 			],
 			xaxis: { title: "Days" },
 		},
 		{
 			title: "Air Temperature Vs Humidity Correlation",
 			data: [
-				{
-					x: metrics.map((item) => item.timestamp),
-					y: metrics.map((item) => item.air_temperature_avg * 10),
-					type: "scatter",
-					mode: "lines",
-					title: "Avg Temperature / 10",
-					color: "secondary",
-				},
-				{
-					x: metrics.map((item) => item.timestamp),
-					y: metrics.map((item) => item.air_humidity),
-					type: "scatter",
-					mode: "lines",
-					title: "Air Pressure",
-					color: "third",
-				},
+				{ x: chartData.timestamps, y: chartData.tempAvg10, type: "scatter", mode: "lines", title: "Avg Temperature / 10", color: "secondary" },
+				{ x: chartData.timestamps, y: chartData.humidity, type: "scatter", mode: "lines", title: "Air Pressure", color: "third" },
 			],
 			xaxis: { title: "Days" },
 		},
 		{
 			title: "Air Pressure Vs Humidity Correlation",
 			data: [
-				{
-					x: metrics.map((item) => item.timestamp),
-					y: metrics.map((item) => item.air_pressure),
-					type: "scatter",
-					mode: "lines",
-					title: "Air Pressure",
-					color: "primary",
-				},
-				{
-					x: metrics.map((item) => item.timestamp),
-					y: metrics.map((item) => item.air_humidity * 10),
-					type: "scatter",
-					mode: "lines",
-					title: "Air Pressure / 10",
-					color: "third",
-				},
+				{ x: chartData.timestamps, y: chartData.pressure, type: "scatter", mode: "lines", title: "Air Pressure", color: "primary" },
+				{ x: chartData.timestamps, y: chartData.humidity10, type: "scatter", mode: "lines", title: "Air Pressure / 10", color: "third" },
 			],
 			xaxis: { title: "Days" },
 		},
 		{
 			title: "Complete Overview",
 			data: [
-				{
-					x: metrics.map((item) => item.timestamp),
-					y: metrics.map((item) => item.air_temperature_max * 100),
-					type: "bar",
-					title: "Max Temperature / 100",
-					color: "secondary",
-				},
-				{
-					x: metrics.map((item) => item.timestamp),
-					y: metrics.map((item) => item.air_pressure),
-					type: "scatter",
-					mode: "lines",
-					title: "Air Pressure",
-					color: "primary",
-				},
-				{
-					x: metrics.map((item) => item.timestamp),
-					y: metrics.map((item) => item.air_humidity * 10),
-					type: "scatter",
-					mode: "lines",
-					title: "Air Pressure / 10",
-					color: "third",
-				},
+				{ x: chartData.timestamps, y: chartData.tempMax.map((temp) => temp * 100), type: "bar", title: "Max Temperature / 100", color: "secondary" },
+				{ x: chartData.timestamps, y: chartData.pressure, type: "scatter", mode: "lines", title: "Air Pressure", color: "primary" },
+				{ x: chartData.timestamps, y: chartData.humidity10, type: "scatter", mode: "lines", title: "Air Pressure / 10", color: "third" },
 			],
 			xaxis: { title: "Days" },
 		},
-	], [metrics]);
+	], [chartData]);
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
@@ -192,19 +125,17 @@ const Probio = () => {
 					{graphConfigs.map((card, index) => (
 						<Grid key={index} item xs={12} sm={12} md={6} mb={index === graphConfigs.length - 1 ? 1 : 0}>
 							<Card title={card.title} footer={cardFooter({ minutesAgo })}>
-								{isValidData
-									? isLoading ? (<LoadingIndicator />
-									) : (
-										<Plot
-											scrollZoom
-											data={card.data}
-											// showLegend={index === 0}
-											height="300px"
-											xaxis={card.xaxis}
-											yaxis={card.yaxis}
-										/>
-									) : (<DataWarning />
-									)}
+								{isLoading ? (<LoadingIndicator minHeight="300px" />
+								) : isValidData ? (
+									<Plot
+										scrollZoom
+										data={card.data}
+										height="300px"
+										xaxis={card.xaxis}
+										yaxis={card.yaxis}
+									/>
+								) : (<DataWarning minHeight="300px" />
+								)}
 							</Card>
 						</Grid>
 					))}

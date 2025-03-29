@@ -1,4 +1,4 @@
-import "./disableWarnings";
+import "./disable-warnings.js";
 
 import { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
