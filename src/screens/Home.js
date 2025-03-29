@@ -6,6 +6,9 @@ import Card from "../components/Card.js";
 import { PrimaryBorderButton } from "../components/Buttons.js";
 import { labs, products } from "../utils/useful-constants.js";
 
+const excludedProducts = new Set(["Oilseeds", "Cereals", "Sheep/Goat Meat"]);
+const mapProducts = new Set(products.filter((product) => !excludedProducts.has(product.text)).map((product) => product));
+
 const imageStyles = {
 	height: "100%",
 	objectFit: "contain",
@@ -63,43 +66,15 @@ const CardSection = ({ items, onCardClick }) => {
 						}}
 						onClick={() => onCardClick?.(item)}
 					>
-						<Box
-							sx={{
-								width: "100%",
-								mb: 1,
-								display: "flex",
-								justifyContent: "center",
-								alignItems: "center",
-								boxSizing: "border-box",
-							}}
-						>
-							<img
-								src={item.image}
-								alt={item.title || item.text}
-								style={imageStyles}
-							/>
+						<Box sx={{ width: "100%", mb: 1, display: "flex", justifyContent: "center", alignItems: "center", boxSizing: "border-box" }}>
+							<img src={item.image} alt={item.title || item.text} style={imageStyles} />
 						</Box>
-						<Typography
-							variant="body2"
-							sx={{
-								color: "text.secondary",
-								fontSize: "0.875rem",
-								mb: 1,
-								padding: "0 8px",
-							}}
-						>
+
+						<Typography variant="body2" sx={{ color: "text.secondary", fontSize: "0.875rem", mb: 1, padding: "0 8px" }}>
 							{item.description}
 						</Typography>
 
-						<Box
-							sx={{
-								display: "flex",
-								flexDirection: "column", // Stack buttons vertically
-								alignItems: "center",
-								gap: "8px", // Space between buttons
-								mb: 1,
-							}}
-						>
+						<Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", mb: 1 }}>
 							<PrimaryBorderButton
 								id={`view-details-${index}`}
 								title="Go to Living Lab page"
@@ -116,9 +91,7 @@ const CardSection = ({ items, onCardClick }) => {
 };
 
 const getRelevantLabs = (product) => labs.filter(
-	(lab) => lab.title
-			&& (product.relevantLLs?.includes(lab.title)
-				|| lab.products.includes(product.value)),
+	(lab) => lab.title && (product.relevantLLs?.includes(lab.title) || lab.products.includes(product.value)),
 );
 
 const ProductCardSection = ({ items, onCardClick, showLabsLabel }) => {
@@ -127,7 +100,7 @@ const ProductCardSection = ({ items, onCardClick, showLabsLabel }) => {
 	return (
 		<Grid container spacing={2} sx={{ mt: 2 }}>
 			{items.map((item, index) => {
-				const relevantLabs = getRelevantLabs(item); // Get the relevant labs
+				const relevantLabs = getRelevantLabs(item);
 
 				return (
 					<Grid key={index} item xs={12} sm={12} md={12} lg={6}>
@@ -138,26 +111,9 @@ const ProductCardSection = ({ items, onCardClick, showLabsLabel }) => {
 							sx={{ display: "flex", flexDirection: "column" }}
 							onClick={() => onCardClick?.(item)}
 						>
-							<Box
-								sx={{
-									display: "flex",
-									justifyContent: "space-between",
-									alignItems: "center",
-									flexWrap: "nowrap",
-									gap: "16px",
-									width: "100%",
-								}}
-							>
+							<Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "nowrap", gap: "16px", width: "100%" }}>
 								{/* Image Box */}
-								<Box
-									sx={{
-										flex: "1",
-										display: "flex",
-										justifyContent: "center",
-										alignItems: "center",
-										boxSizing: "border-box",
-									}}
-								>
+								<Box sx={{ flex: "1", display: "flex", justifyContent: "center", alignItems: "center", boxSizing: "border-box" }}>
 									<img
 										src={item.image || `/product_images/${item.value}.png`}
 										alt={item.title || item.text}
@@ -169,25 +125,9 @@ const ProductCardSection = ({ items, onCardClick, showLabsLabel }) => {
 								</Box>
 
 								{/* Labs Label, Buttons, and Logos */}
-								<Box
-									sx={{
-										display: "flex",
-										flexDirection: "column", // Stack the elements vertically
-										alignItems: "center",
-										flex: "1",
-										gap: "0px",
-									}}
-								>
+								<Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", flex: "1", gap: "0px" }}>
 									{/* Buttons */}
-									<Box
-										sx={{
-											display: "flex",
-											flexDirection: "column", // Stack buttons vertically
-											alignItems: "center",
-											gap: "8px", // Space between buttons
-											mb: 1,
-										}}
-									>
+									<Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", mb: 1 }}>
 										<PrimaryBorderButton
 											id={`view-details-${index}`}
 											title="View stats"
@@ -195,39 +135,33 @@ const ProductCardSection = ({ items, onCardClick, showLabsLabel }) => {
 											height="27px"
 											onClick={() => navigate("/products", { state: { selectedProduct: item.text } })}
 										/>
-										<PrimaryBorderButton
-											id={`view-on-map-${index}`}
-											title="View map"
-											width="115px"
-											height="27px"
-											onClick={() => navigate("/map", { state: { selectedProduct: item.text } })}
-										/>
+										{mapProducts.has(item) && (
+											<PrimaryBorderButton
+												id={`view-on-map-${index}`}
+												title="View map"
+												width="115px"
+												height="27px"
+												onClick={() => {
+													// If product has options property and it's an array with items
+													if (item.subheader) {
+														// Navigate to map with the first option
+														navigate("/map", { state: { selectedProduct: item.prices.products[0].toLowerCase() } });
+													} else {
+														// Navigate with the product itself (current behavior)
+														navigate("/map", { state: { selectedProduct: item.text } });
+													}
+												}}
+											/>
+										)}
 									</Box>
 
 									{/* Relevant LLs text and logos */}
 									{showLabsLabel && (
-										<Box
-											sx={{
-												display: "flex",
-												alignItems: "center",
-												gap: "8px", // Space between text and logos
-											}}
-										>
-											<Typography
-												variant="subtitle1"
-												sx={{ fontWeight: "bold", textAlign: "center" }}
-											>
+										<Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
+											<Typography variant="subtitle1" sx={{ fontWeight: "bold", textAlign: "center" }}>
 												{"LLs:"}
 											</Typography>
-											<Box
-												sx={{
-													display: "flex",
-													justifyContent: "flex-start",
-													alignItems: "center",
-													gap: "8px",
-													flexWrap: "wrap",
-												}}
-											>
+											<Box sx={{ display: "flex", justifyContent: "flex-start", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
 												{relevantLabs.length > 0 ? (
 													relevantLabs.map((lab) => (
 														<img
@@ -244,14 +178,7 @@ const ProductCardSection = ({ items, onCardClick, showLabsLabel }) => {
 														/>
 													))
 												) : (
-													<Typography
-														variant="body2"
-														sx={{
-															color: "text.secondary",
-															fontSize: "0.875rem",
-															textAlign: "center",
-														}}
-													>
+													<Typography variant="body2" sx={{ color: "text.secondary", fontSize: "0.875rem", textAlign: "center" }}>
 														{"-"}
 													</Typography>
 												)}

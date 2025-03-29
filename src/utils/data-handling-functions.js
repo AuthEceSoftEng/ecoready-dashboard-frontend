@@ -105,6 +105,16 @@ export const reducer = (state, action) => {
 			};
 		}
 
+		case "CACHE_RESTORE": {
+			return {
+				...state,
+				isLoading: false,
+				dataSets: action.payload.dataSets,
+				minutesAgo: action.payload.minutesAgo,
+				isCached: true, // Optional flag to indicate data is from cache
+			};
+		}
+
 		case "UPDATE_MINUTES_AGO": {
 			if (!state.pageRefreshTime) return state;
 
@@ -267,32 +277,35 @@ export const findKeyByText = (array, text, details = false) => {
 
 export const isValidArray = (arr) => Array.isArray(arr) && arr.length > 0;
 
-export const formatNumber = (num, suffix = "") => {
-	const roundToNextTen = (n) => {
-		const magnitude = 10 ** Math.floor(Math.log10(n));
-		return Math.ceil(n / magnitude) * magnitude;
-	};
-
-	const formatWithSuffix = (n) => {
-		const divisions = [
-			{ value: 1e9, symbol: "B" },
-			{ value: 1e6, symbol: "M" },
-			{ value: 1e3, symbol: "K" },
-		];
-
-		const division = divisions.find((d) => n >= d.value);
-		return division
-			? (n / division.value).toFixed(2) + division.symbol
-			: roundToNextTen(n).toString();
-	};
-
-	const rounded = roundToNextTen(Math.ceil(num / 10) * 10);
-
-	return {
-		[`roundUpToNextProduct${suffix}`]: rounded,
-		[`formattedNumber${suffix}`]: formatWithSuffix(num),
-	};
+// Utility function to round numbers to the next magnitude
+const roundToNextTen = (n) => {
+	const magnitude = 10 ** Math.floor(Math.log10(n));
+	return Math.ceil(n / magnitude) * magnitude;
 };
+
+// Helper function to format numbers with appropriate suffixes
+const formatWithSuffix = (n) => {
+	const divisions = [
+		{ value: 1e9, symbol: "B" },
+		{ value: 1e6, symbol: "M" },
+		{ value: 1e3, symbol: "K" },
+	];
+
+	const division = divisions.find((d) => n >= d.value);
+
+	if (division) return (n / division.value).toFixed(2) + division.symbol;
+
+	// Use more precise formatting for smaller numbers
+	if (n < 10) return n.toFixed(2);
+
+	if (n < 100) return n.toFixed(1);
+
+	if (n < 1000) return Math.round(n).toString();
+
+	return roundToNextTen(n).toString();
+};
+
+export const formatNumber = (num, suffix = "") => ({ [`formattedNumber${suffix}`]: formatWithSuffix(num) });
 
 export const generateYearsArray = (startYear, endYear) => Array.from(
 	{ length: endYear - startYear + 1 },

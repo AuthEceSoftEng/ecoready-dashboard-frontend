@@ -5,7 +5,7 @@ import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
 import useInit from "../utils/screen-init.js";
 import ecoReadyMasuriaConfigs, { organization } from "../config/EcoReadyMasuriaConfig.js";
-import { calculateDates, getCustomDateTime, findKeyByText } from "../utils/data-handling-functions.js";
+import { calculateDates, findKeyByText } from "../utils/data-handling-functions.js";
 import { monthNames } from "../utils/useful-constants.js";
 import { cardFooter, StickyBand, DataWarning, LoadingIndicator } from "../utils/rendering-items.js";
 
@@ -20,11 +20,12 @@ const EcoReadyMasuria = () => {
 	const [year, setYear] = useState("2014");
 	const [stationName, setStationName] = useState(REGIONS[0].text);
 
-	const customDate = useMemo(() => getCustomDateTime(2006, 1), []);
-	console.log("Custom Date", customDate);
-
 	const handleYearChange = useCallback((newValue) => {
-		setYear(newValue.$y); // Select only the year from the resulting object
+		setYear(newValue.$y);
+	}, []);
+
+	const handleStationChange = useCallback((event) => {
+		setStationName(event.target.value);
 	}, []);
 
 	// Memoize the date calculations and fetchConfigs to reduce re-calculations
@@ -40,12 +41,9 @@ const EcoReadyMasuria = () => {
 			label: "Select Weather Station",
 			items: REGIONS,
 			value: stationName,
-			onChange: (event) => {
-				setStationName(event.target.value);
-			},
-
+			onChange: handleStationChange,
 		},
-	], [stationName]);
+	], [handleStationChange, stationName]);
 
 	const formRefDate = useRef();
 
@@ -166,29 +164,31 @@ const EcoReadyMasuria = () => {
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
 			<StickyBand dropdownContent={dropdownContent} formRef={formRefDate} formContent={formContentDate} />
-			{isValidData ? (
-				<>
-					{charts.map((card, index) => (
-						<Grid key={index} item xs={12} sm={12} md={6} mb={index === charts.length - 1 ? 2 : 0}>
-							<Card title={card.title} footer={cardFooter({ minutesAgo })}>
-								{isLoading ? (<LoadingIndicator />
-								) : (
-									<Plot
-										scrollZoom
-										data={card.data}
-										title={`${monthNames[month].text} ${year}`}
-										showLegend={index === 0}
-										height="300px"
-										xaxis={card.xaxis}
-										yaxis={card.yaxis}
-									/>
-								)}
-							</Card>
-						</Grid>
-					))}
-				</>
-			) : (<DataWarning />
-			)}
+
+			{/* Chart Cards - Always render, with conditional content */}
+			{charts.map((card, index) => (
+				<Grid key={index} item xs={12} sm={12} md={6} mb={index === charts.length - 1 ? 2 : 0}>
+					<Card
+						title={card.title}
+						footer={!isLoading && isValidData ? cardFooter({ minutesAgo }) : undefined}
+					>
+						{isLoading ? (<LoadingIndicator minHeight="300px" />
+						) : isValidData ? (
+							<Plot
+								scrollZoom
+								data={card.data}
+								title={`${monthNames[month].text} ${year}`}
+								showLegend={index === 0}
+								height="300px"
+								xaxis={card.xaxis}
+								yaxis={card.yaxis}
+							/>
+						) : (
+							<DataWarning minHeight="300px" />
+						)}
+					</Card>
+				</Grid>
+			))}
 		</Grid>
 	);
 };
