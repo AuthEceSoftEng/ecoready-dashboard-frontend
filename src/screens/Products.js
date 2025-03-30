@@ -245,7 +245,6 @@ const ProductsScreen = () => {
 	}), [priceConfigs, productionConfigs]);
 
 	const { isPriceLoading, isProductionLoading, dataSets, minutesAgo } = state;
-	console.log("DATASETS:", dataSets);
 
 	const pricesTimeline = useMemo(() => dataSets?.pricesTimeline || [], [dataSets]);
 	const periodPrices = useMemo(() => dataSets?.periodPrices || [], [dataSets]);
