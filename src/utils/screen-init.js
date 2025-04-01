@@ -10,7 +10,7 @@ import { useSnackbar } from "./index.js";
 // Cache storage with memory estimate
 const responseCache = {};
 const cacheSizes = {}; // Track size of each cache entry in bytes (estimated)
-const MAX_CACHE_SIZE_BYTES = 50 * 1024 * 1024; // 50MB max cache size
+const MAX_CACHE_SIZE_BYTES = 500 * 1024 * 1024; // 50MB max cache size
 let currentCacheSize = 0;
 const CACHE_LIFETIME = 25 * 60 * 1000;
 
@@ -73,7 +73,7 @@ const useInit = (organization, fetchConfigs) => {
 
 			// Check if cache is still valid
 			if (Date.now() - cachedData.timestamp < CACHE_LIFETIME) {
-				console.log("Using cached data for:", cacheKey);
+				// console.log("Using cached data for:", cacheKey);
 				isCacheUsed.current = true;
 
 				// Restore state from cache
@@ -176,8 +176,6 @@ const useInit = (organization, fetchConfigs) => {
 			// Track size and update total
 			cacheSizes[cacheKey] = dataSize;
 			currentCacheSize += dataSize;
-
-			console.log(`Cached data for: ${cacheKey} (${dataSize} bytes, total: ${currentCacheSize} bytes)`);
 		}
 	}, [state.isLoading, state.dataSets, cacheKey]);
 
