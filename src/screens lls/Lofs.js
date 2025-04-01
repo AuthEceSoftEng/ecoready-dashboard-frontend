@@ -299,7 +299,7 @@ const LOFS = () => {
 					type: "scatter",
 					mode: "lines+markers",
 					title: "Humidity",
-					color: "primary",
+					color: "third",
 				},
 			],
 			xaxis: { title: "Days" },

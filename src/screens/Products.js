@@ -1012,7 +1012,7 @@ const ProductsScreen = () => {
 										justifyContent="center"
 										alignItems="center"
 									>
-										{isProductionGauge && isProductionLoading ? (<LoadingIndicator />
+										{isProductionGauge && isPriceLoading ? (<LoadingIndicator />
 										) : plotData.warning ? (<DataWarning message={plotData.warning} />
 										) : isTimelinePlot ? (
 											<Plot scrollZoom data={plotData.data} xaxis={plotData.xaxis} yaxis={plotData.yaxis} />
