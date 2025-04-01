@@ -18,14 +18,17 @@ const REGIONS = [
 
 const EcoReadyMasuria = () => {
 	const [year, setYear] = useState("2014");
-	const [stationName, setStationName] = useState(REGIONS[0].text);
+	const [stationName, setStationName] = useState(REGIONS[0]);
 
 	const handleYearChange = useCallback((newValue) => {
 		setYear(newValue.$y);
 	}, []);
 
 	const handleStationChange = useCallback((event) => {
-		setStationName(event.target.value);
+		const selectedStation = findKeyByText(REGIONS, event.target.value, true);
+		if (selectedStation) {
+			setStationName(selectedStation);
+		}
 	}, []);
 
 	// Memoize the date calculations and fetchConfigs to reduce re-calculations
@@ -40,7 +43,7 @@ const EcoReadyMasuria = () => {
 			size: "small",
 			label: "Select Weather Station",
 			items: REGIONS,
-			value: stationName,
+			value: stationName.text,
 			onChange: handleStationChange,
 		},
 	], [handleStationChange, stationName]);
@@ -62,10 +65,10 @@ const EcoReadyMasuria = () => {
 		},
 	], [handleYearChange, year]);
 
-	const stationNameKey = findKeyByText(REGIONS, stationName);
+	// const stationNameKey = findKeyByText(REGIONS, stationName);
 	const fetchConfigs = useMemo(
-		() => (stationNameKey && year ? ecoReadyMasuriaConfigs(stationNameKey, year) : null),
-		[stationNameKey, year],
+		() => (year ? ecoReadyMasuriaConfigs(stationName.value, year) : null),
+		[stationName.value, year],
 	);
 
 	const { state } = useInit(organization, fetchConfigs);
