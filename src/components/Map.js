@@ -62,6 +62,7 @@ const Legend = ({ min, max, unit, colorscale = choroplethColors }) => {
 
 	const { formattedNumberMax } = formatNumber(max, "Max");
 	const { formattedNumberMean } = formatNumber(mean, "Mean");
+	const { formattedNumberMin } = formatNumber(min, "Min");
 
 	/* <h4 style={{ margin: "0 10px 0 0" }}>{title}</h4> */
 	return (
@@ -81,7 +82,7 @@ const Legend = ({ min, max, unit, colorscale = choroplethColors }) => {
 				{/* Value labels below the gradient bar */}
 				<div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between", fontSize: "12px", width: "200px", marginTop: "5px" }}>
 					<span>
-						{min}
+						{formattedNumberMin}
 						{" "}
 						{unit}
 					</span>
