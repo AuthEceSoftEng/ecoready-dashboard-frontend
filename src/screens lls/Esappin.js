@@ -54,17 +54,20 @@ const Esappin = () => {
 
 	const year = customDate.getFullYear();
 
-	const [product, setProduct] = useState(PRODUCTS[0].text);
+	const [product, setProduct] = useState(PRODUCTS[0]);
 
 	const handleProductChange = useCallback((event) => {
-		setProduct(event.target.value);
+		const selectedProduct = findKeyByText(PRODUCTS, event.target.value, true);
+		if (selectedProduct) {
+			setProduct(selectedProduct);
+		}
 	}, []);
 
 	const dropdownContent = useMemo(() => [{
 		id: "product",
 		size: "small",
 		label: "Select field",
-		value: product,
+		value: product.text,
 		items: PRODUCTS,
 		onChange: handleProductChange,
 	}], [product, handleProductChange]);
@@ -85,20 +88,20 @@ const Esappin = () => {
 		},
 	], [handleMonthChange]);
 
-	const productKey = findKeyByText(PRODUCTS, product);
 	const fetchConfigs = useMemo(
-		() => (productKey ? esappinConfigs(productKey, dateRange.startDate, dateRange.endDate) : null),
-		[productKey, dateRange.startDate, dateRange.endDate],
+		() => (esappinConfigs(product.value, dateRange.startDate, dateRange.endDate)),
+		[product.value, dateRange.startDate, dateRange.endDate],
 	);
 
 	const { state } = useInit(organization, fetchConfigs);
 	const { isLoading, dataSets, minutesAgo } = state;
+	console.log("dataSets", dataSets);
 	const metrics = useMemo(() => dataSets?.metrics || [], [dataSets]);
-	const isValidData = useMemo(() => metrics.length > 0, [metrics]);
+	// const isValidData = useMemo(() => metrics.length > 0, [metrics]);
 
 	// Pre-compute data transformations
 	const chartData = useMemo(() => {
-		if (!isValidData) return [];
+		if (!isValidArray(metrics)) return [];
 		const timestamps = metrics.map((item) => item.timestamp);
 		return {
 			timestamps,
@@ -107,18 +110,15 @@ const Esappin = () => {
 			precipitation: metrics.map((item) => item.precipitation_sum),
 			radiationSum: metrics.map((item) => item.shortwave_radiation_sum),
 		};
-	}, [metrics, isValidData]);
+	}, [metrics]);
 
 	const indicatorValues = useMemo(() => {
-		const maxTemp = dataSets?.maxMaxTemperature && Array.isArray(dataSets.maxMaxTemperature)
-			? dataSets.maxMaxTemperature[0]?.max_max_temperature : null;
+		const maxTemp = isValidArray(dataSets?.maxMaxTemperature) ? dataSets.maxMaxTemperature[0]?.max_max_temperature : null;
 
-		const minTemp = dataSets?.minMinTemperature && Array.isArray(dataSets.minMinTemperature)
-			? dataSets.minMinTemperature[0]?.min_min_temperature : null;
+		const minTemp = isValidArray(dataSets?.minMinTemperature) ? dataSets.minMinTemperature[0]?.min_min_temperature : null;
 
-		const precipSum = dataSets?.precipitationSum && Array.isArray(dataSets.precipitationSum)
-			? dataSets.precipitationSum.find((item) => item.key === product)?.sum_precipitation_sum : null;
-
+		const precipSum = isValidArray(dataSets?.precipitationSum)
+			? dataSets.precipitationSum.find((item) => item.key === product.value)?.sum_precipitation_sum : null;
 		return { maxTemp, minTemp, precipSum };
 	}, [dataSets, product]);
 
@@ -251,7 +251,7 @@ const Esappin = () => {
 									justifyContent="center"
 									alignItems="center"
 								>
-									{plotData.data.value ? (
+									{plotData.data.value !== null && plotData.data.value !== undefined ? (
 										<Plot
 											showLegend
 											scrollZoom
@@ -291,7 +291,7 @@ const Esappin = () => {
 				<Grid key={index} item xs={12} sm={12} md={6} mb={index === charts.length - 1 ? 2 : 0}>
 					<Card title={card.title} footer={cardFooter({ minutesAgo })}>
 						{isLoading ? (<LoadingIndicator minHeight="300px" />
-						) : isValidData ? (
+						) : isValidArray(metrics) ? (
 							<Plot
 								scrollZoom
 								data={card.data}

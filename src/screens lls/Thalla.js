@@ -5,7 +5,8 @@ import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
 import useInit from "../utils/screen-init.js";
 import { thallaConfigs, organization } from "../config/ThallaConfig.js";
-import { calculateDates, calculateDifferenceBetweenDates, debounce, findKeyByText } from "../utils/data-handling-functions.js";
+import { calculateDates, calculateDifferenceBetweenDates,
+	findKeyByText, debounce } from "../utils/data-handling-functions.js";
 import { cardFooter, LoadingIndicator, StickyBand, DataWarning } from "../utils/rendering-items.js";
 
 const REGIONS = [
@@ -29,7 +30,25 @@ const getDatasetValue = (dataset, key) => (dataset?.[0] ? dataset[0][key] : null
 const THALLA = () => {
 	const [startDate, setStartDate] = useState("2024-06-01");
 	const [endDate, setEndDate] = useState("2024-06-30");
-	const [region, setRegion] = useState(REGIONS[0].text);
+	const [region, setRegion] = useState(REGIONS[0]);
+
+	const handleRegionChange = useCallback((event) => {
+		const selectedRegion = findKeyByText(REGIONS, event.target.value, true);
+		if (selectedRegion) {
+			setRegion(selectedRegion);
+		}
+	}, []);
+
+	const dropdownContent = useMemo(() => [
+		{
+			id: "region",
+			items: REGIONS,
+			label: "Select Area",
+			value: region.text,
+			size: "small",
+			onChange: handleRegionChange,
+		},
+	], [handleRegionChange, region]);
 
 	const debouncedSetDate = useMemo(
 		() => debounce((date, setter) => {
@@ -43,22 +62,6 @@ const THALLA = () => {
 		if (!newValue?.$d) return;
 		debouncedSetDate(newValue.$d, setter);
 	}, [debouncedSetDate]);
-
-	const dropdownContent = useMemo(() => [
-		{
-			id: "region",
-			items: REGIONS,
-			label: "Select Area",
-			value: region,
-			size: "small",
-			width: "170px",
-			height: "40px",
-			color: "primary",
-			onChange: (event) => {
-				setRegion(event.target.value);
-			},
-		},
-	], [region]);
 
 	const formRefDate = useRef();
 
@@ -84,10 +87,10 @@ const THALLA = () => {
 
 	const { differenceInDays } = calculateDifferenceBetweenDates(startDate, endDate);
 
-	const regionKey = findKeyByText(REGIONS, region);
+	// const regionKey = findKeyByText(REGIONS, region);
 	const fetchConfigs = useMemo(
-		() => (isValidDateRange && regionKey ? thallaConfigs(regionKey, startDate, endDate, differenceInDays) : null),
-		[isValidDateRange, regionKey, startDate, endDate, differenceInDays],
+		() => (isValidDateRange ? thallaConfigs(region.value, startDate, endDate, differenceInDays) : null),
+		[isValidDateRange, region.value, startDate, endDate, differenceInDays],
 	);
 
 	const { state } = useInit(organization, fetchConfigs);
