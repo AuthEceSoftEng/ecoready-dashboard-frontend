@@ -772,6 +772,8 @@ const ProductsScreen = () => {
 			endValue: endDate,
 			endLabel: "End date",
 			labelSize: 12,
+			minDate: new Date("2010-01-01"),
+			maxDate: new Date(`${currentYear}-01-01`),
 			onStartChange: (newValue) => handleDateChange(newValue, setStartDate),
 			onEndChange: (newValue) => handleDateChange(newValue, setEndDate),
 		},

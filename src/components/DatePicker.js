@@ -46,9 +46,9 @@ const useStyles = makeStyles(() => ({
 	},
 	errorMessage: {
 		position: "absolute", // Position relative to container
-		left: "155px", // Position to the left of the date picker
-		top: "50%", // Position at 50% from top
-		transform: "translateY(-40%)", // Pull back up by half of its own height
+		// left: "155px", // Position to the left of the date picker
+		top: "75%", // Position at 50% from top
+		// transform: "translateY(-40%)", // Pull back up by half of its own height
 		color: "#d32f2f",
 		fontSize: "0.75rem",
 		fontFamily: "\"Roboto\", \"Helvetica\", \"Arial\", sans-serif",
