@@ -32,10 +32,20 @@ const EcoReadyMasuria = () => {
 	}, []);
 
 	// Memoize the date calculations and fetchConfigs to reduce re-calculations
-	const { month } = useMemo(
-		() => calculateDates(new Date(year, 0, 2)),
-		[year],
-	);
+	const { month } = useMemo(() => {
+		// Validate that year is a valid number
+		const yearNum = Number.parseInt(year, 10);
+		if (Number.isNaN(yearNum) || yearNum < 2001 || yearNum > 2015) {
+			// Return a default value if year is invalid
+			return {
+				month: new Date(2024, 1, 1).getMonth(),
+				// Include other properties that calculateDates would normally return
+			};
+		}
+
+		// If year is valid, proceed with calculation
+		return calculateDates(new Date(yearNum, 0, 2));
+	}, [year]);
 
 	const dropdownContent = useMemo(() => [
 		{
@@ -57,7 +67,7 @@ const EcoReadyMasuria = () => {
 			width: "170px",
 			sublabel: "Select Year",
 			views: ["year"],
-			value: `${year}`,
+			value: year,
 			minDate: new Date("2001-01-01"),
 			maxDate: new Date("2015-12-31"),
 			labelSize: 12,

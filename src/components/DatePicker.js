@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react"; // Add useEffect
 import { TextField } from "@mui/material";
 import { TimePicker, DateTimePicker, DesktopDatePicker, MobileDatePicker } from "@mui/x-date-pickers";
 import { makeStyles } from "@mui/styles";
@@ -56,7 +56,10 @@ const useStyles = makeStyles(() => ({
 		lineHeight: 1.66,
 		padding: "8px 12px",
 		width: "180px", // Fixed width
-		zIndex: 1,
+		backgroundColor: "#fff",
+		borderRadius: "4px",
+		boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+		zIndex: 9999,
 	},
 	datePickerWrapper: {
 		flexGrow: 1, // Take remaining space
@@ -116,6 +119,45 @@ const DatePicker = ({
 	const [customValue, setCustomValue] = useState(value);
 	const [error, setError] = useState(false);
 	const [errorMessage, setErrorMessage] = useState("");
+	const lastValidValueRef = useRef(value);
+	const datePickerRef = useRef(null);
+	const [isEditing, setIsEditing] = useState(false);
+
+	// Handle clicks outside the date picker
+	useEffect(() => {
+		const handleClickOutside = (event) => {
+			if (datePickerRef.current && !datePickerRef.current.contains(event.target) && isEditing) {
+				// If clicked outside and there's an error, reset to last valid value
+				if (error) {
+					// Force a reset of the component's value
+					const previousValue = lastValidValueRef.current;
+
+					// First clear the value then set it back to force UI update
+					setCustomValue(null);
+
+					// Use a short timeout to ensure the null value gets processed
+					setTimeout(() => {
+						setCustomValue(previousValue);
+						setError(false);
+						setErrorMessage("");
+						if (onChange) onChange(previousValue);
+					}, 0);
+				}
+
+				setIsEditing(false);
+			}
+		};
+
+		document.addEventListener("mousedown", handleClickOutside);
+		return () => {
+			document.removeEventListener("mousedown", handleClickOutside);
+		};
+	}, [error, onChange, isEditing]);
+
+	// Track when editing starts
+	const handleFocus = () => {
+		setIsEditing(true);
+	};
 
 	const handleChange = (newValue) => {
 		// First check if it's a valid date
@@ -130,6 +172,7 @@ const DatePicker = ({
 			} else {
 				// Valid date within range
 				setCustomValue(newValue);
+				lastValidValueRef.current = newValue; // Store as last valid value
 				setError(false);
 				setErrorMessage("");
 				if (onChange) onChange(newValue);
@@ -172,10 +215,26 @@ const DatePicker = ({
 		}
 	};
 
+	const handleBlur = (event) => {
+		// Get the input field's value
+		const inputValue = event.target.value;
+
+		// Check if the value is a valid and complete date
+		const inputDate = new Date(inputValue);
+
+		// Reset to last valid value if input is empty, incomplete, or invalid
+		if (!inputValue || inputValue.trim() === "" || Number.isNaN(inputDate.getTime())) {
+			setCustomValue(lastValidValueRef.current);
+			setError(false);
+			setErrorMessage("");
+			if (onChange) onChange(lastValidValueRef.current);
+		}
+	};
+
 	return (
 		<>
 			{type === "desktop" && (
-				<div className={classes.container}>
+				<div ref={datePickerRef} className={classes.container}>
 					<DesktopDatePicker
 						className={classes.date_picker}
 						views={views}
@@ -190,6 +249,8 @@ const DatePicker = ({
 								{...params}
 								error={error}
 								onKeyDown={handleKeyboardInput}
+								onBlur={handleBlur}
+								onFocus={handleFocus}
 							/>
 						)}
 						onChange={handleChange}
@@ -204,7 +265,7 @@ const DatePicker = ({
 				</div>
 			)}
 			{type === "mobile" && (
-				<div className={classes.container}>
+				<div ref={datePickerRef} className={classes.container}>
 					<MobileDatePicker
 						className={classes.date_picker}
 						views={views}
@@ -219,6 +280,8 @@ const DatePicker = ({
 								{...params}
 								error={error}
 								onKeyDown={handleKeyboardInput}
+								onBlur={handleBlur}
+								onFocus={handleFocus}
 							/>
 						)}
 						onChange={handleChange}
@@ -233,7 +296,7 @@ const DatePicker = ({
 				</div>
 			)}
 			{type === "time" && (
-				<div className={classes.container}>
+				<div ref={datePickerRef} className={classes.container}>
 					<TimePicker
 						className={classes.date_picker}
 						disabled={disabled}
@@ -244,6 +307,8 @@ const DatePicker = ({
 								{...params}
 								error={error}
 								onKeyDown={handleKeyboardInput}
+								onBlur={handleBlur}
+								onFocus={handleFocus}
 							/>
 						)}
 						onChange={handleChange}
@@ -258,7 +323,7 @@ const DatePicker = ({
 				</div>
 			)}
 			{type === "datetime" && (
-				<div className={classes.container}>
+				<div ref={datePickerRef} className={classes.container}>
 					<DateTimePicker
 						className={classes.date_picker}
 						views={views}
@@ -272,6 +337,8 @@ const DatePicker = ({
 								{...params}
 								error={error}
 								onKeyDown={handleKeyboardInput}
+								onBlur={handleBlur}
+								onFocus={handleFocus}
 							/>
 						)}
 						onChange={handleChange}
