@@ -43,6 +43,8 @@ const LivOrganic = () => {
 			endLabel: "End date",
 			background: "primary",
 			labelSize: 12,
+			minDate: new Date("2014-01-01"),
+			maxDate: new Date("2025-01-01"),
 			onStartChange: (newValue) => handleDateChange(newValue, setStartDate),
 			onEndChange: (newValue) => handleDateChange(newValue, setEndDate),
 		},

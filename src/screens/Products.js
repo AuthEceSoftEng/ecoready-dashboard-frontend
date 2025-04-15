@@ -875,7 +875,7 @@ const ProductsScreen = () => {
 			{/* PRODUCTION CARDS */}
 			<Grid item xs={12} md={12} alignItems="center" flexDirection="column">
 				<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2} sx={{ minHeight: "500px" }}>
-					{state.isLoading ? (
+					{state.isLoading || (isProductionLoading && isPriceLoading) ? (
 						<Grid item xs={12}><LoadingIndicator /></Grid>
 					) : dataSets.productProduction ? (
 						<>
@@ -898,11 +898,11 @@ const ProductsScreen = () => {
 									<Grid item xs={12} md={12} display="flex" justifyContent="flex-end">
 										<StickyBand sticky={false} dropdownContent={productionDropdowns} formRef={yearPickerRef} formContent={yearPickerProps} />
 									</Grid>
-									{isProductionLoading ? (<LoadingIndicator />
-									) : dataSets.productProduction.length === 0 ? (
+									{dataSets.productProduction.length === 0 ? (
 										<DataWarning message="No Available Production Data for the Specified Options Combination" />
 									) : (
 										<Grid container display="flex" direction="row" justifyContent="space-evenly" sx={{ flex: 1 }}>
+											{/* Rest of the production card content */}
 											<Grid container display="flex" direction="row" justifyContent="space-evenly" sx={{ flex: 1 }}>
 												<Grid item xs={12} sm={12} md={12} justifyContent="center" alignItems="center">
 													{europeOverview?.charts.gauge.warning ? (

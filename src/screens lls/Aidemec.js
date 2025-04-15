@@ -131,7 +131,7 @@ const AIDEMEC = () => {
 				subtitle: "Min Temperature",
 			},
 			range: [-35, 45],
-			color: "secondary",
+			color: "third",
 			shape: "angular",
 			suffix: "°C",
 		},

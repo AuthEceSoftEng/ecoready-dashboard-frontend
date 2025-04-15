@@ -82,11 +82,11 @@ const Esappin = () => {
 			views: ["month"],
 			minDate: new Date(2024, 8, 1),
 			maxDate: new Date(2024, 10, 30),
-			value: "2024-10-01",
+			value: customDate,
 			labelSize: 12,
 			onChange: handleMonthChange,
 		},
-	], [handleMonthChange]);
+	], [handleMonthChange, customDate]);
 
 	const fetchConfigs = useMemo(
 		() => (esappinConfigs(product.value, dateRange.startDate, dateRange.endDate)),
