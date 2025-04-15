@@ -106,7 +106,7 @@ const Header = ({ isAuthenticated }) => {
 			name: `${lab.title} (Relevant: ${product})`,
 			link: lab.path,
 		}))),
-	], [products, labs]); // Memoize to avoid unnecessary recalculations
+	], []); // Memoize to avoid unnecessary recalculations
 
 	// const isMenuOpenServices = Boolean(anchorElServices);
 	const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
