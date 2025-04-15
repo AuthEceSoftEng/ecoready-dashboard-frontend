@@ -10,8 +10,8 @@ import { cardFooter, LoadingIndicator, StickyBand, DataWarning } from "../utils/
 import { monthNames } from "../utils/useful-constants.js";
 
 const PRODUCTS = [
-	{ value: "Villa D Agri (PZ) - Az. Bosco Galdo", text: "Beans" },
-	{ value: "Metaponto - Pantanello", text: "Tomato" },
+	{ value: "Villa D Agri (PZ) - Az. Bosco Galdo", text: "Beans (Villa D Agri (PZ) - Az. Bosco Galdo)" },
+	{ value: "Metaponto - Pantanello", text: "Tomato (Metaponto - Pantanello)" },
 ];
 
 const AIDEMEC = () => {
@@ -78,11 +78,11 @@ const AIDEMEC = () => {
 			views: ["month"],
 			minDate: new Date(2024, 4, 1),
 			maxDate: new Date(2024, 9, 31),
-			value: "2024-06-01",
+			value: customDate,
 			labelSize: 12,
 			onChange: handleMonthChange,
 		},
-	], [handleMonthChange]);
+	], [handleMonthChange, customDate]);
 
 	const fetchConfigs = useMemo(
 		() => (aidemecConfigs(product.value, dateRange.startDate, dateRange.endDate)),
@@ -121,7 +121,7 @@ const AIDEMEC = () => {
 				subtitle: "Max Temperature",
 			},
 			range: [-35, 45],
-			color: "primary",
+			color: "goldenrod",
 			shape: "angular",
 			suffix: "°C",
 		},
@@ -192,14 +192,14 @@ const AIDEMEC = () => {
 					type: "scatter",
 					mode: "lines+markers",
 					title: "Max",
-					color: "primary",
+					color: "goldenrod",
 				},
 				{
 					x: chartData.timestamps,
 					y: chartData.medTemp,
 					type: "scatter",
 					mode: "lines+markers",
-					title: "Max",
+					title: "Avg",
 					color: "secondary",
 				},
 				{
@@ -230,7 +230,7 @@ const AIDEMEC = () => {
 					y: chartData.medHumidity,
 					type: "scatter",
 					mode: "lines+markers",
-					title: "Max",
+					title: "Avg",
 					color: "secondary",
 				},
 				{
