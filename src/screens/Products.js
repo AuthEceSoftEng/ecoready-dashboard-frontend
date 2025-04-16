@@ -73,6 +73,10 @@ const ProductsScreen = () => {
 	const [endDate, setEndDate] = useState("2024-12-31");
 	const [globalProduct, setGlobalProduct] = useState(selectedProduct || "Rice");
 
+	// Add these near your other state declarations
+	const [productionTimeoutReached, setProductionTimeoutReached] = useState(false);
+	const [priceTimeoutReached, setPriceTimeoutReached] = useState(false);
+
 	// Find the selected product's details from products array
 	const selectedProductDetails = findKeyByText(products, globalProduct, true);
 
@@ -142,7 +146,7 @@ const ProductsScreen = () => {
 		() => debounce((date, setter) => {
 			const { currentDate } = calculateDates(date);
 			setter(currentDate);
-		}, 0),
+		}, 2200),
 		[],
 	);
 
@@ -245,6 +249,46 @@ const ProductsScreen = () => {
 	}), [priceConfigs, productionConfigs]);
 
 	const { isPriceLoading, isProductionLoading, dataSets, minutesAgo } = state;
+
+	// Add this useEffect to handle production data timeout
+	useEffect(() => {
+		if (isProductionLoading) {
+			// Reset timeout flag when loading starts
+			setProductionTimeoutReached(false);
+
+			// Set a timeout (e.g., 10 seconds)
+			const timeoutId = setTimeout(() => {
+				if (isProductionLoading) {
+					setProductionTimeoutReached(true);
+				}
+			}, 10_000);
+
+			// Clean up timeout if loading finishes before timeout
+			return () => clearTimeout(timeoutId);
+		}
+	}, [isProductionLoading]);
+
+	// Add this useEffect to handle price data timeout
+	useEffect(() => {
+		if (isPriceLoading) {
+			// Reset timeout flag when loading starts
+			setPriceTimeoutReached(false);
+
+			// Set a timeout (e.g., 10 seconds)
+			const timeoutId = setTimeout(() => {
+				if (isPriceLoading) {
+					setPriceTimeoutReached(true);
+				}
+			}, 12_000);
+
+			// Clean up timeout if loading finishes before timeout
+			return () => clearTimeout(timeoutId);
+		}
+	}, [isPriceLoading]);
+
+	const hasProductionData = dataSets
+		&& dataSets.productProduction
+		&& (Array.isArray(dataSets.productProduction) ? dataSets.productProduction.length > 0 : !!dataSets.productProduction);
 
 	const pricesTimeline = useMemo(() => dataSets?.pricesTimeline || [], [dataSets]);
 	const periodPrices = useMemo(() => dataSets?.periodPrices || [], [dataSets]);
@@ -875,9 +919,13 @@ const ProductsScreen = () => {
 			{/* PRODUCTION CARDS */}
 			<Grid item xs={12} md={12} alignItems="center" flexDirection="column">
 				<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2} sx={{ minHeight: "500px" }}>
-					{state.isLoading || (isProductionLoading && isPriceLoading) ? (
-						<Grid item xs={12}><LoadingIndicator /></Grid>
-					) : dataSets.productProduction ? (
+					{(isPriceLoading && isProductionLoading && !productionTimeoutReached) ? (
+						<Grid item xs={12}><LoadingIndicator minHeight="500px" /></Grid>
+					) : productionTimeoutReached ? (
+						<Grid item xs={12}>
+							<DataWarning minHeight="400px" message="No Available Production Data for the Specified Product" />
+						</Grid>
+					) : (
 						<>
 							<Grid
 								item
@@ -898,9 +946,8 @@ const ProductsScreen = () => {
 									<Grid item xs={12} md={12} display="flex" justifyContent="flex-end">
 										<StickyBand sticky={false} dropdownContent={productionDropdowns} formRef={yearPickerRef} formContent={yearPickerProps} />
 									</Grid>
-									{dataSets.productProduction.length === 0 ? (
-										<DataWarning message="No Available Production Data for the Specified Options Combination" />
-									) : (
+									{isProductionLoading ? (<LoadingIndicator minHeight="405px" />
+									) : (hasProductionData ? (
 										<Grid container display="flex" direction="row" justifyContent="space-evenly" sx={{ flex: 1 }}>
 											{/* Rest of the production card content */}
 											<Grid container display="flex" direction="row" justifyContent="space-evenly" sx={{ flex: 1 }}>
@@ -943,7 +990,9 @@ const ProductsScreen = () => {
 												</Grid>
 											</Grid>
 										</Grid>
-									)}
+									) : (
+										<DataWarning message="No Available Production Data for the Specified Options Combination" />
+									))}
 								</Card>
 							</Grid>
 							<Grid
@@ -962,31 +1011,22 @@ const ProductsScreen = () => {
 								}}
 							>
 								<Card title="Production per Year" footer={cardFooter({ minutesAgo })} sx={{ display: "flex", flexDirection: "column" }}>
-									{isProductionLoading ? (<LoadingIndicator />
-									) : !dataSets.productProduction || dataSets.productProduction.length === 0 ? (
-										<DataWarning message="No Available Data for the Specified Options Combination" />
-									) : (
-										<Grid item xs={12} sm={12} justifyContent="center" alignItems="center" sx={{ flex: 1 }}>
-											{europeOverview?.charts.bars.data ? (
-												<Plot
-													scrollZoom
-													height="459px"
-													data={[...europeOverview.charts.bars.data].reverse()}
-													barmode="stack"
-													displayBar={false}
-													title={europeOverview.charts.bars.title}
-													xaxis={europeOverview.charts.bars.xaxis}
-												/>
-											) : (<DataWarning message="No Available Data for the Specified Options' Combination" />)}
-										</Grid>
-									)}
+									<Grid item xs={12} sm={12} justifyContent="center" alignItems="center" sx={{ flex: 1 }}>
+										{europeOverview?.charts.bars.data ? (
+											<Plot
+												scrollZoom
+												height="459px"
+												data={[...europeOverview.charts.bars.data].reverse()}
+												barmode="stack"
+												displayBar={false}
+												title={europeOverview.charts.bars.title}
+												xaxis={europeOverview.charts.bars.xaxis}
+											/>
+										) : (<DataWarning minHeight="459px" message="No Available Data for the Specified Options' Combination" />)}
+									</Grid>
 								</Card>
 							</Grid>
 						</>
-					) : (
-						<Grid item xs={12}>
-							<DataWarning message="No Available Production Data for the Specified Product" />
-						</Grid>
 					)}
 				</Grid>
 			</Grid>
@@ -995,8 +1035,8 @@ const ProductsScreen = () => {
 			<Grid item xs={12} md={12} mb={2} alignItems="center" flexDirection="column">
 				<Card title="Product per Country" footer={cardFooter({ minutesAgo })}>
 					<StickyBand sticky={false} dropdownContent={priceDropdowns} formRef={formRefDate} formContent={formContentDate} />
-					{state.isLoading || isPriceLoading ? (<LoadingIndicator />
-					) : existingCountries.length === 0 ? (<DataWarning message="No Available Pricing Data For the Specified Options' Combination" />
+					{state.isLoading || isPriceLoading ? (<LoadingIndicator minHeight="400px" />
+					) : existingCountries.length === 0 ? (<DataWarning minHeight="400px" message="No Available Pricing Data For the Specified Options' Combination" />
 					) : dateMetrics.isValidDateRange ? (
 						<Grid container display="flex" direction="row" justifyContent="space-evenly" padding={0} spacing={1}>
 							{countryOverview.map((plotData, index) => {
@@ -1042,7 +1082,7 @@ const ProductsScreen = () => {
 								);
 							})}
 						</Grid>
-					) : (<DataWarning message="Please Select a Valid Date Range" />
+					) : (<DataWarning minHeight="400px" message="Please Select a Valid Date Range" />
 					)}
 				</Card>
 			</Grid>
