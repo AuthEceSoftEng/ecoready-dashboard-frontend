@@ -69,6 +69,8 @@ const getMaxValue = (maxProd, prodTypeVal, country = "EU") => [
 const ProductsScreen = () => {
 	const location = useLocation();
 	const selectedProduct = location.state?.selectedProduct;
+	const selectedProductionProduct = location.state?.specificProduct;
+	const selectedPriceProduct = location.state?.productValue;
 	const [startDate, setStartDate] = useState("2024-01-01");
 	const [endDate, setEndDate] = useState("2024-12-31");
 	const [globalProduct, setGlobalProduct] = useState(selectedProduct || "Rice");
@@ -112,12 +114,10 @@ const ProductsScreen = () => {
 	}, [collectionOptions?.productTypes, pricesItems.fields, pricesItems.needsDropdown]);
 
 	const productionItems = useMemo(() => extractFields(selectedProductDetails, "production") || [], [selectedProductDetails]);
-	// console.log("Production Items:", productionItems);
 
 	const productionProducts = useMemo(() => productionItems.fields[0]?.products ?? [], [productionItems]);
 	const productTypes = useMemo(() => productionItems.fields[0]?.productTypes ?? [], [productionItems]);
 	const productionMetrics = useMemo(() => productionItems.fields[0]?.productionMetrics ?? [], [productionItems]);
-	// console.log("Production Product Types:", productTypes);
 	const [productionOptions, setProductionOptions] = useState({
 		year: "2024",
 		product: productionProducts?.[0] ?? null,
@@ -326,6 +326,10 @@ const ProductsScreen = () => {
 				const newProduct = event.target.value;
 				dispatch({ type: "FETCH_START" });
 
+				// Reset timeout flags when changing products
+				setProductionTimeoutReached(false);
+				setPriceTimeoutReached(false);
+
 				// Find the new product details
 				const newProductDetails = products.find((p) => p.text === newProduct);
 				const productionFields = extractFields(newProductDetails, "production").fields;
@@ -441,7 +445,6 @@ const ProductsScreen = () => {
 		// Map each key to its array
 		return productionKeys.map((key) => dataSets[key] || []);
 	}, [dataSets]);
-	// console.log("Combined Production Data:", production);
 
 	const maxProduction = useMemo(() => {
 		if (!dataSets) return [];
@@ -669,7 +672,7 @@ const ProductsScreen = () => {
 				id: "product",
 				items: priceProducts,
 				value: priceOptions.product,
-				label: "Select Product Type",
+				label: globalProduct === "Poultry" ? "Select Price Type" : "Select Product Type",
 				onChange: (event) => {
 					priceState.dispatch({ type: "FETCH_PRICE_START" });
 					setPriceOptions((prev) => ({ ...prev, product: event.target.value }));
@@ -991,7 +994,7 @@ const ProductsScreen = () => {
 											</Grid>
 										</Grid>
 									) : (
-										<DataWarning message="No Available Production Data for the Specified Options Combination" />
+										<DataWarning minHeight="409px" message="No Available Production Data for the Specified Options' Combination" />
 									))}
 								</Card>
 							</Grid>
@@ -1012,17 +1015,20 @@ const ProductsScreen = () => {
 							>
 								<Card title="Production per Year" footer={cardFooter({ minutesAgo })} sx={{ display: "flex", flexDirection: "column" }}>
 									<Grid item xs={12} sm={12} justifyContent="center" alignItems="center" sx={{ flex: 1 }}>
-										{europeOverview?.charts.bars.data ? (
-											<Plot
-												scrollZoom
-												height="459px"
-												data={[...europeOverview.charts.bars.data].reverse()}
-												barmode="stack"
-												displayBar={false}
-												title={europeOverview.charts.bars.title}
-												xaxis={europeOverview.charts.bars.xaxis}
-											/>
-										) : (<DataWarning minHeight="459px" message="No Available Data for the Specified Options' Combination" />)}
+										{isProductionLoading ? (<LoadingIndicator minHeight="454px" />
+										) : (
+											europeOverview?.charts.bars.data ? (
+												<Plot
+													scrollZoom
+													height="459px"
+													data={[...europeOverview.charts.bars.data].reverse()}
+													barmode="stack"
+													displayBar={false}
+													title={europeOverview.charts.bars.title}
+													xaxis={europeOverview.charts.bars.xaxis}
+												/>
+											) : (<DataWarning minHeight="459px" message="No Available Data for the Specified Options' Combination" />)
+										)}
 									</Grid>
 								</Card>
 							</Grid>

@@ -83,28 +83,16 @@ const onEachCountry = (feature, layer) => {
 const Map = () => {
 	const location = useLocation();
 	const selectedProduct = location.state?.selectedProduct;
+	const productValue = location.state?.productValue;
 	const navigate = useNavigate();
 	const [geoJsonData, setGeoJsonData] = useState(null);
 	const [showLegend, setShowLegend] = useState(false); // State for controlling legend visibility
+	// Update your state initialization
 	const [filters, setFilters] = useState({
 		year: "2024",
 		product: selectedProduct || "Rice",
+		productValue: productValue || undefined,
 	});
-	// console.log("Product", filters.product);
-
-	useEffect(() => {
-		if (selectedProduct) {
-			setFilters((prev) => ({
-				...prev,
-				product: selectedProduct,
-			}));
-		}
-	}, [selectedProduct]);
-
-	// const selectedProductDetails = findKeyByText(products, filters.product, true);
-
-	// const pricesItems = useMemo(() => extractFields(selectedProductDetails, "prices") || [], [selectedProductDetails]);
-	// const priceCollections = useMemo(() => (pricesItems.needsDropdown ? pricesItems.collections : []), [pricesItems]);
 
 	const [isDataReady, setIsDataReady] = useState(false);
 
@@ -226,7 +214,6 @@ const Map = () => {
 			}),
 		}));
 	}, [geoJsonData, statistics]);
-	// console.log("Created Geodata:", enhancedGeoJsonData);
 
 	// Add effect to monitor data readiness
 	useEffect(() => {
