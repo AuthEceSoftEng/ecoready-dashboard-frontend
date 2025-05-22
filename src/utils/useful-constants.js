@@ -206,6 +206,7 @@ export const products = [
 				{ value: "yield", text: "Yield" },
 			],
 		},
+		mapSet: new Set(["barley", "wheat", "maize", "oats", "rye", "sorghum", "triticale"]),
 		image: "/product_images/cereals.png",
 	},
 	{
@@ -281,7 +282,7 @@ export const products = [
 		subheader: true,
 		collections: ["dairy_prices", "dairy_production"],
 		prices: {
-			products: ["BUTTER", "BUTTEROIL", "CHEDDAR", "CREAM", "EDAM", "EMMENTAL", "GOUDA", "SMP", "WHEYPOWDER", "WMP"], // "DRINKING MILK",
+			products: ["butter", "butteroil", "cheddar", "cream", "edam", "emmental", "gouda", "smp", "wheypowder", "wmp"],
 		},
 		description: "Dairy products derived from milk processing",
 		image: "/product_images/dairy.jpg",
