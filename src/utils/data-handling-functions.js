@@ -113,6 +113,8 @@ export const reducer = (state, action) => {
 			return {
 				...state,
 				isLoading: false,
+				isPriceLoading: false,
+				isProductionLoading: false,
 				dataSets: action.payload.dataSets,
 				minutesAgo: action.payload.minutesAgo,
 				isCached: true, // Optional flag to indicate data is from cache
