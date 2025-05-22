@@ -5,8 +5,7 @@ import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
 import useInit from "../utils/screen-init.js";
 import ecoReadyMasuriaConfigs, { organization } from "../config/EcoReadyMasuriaConfig.js";
-import { calculateDates, findKeyByText } from "../utils/data-handling-functions.js";
-import { monthNames } from "../utils/useful-constants.js";
+import { findKeyByText } from "../utils/data-handling-functions.js";
 import { cardFooter, StickyBand, DataWarning, LoadingIndicator } from "../utils/rendering-items.js";
 
 const REGIONS = [
@@ -30,22 +29,6 @@ const EcoReadyMasuria = () => {
 			setStationName(selectedStation);
 		}
 	}, []);
-
-	// Memoize the date calculations and fetchConfigs to reduce re-calculations
-	const { month } = useMemo(() => {
-		// Validate that year is a valid number
-		const yearNum = Number.parseInt(year, 10);
-		if (Number.isNaN(yearNum) || yearNum < 2001 || yearNum > 2015) {
-			// Return a default value if year is invalid
-			return {
-				month: new Date(2024, 1, 1).getMonth(),
-				// Include other properties that calculateDates would normally return
-			};
-		}
-
-		// If year is valid, proceed with calculation
-		return calculateDates(new Date(yearNum, 0, 2));
-	}, [year]);
 
 	const dropdownContent = useMemo(() => [
 		{
@@ -190,7 +173,7 @@ const EcoReadyMasuria = () => {
 							<Plot
 								scrollZoom
 								data={card.data}
-								title={`${monthNames[month].text} ${year}`}
+								// title={`${monthNames[month].text} ${year}`}
 								showLegend={index === 0}
 								height="300px"
 								xaxis={card.xaxis}
