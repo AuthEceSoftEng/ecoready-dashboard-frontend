@@ -69,8 +69,8 @@ const getMaxValue = (maxProd, prodTypeVal, country = "EU") => [
 const ProductsScreen = () => {
 	const location = useLocation();
 	const selectedProduct = location.state?.selectedProduct;
-	const selectedProductionProduct = location.state?.specificProduct;
-	const selectedPriceProduct = location.state?.productValue;
+	// const selectedProductionProduct = location.state?.specificProduct;
+	// const selectedPriceProduct = location.state?.productValue;
 	const [startDate, setStartDate] = useState("2024-01-01");
 	const [endDate, setEndDate] = useState("2024-12-31");
 	const [globalProduct, setGlobalProduct] = useState(selectedProduct || "Rice");

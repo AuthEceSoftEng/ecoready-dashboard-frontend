@@ -1,3 +1,5 @@
+import colors from "../_colors.scss";
+
 export const monthNames = [
 	{ value: "January", text: "January", no: 1 },
 	{ value: "February", text: "February", no: 2 },
@@ -449,21 +451,340 @@ export const products = [
 ];
 products.sort((a, b) => a.text.localeCompare(b.text));
 
-export const years = [
-	{ value: 2010, label: "2010" },
-	{ value: 2011, label: "2011" },
-	{ value: 2012, label: "2012" },
-	{ value: 2013, label: "2013" },
-	{ value: 2014, label: "2014" },
-	{ value: 2015, label: "2015" },
-	{ value: 2016, label: "2016" },
-	{ value: 2017, label: "2017" },
-	{ value: 2018, label: "2018" },
-	{ value: 2019, label: "2019" },
-	{ value: 2020, label: "2020" },
-	{ value: 2021, label: "2021" },
-	{ value: 2022, label: "2022" },
-	{ value: 2023, label: "2023" },
-	{ value: 2024, label: "2024" },
-	{ value: 2025, label: "2025" },
+export const agriColors = [
+	colors.ag1, colors.ag2, colors.ag3, colors.ag4, colors.ag5,
+	colors.ag6, colors.ag7, colors.ag8, colors.ag9, colors.ag10,
+	colors.ag11, colors.ag12, colors.ag13, colors.ag14, colors.ag15,
+	colors.ag16, colors.ag17, colors.ag18, colors.ag19, colors.ag20,
 ];
+
+export const lcaIndicators = [
+	{
+		label: "Child Labour & Forced Labour",
+		options: [
+			"Children in employment, total",
+			"Frequency of forced labour",
+			"Goods produced by forced labour",
+			"Trafficking in persons",
+		],
+		desc: [
+			"Employment of children below the minimum legal age or harmful to their physical, mental, or moral development",
+			"Incidence of work or service exacted under threat or coercion, against a person's will",
+			"Products manufactured with labour obtained through coercion or involuntary servitude",
+			"Recruitment or transportation of persons through coercion, abduction, fraud, or deception for exploitation",
+		],
+	},
+	{
+		label: "Wage & Working Conditions",
+		options: [
+			"Gender wage gap",
+			"Living wage, per month",
+			"Minimum wage, per month",
+			"Weekly hours of work per employee",
+			"Violations of mandatory health and safety standards",
+		],
+		desc: [
+			"Difference in average earnings between men and women doing similar work or work of equal value",
+			"Income level sufficient to meet basic needs such as food, housing, education, and healthcare",
+			"Legally mandated lowest wage that employers may pay workers",
+			"Average number of hours employees work per week",
+			"Failure to comply with legally required health and safety regulations in the workplace",
+		],
+	},
+	{
+		label: "Labour Rights & Representation",
+		options: [
+			"Trade union density",
+			"Right of Association",
+			"Right of Collective bargaining",
+			"Right to Strike",
+			"Presence of sufficient safety measures",
+		],
+		desc: [
+			"Proportion of workers who are members of trade unions within a sector or country",
+			"Workers' right to form and join organizations of their own choosing",
+			"Workers' right to negotiate collectively with employers on working conditions",
+			"Workers' legal right to stop work to protest working conditions or disputes",
+			"Availability and implementation of safety protocols and equipment to protect workers",
+		],
+	},
+	{
+		label: "Employment & Workforce Composition",
+		options: [
+			"Men in the sectoral labour force",
+			"Women in the sectoral labour force",
+			"Evidence of violations of laws and employment regulations",
+			"Social security expenditures",
+			"Rate of fatal accidents at workplace",
+			"Rate of non-fatal accidents at workplace",
+		],
+		desc: [
+			"Percentage or number of men employed in the sector",
+			"Percentage or number of women employed in the sector",
+			"Instances where laws or employment standards are not respected by employers",
+			"Public or private spending on social protection systems, including pensions, healthcare, and unemployment benefits",
+			"Number of workplace deaths per unit of employment or time",
+			"Number of non-fatal injuries occurring in the workplace per unit of employment or time",
+		],
+	},
+	{
+		label: "Economic & Social Development",
+		options: [
+			"Contribution of the sector to economic development",
+			"Public sector corruption",
+			"Active involvement of enterprises in corruption and bribery",
+			"Presence of anti-competitive behaviour or violation of anti-trust and monopoly legislation",
+			"Membership in an initiative that promotes social responsibility along the supply chain",
+		],
+		desc: [
+			"Extent to which the sector promotes economic growth, job creation, and improved living standards",
+			"Level of corruption perceived or recorded in government institutions affecting public services or policies",
+			"Incidence of companies engaging in corrupt practices to gain advantage",
+			"Existence of practices that limit competition or create monopolies in the market",
+			"Participation of companies in voluntary programs aimed at improving social conditions in their supply chains",
+		],
+	},
+	{
+		label: "Migration",
+		options: [
+			"Emigration rate",
+			"Immigration rate",
+			"International migrant workers in the sector",
+			"Number of asylum seekers in relation to total population",
+		],
+		desc: [
+			"Proportion of population leaving the country or region to reside elsewhere",
+			"Proportion of population entering the country or region from elsewhere",
+			"Proportion or number of migrant workers employed in the sector",
+			"Number of individuals seeking asylum relative to the total population size",
+		],
+	},
+	{
+		label: "Education & Literacy",
+		options: [
+			"Illiteracy rate, total",
+			"Public expenditure on education",
+		],
+		desc: [
+			"Percentage of the population over a certain age unable to read or write",
+			"Government spending on education services as a share of total public expenditure",
+		],
+	},
+	{
+		label: "Health & Wellbeing",
+		options: [
+			"Health expenditure, total",
+			"Life expectancy at birth",
+			"Workers affected by natural disasters",
+			"Sanitation coverage",
+		],
+		desc: [
+			"Total health spending combining domestic, external, and private contributions",
+			"Average number of years a newborn is expected to live under current mortality conditions",
+			"Number or proportion of workers impacted by events like floods, storms, droughts, etc",
+			"Percentage of the population with access to safe sanitation facilities",
+		],
+	},
+	{
+		label: "Indigenous & Minority Rights",
+		options: [
+			"Indigenous People Rights Protection Index",
+			"Presence of indigenous population",
+		],
+		desc: [
+			"Measure of the respect and protection of indigenous peoples' rights in a country or sector",
+			"Existence of indigenous communities within the country or sector",
+		],
+	},
+];
+
+export const riskAssessmentData = {
+	countries: ["CZ", "EL", "BE"],
+	indicators: {
+		"Active involvement of enterprises in corruption and bribery": {
+			CZ: { level: "low risk", score: 2 },
+			EL: { level: "low risk", score: 2 },
+			BE: { level: "low risk", score: 2 },
+		},
+		"Children in employment, total": {
+			CZ: { level: "very low risk", score: 1 },
+			EL: { level: "very low risk", score: 1 },
+			BE: { level: "very low risk", score: 1 },
+		},
+		"Contribution of the sector to economic development": {
+			CZ: { level: "low opportunity", score: 1 },
+			EL: { level: "low opportunity", score: 1 },
+			BE: { level: "no opportunity", score: 0 },
+		},
+		"Emigration rate": {
+			CZ: { level: "low risk", score: 2 },
+			EL: { level: "high risk", score: 4 },
+			BE: { level: "medium risk", score: 3 },
+		},
+		"Evidence of violations of laws and employment regulations": {
+			CZ: { level: "medium risk", score: 3 },
+			EL: { level: "medium risk", score: 3 },
+			BE: { level: "medium risk", score: 3 },
+		},
+		"Frequency of forced labour": {
+			CZ: { level: "very low risk", score: 1 },
+			EL: { level: "low risk", score: 2 },
+			BE: { level: "very low risk", score: 1 },
+		},
+		"Gender wage gap": {
+			CZ: { level: "high risk", score: 4 },
+			EL: { level: "medium risk", score: 3 },
+			BE: { level: "low risk", score: 2 },
+		},
+		"Goods produced by forced labour": {
+			CZ: { level: "no data", score: "N/A" },
+			EL: { level: "no data", score: "N/A" },
+			BE: { level: "no data", score: "N/A" },
+		},
+		"Health expenditure, total": {
+			CZ: { level: "medium risk", score: 3 },
+			EL: { level: "medium risk", score: 3 },
+			BE: { level: "low risk", score: 2 },
+		},
+		"Illiteracy rate, total": {
+			CZ: { level: "very low risk", score: 1 },
+			EL: { level: "very low risk", score: 1 },
+			BE: { level: "very low risk", score: 1 },
+		},
+		"Immigration rate": {
+			CZ: { level: "very low risk", score: 1 },
+			EL: { level: "very low risk", score: 1 },
+			BE: { level: "medium risk", score: 3 },
+		},
+		"Indigenous People Rights Protection Index": {
+			CZ: { level: "no data", score: "N/A" },
+			EL: { level: "no data", score: "N/A" },
+			BE: { level: "no data", score: "N/A" },
+		},
+		"International migrant workers in the sector": {
+			CZ: { level: "no data", score: "N/A" },
+			EL: { level: "no data", score: "N/A" },
+			BE: { level: "no data", score: "N/A" },
+		},
+		"Life expectancy at birth": {
+			CZ: { level: "very low risk", score: 1 },
+			EL: { level: "no risk", score: 0 },
+			BE: { level: "no risk", score: 0 },
+		},
+		"Living wage, per month": {
+			CZ: { level: "high risk", score: 4 },
+			EL: { level: "high risk", score: 4 },
+			BE: { level: "very high risk", score: 5 },
+		},
+		"Membership in an initiative that promotes social responsibility along the supply chain": {
+			CZ: { level: "no data", score: "N/A" },
+			EL: { level: "no data", score: "N/A" },
+			BE: { level: "no data", score: "N/A" },
+		},
+		"Men in the sectoral labour force": {
+			CZ: { level: "very low risk", score: 1 },
+			EL: { level: "very low risk", score: 1 },
+			BE: { level: "very low risk", score: 1 },
+		},
+		"Minimum wage, per month": {
+			CZ: { level: "very high risk", score: 5 },
+			EL: { level: "low risk", score: 2 },
+			BE: { level: "medium risk", score: 3 },
+		},
+		"Number of asylum seekers in relation to total population": {
+			CZ: { level: "very low risk", score: 1 },
+			EL: { level: "very high risk", score: 5 },
+			BE: { level: "high risk", score: 4 },
+		},
+		"Presence of anti-competitive behaviour or violation of anti-trust and monopoly legislation": {
+			CZ: { level: "no data", score: "N/A" },
+			EL: { level: "no data", score: "N/A" },
+			BE: { level: "no data", score: "N/A" },
+		},
+		"Presence of indigenous population": {
+			CZ: { level: "no risk", score: 0 },
+			EL: { level: "no risk", score: 0 },
+			BE: { level: "no risk", score: 0 },
+		},
+		"Presence of sufficient safety measures": {
+			CZ: { level: "low risk", score: 2 },
+			EL: { level: "low risk", score: 2 },
+			BE: { level: "low risk", score: 2 },
+		},
+		"Public expenditure on education": {
+			CZ: { level: "medium risk", score: 3 },
+			EL: { level: "medium risk", score: 3 },
+			BE: { level: "medium risk", score: 3 },
+		},
+		"Public sector corruption": {
+			CZ: { level: "high risk", score: 4 },
+			EL: { level: "very high risk", score: 5 },
+			BE: { level: "medium risk", score: 3 },
+		},
+		"Rate of fatal accidents at workplace": {
+			CZ: { level: "very low risk", score: 1 },
+			EL: { level: "very low risk", score: 1 },
+			BE: { level: "very low risk", score: 1 },
+		},
+		"Rate of non-fatal accidents at workplace": {
+			CZ: { level: "very low risk", score: 1 },
+			EL: { level: "very low risk", score: 1 },
+			BE: { level: "very low risk", score: 1 },
+		},
+		"Right of Association": {
+			CZ: { level: "no risk", score: 0 },
+			EL: { level: "no risk", score: 0 },
+			BE: { level: "no risk", score: 0 },
+		},
+		"Right of Collective bargaining": {
+			CZ: { level: "no risk", score: 0 },
+			EL: { level: "no risk", score: 0 },
+			BE: { level: "no risk", score: 0 },
+		},
+		"Right to Strike": {
+			CZ: { level: "no risk", score: 0 },
+			EL: { level: "no risk", score: 0 },
+			BE: { level: "no risk", score: 0 },
+		},
+		"Sanitation coverage": {
+			CZ: { level: "high risk", score: 4 },
+			EL: { level: "very high risk", score: 5 },
+			BE: { level: "very low risk", score: 1 },
+		},
+		"Social security expenditures": {
+			CZ: { level: "medium risk", score: 3 },
+			EL: { level: "low risk", score: 2 },
+			BE: { level: "low risk", score: 2 },
+		},
+		"Trade union density": {
+			CZ: { level: "very high risk", score: 5 },
+			EL: { level: "very high risk", score: 5 },
+			BE: { level: "medium risk", score: 3 },
+		},
+		"Trafficking in persons": {
+			CZ: { level: "low risk", score: 2 },
+			EL: { level: "medium risk", score: 3 },
+			BE: { level: "low risk", score: 2 },
+		},
+		"Violations of mandatory health and safety standards": {
+			CZ: { level: "high risk", score: 4 },
+			EL: { level: "no data", score: "N/A" },
+			BE: { level: "no data", score: "N/A" },
+		},
+		"Weekly hours of work per employee": {
+			CZ: { level: "high risk", score: 4 },
+			EL: { level: "high risk", score: 4 },
+			BE: { level: "medium risk", score: 3 },
+		},
+		"Women in the sectoral labour force": {
+			CZ: { level: "medium risk", score: 3 },
+			EL: { level: "very low risk", score: 1 },
+			BE: { level: "low risk", score: 2 },
+		},
+		"Workers affected by natural disasters": {
+			CZ: { level: "very high risk", score: 5 },
+			EL: { level: "very low risk", score: 1 },
+			BE: { level: "very low risk", score: 1 },
+		},
+	},
+};

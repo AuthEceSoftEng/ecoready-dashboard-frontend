@@ -6,6 +6,7 @@ import Image from "mui-image";
 import {
 	ExpandMoreRounded, MapRounded, HomeRounded,
 	AgricultureRounded, SpaRounded,
+	Diversity3Rounded,
 } from "@mui/icons-material";
 
 import { labs } from "../utils/useful-constants.js";
@@ -192,6 +193,14 @@ const Sidebar = ({ isSmall: sidebarIsSmall, onToggleSidebar }) => {
 			handler: () => {
 				handleServicesMenuClose();
 				navigate("/products");
+			},
+		},
+		{
+			icon: <Diversity3Rounded />,
+			text: "Social Impact",
+			handler: () => {
+				handleServicesMenuClose();
+				navigate("/lcamag");
 			},
 		},
 		{
