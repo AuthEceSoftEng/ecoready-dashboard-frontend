@@ -129,6 +129,23 @@ const SocialIndicatorsAccordion = ({ onIndicatorSelect }) => {
 	);
 };
 
+// Define y-axis configuration for risk scale
+const getRiskScaleYAxis = () => ({
+	tickmode: "array",
+	tickvals: [0, 1, 2, 3, 4, 5, 6],
+	ticktext: [
+		"No Data",
+		"No Risk",
+		"Very Low Risk",
+		"Low Risk",
+		"Medium Risk",
+		"High Risk",
+		"Very High Risk",
+	],
+	tickangle: -60,
+	range: [0, 6],
+});
+
 const customDate = getCustomDateTime(2024, 12);
 const { year } = calculateDates(customDate);
 
@@ -161,6 +178,7 @@ const LcaMag = () => {
 			}
 		}
 	}, [selectedIndicator, selectedCountry]);
+	console.log("Risk Data:", riskData);
 
 	// Create chart data based on selected indicator
 	const getChartData = () => {
@@ -199,7 +217,48 @@ const LcaMag = () => {
 			title: "Risk Scores by Country",
 			color: chartData.colors,
 			text: chartData.levels,
-			textposition: "outside",
+		}];
+	};
+
+	const createCountryIndicatorsChart = () => {
+		if (!selectedCountry) return [];
+
+		const countryCode = countriesForNow.find((c) => c.text === selectedCountry)?.value;
+		if (!countryCode) return [];
+
+		const indicators = [];
+		const scores = [];
+		const levels = [];
+		const colors = [];
+
+		// Collect data for all indicators for the selected country
+		for (const [indicatorName, indicatorData] of Object.entries(riskAssessmentData.indicators)) {
+			if (indicatorData && indicatorData[countryCode]) {
+				const level = indicatorData[countryCode].level;
+				const score = indicatorData[countryCode].score;
+
+				// Filter out "no data" entries if desired, or include them
+				if (level !== "no data") {
+					indicators.push(indicatorName);
+					scores.push(score === "N/A" ? 0 : score);
+					levels.push(level);
+					colors.push(getRiskColor(level));
+				}
+			}
+		}
+
+		// If no data available
+		if (indicators.length === 0) {
+			return [];
+		}
+
+		return [{
+			x: indicators.map((indicator) => (indicator.length > 30 ? `${indicator.slice(0, 30)}...` : indicator)), // Truncate very long indicator names
+			y: scores,
+			type: "bar",
+			title: `All Indicators - ${selectedCountry}`,
+			color: colors,
+			text: levels.map((level) => level.toUpperCase()),
 		}];
 	};
 
@@ -248,8 +307,6 @@ const LcaMag = () => {
 			title: `${parentCategory.label} Indicators - ${selectedCountry}`,
 			color: colors,
 			text: levels.map((level) => level.toUpperCase()),
-			textposition: "outside",
-			textangle: -45, // Rotate text for better readability
 		}];
 	};
 
@@ -270,7 +327,7 @@ const LcaMag = () => {
 		},
 	], []);
 
-	const countryDropdown = useMemo(() => ({
+	const countryDropdown = useMemo(() => ([{
 		id: "country-dropdown",
 		label: "Select Country",
 		items: countriesForNow,
@@ -279,13 +336,27 @@ const LcaMag = () => {
 			const countryText = event.target.value;
 			setSelectedCountry(countryText);
 		},
-	}), [selectedCountry]);
+	}]), [selectedCountry]);
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
-			<StickyBand dropdownContent={[countryDropdown]} formRef={yearPickerRef} formContent={yearPickerProps} />
+			<StickyBand dropdownContent={countryDropdown} formRef={yearPickerRef} formContent={yearPickerProps} />
 
 			{/* Main content area */}
+			{/* All Indicators for Selected Country - New Chart */}
+			<Grid item xs={12}>
+				<Card title={`All Indicators - ${selectedCountry}`} sx={{ display: "flex", flexDirection: "column" }}>
+					{/* <StickyBand sticky={false} dropdownContent={countryDropdown} /> */}
+					<Plot
+						data={createCountryIndicatorsChart()}
+						title=""
+						height="400px"
+						showLegend={false}
+						yaxis={getRiskScaleYAxis()}
+						xaxis={{ tickangle: 20 }}
+					/>
+				</Card>
+			</Grid>
 			<Grid item xs={12} md={9}>
 				{/* Charts */}
 				{selectedIndicator && (
@@ -298,7 +369,7 @@ const LcaMag = () => {
 									title=""
 									height="400px"
 									showLegend={false}
-									yaxis={{ title: "Risk Score" }}
+									yaxis={getRiskScaleYAxis()}
 									xaxis={{ title: "Country" }}
 								/>
 							</Card>
@@ -307,7 +378,7 @@ const LcaMag = () => {
 						{/* Category Indicators Bar Chart - Replaces Pie Chart */}
 						<Grid item xs={12} lg={6}>
 							<Card
-								title={`${lcaIndicators.find((cat) => cat.options.includes(selectedIndicator.option))?.label || "Category"} Indicators`}
+								title={`${selectedCountry}'s ${lcaIndicators.find((cat) => cat.options.includes(selectedIndicator.option))?.label || "Category"} Indicators`}
 								sx={{ display: "flex", flexDirection: "column" }}
 							>
 								<Plot
@@ -315,11 +386,9 @@ const LcaMag = () => {
 									title=""
 									height="400px"
 									showLegend={false}
-									yaxis={{ title: "Risk Score", range: [0, 6] }}
-									xaxis={{
-										title: "Indicators",
-										tickangle: -45, // Rotate x-axis labels for better readability
-									}}
+									yaxis={getRiskScaleYAxis()}
+									xaxis={{ tickangle: 20 }}
+
 								/>
 							</Card>
 						</Grid>
@@ -330,7 +399,7 @@ const LcaMag = () => {
 
 			{/* Social Indicators Accordion - Right Side */}
 			<Grid item xs={6} md={3}>
-				<div style={{ position: "sticky", top: "20px"}}>
+				<div style={{ position: "sticky", top: "20px" }}>
 					<SocialIndicatorsAccordion onIndicatorSelect={handleIndicatorSelection} />
 				</div>
 			</Grid>
