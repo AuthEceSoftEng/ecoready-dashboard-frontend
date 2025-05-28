@@ -64,6 +64,7 @@ const SocialIndicatorsAccordion = ({ onIndicatorSelect }) => {
 			{lcaIndicators.map((category) => (
 				<Accordion
 					key={category.label}
+					expanded={openAccordion === category.label}
 					title={(
 						<Typography
 							variant="h6"
@@ -119,7 +120,6 @@ const SocialIndicatorsAccordion = ({ onIndicatorSelect }) => {
 							))}
 						</Grid>
 					)}
-					alwaysExpanded={openAccordion === category.label} // Control expansion state
 					titleBackground="rgba(162, 202, 55, 0.05)"
 					expandIconColor="#a2ca37"
 					onToggle={() => handleAccordionToggle(category.label)} // Handle toggle

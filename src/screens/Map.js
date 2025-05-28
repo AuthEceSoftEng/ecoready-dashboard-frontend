@@ -163,21 +163,6 @@ const Map = () => {
 		...item,
 	}))), [dispatch, filters.product]); // Add dispatch to dependencies
 
-	// const productTypeDropdownContent = useMemo(() => ([
-	// 	{
-	// 		id: "product",
-	// 		items: products?.prices.products || [],
-	// 		label: "Select Product Type",
-	// 		value: filters.product,
-	// 		onChange: (event) => {
-	// 			dispatch({ type: "FETCH_START" }); // Add loading state
-	// 			setFilters((prev) => ({ ...prev, product: event.target.value }));
-	// 		},
-	// 	},
-	// ].map((item) => ({
-	// 	...item,
-	// }))), [dispatch, filters.product]); // Add dispatch to dependencies
-
 	useEffect(() => {
 		// Load the GeoJSON file from the public directory
 		fetch("/european_countries.json")
