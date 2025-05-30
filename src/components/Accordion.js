@@ -49,11 +49,21 @@ const Accordion = ({
 	subtitle,
 	subtitleColor = "white",
 	subtitleBackground = "third",
+	expanded,
 	expandIconColor = "third",
 	content,
 	alwaysExpanded = false,
+	onToggle,
 }) => {
 	const classes = useStyles({ titleColor, titleBackground, subtitleColor, subtitleBackground });
+
+	// Handle click on accordion header
+	const handleToggle = () => {
+		if (!alwaysExpanded && onToggle) {
+			onToggle();
+		}
+	};
+
 	return (
 		<MUIAccordion
 			classes={{
@@ -61,7 +71,7 @@ const Accordion = ({
 				expanded: classes.accordionExpanded,
 			}}
 			sx={{ minHeight: "auto" }}
-			expanded={alwaysExpanded || undefined}
+			expanded={alwaysExpanded || expanded}
 		>
 			<AccordionSummary
 				expandIcon={alwaysExpanded ? null : <ExpandMore color={expandIconColor} />}
@@ -71,23 +81,24 @@ const Accordion = ({
 					contentGutters: classes.accordionContentGutters,
 				}}
 				sx={{ background: "secondary.main", ...(alwaysExpanded && { cursor: "default!important" }) }}
+				onClick={handleToggle}
 			>
 				{typeof title === "string"
 					? <Typography>{title}</Typography>
 					: title}
 			</AccordionSummary>
 			{subtitle
-			&& (
-				<AccordionDetails
-					classes={{
-						root: classes.accordionSubtitle,
-					}}
-				>
-					{typeof subtitle === "string"
-						? <Typography>{subtitle}</Typography>
-						: subtitle}
-				</AccordionDetails>
-			)}
+				&& (
+					<AccordionDetails
+						classes={{
+							root: classes.accordionSubtitle,
+						}}
+					>
+						{typeof subtitle === "string"
+							? <Typography>{subtitle}</Typography>
+							: subtitle}
+					</AccordionDetails>
+				)}
 			<AccordionDetails
 				classes={{
 					root: classes.accordionMain,

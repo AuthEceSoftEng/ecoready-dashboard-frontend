@@ -46,7 +46,7 @@ export const StickyBand = ({ sticky = true, dropdownContent = [], formRef, formC
 			top: -5,
 			backgroundColor: sticky ? colors.grey : "inherit",
 			zIndex: sticky ? 100 : "auto",
-			minWidth: "100%",
+			minWidth: "100.1%",
 			padding: "0.3rem",
 			gap: "0.3rem",
 			margin: 0,

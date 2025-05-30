@@ -12,8 +12,6 @@ import { Image } from "mui-image";
 import { jwt, capitalize } from "../utils/index.js"; // , isFuzzyMatch
 import { products, labs } from "../utils/useful-constants.js";
 import logo from "../assets/images/logo.png";
-// import inspectionIcon from "../assets/icons/inspection.png";
-// import servicesIcon from "../assets/icons/services.png";
 import logoutIcon from "../assets/icons/logout.png";
 
 import Search from "./Search.js";
@@ -90,23 +88,90 @@ const Header = ({ isAuthenticated }) => {
 	const [searchFilter, setSearchFilter] = useState("");
 	const [searchResults, setSearchResults] = useState([]);
 
-	const searchData = useMemo(() => [
-		...products.map((product) => ({
+	const searchData = useMemo(() => {
+		// Standard product entries (existing)
+		const productEntries = products.map((product) => ({
 			type: "product",
 			name: product.text,
 			link: `/products?selected=${product.value}`,
-		})),
-		...products.map((product) => ({
-			type: "map",
-			name: `${product.text} Map`,
-			link: `/map?selected=${product.value}`,
-		})),
-		...labs.flatMap((lab) => lab.products.map((product) => ({
+			product, // Store the full product object for searching
+		}));
+
+		// const productionEntries = products.flatMap((product) => {
+		// 	// Check if this product has production products listed
+		// 	if (product.production && Array.isArray(product.production.products)) {
+		// 		// For each specific product, create a production entry
+		// 		return product.production.products.map((subProduct) => ({
+		// 			type: "product",
+		// 			name: `${subProduct} (${product.text})`,
+		// 			link: `/products?selected=${product.value}`,
+		// 			product,
+		// 			value: product.value,
+		// 			subProduct, // Store the specific sub-product
+		// 			section: "production", // Store which section this belongs to
+		// 		}));
+		// 	}
+
+		// 	return []; // Return empty array if no production products exist
+		// });
+
+		// const priceEntries = products.flatMap((product) => {
+		// 	// Check if this product has prices with specific products listed
+		// 	if (product.prices && Array.isArray(product.prices.products)) {
+		// 		// For each specific product, create a price entry
+		// 		return product.prices.products.map((subProduct) => ({
+		// 			type: "product",
+		// 			name: `${subProduct} (${product.text})`,
+		// 			link: `/products?selected=${product.value}`,
+		// 			product, // Store the parent product object
+		// 			value: product.value,
+		// 			subProduct, // Store the specific sub-product
+		// 			section: "prices",
+		// 		}));
+		// 	}
+
+		// 	return []; // Return empty array if no prices.products exist
+		// });
+
+		// Map entries - include ALL products, not just top-level ones
+		const mapEntries = products
+			.filter((product) => !product.subheader) // Skip subheader entries
+			.map((product) => ({
+				type: "map",
+				name: `${product.text} Map`,
+				link: `/map?selected=${product.value}`,
+				product, // Store the full product object for searching
+				value: product.value, // Add value for proper navigation
+			}));
+
+		// NEW: Map entries for specific subproducts (like abricots under Fruits & Vegetables)
+		const subProductMapEntries = products.flatMap((product) => {
+			// Check if this product has prices with specific products listed
+			if (product.subheader && Array.isArray(product.prices.products)) {
+				// For each specific product, create a map entry
+				return product.prices.products.map((subProduct) => ({
+					type: "map",
+					name: `${subProduct.toLocaleLowerCase()} (${product.text}) Map`,
+					link: `/map?selected=${product.value}`,
+					product, // Store the parent product object
+					value: product.value,
+				}));
+			}
+
+			return []; // Return empty array if no prices.products exists
+		});
+
+		// Lab entries (existing)
+		const labEntries = labs.flatMap((lab) => lab.products.map((product) => ({
 			type: "lab",
 			name: `${lab.title} (Relevant: ${product})`,
 			link: lab.path,
-		}))),
-	], [products, labs]); // Memoize to avoid unnecessary recalculations
+			lab, // Store the full lab object
+			productName: product, // Store the product name
+		})));
+
+		return [...productEntries, ...mapEntries, ...subProductMapEntries, ...labEntries]; //...productionEntries, ...priceEntries, 
+	}, []); // Memoize to avoid unnecessary recalculations
 
 	// const isMenuOpenServices = Boolean(anchorElServices);
 	const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
@@ -121,7 +186,7 @@ const Header = ({ isAuthenticated }) => {
 	};
 
 	const handleSearchChange = (event) => {
-		const query = event.target.value.toLowerCase();
+		const query = event.target.value.toLowerCase().trim();
 		setSearchFilter(query);
 
 		if (query.length === 0) {
@@ -129,7 +194,59 @@ const Header = ({ isAuthenticated }) => {
 			return;
 		}
 
-		const filteredResults = searchData.filter((item) => item.name.toLowerCase().includes(query));
+		// Prioritize direct name matches
+		const nameMatches = searchData.filter((item) => item.name.toLowerCase().includes(query));
+
+		// If we have direct name matches, only show those
+		if (nameMatches.length > 0) {
+			setSearchResults(nameMatches);
+			return;
+		}
+
+		// Enhanced filtering logic to search across multiple fields
+		const filteredResults = searchData.filter((item) => {
+			// Always check the name field
+			if (item.name.toLowerCase().includes(query)) return true;
+
+			// Check product-specific fields
+			if (item.product) {
+				const product = item.product;
+
+				// Check description
+				if (product.description && product.description.toLowerCase().includes(query)) return true;
+
+				// Check collections and their products
+				if (product.collections) {
+					// Check if any collection name matches
+					if (Array.isArray(product.collections)) {
+						const collectionMatch = product.collections.some((col) => (typeof col === "string" && col.toLowerCase().includes(query))
+							|| (col.text && col.text.toLowerCase().includes(query)));
+						if (collectionMatch) return true;
+					}
+
+					// Check prices products
+					if (product.prices && product.prices.products) {
+						const pricesMatch = product.prices.products.some((p) => p.toLowerCase().includes(query));
+						if (pricesMatch) return true;
+					}
+
+					// Check production products
+					if (product.production && product.production.products) {
+						const productionMatch = product.production.products.some((p) => p.toLowerCase().includes(query));
+						if (productionMatch) return true;
+					}
+				}
+			}
+
+			// Check lab-specific fields
+			if (item.lab) {
+				const lab = item.lab;
+				if (lab.description && lab.description.toLowerCase().includes(query)) return true;
+				if (lab.region && lab.region.toLowerCase().includes(query)) return true;
+			}
+
+			return false;
+		});
 
 		setSearchResults(filteredResults);
 	};
@@ -137,27 +254,6 @@ const Header = ({ isAuthenticated }) => {
 	const CrumpLink = styled(Link)(({ theme }) => ({ display: "flex", color: theme.palette.primary.main }));
 
 	const buttons = [
-		// {
-		// 	icon: inspectionIcon,
-		// 	text: "Inspection",
-		// 	handler: () => {
-		// 		closeAll();
-		// 		navigate("/inspection");
-		// 	},
-		// },
-		// {
-		// 	icon: servicesIcon,
-		// 	text: "Services",
-		// 	handler: (event) => {
-		// 		closeAll();
-		// 		handleServicesMenuOpen(event);
-		// 	},
-		// 	more: [
-		// 		{ title: "Users", path: "/users", icon: servicesIcon },
-		// 		{ title: "Services", path: "/services", icon: servicesIcon },
-		// 		{ title: "Hacking", path: "/hacking", icon: servicesIcon },
-		// 	],
-		// },
 		{
 			icon: logoutIcon,
 			text: "Logout",
@@ -187,24 +283,6 @@ const Header = ({ isAuthenticated }) => {
 			))}
 		</Menu>
 	);
-
-	// const renderServicesMenu = (
-	// 	<Menu
-	// 		keepMounted
-	// 		anchorEl={anchorElServices}
-	// 		anchorOrigin={{ vertical: "top", horizontal: "right" }}
-	// 		transformOrigin={{ vertical: "top", horizontal: "right" }}
-	// 		open={isMenuOpenServices}
-	// 		onClose={handleServicesMenuClose}
-	// 	>
-	// 		{buttons.find((button) => button.text === "Services").more.map((moreButton) => (
-	// 			<MenuItem key={moreButton.title} onClick={() => { closeAll(); navigate(moreButton.path); }}>
-	// 				<Image src={moreButton.icon} width="20px" />
-	// 				<p style={{ marginLeft: "5px" }}>{moreButton.title}</p>
-	// 			</MenuItem>
-	// 		))}
-	// 	</Menu>
-	// );
 
 	const pathnames = location.pathname.split("/").filter(Boolean);
 	const crumps = [];

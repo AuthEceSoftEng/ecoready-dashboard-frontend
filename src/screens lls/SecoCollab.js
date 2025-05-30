@@ -1,5 +1,5 @@
 import { Grid } from "@mui/material";
-import { memo, useMemo } from "react";
+import { memo, useMemo, useState, useCallback } from "react";
 
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
@@ -8,7 +8,10 @@ import secoConfigs, { organization } from "../config/SecoConfig.js";
 import { getCustomDateTime, calculateDates } from "../utils/data-handling-functions.js";
 import { cardFooter, LoadingIndicator, StickyBand, DataWarning } from "../utils/rendering-items.js";
 
+const timelineValues = ["Temperature", "Humidity", "Co2"];
+
 const SecoCollab = () => {
+	const [metric, setMetric] = useState(timelineValues[0]);
 	const customDate = useMemo(() => getCustomDateTime(2024, 8), []);
 	const { currentDate, formattedBeginningOfMonth, formattedBeginningOfDay } = useMemo(
 		() => calculateDates(customDate), [customDate],
@@ -20,6 +23,24 @@ const SecoCollab = () => {
 	);
 	const { state } = useInit(organization, fetchConfigs);
 	const { isLoading, dataSets, minutesAgo } = state;
+
+	const handleMetricChange = useCallback((event) => {
+		const selectedMetric = event.target.value;
+		if (timelineValues.includes(selectedMetric)) {
+			setMetric(selectedMetric);
+		}
+	}, []);
+
+	const metricsDropdownContent = useMemo(() => [
+		{
+			id: "timeline",
+			size: "small",
+			label: "Select Metric",
+			items: timelineValues,
+			value: metric,
+			onChange: handleMetricChange,
+		},
+	], [handleMetricChange, metric]);
 
 	const dailyOverview = useMemo(() => [
 		{
@@ -223,18 +244,27 @@ const SecoCollab = () => {
 			</Grid>
 			<Grid item xs={12} md={12} alignItems="center" flexDirection="column" mb={1}>
 				<Card title="Timeline's Overview" footer={cardFooter({ minutesAgo })}>
+					<Grid item xs={12} md={12} display="flex" justifyContent="flex-end">
+						<StickyBand sticky={false} dropdownContent={metricsDropdownContent} />
+					</Grid>
 					{isLoading ? (<LoadingIndicator />
 					) : (
-						timelineOverview.map((plotData, index) => (
-							<Plot
-								key={index}
-								scrollZoom
-								height="350px"
-								data={plotData.data}
-								displayBar={false}
-								yaxis={plotData.yaxis}
-							/>
-						))
+						timelineOverview.map((plotData, index) => {
+							if (plotData.data[0].title === metric) {
+								return (
+									<Plot
+										key={index}
+										scrollZoom
+										height="350px"
+										data={plotData.data}
+										displayBar={false}
+										yaxis={plotData.yaxis}
+									/>
+								);
+							}
+
+							return null;
+						})
 					)}
 				</Card>
 			</Grid>

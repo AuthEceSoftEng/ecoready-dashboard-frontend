@@ -41,6 +41,8 @@ export const reducer = (state, action) => {
 			return {
 				...state,
 				isPriceLoading: true,
+				isProductionLoading: false,
+				isLoading: false,
 				warning: null,
 				error: null,
 				dataSets: {
@@ -57,6 +59,8 @@ export const reducer = (state, action) => {
 			return {
 				...state,
 				isProductionLoading: true,
+				isPriceLoading: false,
+				isLoading: false,
 				warning: null,
 				error: null,
 				dataSets: {
@@ -109,6 +113,8 @@ export const reducer = (state, action) => {
 			return {
 				...state,
 				isLoading: false,
+				isPriceLoading: false,
+				isProductionLoading: false,
 				dataSets: action.payload.dataSets,
 				minutesAgo: action.payload.minutesAgo,
 				isCached: true, // Optional flag to indicate data is from cache

@@ -21,7 +21,7 @@ const useStyles = makeStyles((theme) => ({
 		position: "absolute",
 		display: "flex",
 		height: "100%",
-		transition: "width 0.3s, margin-left 0.3s",
+		transition: "width 0.6s, margin-left 0.6s",
 	},
 	sidebar: {
 		position: "fixed",
@@ -67,7 +67,7 @@ const Protected = ({ c }) => {
 						marginLeft: isSmall ? "50px" : "200px",
 					}}
 				>
-					<div className="header-container">
+					<div className="content-container">
 						{c}
 					</div>
 				</div>

@@ -1,5 +1,19 @@
 import { products } from "../utils/useful-constants.js";
 
+const fruitVegetables = new Set([
+	"abricots", "apples", "asparagus", "avocados", "beans", "cabbages",
+	"carrots", "cauliflowers", "cherries", "clementines", "courgettes",
+	"cucumbers", "egg plants, aubergines", "garlic", "kiwis", "leeks",
+	"lemons", "lettuces", "mandarins", "melons", "mushrooms, cultivated",
+	"nectarines", "onions", "oranges", "peaches", "pears", "peppers",
+	"plums", "satsumas", "strawberries", "table grapes", "tomatoes", "water melons",
+]);
+const dairyProducts = new Set(["butter", "butteroil", "cheddar", "cream", "edam", "emmental", "gouda", "smp", "wheypowder", "wmp"]); // "drinking milk",
+
+const proteinCrops = new Set(["Alfalfa", "Broad beans", "Chickpeas", "Lentils", "Lupins", "Peas"]);
+
+const cerealProducts = new Set(["barley", "wheat", "maize", "oats", "rye", "sorghum", "triticale"]);
+
 export const organization = "european_data";
 
 export const mapInfoConfigs = (prod, year) => {
@@ -244,15 +258,6 @@ export const mapInfoConfigs = (prod, year) => {
 		];
 	}
 
-	const fruitVegetables = new Set([
-		"abricots", "apples", "asparagus", "avocados", "beans", "cabbages",
-		"carrots", "cauliflowers", "cherries", "clementines", "courgettes",
-		"cucumbers", "egg plants, aubergines", "garlic", "kiwis", "leeks",
-		"lemons", "lettuces", "mandarins", "melons", "mushrooms, cultivated",
-		"nectarines", "onions", "oranges", "peaches", "pears", "peppers",
-		"plums", "satsumas", "strawberries", "table grapes", "tomatoes", "water melons",
-	]);
-
 	if (fruitVegetables.has(prod)) {
 		return [{
 			type: "stats",
@@ -273,8 +278,6 @@ export const mapInfoConfigs = (prod, year) => {
 			plotId: "productPrices",
 		}];
 	}
-
-	const dairyProducts = new Set(["butter", "butteroil", "cheddar", "cream", "edam", "emmental", "gouda", "smp", "wheypowder", "wmp"]); // "drinking milk",
 
 	if (dairyProducts.has(prod)) {
 		const dairyType = prod.toUpperCase();
@@ -315,7 +318,7 @@ export const mapInfoConfigs = (prod, year) => {
 		];
 	}
 
-	if (product === "barley" || product === "wheat" || product === "maize" || product === "oats" || product === "rye" || product === "sorghum" || product === "triticale") {
+	if (cerealProducts.has(product)) {
 		const productnames = products.find((item) => item.value === product)?.priceProductType || [];
 		const cropnames = products.find((item) => item.value === product)?.productionProductType || [];
 
@@ -361,7 +364,6 @@ export const mapInfoConfigs = (prod, year) => {
 		return [...productData, ...cropData];
 	}
 
-	const proteinCrops = new Set(["Alfalfa", "Broad beans", "Chickpeas", "Lentils", "Lupins", "Peas"]);
 	const formattedProd = prod.charAt(0).toUpperCase() + prod.slice(1).toLowerCase();
 	if (proteinCrops.has(formattedProd)) {
 		return [
