@@ -30,6 +30,15 @@ const validatePieData = (data) => {
 	return { hasError, errorMessage };
 };
 
+const pieDataThereshold = (data, thres = 0.03) => {
+	const total = data.reduce((a, b) => a + b, 0);
+	const text = data.map((val) => {
+		const pct = val / total;
+		return pct >= thres ? `${((pct) * 100).toFixed(1)}%` : "";
+	});
+	return text;
+};
+
 const Plot = ({
 	data, // An array of objects. Each one describes a specific subplot
 	title = "", // Plot title
@@ -62,47 +71,69 @@ const Plot = ({
 	return (
 		<Plotly
 			useResizeHandler // Enable resize handler
-			data={data.map((d, index) => ({
-				x: d.x,
-				y: d.y,
-				z: d.z,
-				type: d.type,
-				name: d.title,
-				text: d.texts,
-				mode: d.mode,
-				marker: d.type === "pie"
-					? { colors: d.color || agriColors }
-					: {
+			data={data.map((d, index) => {
+				const baseProps = {
+					x: d.x,
+					y: d.y,
+					z: d.z,
+					type: d.type,
+					name: d.title,
+					text: d.texts,
+					mode: d.mode,
+					values: d.values,
+					value: d.value,
+					r: d.r,
+					theta: d.theta,
+					fill: d.fill,
+					number: {
+						suffix: d.suffix,
+						font: { color: colors?.[d?.textColor] || d?.textColor || "black" },
+					},
+					sort: d.sort ?? true,
+				};
+
+				// Add pie-specific properties
+				if (d.type === "pie") {
+					return {
+						...baseProps,
+						marker: { colors: d.color || agriColors },
+						labels: d.labels,
+						textposition: "inside",
+						text: pieDataThereshold(d.values, 0.03),
+						textinfo: "text",
+						hoverinfo: "label+percent+value",
+						automargin: true,
+						insidetextorientation: "radial",
+						domain: { x: [0, 1], y: [0, 1] },
+						textfont: { color: "white", size: 12 },
+					};
+				}
+
+				// Non-pie chart properties
+				return {
+					...baseProps,
+					marker: {
 						color: d.color
 							? (colors?.[d.color] || d.color)
 							: agriColors[index % agriColors.length],
 					},
-				values: d.values,
-				value: d.value,
-				r: d.r,
-				theta: d.theta,
-				fill: d.fill,
-				number: {
-					suffix: d.suffix,
-					font: { color: colors?.[d?.textColor] || d?.textColor || "black" },
-				},
-				sort: d.sort ?? true,
-				gauge: {
-					axis: { range: d.range },
-					bar: { color: colors?.[d?.color] || d?.color, thickness: 1 },
-					shape: d.shape,
-					...(d.indicator && {
-						threshold: {
-							line: { color: colors?.[d?.indicator] || d?.indicator, width: 3 },
-							thickness: 1,
-							value: d.value,
-						},
-					}),
-				},
-				domain: { x: [0, 1], y: [0, 1] },
-				labels: d.labels,
-				textFont: { color: "white" },
-			}))}
+					gauge: d.type === "indicator" ? {
+						axis: { range: d.range },
+						bar: { color: colors?.[d?.color] || d?.color, thickness: 1 },
+						shape: d.shape,
+						...(d.indicator && {
+							threshold: {
+								line: { color: colors?.[d?.indicator] || d?.indicator, width: 3 },
+								thickness: 1,
+								value: d.value,
+							},
+						}),
+					} : undefined,
+					domain: { x: [0, 1], y: [0, 1] },
+					labels: d.labels,
+					textfont: { color: "white" },
+				};
+			})}
 			layout={{
 				title: {
 					text: title,
