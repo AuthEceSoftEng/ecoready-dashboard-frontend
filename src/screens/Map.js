@@ -14,6 +14,7 @@ import { findKeyByText } from "../utils/data-handling-functions.js";
 
 const excludedProducts = new Set(["Oilseeds", "Cereals", "Sheep/Goat Meat"]);
 const mapProducts = products.filter((product) => !excludedProducts.has(product.text)).map((product) => product);
+console.log("Map Products", mapProducts);
 
 const currentYear = new Date().getFullYear();
 // Extract popup component
@@ -83,7 +84,6 @@ const onEachCountry = (feature, layer) => {
 const Map = () => {
 	const location = useLocation();
 	const selectedProduct = location.state?.selectedProduct;
-	const productValue = location.state?.productValue;
 	const navigate = useNavigate();
 	const [geoJsonData, setGeoJsonData] = useState(null);
 	const [showLegend, setShowLegend] = useState(false); // State for controlling legend visibility
@@ -91,7 +91,6 @@ const Map = () => {
 	const [filters, setFilters] = useState({
 		year: "2024",
 		product: selectedProduct || "Rice",
-		productValue: productValue || undefined,
 	});
 
 	const [isDataReady, setIsDataReady] = useState(false);

@@ -82,7 +82,20 @@ const Search = ({
 
 		switch (result.type) {
 			case "product": {
-				navigate("/products", { state: { selectedProduct: result.name } });
+				// Check if this is a sub-product with section information
+				if (result.subProduct && result.section) {
+					navigate("/products", {
+						state: {
+							selectedProduct: result.product.text, // Use the parent product name
+							selectedSubProduct: result.subProduct,
+							section: result.section,
+							parentProduct: result.product,
+						},
+					});
+				} else {
+					navigate("/products", { state: { selectedProduct: result.name } });
+				}
+
 				break;
 			}
 
@@ -210,35 +223,7 @@ const Search = ({
 							tabIndex="0"
 							aria-label={`${result.name} ${result.type}`}
 							onClick={() => {
-								switch (result.type) {
-									case "product": {
-										navigate("/products", { state: { selectedProduct: result.name } });
-
-										break;
-									}
-
-									case "map": {
-										// Handle both regular map entries and specific product entries
-										navigate("/map", {
-											state: {
-												selectedProduct: result.name.replace(" Map", "").split(" (")[0], // Get just the product name
-												productValue: result.product?.value, // Pass the value
-												specificProduct: result.specificProduct || null, // Pass the specific product if it exists
-												// Pass parent if we have specific product
-												parentProduct: result.specificProduct ? result.product?.text : null,
-											},
-										});
-										break;
-									}
-
-									case "lab": {
-										navigate(result.link, { replace: true });
-
-										break;
-									}
-
-									default:// Do nothing
-								}
+								handleResultSelect(result);
 							}}
 							onMouseEnter={() => setFocusedIndex(index)}
 							onKeyDown={(e) => {
