@@ -425,7 +425,7 @@ const LOFS = () => {
 						) : isValidArray(metrics) ? (
 							<Plot
 								scrollZoom
-								showLegend
+								showLegend={card.data.length > 1} // Show legend only when data has more than 1 element
 								data={card.data}
 								title={dateRange.month === undefined
 									? "" : `${monthNames[dateRange.month].text} ${dateRange.year}`}

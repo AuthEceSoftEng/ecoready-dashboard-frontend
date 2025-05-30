@@ -69,9 +69,15 @@ const getMaxValue = (maxProd, prodTypeVal, country = "EU") => [
 const ProductsScreen = () => {
 	const location = useLocation();
 	const selectedProduct = location.state?.selectedProduct;
+	// const selectedProductionProduct = location.state?.specificProduct;
+	// const selectedPriceProduct = location.state?.productValue;
 	const [startDate, setStartDate] = useState("2024-01-01");
 	const [endDate, setEndDate] = useState("2024-12-31");
 	const [globalProduct, setGlobalProduct] = useState(selectedProduct || "Rice");
+
+	// Add these near your other state declarations
+	const [productionTimeoutReached, setProductionTimeoutReached] = useState(false);
+	const [priceTimeoutReached, setPriceTimeoutReached] = useState(false);
 
 	// Find the selected product's details from products array
 	const selectedProductDetails = findKeyByText(products, globalProduct, true);
@@ -108,12 +114,10 @@ const ProductsScreen = () => {
 	}, [collectionOptions?.productTypes, pricesItems.fields, pricesItems.needsDropdown]);
 
 	const productionItems = useMemo(() => extractFields(selectedProductDetails, "production") || [], [selectedProductDetails]);
-	// console.log("Production Items:", productionItems);
 
 	const productionProducts = useMemo(() => productionItems.fields[0]?.products ?? [], [productionItems]);
 	const productTypes = useMemo(() => productionItems.fields[0]?.productTypes ?? [], [productionItems]);
 	const productionMetrics = useMemo(() => productionItems.fields[0]?.productionMetrics ?? [], [productionItems]);
-	// console.log("Production Product Types:", productTypes);
 	const [productionOptions, setProductionOptions] = useState({
 		year: "2024",
 		product: productionProducts?.[0] ?? null,
@@ -142,7 +146,7 @@ const ProductsScreen = () => {
 		() => debounce((date, setter) => {
 			const { currentDate } = calculateDates(date);
 			setter(currentDate);
-		}, 0),
+		}, 2200),
 		[],
 	);
 
@@ -246,6 +250,46 @@ const ProductsScreen = () => {
 
 	const { isPriceLoading, isProductionLoading, dataSets, minutesAgo } = state;
 
+	// Add this useEffect to handle production data timeout
+	useEffect(() => {
+		if (isProductionLoading) {
+			// Reset timeout flag when loading starts
+			setProductionTimeoutReached(false);
+
+			// Set a timeout (e.g., 10 seconds)
+			const timeoutId = setTimeout(() => {
+				if (isProductionLoading) {
+					setProductionTimeoutReached(true);
+				}
+			}, 10_000);
+
+			// Clean up timeout if loading finishes before timeout
+			return () => clearTimeout(timeoutId);
+		}
+	}, [isProductionLoading]);
+
+	// Add this useEffect to handle price data timeout
+	useEffect(() => {
+		if (isPriceLoading) {
+			// Reset timeout flag when loading starts
+			setPriceTimeoutReached(false);
+
+			// Set a timeout (e.g., 10 seconds)
+			const timeoutId = setTimeout(() => {
+				if (isPriceLoading) {
+					setPriceTimeoutReached(true);
+				}
+			}, 12_000);
+
+			// Clean up timeout if loading finishes before timeout
+			return () => clearTimeout(timeoutId);
+		}
+	}, [isPriceLoading]);
+
+	const hasProductionData = dataSets
+		&& dataSets.productProduction
+		&& (Array.isArray(dataSets.productProduction) ? dataSets.productProduction.length > 0 : !!dataSets.productProduction);
+
 	const pricesTimeline = useMemo(() => dataSets?.pricesTimeline || [], [dataSets]);
 	const periodPrices = useMemo(() => dataSets?.periodPrices || [], [dataSets]);
 	const monthlyPrices = useMemo(() => dataSets?.monthlyPrices || [], [dataSets]);
@@ -281,6 +325,10 @@ const ProductsScreen = () => {
 			onChange: (event) => {
 				const newProduct = event.target.value;
 				dispatch({ type: "FETCH_START" });
+
+				// Reset timeout flags when changing products
+				setProductionTimeoutReached(false);
+				setPriceTimeoutReached(false);
 
 				// Find the new product details
 				const newProductDetails = products.find((p) => p.text === newProduct);
@@ -397,7 +445,6 @@ const ProductsScreen = () => {
 		// Map each key to its array
 		return productionKeys.map((key) => dataSets[key] || []);
 	}, [dataSets]);
-	// console.log("Combined Production Data:", production);
 
 	const maxProduction = useMemo(() => {
 		if (!dataSets) return [];
@@ -625,7 +672,7 @@ const ProductsScreen = () => {
 				id: "product",
 				items: priceProducts,
 				value: priceOptions.product,
-				label: "Select Product Type",
+				label: globalProduct === "Poultry" ? "Select Price Type" : "Select Product Type",
 				onChange: (event) => {
 					priceState.dispatch({ type: "FETCH_PRICE_START" });
 					setPriceOptions((prev) => ({ ...prev, product: event.target.value }));
@@ -772,6 +819,8 @@ const ProductsScreen = () => {
 			endValue: endDate,
 			endLabel: "End date",
 			labelSize: 12,
+			minDate: new Date("2010-01-01"),
+			maxDate: new Date(`${currentYear}-01-01`),
 			onStartChange: (newValue) => handleDateChange(newValue, setStartDate),
 			onEndChange: (newValue) => handleDateChange(newValue, setEndDate),
 		},
@@ -873,9 +922,13 @@ const ProductsScreen = () => {
 			{/* PRODUCTION CARDS */}
 			<Grid item xs={12} md={12} alignItems="center" flexDirection="column">
 				<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2} sx={{ minHeight: "500px" }}>
-					{state.isLoading ? (
-						<Grid item xs={12}><LoadingIndicator /></Grid>
-					) : dataSets.productProduction ? (
+					{(isPriceLoading && isProductionLoading && !productionTimeoutReached) ? (
+						<Grid item xs={12}><LoadingIndicator minHeight="500px" /></Grid>
+					) : productionTimeoutReached ? (
+						<Grid item xs={12}>
+							<DataWarning minHeight="400px" message="No Available Production Data for the Specified Product" />
+						</Grid>
+					) : (
 						<>
 							<Grid
 								item
@@ -896,11 +949,10 @@ const ProductsScreen = () => {
 									<Grid item xs={12} md={12} display="flex" justifyContent="flex-end">
 										<StickyBand sticky={false} dropdownContent={productionDropdowns} formRef={yearPickerRef} formContent={yearPickerProps} />
 									</Grid>
-									{isProductionLoading ? (<LoadingIndicator />
-									) : dataSets.productProduction.length === 0 ? (
-										<DataWarning message="No Available Production Data for the Specified Options Combination" />
-									) : (
+									{isProductionLoading ? (<LoadingIndicator minHeight="405px" />
+									) : (hasProductionData ? (
 										<Grid container display="flex" direction="row" justifyContent="space-evenly" sx={{ flex: 1 }}>
+											{/* Rest of the production card content */}
 											<Grid container display="flex" direction="row" justifyContent="space-evenly" sx={{ flex: 1 }}>
 												<Grid item xs={12} sm={12} md={12} justifyContent="center" alignItems="center">
 													{europeOverview?.charts.gauge.warning ? (
@@ -941,7 +993,9 @@ const ProductsScreen = () => {
 												</Grid>
 											</Grid>
 										</Grid>
-									)}
+									) : (
+										<DataWarning minHeight="409px" message="No Available Production Data for the Specified Options' Combination" />
+									))}
 								</Card>
 							</Grid>
 							<Grid
@@ -960,12 +1014,10 @@ const ProductsScreen = () => {
 								}}
 							>
 								<Card title="Production per Year" footer={cardFooter({ minutesAgo })} sx={{ display: "flex", flexDirection: "column" }}>
-									{isProductionLoading ? (<LoadingIndicator />
-									) : !dataSets.productProduction || dataSets.productProduction.length === 0 ? (
-										<DataWarning message="No Available Data for the Specified Options Combination" />
-									) : (
-										<Grid item xs={12} sm={12} justifyContent="center" alignItems="center" sx={{ flex: 1 }}>
-											{europeOverview?.charts.bars.data ? (
+									<Grid item xs={12} sm={12} justifyContent="center" alignItems="center" sx={{ flex: 1 }}>
+										{isProductionLoading ? (<LoadingIndicator minHeight="454px" />
+										) : (
+											europeOverview?.charts.bars.data ? (
 												<Plot
 													scrollZoom
 													height="459px"
@@ -975,16 +1027,12 @@ const ProductsScreen = () => {
 													title={europeOverview.charts.bars.title}
 													xaxis={europeOverview.charts.bars.xaxis}
 												/>
-											) : (<DataWarning message="No Available Data for the Specified Options' Combination" />)}
-										</Grid>
-									)}
+											) : (<DataWarning minHeight="459px" message="No Available Data for the Specified Options' Combination" />)
+										)}
+									</Grid>
 								</Card>
 							</Grid>
 						</>
-					) : (
-						<Grid item xs={12}>
-							<DataWarning message="No Available Production Data for the Specified Product" />
-						</Grid>
 					)}
 				</Grid>
 			</Grid>
@@ -993,8 +1041,8 @@ const ProductsScreen = () => {
 			<Grid item xs={12} md={12} mb={2} alignItems="center" flexDirection="column">
 				<Card title="Product per Country" footer={cardFooter({ minutesAgo })}>
 					<StickyBand sticky={false} dropdownContent={priceDropdowns} formRef={formRefDate} formContent={formContentDate} />
-					{state.isLoading || isPriceLoading ? (<LoadingIndicator />
-					) : existingCountries.length === 0 ? (<DataWarning message="No Available Pricing Data For the Specified Options' Combination" />
+					{state.isLoading || isPriceLoading ? (<LoadingIndicator minHeight="400px" />
+					) : existingCountries.length === 0 ? (<DataWarning minHeight="400px" message="No Available Pricing Data For the Specified Options' Combination" />
 					) : dateMetrics.isValidDateRange ? (
 						<Grid container display="flex" direction="row" justifyContent="space-evenly" padding={0} spacing={1}>
 							{countryOverview.map((plotData, index) => {
@@ -1040,7 +1088,7 @@ const ProductsScreen = () => {
 								);
 							})}
 						</Grid>
-					) : (<DataWarning message="Please Select a Valid Date Range" />
+					) : (<DataWarning minHeight="400px" message="Please Select a Valid Date Range" />
 					)}
 				</Card>
 			</Grid>
