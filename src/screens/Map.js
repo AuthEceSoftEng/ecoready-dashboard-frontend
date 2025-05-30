@@ -14,6 +14,7 @@ import { findKeyByText } from "../utils/data-handling-functions.js";
 
 const excludedProducts = new Set(["Oilseeds", "Cereals", "Sheep/Goat Meat"]);
 const mapProducts = products.filter((product) => !excludedProducts.has(product.text)).map((product) => product);
+console.log("Map Products", mapProducts);
 
 const currentYear = new Date().getFullYear();
 // Extract popup component
@@ -86,25 +87,11 @@ const Map = () => {
 	const navigate = useNavigate();
 	const [geoJsonData, setGeoJsonData] = useState(null);
 	const [showLegend, setShowLegend] = useState(false); // State for controlling legend visibility
+	// Update your state initialization
 	const [filters, setFilters] = useState({
 		year: "2024",
 		product: selectedProduct || "Rice",
 	});
-	// console.log("Product", filters.product);
-
-	useEffect(() => {
-		if (selectedProduct) {
-			setFilters((prev) => ({
-				...prev,
-				product: selectedProduct,
-			}));
-		}
-	}, [selectedProduct]);
-
-	// const selectedProductDetails = findKeyByText(products, filters.product, true);
-
-	// const pricesItems = useMemo(() => extractFields(selectedProductDetails, "prices") || [], [selectedProductDetails]);
-	// const priceCollections = useMemo(() => (pricesItems.needsDropdown ? pricesItems.collections : []), [pricesItems]);
 
 	const [isDataReady, setIsDataReady] = useState(false);
 
@@ -175,21 +162,6 @@ const Map = () => {
 		...item,
 	}))), [dispatch, filters.product]); // Add dispatch to dependencies
 
-	// const productTypeDropdownContent = useMemo(() => ([
-	// 	{
-	// 		id: "product",
-	// 		items: products?.prices.products || [],
-	// 		label: "Select Product Type",
-	// 		value: filters.product,
-	// 		onChange: (event) => {
-	// 			dispatch({ type: "FETCH_START" }); // Add loading state
-	// 			setFilters((prev) => ({ ...prev, product: event.target.value }));
-	// 		},
-	// 	},
-	// ].map((item) => ({
-	// 	...item,
-	// }))), [dispatch, filters.product]); // Add dispatch to dependencies
-
 	useEffect(() => {
 		// Load the GeoJSON file from the public directory
 		fetch("/european_countries.json")
@@ -226,7 +198,6 @@ const Map = () => {
 			}),
 		}));
 	}, [geoJsonData, statistics]);
-	// console.log("Created Geodata:", enhancedGeoJsonData);
 
 	// Add effect to monitor data readiness
 	useEffect(() => {
