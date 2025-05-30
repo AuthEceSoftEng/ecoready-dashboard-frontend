@@ -12,8 +12,6 @@ import { Image } from "mui-image";
 import { jwt, capitalize } from "../utils/index.js"; // , isFuzzyMatch
 import { products, labs } from "../utils/useful-constants.js";
 import logo from "../assets/images/logo.png";
-// import inspectionIcon from "../assets/icons/inspection.png";
-// import servicesIcon from "../assets/icons/services.png";
 import logoutIcon from "../assets/icons/logout.png";
 
 import Search from "./Search.js";
@@ -99,37 +97,41 @@ const Header = ({ isAuthenticated }) => {
 			product, // Store the full product object for searching
 		}));
 
-		const productionEntries = products.flatMap((product) => {
-			// Check if this product has production products listed
-			if (product.production && Array.isArray(product.production.products)) {
-				// For each specific product, create a production entry
-				return product.production.products.map((subProduct) => ({
-					type: "product",
-					name: `${subProduct} (${product.text})`,
-					link: `/products?selected=${product.value}`,
-					product, // Store the parent product object
-					value: product.value,
-				}));
-			}
+		// const productionEntries = products.flatMap((product) => {
+		// 	// Check if this product has production products listed
+		// 	if (product.production && Array.isArray(product.production.products)) {
+		// 		// For each specific product, create a production entry
+		// 		return product.production.products.map((subProduct) => ({
+		// 			type: "product",
+		// 			name: `${subProduct} (${product.text})`,
+		// 			link: `/products?selected=${product.value}`,
+		// 			product,
+		// 			value: product.value,
+		// 			subProduct, // Store the specific sub-product
+		// 			section: "production", // Store which section this belongs to
+		// 		}));
+		// 	}
 
-			return []; // Return empty array if no production products exist
-		});
+		// 	return []; // Return empty array if no production products exist
+		// });
 
-		const priceEntries = products.flatMap((product) => {
-			// Check if this product has prices with specific products listed
-			if (product.prices && Array.isArray(product.prices.products)) {
-				// For each specific product, create a price entry
-				return product.prices.products.map((subProduct) => ({
-					type: "product",
-					name: `${subProduct} (${product.text})`,
-					link: `/products?selected=${product.value}`,
-					product, // Store the parent product object
-					value: product.value,
-				}));
-			}
+		// const priceEntries = products.flatMap((product) => {
+		// 	// Check if this product has prices with specific products listed
+		// 	if (product.prices && Array.isArray(product.prices.products)) {
+		// 		// For each specific product, create a price entry
+		// 		return product.prices.products.map((subProduct) => ({
+		// 			type: "product",
+		// 			name: `${subProduct} (${product.text})`,
+		// 			link: `/products?selected=${product.value}`,
+		// 			product, // Store the parent product object
+		// 			value: product.value,
+		// 			subProduct, // Store the specific sub-product
+		// 			section: "prices",
+		// 		}));
+		// 	}
 
-			return []; // Return empty array if no prices.products exist
-		});
+		// 	return []; // Return empty array if no prices.products exist
+		// });
 
 		// Map entries - include ALL products, not just top-level ones
 		const mapEntries = products
@@ -145,11 +147,11 @@ const Header = ({ isAuthenticated }) => {
 		// NEW: Map entries for specific subproducts (like abricots under Fruits & Vegetables)
 		const subProductMapEntries = products.flatMap((product) => {
 			// Check if this product has prices with specific products listed
-			if (product.prices && Array.isArray(product.prices.products)) {
+			if (product.subheader && Array.isArray(product.prices.products)) {
 				// For each specific product, create a map entry
 				return product.prices.products.map((subProduct) => ({
 					type: "map",
-					name: `${subProduct} (${product.text}) Map`,
+					name: `${subProduct.toLocaleLowerCase()} (${product.text}) Map`,
 					link: `/map?selected=${product.value}`,
 					product, // Store the parent product object
 					value: product.value,
@@ -168,7 +170,7 @@ const Header = ({ isAuthenticated }) => {
 			productName: product, // Store the product name
 		})));
 
-		return [...productEntries, ...productionEntries, ...priceEntries, ...mapEntries, ...subProductMapEntries, ...labEntries];
+		return [...productEntries, ...mapEntries, ...subProductMapEntries, ...labEntries]; //...productionEntries, ...priceEntries, 
 	}, []); // Memoize to avoid unnecessary recalculations
 
 	// const isMenuOpenServices = Boolean(anchorElServices);
