@@ -7,6 +7,7 @@ import {
 	ExpandMoreRounded, MapRounded, HomeRounded,
 	AgricultureRounded, SpaRounded,
 	Diversity3Rounded,
+	CrisisAlertRounded,
 } from "@mui/icons-material";
 
 import { labs } from "../utils/useful-constants.js";
@@ -193,6 +194,14 @@ const Sidebar = ({ isSmall: sidebarIsSmall, onToggleSidebar }) => {
 			handler: () => {
 				handleServicesMenuClose();
 				navigate("/products");
+			},
+		},
+		{
+			icon: <CrisisAlertRounded />,
+			text: "Contaminants",
+			handler: () => {
+				handleServicesMenuClose();
+				navigate("/contaminants");
 			},
 		},
 		{
