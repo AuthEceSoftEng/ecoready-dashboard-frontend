@@ -1,7 +1,6 @@
 export	const organization = "efsa";
 
-const efsaConfigs = (year) => [
-
+const efsaConfigs = (country, year = null) => [
 	{
 		type: "data",
 		project: "efsaproject",
@@ -13,21 +12,25 @@ const efsaConfigs = (year) => [
 				"origcountry",
 			],
 			filters: [
-				// {
-				// 	property_name: "station_name",
-				// 	operator: "eq",
-				// 	property_value: stationName,
-				// },
-				{
-					property_name: "timestamp",
-					operator: "gte",
-					property_value: `${year}-01-01`,
-				},
-				{
-					property_name: "timestamp",
-					operator: "lte",
-					property_value: `${year}-12-31`,
-				},
+				// Conditionally include country filter
+				...(country ? [{
+					property_name: "origcountry",
+					operator: "eq",
+					property_value: country,
+				}] : []),
+				// Conditionally include year filters
+				...(year ? [
+					{
+						property_name: "timestamp",
+						operator: "gte",
+						property_value: `${year}-01-01`,
+					},
+					{
+						property_name: "timestamp",
+						operator: "lte",
+						property_value: `${year}-12-31`,
+					}
+				] : []),
 			],
 			order_by: {
 				field: "timestamp",
