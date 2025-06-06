@@ -56,6 +56,7 @@ const Plot = ({
 	background = "white",
 	polarRange = [0, 100],
 	barmode = null,
+	shapes = [],
 	xaxis = {},
 	yaxis = {},
 }) => {
@@ -143,6 +144,7 @@ const Plot = ({
 				legend: {
 					font: { color: colors?.[titleColor] || titleColor, size: legendFontSize },
 				},
+				shapes: shapes.map((shape) => ({ ...shape })),
 				xaxis: {
 					...xaxis,
 				},
