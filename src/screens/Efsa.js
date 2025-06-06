@@ -1,5 +1,5 @@
 import { useLocation } from "react-router-dom";
-import { Grid, Tooltip } from "@mui/material";
+import { Grid } from "@mui/material";
 import { memo, useMemo, useState, useCallback, useRef, useEffect } from "react";
 
 import Card from "../components/Card.js";
@@ -15,8 +15,8 @@ const countries = ["Austria", "Belgium", "Bulgaria", "Croatia", "Denmark", "Fran
 const Efsa = () => {
 	const [selectedCountry, setSelectedCountry] = useState(countries[0]);
 	console.log("Efsa selectedCountry:", selectedCountry);
-	const [selectedContaminant, setSelectedContaminant] = useState(null);
-	const [selectedProduct, setSelectedProduct] = useState(null);
+	const [selectedContaminant, setSelectedContaminant] = useState("");
+	const [selectedProduct, setSelectedProduct] = useState("");
 	const [year, setYear] = useState("2021");
 
 	const handleYearChange = useCallback((newValue) => {
@@ -48,22 +48,23 @@ const Efsa = () => {
 	console.log("Efsa dataSets:", dataSets);
 	const data = useMemo(() => dataSets?.metrics || [], [dataSets]);
 
-	const uniqueProducts = useMemo(() => {
-		// Wait until dataSets is available and has metrics
-		if (!data || data.length === 0) return [];
+	const { uniqueProducts, uniqueParams } = useMemo(() => {
+		if (!data || data.length === 0) return { uniqueProducts: [], uniqueParams: [] };
 
-		// Direct extraction without extractFields
-		const keys = data.map((item) => item.key);
-		return [...new Set(keys)].sort();
+		const products = [...new Set(data.map((item) => item.key))].sort();
+		const params = [...new Set(data.map((item) => item.param))].sort();
+
+		return { uniqueProducts: products, uniqueParams: params };
 	}, [data]);
 
-	const uniqueParams = useMemo(() => {
-		// Wait until dataSets is available and has metrics
-		if (!data || data.length === 0) return [];
+	// Combined grouped data
+	const { dataGroupedByKey, dataGroupedByParam } = useMemo(() => {
+		if (!isValidArray(data)) return { dataGroupedByKey: {}, dataGroupedByParam: {} };
 
-		// Direct extraction without extractFields
-		const params = data.map((item) => item.param);
-		return [...new Set(params)].sort();
+		return {
+			dataGroupedByKey: groupByKey(data, "key"),
+			dataGroupedByParam: groupByKey(data, "param"),
+		};
 	}, [data]);
 
 	const countryDropdown = useMemo(() => ([{
@@ -111,66 +112,147 @@ const Efsa = () => {
 		}
 	}, [selectedCountry, uniqueParams, uniqueProducts]);
 
-	// Group data by key and param
-	const dataGroupedByKey = useMemo(() => (data.length > 0 ? groupByKey(data, "key") : {}),
-		[data]);
-	// console.log("Efsa dataGroupedByKey:", dataGroupedByKey);
-
-	const dataGroupedByParam = useMemo(() => (data.length > 0 ? groupByKey(data, "param") : {}),
-		[data]);
-	// console.log("Efsa dataGroupedByParam:", dataGroupedByParam);
-
 	const contaminantChartData = useMemo(() => {
 		if (!selectedContaminant || data.length === 0) return [];
 
-		// Use pre-grouped data instead of filtering entire dataset
 		const contaminantData = dataGroupedByParam[selectedContaminant] || [];
 		const filteredData = contaminantData.filter((item) => item.resval > item.resloq);
-		console.log("Contaminant filteredData:", filteredData);
-		return [{
-			x: filteredData.map((item) => item.key),
-			y: filteredData.map((item) => item.resval),
-			type: "bar",
-			name: "Residue Value",
-			color: "red",
-		}];
+
+		return [
+			{
+				x: filteredData.map((item) => item.key),
+				y: filteredData.map((item) => item.resval),
+				type: "bar",
+				name: "Residue Value",
+			},
+			{
+				x: filteredData.map((item) => item.key),
+				y: filteredData.map((item) => item.resloq),
+				type: "scatter",
+				mode: "lines",
+				name: "LOQ",
+				line: { color: "goldenrod", dash: "dash", width: 2 },
+			},
+		];
 	}, [data.length, dataGroupedByParam, selectedContaminant]);
 
 	const productChartData = useMemo(() => {
 		if (!selectedProduct || data.length === 0) return [];
 
-		// Use pre-grouped data
 		const productData = dataGroupedByKey[selectedProduct] || [];
 		const filteredData = productData.filter((item) => item.resval > item.resloq);
-		console.log("Product filteredData:", filteredData);
-		return [{
-			x: filteredData.map((item) => item.param),
-			y: filteredData.map((item) => item.resval),
-			type: "bar",
-			name: "Residue Value",
-			color: "primary",
-		}];
+
+		return [
+			{
+				x: filteredData.map((item) => item.param),
+				y: filteredData.map((item) => item.resval),
+				type: "bar",
+				name: "Residue Value",
+				marker: { color: "primary" },
+			},
+		];
 	}, [data.length, dataGroupedByKey, selectedProduct]);
 
-	const contaminantChartLayout = useMemo(() => ({
-		xaxis: {
-			title: "Food Products",
-			tickangle: -5,
-		},
-		yaxis: {
-			title: "Residue Value",
-		},
-	}), []);
+	const contaminantChartLayout = useMemo(() => {
+		// Get LOQ value (same for all products)
+		const contaminantData = dataGroupedByParam[selectedContaminant] || [];
+		const filteredData = contaminantData.filter((item) => item.resval > item.resloq);
+		const loqValue = filteredData.length > 0 ? filteredData[0].resloq : 0;
 
-	const productChartLayout = useMemo(() => ({
-		xaxis: {
-			title: "Contaminants",
-			tickangle: 5,
-		},
-		yaxis: {
-			title: "Residue Value",
-		},
-	}), []);
+		return {
+			xaxis: {
+				title: "Food Products",
+				tickangle: 5,
+			},
+			yaxis: {
+				title: "Residue Value",
+			},
+			shapes: loqValue > 0 ? [{
+				type: "line",
+				xref: "paper",
+				x0: 0,
+				x1: 1,
+				yref: "y",
+				y0: loqValue,
+				y1: loqValue,
+				line: {
+					color: "goldenrod",
+					width: 2,
+					dash: "dash",
+				},
+			}] : [],
+		};
+	}, [selectedContaminant, dataGroupedByParam]);
+
+	const contaminantPieChartData = useMemo(() => {
+		if (!selectedContaminant || data.length === 0) return [];
+
+		// Filter data for selected contaminant
+		const contaminantData = data.filter((item) => item.param === selectedContaminant);
+
+		if (contaminantData.length === 0) return [];
+
+		// Count exceedances and non-exceedances
+		const exceedances = contaminantData.filter((item) => item.resval > item.resloq).length;
+		const nonExceedances = contaminantData.length - exceedances;
+
+		// Calculate percentages
+		const exceedancePercentage = ((exceedances / contaminantData.length) * 100).toFixed(1);
+		const nonExceedancePercentage = ((nonExceedances / contaminantData.length) * 100).toFixed(1);
+
+		return [{
+			values: [exceedances, nonExceedances],
+			labels: [
+				`Exceeding LOQ (${exceedancePercentage}%)`,
+				`Below LOQ (${nonExceedancePercentage}%)`,
+			],
+			type: "pie",
+		}];
+	}, [data, selectedContaminant]);
+
+	const productChartLayout = useMemo(() => {
+		if (!selectedProduct || data.length === 0) {
+			return {
+				xaxis: {
+					title: "Contaminants",
+					tickangle: 5,
+				},
+				yaxis: {
+					title: "Residue Value",
+				},
+			};
+		}
+
+		const productData = dataGroupedByKey[selectedProduct] || [];
+		const filteredData = productData.filter((item) => item.resval > item.resloq);
+
+		// Create individual shapes for each contaminant's LOQ line
+		const shapes = filteredData.map((item, index) => ({
+			type: "line",
+			xref: "x",
+			x0: index - 0.4, // Start before the bar
+			x1: index + 0.4, // End after the bar
+			yref: "y",
+			y0: item.resloq,
+			y1: item.resloq,
+			line: {
+				color: "goldenrod",
+				width: 3,
+				dash: "dash",
+			},
+		}));
+
+		return {
+			xaxis: {
+				title: "Contaminants",
+				tickangle: 5,
+			},
+			yaxis: {
+				title: "Residue Value",
+			},
+			shapes,
+		};
+	}, [selectedProduct, dataGroupedByKey, data.length]);
 
 	const productPieChartData = useMemo(() => {
 		if (!selectedProduct || data.length === 0) return [];
@@ -195,14 +277,14 @@ const Efsa = () => {
 				`Below LOQ (${nonExceedancePercentage}%)`,
 			],
 			type: "pie",
-			name: "Contamination Status",
 		}];
 	}, [data, selectedProduct]);
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
 			<StickyBand dropdownContent={countryDropdown} formRef={yearPickerRef} formContent={yearPickerProps} />
-			<Grid item xs={12} sm={12} md={6} lg={6}>
+
+			<Grid item xs={12} sm={12} md={12} lg={12}>
 				<Card
 					title="Foods with Risky Contaminant Levels"
 					footer={isLoading ? undefined : cardFooter({ minutesAgo })}
@@ -210,25 +292,33 @@ const Efsa = () => {
 					<StickyBand sticky={false} dropdownContent={contaminantDropdown} />
 					{isLoading ? (
 						<LoadingIndicator minHeight="300px" />
-					) : selectedContaminant ? (
-						contaminantChartData.length > 0 ? (
-							<Plot
-								scrollZoom
-								data={contaminantChartData}
-								showLegend={false}
-								xaxis={contaminantChartLayout.xaxis}
-								yaxis={contaminantChartLayout.yaxis}
-							/>
-						) : (
-							<DataWarning message={`No exceedances found for ${selectedContaminant}`} />
-						)
+					) : uniqueParams.length === 0 ? (
+						<DataWarning message="No contaminant measurements available for the selected country and year" />
+					) : isValidArray(contaminantChartData[0]?.x) ? (
+						<Grid container spacing={1}>
+							<Grid item xs={12} md={6}>
+								<Plot
+									scrollZoom
+									data={contaminantChartData}
+									showLegend={false}
+									shapes={contaminantChartLayout.shapes}
+									xaxis={contaminantChartLayout.xaxis}
+									yaxis={contaminantChartLayout.yaxis}
+								/>
+							</Grid>
+							<Grid item xs={12} md={6}>
+								<Plot
+									data={contaminantPieChartData}
+								/>
+							</Grid>
+						</Grid>
 					) : (
-						<DataWarning message="Please select a contaminant to view the chart" />
+						<DataWarning message={`No measurements exceeding LOQ found for ${selectedContaminant}. All levels are compliant with EU health standards.`} />
 					)}
 				</Card>
 			</Grid>
 
-			<Grid item xs={12} sm={12} md={6} lg={6}>
+			<Grid item xs={12} sm={12} md={12} lg={12}>
 				<Card
 					title="Contaminants in Selected Food Product"
 					footer={isLoading ? undefined : cardFooter({ minutesAgo })}
@@ -236,43 +326,28 @@ const Efsa = () => {
 					<StickyBand sticky={false} dropdownContent={productDropdown} />
 					{isLoading ? (
 						<LoadingIndicator minHeight="300px" />
-					) : selectedProduct ? (
-						productChartData.length > 0 ? (
-							<Plot
-								scrollZoom
-								data={productChartData}
-								showLegend={false}
-								xaxis={productChartLayout.xaxis}
-								yaxis={productChartLayout.yaxis}
-							/>
-						) : (
-							<DataWarning message={`No exceedances found for ${selectedProduct}`} />
-						)
+					) : uniqueProducts.length === 0 ? (
+						<DataWarning message="No product measurements available for the selected country and year" />
+					) : isValidArray(productChartData[0]?.x) ? (
+						<Grid container spacing={1}>
+							<Grid item xs={12} md={6}>
+								<Plot
+									scrollZoom
+									showLegend
+									data={productChartData}
+									shapes={productChartLayout.shapes}
+									xaxis={productChartLayout.xaxis}
+									yaxis={productChartLayout.yaxis}
+								/>
+							</Grid>
+							<Grid item xs={12} md={6}>
+								<Plot
+									data={productPieChartData}
+								/>
+							</Grid>
+						</Grid>
 					) : (
-						<DataWarning message="Please select a product to view the chart" />
-					)}
-				</Card>
-			</Grid>
-
-			<Grid item xs={12} sm={12} md={4} lg={4}>
-				<Card
-					title="Contamination Analysis"
-					footer={isLoading ? undefined : cardFooter({ minutesAgo })}
-				>
-					<StickyBand sticky={false} dropdownContent={productDropdown} />
-					{isLoading ? (
-						<LoadingIndicator minHeight="300px" />
-					) : selectedProduct ? (
-						productPieChartData.length > 0 ? (
-							<Plot
-								data={productPieChartData}
-								height="300px"
-							/>
-						) : (
-							<DataWarning message={`No data found for ${selectedProduct}`} />
-						)
-					) : (
-						<DataWarning message="Please select a product to view the analysis" />
+						<DataWarning message={`No measurements exceeding LOQ found for ${selectedProduct}. All levels are compliant with EU health standards.`} />
 					)}
 				</Card>
 			</Grid>
