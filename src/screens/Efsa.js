@@ -14,9 +14,17 @@ const countries = ["Austria", "Belgium", "Bulgaria", "Croatia", "Denmark", "Fran
 
 const truncateLabel = (label, maxLength = 15) => (label.length > maxLength ? `${label.slice(0, Math.max(0, maxLength))}...` : label);
 
+// Create a dropdown factory function
+const createDropdown = (id, label, items, value, onChange) => ([{
+	id,
+	label,
+	items,
+	value,
+	onChange,
+}]);
+
 const Efsa = () => {
 	const [selectedCountry, setSelectedCountry] = useState(countries[0]);
-	console.log("Efsa selectedCountry:", selectedCountry);
 	const [selectedContaminant, setSelectedContaminant] = useState("");
 	const [selectedProduct, setSelectedProduct] = useState("");
 	const [selectedContaminantTimeline, setSelectedContaminantTimeline] = useState("");
@@ -42,85 +50,130 @@ const Efsa = () => {
 	], [handleYearChange, year]);
 
 	const fetchConfigs = useMemo(
-		() => (year ? efsaConfigs(selectedCountry.toLowerCase(), selectedProductTimeline, selectedContaminantTimeline, year) : null),
-		[selectedContaminantTimeline, selectedCountry, selectedProductTimeline, year],
+		() => (selectedCountry ? efsaConfigs(selectedCountry.toLowerCase(), year) : null),
+		[selectedCountry, year],
 	);
 
 	const { state } = useInit(organization, fetchConfigs);
 
 	const { isLoading, dataSets, minutesAgo } = state;
 	const data = useMemo(() => dataSets?.metrics || [], [dataSets]);
+	const timelineData = useMemo(() => dataSets?.timeline || [], [dataSets]);
 	console.log("Efsa data:", data);
 
-	const { uniqueProducts, uniqueContaminants } = useMemo(() => {
-		if (!data || data.length === 0) return { uniqueProducts: [], uniqueContaminants: [] };
+	const { uniqueChartProducts, uniqueChartContaminants, uniqueTimelineProducts, uniqueTimelineContaminants } = useMemo(() => {
+		// Early return if no data
+		if ((!data?.length) && (!timelineData?.length)) {
+			return { uniqueChartProducts: [], uniqueChartContaminants: [], uniqueTimelineProducts: [], uniqueTimelineContaminants: [] };
+		}
 
-		const products = [...new Set(data.map((item) => item.key))].sort();
-		const contaminants = [...new Set(data.map((item) => item.param))].sort();
+		const chartProductsSet = new Set();
+		const chartContaminantsSet = new Set();
+		const timelineProductsSet = new Set();
+		const timelineContaminantsSet = new Set();
 
-		return { uniqueProducts: products, uniqueContaminants: contaminants };
-	}, [data]);
+		// Process data array
+		if (data) {
+			for (const item of data) {
+				if (item.resval > 0) {
+					chartProductsSet.add(item.key);
+					chartContaminantsSet.add(item.param);
+				}
+			}
+		}
+
+		// Process timelineData array
+		if (timelineData) {
+			for (const item of timelineData) {
+				timelineProductsSet.add(item.key);
+				timelineContaminantsSet.add(item.param);
+			}
+		}
+
+		// Convert to sorted arrays only once at the end
+		return {
+			uniqueChartProducts: [...chartProductsSet].sort(),
+			uniqueChartContaminants: [...chartContaminantsSet].sort(),
+			uniqueTimelineProducts: [...timelineProductsSet].sort(),
+			uniqueTimelineContaminants: [...timelineContaminantsSet].sort(),
+		};
+	}, [data, timelineData]);
 
 	// Combined grouped data
 	const { dataGroupedByProduct, dataGroupedByContaminant } = useMemo(() => {
 		if (!isValidArray(data)) return { dataGroupedByProduct: {}, dataGroupedByContaminant: {} };
 
-		// Filter data to only include items with keys/params that exist in uniqueProducts/uniqueContaminants
-		const filteredData = data.filter((item) => uniqueProducts.includes(item.key) && uniqueContaminants.includes(item.param));
+		// Filter data to only include items with keys/params that exist in uniqueChartProducts/uniqueChartContaminants
+		const filteredData = data.filter((item) => uniqueChartProducts.includes(item.key) && uniqueChartContaminants.includes(item.param));
 
 		return {
 			dataGroupedByProduct: groupByKey(filteredData, "key"),
 			dataGroupedByContaminant: groupByKey(filteredData, "param"),
 		};
-	}, [data, uniqueProducts, uniqueContaminants]);
+	}, [data, uniqueChartProducts, uniqueChartContaminants]);
 
-	console.log("Efsa dataGroupedByProduct:", dataGroupedByProduct);
-	console.log("Efsa dataGroupedByContaminant:", dataGroupedByContaminant);
-
-	const countryDropdown = useMemo(() => ([{
-		id: "country-dropdown",
-		label: "Select Country",
-		items: countries,
-		value: selectedCountry,
-		onChange: (e) => {
+	const countryDropdown = useMemo(() => createDropdown(
+		"country-dropdown",
+		"Select Country",
+		countries,
+		selectedCountry,
+		(e) => {
 			const newCountry = e.target.value;
 			setSelectedCountry(newCountry);
-			setSelectedContaminant(uniqueContaminants[0]); // Reset contaminant when country changes
+			setSelectedContaminant(uniqueChartContaminants[0]);
 		},
-	}]), [selectedCountry, uniqueContaminants]);
+	), [selectedCountry, uniqueChartContaminants]);
 
-	const productDropdown = useMemo(() => ([{
-		id: "product-dropdown",
-		label: "Select Product",
-		items: uniqueProducts,
-		value: selectedProduct,
-		onChange: (e) => {
-			const newProduct = e.target.value;
-			setSelectedProduct(newProduct);
-		},
-	}]), [uniqueProducts, selectedProduct]);
+	const productChartDropdown = useMemo(() => createDropdown(
+		"product-dropdown",
+		"Select Product",
+		uniqueChartProducts,
+		selectedProduct,
+		(e) => setSelectedProduct(e.target.value),
+	), [uniqueChartProducts, selectedProduct]);
 
-	const contaminantDropdown = useMemo(() => ([{
-		id: "contaminant-dropdown",
-		label: "Select Contaminant",
-		items: uniqueContaminants,
-		value: selectedContaminant,
-		onChange: (e) => {
-			const newContaminant = e.target.value;
-			setSelectedContaminant(newContaminant);
-		},
-	}]), [uniqueContaminants, selectedContaminant]);
+	const contaminantChartDropdown = useMemo(() => createDropdown(
+		"contaminant-dropdown",
+		"Select Contaminant",
+		uniqueChartContaminants,
+		selectedContaminant,
+		(e) => setSelectedContaminant(e.target.value),
+	), [uniqueChartContaminants, selectedContaminant]);
+
+	const productTimelineDropdown = useMemo(() => createDropdown(
+		"product-timeline-dropdown",
+		"Select Product",
+		uniqueTimelineProducts,
+		selectedProductTimeline,
+		(e) => setSelectedProduct(e.target.value),
+	), [uniqueTimelineProducts, selectedProductTimeline]);
+
+	const contaminantTimelineDropdown = useMemo(() => createDropdown(
+		"contaminant-timeline-dropdown",
+		"Select Contaminant",
+		uniqueTimelineContaminants,
+		selectedContaminantTimeline,
+		(e) => setSelectedContaminant(e.target.value),
+	), [uniqueTimelineContaminants, selectedContaminantTimeline]);
 
 	useEffect(() => {
 		// Reset selected contaminant and product when country changes
-		if (selectedCountry && uniqueContaminants.length > 0) {
-			setSelectedContaminant(uniqueContaminants[0]);
+		if (selectedCountry && uniqueChartContaminants.length > 0) {
+			setSelectedContaminant(uniqueChartContaminants[0]);
 		}
 
-		if (selectedCountry && uniqueProducts.length > 0) {
-			setSelectedProduct(uniqueProducts[0]);
+		if (selectedCountry && uniqueChartProducts.length > 0) {
+			setSelectedProduct(uniqueChartProducts[0]);
 		}
-	}, [selectedCountry, uniqueContaminants, uniqueProducts]);
+
+		if (selectedCountry && uniqueTimelineContaminants.length > 0) {
+			setSelectedContaminantTimeline(uniqueTimelineContaminants[0]);
+		}
+
+		if (selectedCountry && uniqueTimelineProducts.length > 0) {
+			setSelectedProductTimeline(uniqueTimelineProducts[0]);
+		}
+	}, [selectedCountry, uniqueChartContaminants, uniqueChartProducts, uniqueTimelineContaminants, uniqueTimelineProducts]);
 
 	const contaminantChartData = useMemo(() => {
 		if (!selectedContaminant || Object.keys(dataGroupedByContaminant).length === 0) return [];
@@ -132,6 +185,7 @@ const Efsa = () => {
 				x: contaminantData.map((item) => truncateLabel(item.key)),
 				y: contaminantData.map((item) => item.resval),
 				type: "bar",
+				color: "third",
 				name: "Residue Value",
 			},
 			{
@@ -149,16 +203,16 @@ const Efsa = () => {
 		if (!selectedProduct || Object.keys(dataGroupedByProduct).length === 0) return [];
 
 		const productData = dataGroupedByProduct[selectedProduct] || [];
+		console.log("Efsa productData:", productData);
 
 		return [
 			{
 				x: productData.map((item) => truncateLabel(item.param)), // Use truncated labels
 				y: productData.map((item) => item.resval),
 				text: productData.map((item) => item.param), // Full text for hover
-				hovertemplate: "%{text}<br>Value: %{y}<extra></extra>", // Show full text on hover
 				type: "bar",
 				name: "Residue Value",
-				marker: { color: "primary" },
+				color: "colors.third",
 			},
 		];
 	}, [dataGroupedByProduct, selectedProduct]);
@@ -249,25 +303,25 @@ const Efsa = () => {
 
 	// Add this new useMemo after the existing chart data calculations
 	const stackedBarChartData = useMemo(() => {
-		if (!isValidArray(data) || uniqueProducts.length === 0 || uniqueContaminants.length === 0) return [];
+		if (!isValidArray(data) || uniqueChartProducts.length === 0 || uniqueChartContaminants.length === 0) return [];
 
 		// Use grouped data for O(1) lookups instead of O(n) searches
-		return uniqueContaminants.map((contaminant) => {
+		return uniqueChartContaminants.map((contaminant) => {
 			const contaminantData = dataGroupedByContaminant[contaminant] || [];
 
-			const contaminantValues = uniqueProducts.map((product) => {
+			const contaminantValues = uniqueChartProducts.map((product) => {
 				const dataPoint = contaminantData.find((item) => item.key === product);
 				return dataPoint ? dataPoint.resval : 0;
 			});
 
 			return {
-				x: uniqueProducts.map((product) => truncateLabel(product)),
+				x: uniqueChartProducts.map((product) => truncateLabel(product)),
 				y: contaminantValues,
 				title: truncateLabel(contaminant),
 				type: "bar",
 			};
 		});
-	}, [data, uniqueProducts, uniqueContaminants, dataGroupedByContaminant]);
+	}, [data, uniqueChartProducts, uniqueChartContaminants, dataGroupedByContaminant]);
 
 	const stackedBarChartLayout = useMemo(() => {
 		// Get unit from first data point (assuming all have same unit)
@@ -293,7 +347,7 @@ const Efsa = () => {
 				orientation: "v", // Vertical legend to show contaminant names clearly
 				y: 1,
 				x: 1.02,
-				xanchor: 'left'
+				xanchor: "left",
 			},
 		};
 	}, [data]);
@@ -310,14 +364,14 @@ const Efsa = () => {
 				>
 					{isLoading ? (
 						<LoadingIndicator minHeight="300px" />
-					) : uniqueProducts.length === 0 || uniqueContaminants.length === 0 ? (
+					) : uniqueChartProducts.length === 0 || uniqueChartContaminants.length === 0 ? (
 						<DataWarning message="No data available for the selected country and year" />
 					) : isValidArray(stackedBarChartData) && stackedBarChartData.length > 0 ? (
 						<Grid item xs={12}>
 							<Plot
 								scrollZoom
 								data={stackedBarChartData}
-								barmode="stack"  // This is what makes it stack vertically
+								barmode="stack" // This is what makes it stack vertically
 								displayBar={false}
 								xaxis={stackedBarChartLayout.xaxis}
 								yaxis={stackedBarChartLayout.yaxis}
@@ -334,10 +388,10 @@ const Efsa = () => {
 					title="Foods with Risky Contaminant Levels"
 					footer={isLoading ? undefined : cardFooter({ minutesAgo })}
 				>
-					<StickyBand sticky={false} dropdownContent={contaminantDropdown} />
+					<StickyBand sticky={false} dropdownContent={contaminantChartDropdown} />
 					{isLoading ? (
 						<LoadingIndicator minHeight="300px" />
-					) : uniqueContaminants.length === 0 ? (
+					) : uniqueChartContaminants.length === 0 ? (
 						<DataWarning message="No contaminant measurements available for the selected country and year" />
 					) : isValidArray(contaminantChartData[0]?.x) ? (
 						<Grid item xs={12} md={12}>
@@ -361,10 +415,10 @@ const Efsa = () => {
 					title="Contaminants in Selected Food Product"
 					footer={isLoading ? undefined : cardFooter({ minutesAgo })}
 				>
-					<StickyBand sticky={false} dropdownContent={productDropdown} />
+					<StickyBand sticky={false} dropdownContent={productChartDropdown} />
 					{isLoading ? (
 						<LoadingIndicator minHeight="300px" />
-					) : uniqueProducts.length === 0 ? (
+					) : uniqueChartProducts.length === 0 ? (
 						<DataWarning message="No product measurements available for the selected country and year" />
 					) : isValidArray(productChartData[0]?.x) ? (
 						<Grid item xs={12} md={12}>
