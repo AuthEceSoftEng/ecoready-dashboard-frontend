@@ -209,7 +209,7 @@ const Sidebar = ({ isSmall: sidebarIsSmall, onToggleSidebar }) => {
 			text: "Social Impact",
 			handler: () => {
 				handleServicesMenuClose();
-				navigate("/lcamag");
+				navigate("/socialimpact");
 			},
 		},
 		{
