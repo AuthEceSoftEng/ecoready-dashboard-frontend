@@ -1,6 +1,10 @@
+import { calculateDifferenceBetweenDates } from "../utils/data-handling-functions.js";
+
 export const organization = "seco_collab";
 
-const secoConfigs = (currentDate, formattedBeginningOfMonth, formattedBeginningOfDay) => {
+const secoConfigs = (startDate, endDate) => {
+	const { differenceInDays } = calculateDifferenceBetweenDates(startDate, endDate);
+
 	// Common configuration for all requests
 	const baseConfig = {
 		project: "seco_collab_project",
@@ -14,57 +18,59 @@ const secoConfigs = (currentDate, formattedBeginningOfMonth, formattedBeginningO
 		{ attribute: "a_co2", name: "Co2" },
 	];
 
-	// Date ranges
-	const dateRanges = {
-		today: {
-			start_time: formattedBeginningOfDay,
-			end_time: currentDate,
-		},
-		month: {
-			start_time: formattedBeginningOfMonth,
-			end_time: currentDate,
-		},
+	// Common date range object
+	const dateRange = {
+		start_time: startDate,
+		end_time: endDate,
 	};
 
-	// Factory functions to create config objects
-	const createDataConfig = () => ({
+	// Unified factory function for creating configs
+	const createConfig = (type, params, plotId) => ({
 		...baseConfig,
-		type: "data",
-		params: JSON.stringify({
-			attributes: ["timestamp", ...metrics.map((m) => m.attribute)],
-			order_by: {
-				field: "timestamp",
-				order: "asc",
-			},
-		}),
-		plotId: "overview",
+		type,
+		params: JSON.stringify(params),
+		plotId,
 	});
 
-	const createStatsConfig = (metric, stat, timeframe, plotIdPrefix) => ({
-		...baseConfig,
-		type: "stats",
-		params: JSON.stringify({
+	// Factory for data config
+	const createDataConfig = () => createConfig(
+		"data",
+		{
+			attributes: ["timestamp", ...metrics.map((m) => m.attribute)],
+			filters: [
+				{ property_name: "timestamp", operator: "gte", property_value: startDate },
+				{ property_name: "timestamp", operator: "lte", property_value: endDate },
+			],
+			order_by: { field: "timestamp", order: "asc" },
+		},
+		"overview",
+	);
+
+	// Unified factory for stats configs
+	const createStatsConfig = (metric, stat = "avg", plotIdPrefix, customInterval = null) => createConfig(
+		"stats",
+		{
 			attribute: [metric.attribute],
 			stat,
-			interval: "every_1_days",
-			...dateRanges[timeframe],
-		}),
-		plotId: `${plotIdPrefix}${metric.name}`,
-	});
+			interval: customInterval || (differenceInDays ? `every_${Math.max(differenceInDays, 1)}_days` : "every_1_days"),
+			...dateRange,
+		},
+		`${plotIdPrefix}${metric.name}`,
+	);
 
 	// Create configs array
 	const configs = [
 		// Overview data
 		createDataConfig(),
 
-		// Today's averages
-		...metrics.map((metric) => createStatsConfig(metric, "avg", "today", "today")),
+		// Monthly averages (with dynamic interval)
+		...metrics.map((metric) => createStatsConfig(metric, "avg", "avg")),
 
-		// Monthly maximums
-		...metrics.map((metric) => createStatsConfig(metric, "max", "month", "monthMax")),
+		// Monthly maximums (with fixed daily interval)
+		...metrics.map((metric) => createStatsConfig(metric, "max", "max", "every_1_days")),
 
-		// Monthly minimums
-		...metrics.map((metric) => createStatsConfig(metric, "min", "month", "monthMin")),
+		// Monthly minimums (with fixed daily interval)
+		...metrics.map((metric) => createStatsConfig(metric, "min", "min", "every_1_days")),
 	];
 
 	return configs;

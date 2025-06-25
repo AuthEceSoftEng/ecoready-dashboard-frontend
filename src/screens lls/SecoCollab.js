@@ -1,28 +1,61 @@
 import { Grid } from "@mui/material";
-import { memo, useMemo, useState, useCallback } from "react";
+import { memo, useMemo, useState, useCallback, useRef } from "react";
 
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
 import useInit from "../utils/screen-init.js";
 import secoConfigs, { organization } from "../config/SecoConfig.js";
-import { getCustomDateTime, calculateDates } from "../utils/data-handling-functions.js";
+import { calculateDates, debounce } from "../utils/data-handling-functions.js";
 import { cardFooter, LoadingIndicator, StickyBand, DataWarning } from "../utils/rendering-items.js";
 
 const timelineValues = ["Temperature", "Humidity", "Co2"];
+const MIN_DATE = new Date(2023, 9, 1);
+const MAX_DATE = new Date(new Date());
 
 const SecoCollab = () => {
 	const [metric, setMetric] = useState(timelineValues[0]);
-	const customDate = useMemo(() => getCustomDateTime(2024, 8), []);
-	const { currentDate, formattedBeginningOfMonth, formattedBeginningOfDay } = useMemo(
-		() => calculateDates(customDate), [customDate],
+	const [startDate, setStartDate] = useState("2025-01-01");
+	const [endDate, setEndDate] = useState("2025-05-30");
+
+	const isValidDateRange = useMemo(() => startDate && endDate && new Date(startDate) <= new Date(endDate),
+		[startDate, endDate]);
+
+	const debouncedSetDate = useMemo(
+		() => debounce((date, setter) => {
+			const { currentDate } = calculateDates(date);
+			setter(currentDate);
+		}, 0),
+		[],
 	);
+	const handleDateChange = useCallback((newValue, setter) => {
+		if (!newValue?.$d) return;
+		debouncedSetDate(newValue.$d, setter);
+	}, [debouncedSetDate]);
+
+	const formRefDate = useRef();
+	const formContentDate = useMemo(() => [
+		{
+			customType: "date-range",
+			id: "dateRange",
+			minDate: MIN_DATE,
+			maxDate: MAX_DATE,
+			startValue: startDate,
+			startLabel: "Start date",
+			endValue: endDate,
+			endLabel: "End date",
+			labelSize: 12,
+			onStartChange: (newValue) => handleDateChange(newValue, setStartDate),
+			onEndChange: (newValue) => handleDateChange(newValue, setEndDate),
+		},
+	], [endDate, handleDateChange, startDate]);
 
 	const fetchConfigs = useMemo(
-		() => secoConfigs(currentDate, formattedBeginningOfMonth, formattedBeginningOfDay),
-		[currentDate, formattedBeginningOfMonth, formattedBeginningOfDay],
+		() => secoConfigs(startDate, endDate),
+		[startDate, endDate],
 	);
 	const { state } = useInit(organization, fetchConfigs);
 	const { isLoading, dataSets, minutesAgo } = state;
+	console.log("dataSets", dataSets);
 
 	const handleMetricChange = useCallback((event) => {
 		const selectedMetric = event.target.value;
@@ -42,12 +75,12 @@ const SecoCollab = () => {
 		},
 	], [handleMetricChange, metric]);
 
-	const dailyOverview = useMemo(() => [
+	const gaugesOverview = useMemo(() => [
 		{
 			subtitle: "Avg Temperature",
 			min: 0,
 			max: 40,
-			value: dataSets.todayTemperature?.at(-1)?.avg_m_temp01 ?? null,
+			value: dataSets.avgTemperature?.at(-1)?.avg_m_temp01 ?? null,
 			color: "goldenrod",
 			symbol: "°C",
 		},
@@ -55,7 +88,7 @@ const SecoCollab = () => {
 			subtitle: "Avg Humidity",
 			min: 0,
 			max: 100,
-			value: dataSets.todayHumidity?.at(-1)?.avg_m_hum01 ?? null,
+			value: dataSets.avgHumidity?.at(-1)?.avg_m_hum01 ?? null,
 			color: "third",
 			symbol: "%",
 		},
@@ -63,71 +96,64 @@ const SecoCollab = () => {
 			subtitle: "Avg Co2",
 			min: 100,
 			max: 1600,
-			value: dataSets.todayCo2?.at(-1)?.avg_a_co2 ?? null,
+			value: dataSets.avgCo2?.at(-1)?.avg_a_co2 ?? null,
 			color: "secondary",
 			symbol: "",
 		},
 	], [dataSets]);
 
-	const monthlyOverview = useMemo(() => [
+	const chartConfigs = useMemo(() => [
 		{
-			data: [
-				{
-					x: dataSets.monthMaxTemperature?.map((item) => item.interval_start) ?? [],
-					y: dataSets.monthMaxTemperature?.map((item) => item.max_m_temp01) ?? [],
-					type: "bar",
-					color: "goldenrod",
-					title: "maxTemperature",
-				},
-				{
-					x: dataSets.monthMaxTemperature?.map((item) => item.interval_start) ?? [],
-					y: dataSets.monthMinTemperature?.map((item) => item.min_m_temp01) ?? [],
-					type: "bar",
-					color: "gold",
-					title: "minTemperature",
-				},
-			],
-			yaxis: { title: "Temperature (°C)" },
+			metric: "Temperature",
+			yAxisTitle: "Temperature (°C)",
+			maxKey: "maxTemperature",
+			minKey: "minTemperature",
+			maxColor: "goldenrod",
+			minColor: "gold",
+			maxField: "max_m_temp01",
+			minField: "min_m_temp01",
 		},
 		{
-			data: [
-				{
-					x: dataSets.monthMaxHumidity?.map((item) => item.interval_start) ?? [],
-					y: dataSets.monthMaxHumidity?.map((item) => item.max_m_hum01) ?? [],
-					type: "bar",
-					color: "primary",
-					title: "maxHumidity",
-				},
-				{
-					x: dataSets.monthMaxHumidity?.map((item) => item.interval_start) ?? [],
-					y: dataSets.monthMinHumidity?.map((item) => item.min_m_hum01) ?? [],
-					type: "bar",
-					color: "third",
-					title: "minHumidity",
-				},
-			],
-			yaxis: { title: "Humidity (%)" },
+			metric: "Humidity",
+			yAxisTitle: "Humidity (%)",
+			maxKey: "maxHumidity",
+			minKey: "minHumidity",
+			maxColor: "primary",
+			minColor: "third",
+			maxField: "max_m_hum01",
+			minField: "min_m_hum01",
 		},
 		{
-			data: [
-				{
-					x: dataSets.monthMaxCo2?.map((item) => item.interval_start) ?? [],
-					y: dataSets.monthMaxCo2?.map((item) => item.max_a_co2) ?? [],
-					type: "bar",
-					color: "green",
-					title: "maxCo2",
-				},
-				{
-					x: dataSets.monthMaxCo2?.map((item) => item.interval_start) ?? [],
-					y: dataSets.monthMinCo2?.map((item) => item.min_a_co2) ?? [],
-					type: "bar",
-					color: "secondary",
-					title: "minCo2",
-				},
-			],
-			yaxis: { title: "Co2" },
+			metric: "Co2",
+			yAxisTitle: "Co2",
+			maxKey: "maxCo2",
+			minKey: "minCo2",
+			maxColor: "green",
+			minColor: "secondary",
+			maxField: "max_a_co2",
+			minField: "min_a_co2",
 		},
-	], [dataSets]);
+	], []);
+
+	const maxminOverview = useMemo(() => chartConfigs.map((config) => ({
+		data: [
+			{
+				x: dataSets[config.maxKey]?.map((item) => item.interval_start) ?? [],
+				y: dataSets[config.maxKey]?.map((item) => item[config.maxField]) ?? [],
+				type: "bar",
+				color: config.maxColor,
+				title: `max${config.metric}`,
+			},
+			{
+				x: dataSets[config.maxKey]?.map((item) => item.interval_start) ?? [],
+				y: dataSets[config.minKey]?.map((item) => item[config.minField]) ?? [],
+				type: "bar",
+				color: config.minColor,
+				title: `min${config.metric}`,
+			},
+		],
+		yaxis: { title: config.yAxisTitle },
+	})), [dataSets, chartConfigs]);
 
 	const overviewData = useMemo(() => {
 		if (!dataSets.overview?.length) return { timestamps: [] };
@@ -182,92 +208,96 @@ const SecoCollab = () => {
 		},
 	], [overviewData]);
 
+	const selectedTimelineData = useMemo(() => timelineOverview.find((plotData) => plotData.data[0].title === metric),
+		[timelineOverview, metric]);
+
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
-			<Grid item xs={12} md={12} alignItems="center" flexDirection="row" mt={2}>
-				<Card title="Today's Overview" footer={cardFooter({ minutesAgo })}>
-					{isLoading ? (<LoadingIndicator />
-					) : dailyOverview.some((plot) => plot.value !== null) ? (
-						<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
-							{dailyOverview.map((plot, index) => (
-								<Grid key={index} item xs={12} md={4} justifyContent="center" sx={{ height: "200px" }}>
-									{plot.value === null ? (
-										<DataWarning minHeight="200px" />
-									) : (
-										<Plot
-											scrollZoom
-											data={[
-												{
-													type: "indicator",
-													mode: "gauge+number",
-													value: plot.value,
-													range: [plot.min, plot.max],
-													color: plot.color,
-													shape: "angular",
-													indicator: "primary",
-													textColor: "primary",
-													suffix: plot.symbol,
-												},
-											]}
-											displayBar={false}
-											title={plot.subtitle}
-										/>
-									)}
+			<StickyBand formRef={formRefDate} formContent={formContentDate} />
+			{isValidDateRange ? (
+				<>
+					<Grid item xs={12} md={12} alignItems="center" flexDirection="row">
+						<Card title="Timeframe's Averages" footer={cardFooter({ minutesAgo })}>
+							{isLoading ? (<LoadingIndicator />
+							) : gaugesOverview.some((plot) => plot.value !== null) ? (
+								<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
+									{gaugesOverview.map((plot, index) => (
+										<Grid key={index} item xs={12} md={4} justifyContent="center" sx={{ height: "200px" }}>
+											{plot.value === null ? (
+												<DataWarning minHeight="200px" />
+											) : (
+												<Plot
+													scrollZoom
+													data={[
+														{
+															type: "indicator",
+															mode: "gauge+number",
+															value: plot.value,
+															range: [plot.min, plot.max],
+															color: plot.color,
+															shape: "angular",
+															indicator: "primary",
+															textColor: "primary",
+															suffix: plot.symbol,
+														},
+													]}
+													displayBar={false}
+													title={plot.subtitle}
+												/>
+											)}
+										</Grid>
+									))}
 								</Grid>
-							))}
-						</Grid>
-					) : (<DataWarning message="No overview data available" />
-					)}
-				</Card>
-			</Grid>
-			<Grid item xs={12} md={12} alignItems="center" flexDirection="column">
-				<Card title="Monthly Max vs Min Values" footer={cardFooter({ minutesAgo })}>
-					{isLoading ? (<LoadingIndicator />
-					) : (
-						<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
-							{monthlyOverview.map((plot, index) => (
-								<Grid key={index} item xs={12} md={4} justifyContent="center">
-									<Plot
-										key={index}
-										scrollZoom
-										height="250px"
-										showLegend={false}
-										data={plot.data}
-										displayBar={false}
-										yaxis={plot.yaxis}
-									/>
-								</Grid>
-							))}
-						</Grid>
-					)}
-				</Card>
-			</Grid>
-			<Grid item xs={12} md={12} alignItems="center" flexDirection="column" mb={1}>
-				<Card title="Timeline's Overview" footer={cardFooter({ minutesAgo })}>
-					<Grid item xs={12} md={12} display="flex" justifyContent="flex-end">
-						<StickyBand sticky={false} dropdownContent={metricsDropdownContent} />
+							) : (<DataWarning message="No overview data available" />
+							)}
+						</Card>
 					</Grid>
-					{isLoading ? (<LoadingIndicator />
-					) : (
-						timelineOverview.map((plotData, index) => {
-							if (plotData.data[0].title === metric) {
-								return (
-									<Plot
-										key={index}
-										scrollZoom
-										height="350px"
-										data={plotData.data}
-										displayBar={false}
-										yaxis={plotData.yaxis}
-									/>
-								);
-							}
-
-							return null;
-						})
-					)}
-				</Card>
-			</Grid>
+					<Grid item xs={12} md={12} alignItems="center" flexDirection="column">
+						<Card title="Timeframe's Max vs Min Values" footer={cardFooter({ minutesAgo })}>
+							{isLoading ? (<LoadingIndicator />
+							) : (
+								<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
+									{maxminOverview.map((plot, index) => (
+										<Grid key={index} item xs={12} md={4} justifyContent="center">
+											<Plot
+												key={index}
+												scrollZoom
+												height="250px"
+												showLegend={false}
+												data={plot.data}
+												displayBar={false}
+												yaxis={plot.yaxis}
+											/>
+										</Grid>
+									))}
+								</Grid>
+							)}
+						</Card>
+					</Grid>
+					<Grid item xs={12} md={12} alignItems="center" flexDirection="column" mb={1}>
+						<Card title="Timeline's Overview" footer={cardFooter({ minutesAgo })}>
+							<Grid item xs={12} md={12} display="flex" justifyContent="flex-end">
+								<StickyBand sticky={false} dropdownContent={metricsDropdownContent} />
+							</Grid>
+							{isLoading ? (<LoadingIndicator />
+							) : selectedTimelineData ? (
+								<Plot
+									scrollZoom
+									height="350px"
+									data={selectedTimelineData.data}
+									showLegend={false}
+									displayBar={false}
+									yaxis={selectedTimelineData.yaxis}
+								/>
+							) : null}
+						</Card>
+					</Grid>
+				</>
+			) : (
+				<Grid item xs={12}>
+					<DataWarning message="Please select a valid date range" />
+				</Grid>
+			)}
 		</Grid>
 	);
 };
