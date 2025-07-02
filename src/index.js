@@ -65,6 +65,7 @@ import Mapexamp from "./examples/Map.js";
 import ProductsOverview from "./screens/Products.js";
 import DataView from "./screens/DataView.js";
 import LcaMag from "./screens/LcaMag.js";
+import Efsa from "./screens/Efsa.js";
 
 const {
 	NODE_ENV,
@@ -145,7 +146,8 @@ const App = () => {
 								<Route path="products" element={<Protected c={<ProductsOverview />} />} />
 								<Route path="dataview" element={<Protected c={<DataView />} />} />
 								<Route path="mapexamp" element={<Protected c={<Mapexamp />} />} />
-								<Route path="lcamag" element={<Protected c={<LcaMag />} />} />
+								<Route path="socialimpact" element={<Protected c={<LcaMag />} />} />
+								<Route path="contaminants" element={<Protected c={<Efsa />} />} />
 								{/* Living Labs */}
 								<Route path="agrolab" element={<Protected c={<AgroLab />} />} />
 								<Route path="hivelab" element={<Protected c={<HiveLab />} />} />

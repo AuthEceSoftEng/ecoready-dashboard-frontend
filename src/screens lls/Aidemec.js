@@ -91,7 +91,6 @@ const AIDEMEC = () => {
 
 	const { state } = useInit(organization, fetchConfigs);
 	const { isLoading, dataSets, minutesAgo } = state;
-	// console.log("dataSets", dataSets);
 	const metrics = useMemo(() => dataSets?.metrics || [], [dataSets]);
 
 	const indicatorValues = useMemo(() => {

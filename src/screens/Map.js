@@ -14,7 +14,6 @@ import { findKeyByText } from "../utils/data-handling-functions.js";
 
 const excludedProducts = new Set(["Oilseeds", "Cereals", "Sheep/Goat Meat"]);
 const mapProducts = products.filter((product) => !excludedProducts.has(product.text)).map((product) => product);
-console.log("Map Products", mapProducts);
 
 const currentYear = new Date().getFullYear();
 // Extract popup component
