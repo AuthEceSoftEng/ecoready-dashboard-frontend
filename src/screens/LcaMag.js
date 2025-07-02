@@ -1,7 +1,8 @@
 import { useLocation } from "react-router-dom";
-import { Grid, Button, Typography, Tooltip } from "@mui/material";
+import { Grid, Button, Typography } from "@mui/material";
 import { memo, useMemo, useState, useCallback, useRef, useEffect } from "react";
 
+import Tooltip from "../components/Tooltip.js";
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
 import Accordion from "../components/Accordion.js";
@@ -81,7 +82,7 @@ const SocialIndicatorsAccordion = ({ onIndicatorSelect }) => {
 						<Grid container flexDirection="column" spacing={1}>
 							{category.options.map((option, optionIndex) => (
 								<Grid key={option} item>
-									<Tooltip arrow title={category.desc[optionIndex]} placement="top">
+									<Tooltip title={category.desc[optionIndex]} placement="right">
 										<Button
 											variant={selectedIndicator?.option === option ? "contained" : "outlined"}
 											sx={{
@@ -178,7 +179,6 @@ const LcaMag = () => {
 			}
 		}
 	}, [selectedIndicator, selectedCountry]);
-	console.log("Risk Data:", riskData);
 
 	// Create chart data based on selected indicator
 	const getChartData = () => {
@@ -321,7 +321,7 @@ const LcaMag = () => {
 			sublabel: "Select Year",
 			views: ["year"],
 			value: new Date(`${year}-01-01`),
-			minDate: new Date("2010-01-01"),
+			minDate: new Date("2024-01-01"),
 			maxDate: new Date(`${currentYear}-01-01`),
 			onChange: (newValue) => { if (newValue) { console.log("Selected year:", newValue); } },
 		},
