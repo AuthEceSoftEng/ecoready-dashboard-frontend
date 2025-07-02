@@ -56,8 +56,10 @@ const Plot = ({
 	background = "white",
 	polarRange = [0, 100],
 	barmode = null,
+	shapes = [],
 	xaxis = {},
 	yaxis = {},
+	yaxis2 = {},
 }) => {
 	const hasPieChart = data.some((d) => d.type === "pie");
 
@@ -76,6 +78,7 @@ const Plot = ({
 					x: d.x,
 					y: d.y,
 					z: d.z,
+					yaxis: d.yaxis,
 					type: d.type,
 					name: d.title,
 					text: d.texts,
@@ -85,6 +88,7 @@ const Plot = ({
 					r: d.r,
 					theta: d.theta,
 					fill: d.fill,
+					showlegend: d.showlegend === undefined ? true : d.showlegend, // Add this line
 					number: {
 						suffix: d.suffix,
 						font: { color: colors?.[d?.textColor] || d?.textColor || "black" },
@@ -143,12 +147,10 @@ const Plot = ({
 				legend: {
 					font: { color: colors?.[titleColor] || titleColor, size: legendFontSize },
 				},
-				xaxis: {
-					...xaxis,
-				},
-				yaxis: {
-					...yaxis,
-				},
+				shapes: shapes.map((shape) => ({ ...shape })),
+				xaxis: xaxis || {},
+				yaxis: yaxis || {},
+				...(yaxis2 && { yaxis2 }), // Add this line to support secondary y-axis
 				barmode,
 				paper_bgcolor: colors?.[background] || background,
 				plot_bgcolor: colors?.[background] || background,
