@@ -5,21 +5,23 @@ import { memo, useMemo, useState, useCallback, useRef, useEffect } from "react";
 import Tooltip from "../components/Tooltip.js";
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
-import Accordion from "../components/Accordion.js";
-import Dropdown from "../components/Dropdown.js";
 import useInit from "../utils/screen-init.js";
-import {
-	extractFields, getCustomDateTime, calculateDates, calculateDifferenceBetweenDates,
-	debounce, isValidArray, generateYearsArray, groupByKey,
-	findKeyByText,
-} from "../utils/data-handling-functions.js";
+import { magnetConfigs, organization } from "../config/MagnetConfig.js";
+import { extractFields, isValidArray, groupByKey, findKeyByText } from "../utils/data-handling-functions.js";
 import { LoadingIndicator, StickyBand, DataWarning } from "../utils/rendering-items.js";
 import { europeanCountries, lcaIndicators, riskAssessmentData } from "../utils/useful-constants.js";
 
-const countriesForNow = europeanCountries
-	.filter((country) => country.text === "Greece"
-		|| country.text === "Czech Republic"
-		|| country.text === "Belgium");
+const getUniqueCountries = (array, factor) => {
+	if (!Array.isArray(array)) return [];
+
+	// Get unique keys from array
+	const uniqueKeys = [...new Set(array.map((item) => item[factor]))].filter((key) => key !== "EU");
+
+	// For other products, use normal country mapping
+	return uniqueKeys
+		.map((key) => europeanCountries.find((country) => country.value === key))
+		.filter(Boolean);
+};
 
 // Function to get risk color based on level - Alternative vibrant scheme
 const getRiskColor = (level) => {
@@ -101,7 +103,7 @@ const SocialIndicatorsAccordion = ({ onIndicatorSelect }) => {
 													},
 												}),
 												// Non-selected state
-												...(!selectedIndicator?.option === option && {
+												...(selectedIndicator?.option !== option && {
 													"&:hover": {
 														backgroundColor: "rgba(162, 202, 55, 0.1)",
 														borderColor: "#a2ca37",
@@ -147,21 +149,16 @@ const getRiskScaleYAxis = () => ({
 	range: [0, 6],
 });
 
-const customDate = getCustomDateTime(2024, 12);
-const { year } = calculateDates(customDate);
-
-const currentYear = new Date().getFullYear();
-
 const LcaMag = () => {
-	const [selectedCountry, setSelectedCountry] = useState(countriesForNow[0].text);
-	const [selectedIndicator, setSelectedIndicator] = useState(null);
+	const [selectedCountry, setSelectedCountry] = useState(europeanCountries[0].text);
+	const [selectedIndicator, setSelectedIndicator] = useState(lcaIndicators[0].options[0]);
 	const [riskData, setRiskData] = useState(null);
 
 	// Update risk data when indicator or country changes
 	useEffect(() => {
 		if (selectedIndicator && selectedCountry) {
 			const indicatorName = selectedIndicator.option;
-			const countryCode = countriesForNow.find((c) => c.text === selectedCountry)?.value;
+			const countryCode = europeanCountries.find((c) => c.text === selectedCountry)?.value;
 
 			if (riskAssessmentData.indicators[indicatorName]
 				&& riskAssessmentData.indicators[indicatorName][countryCode]) {
@@ -180,6 +177,33 @@ const LcaMag = () => {
 		}
 	}, [selectedIndicator, selectedCountry]);
 
+	const fetchConfigs = useMemo(
+		() => {
+			const countryValue = europeanCountries.find((country) => country.text === selectedCountry)?.value || selectedCountry;
+			console.log("Selected Country Value:", countryValue);
+			return magnetConfigs(countryValue);
+		},
+		[selectedCountry],
+	);
+
+	const { state } = useInit(organization, fetchConfigs);
+	const { isLoading, dataSets, minutesAgo } = state;
+	const metrics = useMemo(() => dataSets?.metrics || [], [dataSets]);
+	console.log("Metrics Data:", metrics);
+
+	// Filter metrics to keep only those with indicators present in lcaIndicators
+	const filteredMetrics = useMemo(() => {
+		if (metrics.length === 0) return [];
+
+		// Get all indicator options from lcaIndicators
+		const allIndicatorOptions = new Set(lcaIndicators.flatMap((category) => category.options));
+
+		// Filter metrics based on indicator field matching lcaIndicators
+		return metrics.filter((metric) => allIndicatorOptions.has(metric.indicator));
+	}, [metrics]);
+
+	console.log("Filtered Metrics:", filteredMetrics);
+
 	// Create chart data based on selected indicator
 	const getChartData = () => {
 		if (!selectedIndicator) return null;
@@ -191,7 +215,7 @@ const LcaMag = () => {
 
 		// Extract data for all countries
 		const countryCodes = Object.keys(indicatorData);
-		const countries = countryCodes.map((code) => countriesForNow.find((c) => c.value === code)?.text || code);
+		const countries = countryCodes.map((code) => europeanCountries.find((c) => c.value === code)?.text || code);
 		const levels = countryCodes.map((countryCode) => indicatorData[countryCode].level);
 		const scores = countryCodes.map((countryCode) => indicatorData[countryCode].score);
 		const colors = countryCodes.map((countryCode) => getRiskColor(indicatorData[countryCode].level));
@@ -223,7 +247,7 @@ const LcaMag = () => {
 	const createCountryIndicatorsChart = () => {
 		if (!selectedCountry) return [];
 
-		const countryCode = countriesForNow.find((c) => c.text === selectedCountry)?.value;
+		const countryCode = europeanCountries.find((c) => c.text === selectedCountry)?.value;
 		if (!countryCode) return [];
 
 		const indicators = [];
@@ -272,7 +296,7 @@ const LcaMag = () => {
 		if (!parentCategory) return []; // Return empty array instead of null
 
 		// Get all indicators in the same category and their data for selected country
-		const countryCode = countriesForNow.find((c) => c.text === selectedCountry)?.value;
+		const countryCode = europeanCountries.find((c) => c.text === selectedCountry)?.value;
 		if (!countryCode) return []; // Return empty array instead of null
 
 		const indicators = [];
@@ -320,27 +344,40 @@ const LcaMag = () => {
 			width: "150px",
 			sublabel: "Select Year",
 			views: ["year"],
-			value: new Date(`${year}-01-01`),
+			value: new Date("2024-01-01"),
 			minDate: new Date("2024-01-01"),
-			maxDate: new Date(`${currentYear}-01-01`),
+			maxDate: new Date("2024-12-31"),
 			onChange: (newValue) => { if (newValue) { console.log("Selected year:", newValue); } },
 		},
 	], []);
 
-	const countryDropdown = useMemo(() => ([{
+	const countryDropdown = useMemo(() => ({
 		id: "country-dropdown",
 		label: "Select Country",
-		items: countriesForNow,
+		items: europeanCountries,
 		value: selectedCountry,
 		onChange: (event) => {
 			const countryText = event.target.value;
 			setSelectedCountry(countryText);
 		},
-	}]), [selectedCountry]);
+	}), [selectedCountry]);
+
+	const indicatorDropdown = useMemo(() => ({
+		id: "indicator-dropdown",
+		label: "Select Indicator",
+		items: lcaIndicators,
+		value: selectedIndicator,
+		subheader: true,
+		onChange: (event) => {
+			const selectedOption = event.target.value;
+			const selectedCategory = lcaIndicators.find((cat) => cat.options.includes(selectedOption));
+			selectedCategory ? setSelectedIndicator(selectedOption) : setSelectedIndicator("");
+		},
+	}), [selectedIndicator]);
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
-			<StickyBand dropdownContent={countryDropdown} formRef={yearPickerRef} formContent={yearPickerProps} />
+			<StickyBand dropdownContent={[countryDropdown, indicatorDropdown]} formRef={yearPickerRef} formContent={yearPickerProps} />
 
 			{/* Main content area */}
 			{/* All Indicators for Selected Country - New Chart */}
@@ -357,7 +394,7 @@ const LcaMag = () => {
 					/>
 				</Card>
 			</Grid>
-			<Grid item xs={12} md={9}>
+			<Grid item xs={12} md={12}>
 				{/* Charts */}
 				{selectedIndicator && (
 					<Grid container spacing={2}>
@@ -397,12 +434,12 @@ const LcaMag = () => {
 				)}
 			</Grid>
 
-			{/* Social Indicators Accordion - Right Side */}
+			{/* Social Indicators Accordion - Right Side
 			<Grid item xs={6} md={3}>
 				<div style={{ position: "sticky", top: "20px" }}>
 					<SocialIndicatorsAccordion onIndicatorSelect={handleIndicatorSelection} />
 				</div>
-			</Grid>
+			</Grid> */}
 		</Grid>
 	);
 };
