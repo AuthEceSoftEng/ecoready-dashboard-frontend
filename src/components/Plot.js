@@ -60,6 +60,7 @@ const Plot = ({
 	xaxis = {},
 	yaxis = {},
 	yaxis2 = {},
+	layout = {}, // Add this prop to accept custom layout
 }) => {
 	const hasPieChart = data.some((d) => d.type === "pie");
 
@@ -94,6 +95,7 @@ const Plot = ({
 						font: { color: colors?.[d?.textColor] || d?.textColor || "black" },
 					},
 					sort: d.sort ?? true,
+					orientation: d.orientation || "v",
 				};
 
 				// Add pie-specific properties
@@ -121,6 +123,8 @@ const Plot = ({
 							? (colors?.[d.color] || d.color)
 							: agriColors[index % agriColors.length],
 					},
+					hovertemplate: d.hovertemplate, // Add this line
+					customdata: d.customdata, // Add this line
 					gauge: d.type === "indicator" ? {
 						axis: { range: d.range },
 						bar: { color: colors?.[d?.color] || d?.color, thickness: 1 },
@@ -162,6 +166,7 @@ const Plot = ({
 						range: polarRange,
 					},
 				},
+				...layout, // Merge custom layout props
 			}}
 			config={{
 				scrollZoom,

@@ -9,25 +9,15 @@ import useInit from "../utils/screen-init.js";
 import { magnetConfigs, organization } from "../config/MagnetConfig.js";
 import { extractFields, isValidArray, groupByKey, findKeyByText } from "../utils/data-handling-functions.js";
 import { LoadingIndicator, StickyBand, DataWarning } from "../utils/rendering-items.js";
-import { europeanCountries, lcaIndicators, riskAssessmentData } from "../utils/useful-constants.js";
+import { europeanCountries, lcaIndicators } from "../utils/useful-constants.js";
 
-const getUniqueCountries = (array, factor) => {
-	if (!Array.isArray(array)) return [];
-
-	// Get unique keys from array
-	const uniqueKeys = [...new Set(array.map((item) => item[factor]))].filter((key) => key !== "EU");
-
-	// For other products, use normal country mapping
-	return uniqueKeys
-		.map((key) => europeanCountries.find((country) => country.value === key))
-		.filter(Boolean);
-};
+const euCountries = europeanCountries.filter((country) => country.isEU === true);
 
 // Function to get risk color based on level - Alternative vibrant scheme
 const getRiskColor = (level) => {
 	const colorMap = {
 		// No risk/opportunity levels - Green tones
-		"no risk": "#2E7D32", // Dark green
+		// "no risk": "#2E7D32", // Dark green
 		"very low risk": "#4CAF50", // Standard green
 		"low risk": "#8BC34A", // Light green
 
@@ -48,168 +38,81 @@ const getRiskColor = (level) => {
 	return colorMap[level] || "#BDBDBD"; // Light gray fallback
 };
 
-const SocialIndicatorsAccordion = ({ onIndicatorSelect }) => {
-	const [selectedIndicator, setSelectedIndicator] = useState(null);
-	const [openAccordion, setOpenAccordion] = useState(null); // Track which accordion is open
-
-	const handleIndicatorClick = (label, option) => {
-		setSelectedIndicator({ label, option });
-		onIndicatorSelect && onIndicatorSelect({ label, option });
-	};
-
-	const handleAccordionToggle = (categoryLabel) => {
-		// If the clicked accordion is already open, close it; otherwise, open it and close others
-		setOpenAccordion(openAccordion === categoryLabel ? null : categoryLabel);
-	};
-
-	return (
-		<div style={{ width: "100%" }}>
-			{lcaIndicators.map((category) => (
-				<Accordion
-					key={category.label}
-					expanded={openAccordion === category.label}
-					title={(
-						<Typography
-							variant="h6"
-							sx={{
-								fontWeight: "bold",
-								color: "primary.main",
-								textTransform: "capitalize",
-							}}
-						>
-							{category.label}
-						</Typography>
-					)}
-					content={(
-						<Grid container flexDirection="column" spacing={1}>
-							{category.options.map((option, optionIndex) => (
-								<Grid key={option} item>
-									<Tooltip title={category.desc[optionIndex]} placement="right">
-										<Button
-											variant={selectedIndicator?.option === option ? "contained" : "outlined"}
-											sx={{
-												width: "100%",
-												justifyContent: "flex-start",
-												textAlign: "left",
-												padding: "12px 16px",
-												textTransform: "none",
-												fontSize: "0.9rem",
-												...(selectedIndicator?.option === option && {
-													backgroundColor: "#a2ca37 !important", // Your custom green color
-													color: "white !important",
-													borderColor: "#a2ca37 !important",
-													"&:hover": {
-														backgroundColor: "#8db330 !important", // Darker green on hover
-													},
-												}),
-												// Non-selected state
-												...(selectedIndicator?.option !== option && {
-													"&:hover": {
-														backgroundColor: "rgba(162, 202, 55, 0.1)",
-														borderColor: "#a2ca37",
-													},
-												}),
-											}}
-											onClick={() => handleIndicatorClick(
-												category.label,
-												option,
-												category.desc[optionIndex],
-											)}
-										>
-											{option}
-										</Button>
-									</Tooltip>
-								</Grid>
-							))}
-						</Grid>
-					)}
-					titleBackground="rgba(162, 202, 55, 0.05)"
-					expandIconColor="#a2ca37"
-					onToggle={() => handleAccordionToggle(category.label)} // Handle toggle
-				/>
-			))}
-		</div>
-	);
-};
-
-// Define y-axis configuration for risk scale
-const getRiskScaleYAxis = () => ({
+// Define x-axis configuration for risk scale
+const getRiskScaleXAxis = () => ({
 	tickmode: "array",
-	tickvals: [0, 1, 2, 3, 4, 5, 6],
+	tickvals: [0, 1, 2, 3, 4, 5],
 	ticktext: [
 		"No Data",
-		"No Risk",
 		"Very Low Risk",
 		"Low Risk",
 		"Medium Risk",
 		"High Risk",
 		"Very High Risk",
 	],
-	tickangle: -60,
-	range: [0, 6],
+	range: [0, 5],
+	// tickangle: -45, // Rotate labels for better readability
+	// title: "Risk Level",
+});
+
+// Define y-axis configuration for risk scale
+const getRiskScaleYAxis = () => ({
+	tickmode: "array",
+	tickvals: [0, 1, 2, 3, 4, 5],
+	ticktext: [
+		"No Data",
+		"Very Low Risk",
+		"Low Risk",
+		"Medium Risk",
+		"High Risk",
+		"Very High Risk",
+	],
+	range: [0, 5],
 });
 
 const LcaMag = () => {
-	const [selectedCountry, setSelectedCountry] = useState(europeanCountries[0].text);
-	const [selectedIndicator, setSelectedIndicator] = useState(lcaIndicators[0].options[0]);
-	const [riskData, setRiskData] = useState(null);
-
-	// Update risk data when indicator or country changes
-	useEffect(() => {
-		if (selectedIndicator && selectedCountry) {
-			const indicatorName = selectedIndicator.option;
-			const countryCode = europeanCountries.find((c) => c.text === selectedCountry)?.value;
-
-			if (riskAssessmentData.indicators[indicatorName]
-				&& riskAssessmentData.indicators[indicatorName][countryCode]) {
-				const risk = riskAssessmentData.indicators[indicatorName][countryCode];
-
-				setRiskData({
-					indicator: indicatorName,
-					country: selectedCountry, // Use the text directly
-					countryCode,
-					level: risk.level,
-					score: risk.score,
-				});
-			} else {
-				setRiskData(null);
-			}
-		}
-	}, [selectedIndicator, selectedCountry]);
+	const [selections, setSelections] = useState({
+		country: euCountries[0],
+		indicator: "",
+	});
+	console.log("Selected Country:", selections.country);
+	console.log("Selected Indicator:", selections.indicator);
 
 	const fetchConfigs = useMemo(
 		() => {
-			const countryValue = europeanCountries.find((country) => country.text === selectedCountry)?.value || selectedCountry;
+			const countryValue = selections.country?.value || selections.country;
 			console.log("Selected Country Value:", countryValue);
 			return magnetConfigs(countryValue);
 		},
-		[selectedCountry],
+		[selections.country],
 	);
 
 	const { state } = useInit(organization, fetchConfigs);
-	const { isLoading, dataSets, minutesAgo } = state;
+	const { isLoading, dataSets } = state;
 	const metrics = useMemo(() => dataSets?.metrics || [], [dataSets]);
 	console.log("Metrics Data:", metrics);
 
-	// Filter metrics to keep only those with indicators present in lcaIndicators
-	const filteredMetrics = useMemo(() => {
-		if (metrics.length === 0) return [];
+	// Replace the existing useMemo for riskAssessmentData
+	const { allIndicatorOptions, riskAssessmentData } = useMemo(() => {
+		if (metrics.length === 0) return { allIndicatorOptions: new Set(), riskAssessmentData: [] };
 
-		// Get all indicator options from lcaIndicators
-		const allIndicatorOptions = new Set(lcaIndicators.flatMap((category) => category.options));
+		const options = new Set(lcaIndicators.flatMap((category) => category.options));
+		const filteredData = metrics.filter((metric) => options.has(metric.indicator));
 
-		// Filter metrics based on indicator field matching lcaIndicators
-		return metrics.filter((metric) => allIndicatorOptions.has(metric.indicator));
+		return {
+			allIndicatorOptions: options,
+			riskAssessmentData: filteredData,
+		};
 	}, [metrics]);
-
-	console.log("Filtered Metrics:", filteredMetrics);
+	console.log("Filtered Metrics:", riskAssessmentData);
 
 	// Create chart data based on selected indicator
 	const getChartData = () => {
-		if (!selectedIndicator) return null;
+		if (!selections.indicator) return null;
 
-		const indicatorName = selectedIndicator.option;
-		const indicatorData = riskAssessmentData.indicators[indicatorName];
+		// const indicatorName = selectedIndicator.option;
+		const indicatorData = riskAssessmentData.indicators[selections.indicator];
+		console.log("Indicator Data:", indicatorData);
 
 		if (!indicatorData) return null;
 
@@ -220,12 +123,7 @@ const LcaMag = () => {
 		const scores = countryCodes.map((countryCode) => indicatorData[countryCode].score);
 		const colors = countryCodes.map((countryCode) => getRiskColor(indicatorData[countryCode].level));
 
-		return {
-			countries,
-			levels,
-			scores,
-			colors,
-		};
+		return { countries, levels, scores, colors };
 	};
 
 	const chartData = getChartData();
@@ -245,58 +143,94 @@ const LcaMag = () => {
 	};
 
 	const createCountryIndicatorsChart = () => {
-		if (!selectedCountry) return [];
+		if (!selections.country || riskAssessmentData.length === 0) return [];
 
-		const countryCode = europeanCountries.find((c) => c.text === selectedCountry)?.value;
-		if (!countryCode) return [];
+		// Group data by risk level
+		const dataByLevel = {};
 
-		const indicators = [];
-		const scores = [];
-		const levels = [];
-		const colors = [];
+		for (const item of riskAssessmentData) {
+			const level = item.risk_level;
+			const score = item.score;
 
-		// Collect data for all indicators for the selected country
-		for (const [indicatorName, indicatorData] of Object.entries(riskAssessmentData.indicators)) {
-			if (indicatorData && indicatorData[countryCode]) {
-				const level = indicatorData[countryCode].level;
-				const score = indicatorData[countryCode].score;
+			// Find the parent category and description for this indicator
+			const parentCategory = lcaIndicators.find((category) => category.options.includes(item.indicator));
+			const indicatorIndex = parentCategory?.options.indexOf(item.indicator) ?? -1;
+			const description = parentCategory?.desc[indicatorIndex] || "No description available";
 
-				// Filter out "no data" entries if desired, or include them
-				if (level !== "no data") {
-					indicators.push(indicatorName);
-					scores.push(score === "N/A" ? 0 : score);
-					levels.push(level);
-					colors.push(getRiskColor(level));
-				}
+			if (!dataByLevel[level]) {
+				dataByLevel[level] = {
+					indicators: [],
+					scores: [],
+					color: getRiskColor(level),
+					fullIndicators: [], // Store full indicator names
+					categories: [], // Store parent category labels
+					descriptions: [], // Store indicator descriptions
+				};
 			}
+
+			dataByLevel[level].indicators.push(item.indicator);
+			dataByLevel[level].fullIndicators.push(item.indicator); // Store full names
+			dataByLevel[level].categories.push(parentCategory?.label || "Unknown Category");
+			dataByLevel[level].descriptions.push(description);
+			dataByLevel[level].scores.push(score === "N/A" ? 0 : score);
 		}
 
-		// If no data available
-		if (indicators.length === 0) {
-			return [];
-		}
-
-		return [{
-			x: indicators.map((indicator) => (indicator.length > 30 ? `${indicator.slice(0, 30)}...` : indicator)), // Truncate very long indicator names
-			y: scores,
+		// Create traces with word-wrapped indicators
+		const traces = Object.entries(dataByLevel).map(([level, data]) => ({
+			x: data.scores,
+			y: data.indicators.map((indicator) => (indicator.length > 25
+				? `${indicator.slice(0, 25)}...`
+				: indicator)),
 			type: "bar",
-			title: `All Indicators - ${selectedCountry}`,
-			color: colors,
-			text: levels.map((level) => level.toUpperCase()),
-		}];
+			orientation: "h", // Horizontal bars
+			title: level.charAt(0).toUpperCase() + level.slice(1),
+			color: data.color,
+			text: data.scores.map(() => level.toUpperCase()),
+			// Enhanced hover template with category and description
+			hovertemplate:
+				"<b>%{customdata[0]}</b><br>"
+				+ "<b>Description:</b>%{customdata[2]}<br>"
+				+ "<b>Category:</b> <i>%{customdata[1]}</i><br>"
+				+ "<b>Risk Level:</b> <i>%{x}</i><br>"
+				+ "<extra></extra>",
+			customdata: data.fullIndicators.map((indicator, index) => [
+				indicator, // Full indicator name
+				data.categories[index], // Parent category label
+				data.descriptions[index], // Indicator description
+			]), // Pass full indicator names, categories, and descriptions for hover
+		}));
+		console.log("Country Indicators Chart Data:", traces);
+
+		// Define risk level order (highest to lowest)
+		const riskOrder = {
+			"very high risk": 5,
+			"high risk": 4,
+			"medium risk": 3,
+			"low risk": 2,
+			"very low risk": 1,
+			"no data": 0,
+		};
+
+		return traces.sort((a, b) => {
+			const aLevel = a.title.toLowerCase();
+			const bLevel = b.title.toLowerCase();
+			const aRiskValue = riskOrder[aLevel] || 0;
+			const bRiskValue = riskOrder[bLevel] || 0;
+			return bRiskValue - aRiskValue;
+		});
 	};
 
 	// Bar chart showing all indicators in the same category as the selected indicator
 	const createCategoryBarChart = () => {
-		if (!selectedIndicator) return []; // Return empty array instead of null
+		if (!selections.indicator) return []; // Return empty array instead of null
 
 		// Find the parent category of the selected indicator
-		const parentCategory = lcaIndicators.find((category) => category.options.includes(selectedIndicator.option));
+		const parentCategory = lcaIndicators.find((category) => category.options.includes(selections.indicator.option));
 
 		if (!parentCategory) return []; // Return empty array instead of null
 
 		// Get all indicators in the same category and their data for selected country
-		const countryCode = europeanCountries.find((c) => c.text === selectedCountry)?.value;
+		const countryCode = europeanCountries.find((c) => c.text === selections.country)?.value;
 		if (!countryCode) return []; // Return empty array instead of null
 
 		const indicators = [];
@@ -325,16 +259,14 @@ const LcaMag = () => {
 		}
 
 		return [{
-			x: indicators.map((indicator) => (indicator.length > 25 ? `${indicator.slice(0, 25)}...` : indicator)), // Truncate long indicator names
+			x: indicators,
 			y: scores,
 			type: "bar",
-			title: `${parentCategory.label} Indicators - ${selectedCountry}`,
+			title: `${parentCategory.label} Indicators - ${selections.country.text}`,
 			color: colors,
 			text: levels.map((level) => level.toUpperCase()),
 		}];
 	};
-
-	const handleIndicatorSelection = (selectedData) => { setSelectedIndicator(selectedData); };
 
 	const yearPickerRef = useRef();
 	const yearPickerProps = useMemo(() => [
@@ -354,26 +286,30 @@ const LcaMag = () => {
 	const countryDropdown = useMemo(() => ({
 		id: "country-dropdown",
 		label: "Select Country",
-		items: europeanCountries,
-		value: selectedCountry,
+		items: euCountries,
+		value: selections.country.text,
 		onChange: (event) => {
 			const countryText = event.target.value;
-			setSelectedCountry(countryText);
+			const country = euCountries.find((c) => c.text === countryText);
+			setSelections((prev) => ({ ...prev, country }));
 		},
-	}), [selectedCountry]);
+	}), [selections.country]);
 
 	const indicatorDropdown = useMemo(() => ({
 		id: "indicator-dropdown",
 		label: "Select Indicator",
 		items: lcaIndicators,
-		value: selectedIndicator,
+		value: selections.indicator,
 		subheader: true,
 		onChange: (event) => {
 			const selectedOption = event.target.value;
 			const selectedCategory = lcaIndicators.find((cat) => cat.options.includes(selectedOption));
-			selectedCategory ? setSelectedIndicator(selectedOption) : setSelectedIndicator("");
+			setSelections((prev) => ({
+				...prev,
+				indicator: selectedCategory ? selectedOption : "",
+			}));
 		},
-	}), [selectedIndicator]);
+	}), [selections.indicator]);
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
@@ -382,25 +318,30 @@ const LcaMag = () => {
 			{/* Main content area */}
 			{/* All Indicators for Selected Country - New Chart */}
 			<Grid item xs={12}>
-				<Card title={`All Indicators - ${selectedCountry}`} sx={{ display: "flex", flexDirection: "column" }}>
-					{/* <StickyBand sticky={false} dropdownContent={countryDropdown} /> */}
-					<Plot
-						data={createCountryIndicatorsChart()}
-						title=""
-						height="400px"
-						showLegend={false}
-						yaxis={getRiskScaleYAxis()}
-						xaxis={{ tickangle: 20 }}
-					/>
+				<Card title={`All Indicators - ${selections.country.text}`}>
+					{isLoading ? (
+						<LoadingIndicator minHeight="400px" />
+					) : riskAssessmentData.length === 0 ? (
+						<DataWarning minHeight="400px" message="No indicator data available for the selected country" />
+					) : (
+						<Plot
+							showLegend
+							data={createCountryIndicatorsChart()}
+							xaxis={getRiskScaleXAxis()}
+							layout={{
+								margin: { l: 200, r: 40, t: 10, b: 20 }, // Adjusted left margin for long indicator names
+							}}
+						/>
+					)}
 				</Card>
 			</Grid>
 			<Grid item xs={12} md={12}>
 				{/* Charts */}
-				{selectedIndicator && (
+				{selections.indicator && (
 					<Grid container spacing={2}>
 						{/* Bar Chart - Risk Scores by Country */}
 						<Grid item xs={12} lg={6}>
-							<Card title="Risk Score by Country" sx={{ display: "flex", flexDirection: "column" }}>
+							<Card title="Risk Score by Country">
 								<Plot
 									data={createBarChart()}
 									title=""
@@ -415,7 +356,7 @@ const LcaMag = () => {
 						{/* Category Indicators Bar Chart - Replaces Pie Chart */}
 						<Grid item xs={12} lg={6}>
 							<Card
-								title={`${selectedCountry}'s ${lcaIndicators.find((cat) => cat.options.includes(selectedIndicator.option))?.label || "Category"} Indicators`}
+								title={`${selections.country}'s ${lcaIndicators.find((cat) => cat.options.includes(selections.indicator.option))?.label || "Category"} Indicators`}
 								sx={{ display: "flex", flexDirection: "column" }}
 							>
 								<Plot
@@ -433,13 +374,6 @@ const LcaMag = () => {
 					</Grid>
 				)}
 			</Grid>
-
-			{/* Social Indicators Accordion - Right Side
-			<Grid item xs={6} md={3}>
-				<div style={{ position: "sticky", top: "20px" }}>
-					<SocialIndicatorsAccordion onIndicatorSelect={handleIndicatorSelection} />
-				</div>
-			</Grid> */}
 		</Grid>
 	);
 };
