@@ -154,7 +154,7 @@ const Plot = ({
 				shapes: shapes.map((shape) => ({ ...shape })),
 				xaxis: xaxis || {},
 				yaxis: yaxis || {},
-				...(yaxis2 && { yaxis2 }), // Add this line to support secondary y-axis
+				...(yaxis2 && { yaxis2 }),
 				barmode,
 				paper_bgcolor: colors?.[background] || background,
 				plot_bgcolor: colors?.[background] || background,
