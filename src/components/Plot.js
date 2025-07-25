@@ -59,7 +59,7 @@ const Plot = ({
 	shapes = [],
 	xaxis = {},
 	yaxis = {},
-	yaxis2 = {},
+	layout = {}, // Add this prop to accept custom layout
 }) => {
 	const hasPieChart = data.some((d) => d.type === "pie");
 
@@ -80,7 +80,7 @@ const Plot = ({
 					z: d.z,
 					yaxis: d.yaxis,
 					type: d.type,
-					name: d.title,
+					name: d.name || d.title,
 					text: d.texts,
 					mode: d.mode,
 					values: d.values,
@@ -88,12 +88,13 @@ const Plot = ({
 					r: d.r,
 					theta: d.theta,
 					fill: d.fill,
-					showlegend: d.showlegend === undefined ? true : d.showlegend, // Add this line
+					showlegend: d.showlegend === undefined ? true : d.showlegend,
 					number: {
 						suffix: d.suffix,
 						font: { color: colors?.[d?.textColor] || d?.textColor || "black" },
 					},
 					sort: d.sort ?? true,
+					orientation: d.orientation || "v",
 				};
 
 				// Add pie-specific properties
@@ -121,6 +122,8 @@ const Plot = ({
 							? (colors?.[d.color] || d.color)
 							: agriColors[index % agriColors.length],
 					},
+					hovertemplate: d.hovertemplate, // Add this line
+					customdata: d.customdata, // Add this line
 					gauge: d.type === "indicator" ? {
 						axis: { range: d.range },
 						bar: { color: colors?.[d?.color] || d?.color, thickness: 1 },
@@ -148,9 +151,10 @@ const Plot = ({
 					font: { color: colors?.[titleColor] || titleColor, size: legendFontSize },
 				},
 				shapes: shapes.map((shape) => ({ ...shape })),
-				xaxis: xaxis || {},
-				yaxis: yaxis || {},
-				...(yaxis2 && { yaxis2 }), // Add this line to support secondary y-axis
+				xaxis: xaxis.primary || xaxis || {},
+				...(xaxis.secondary && { xaxis2: xaxis.secondary }),
+				yaxis: yaxis.primary || yaxis || {},
+				...(yaxis.secondary && { yaxis2: yaxis.secondary }),
 				barmode,
 				paper_bgcolor: colors?.[background] || background,
 				plot_bgcolor: colors?.[background] || background,
@@ -162,6 +166,7 @@ const Plot = ({
 						range: polarRange,
 					},
 				},
+				...layout, // Merge custom layout props
 			}}
 			config={{
 				scrollZoom,
