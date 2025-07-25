@@ -15,14 +15,13 @@ const Card = ({
 	footerColor = "greyDark.main",
 	footerBackgroundColor = "white.main",
 	backgroundColor = "white.main",
-	transparent = false, // New prop
+	transparent = false,
 	opacity = 1,
 	footerFontSize = "16px",
 	width = "100%",
 	height = "auto",
 	padding = "10px",
 	borderRadius = "16px",
-	// New props
 	onClick = null,
 	clickable = false,
 	hoverEffect = true,

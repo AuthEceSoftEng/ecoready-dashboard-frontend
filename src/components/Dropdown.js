@@ -188,34 +188,70 @@ const Dropdown = ({
 				}}
 				onChange={onChange}
 			>
-				{items.flatMap((item, index) => (subheader && item.subheader ? [
-					<ListSubheader
-						key={`header-${index}`}
-						sx={{
-							fontWeight: "bold",
-							borderTop: "1px solid rgba(0, 0, 0, 0.12)",
-							color: "black!important",
-						}}
-					>
-						{typeof item === "string" ? item : item.text}
-					</ListSubheader>,
-					...((item.prices?.products || []).map((product) => product.toLowerCase()) || []).map((product, prodIndex) => (
-						<MenuItem
-							key={`item-${index}-${prodIndex}`}
-							value={product}
-							sx={{
-								pl: 4, // Adds left padding to indent the items
-								backgroundColor: "rgba(0, 0, 0, 0.02)",
-							}}
-						>
-							{product}
+				{items.flatMap((item, index) => {
+					// Handle lcaIndicators structure (has label and options)
+					if (subheader && item.label && item.options) {
+						return [
+							<ListSubheader
+								key={`header-${index}`}
+								sx={{
+									fontWeight: "bold",
+									borderTop: "1px solid rgba(0, 0, 0, 0.12)",
+									color: "black!important",
+								}}
+							>
+								{item.label}
+							</ListSubheader>,
+							...item.options.map((option, optIndex) => (
+								<MenuItem
+									key={`item-${index}-${optIndex}`}
+									value={option}
+									sx={{
+										pl: 4, // Adds left padding to indent the items
+										backgroundColor: "rgba(0, 0, 0, 0.02)",
+									}}
+								>
+									{option}
+								</MenuItem>
+							)),
+						];
+					}
+
+					// Handle products structure (has subheader and prices.products)
+					if (subheader && item.subheader) {
+						return [
+							<ListSubheader
+								key={`header-${index}`}
+								sx={{
+									fontWeight: "bold",
+									borderTop: "1px solid rgba(0, 0, 0, 0.12)",
+									color: "black!important",
+								}}
+							>
+								{typeof item === "string" ? item : item.text}
+							</ListSubheader>,
+							...((item.prices?.products || []).map((product) => product.toLowerCase()) || []).map((product, prodIndex) => (
+								<MenuItem
+									key={`item-${index}-${prodIndex}`}
+									value={product}
+									sx={{
+										pl: 4, // Adds left padding to indent the items
+										backgroundColor: "rgba(0, 0, 0, 0.02)",
+									}}
+								>
+									{product}
+								</MenuItem>
+							)),
+						];
+					}
+					// Handle regular items (no subheader)
+
+					return (
+						<MenuItem key={`item-${index}`} value={typeof item === "string" ? item : item.text || item.value}>
+							{typeof item === "string" ? item : item.text || item.value}
 						</MenuItem>
-					)),
-				] : (
-					<MenuItem key={`item-${index}`} value={typeof item === "string" ? item : item.text}>
-						{typeof item === "string" ? item : item.text}
-					</MenuItem>
-				)))}
+					);
+				})}
 			</Select>
 		</FormControl>
 	);

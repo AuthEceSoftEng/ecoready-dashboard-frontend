@@ -107,12 +107,9 @@ const Probio = () => {
 				{ x: chartData.timestamps, y: chartData.air_pressure, type: "scatter", mode: "lines", title: "Air Pressure", color: "third", yaxis: "y2" },
 			],
 			xaxis: { title: "Days" },
-			yaxis: { title: "Temperature (°C)" },
-			yaxis2: {
-				title: "Air Pressure (hPa)",
-				anchor: "x",
-				overlaying: "y",
-				side: "right",
+			yaxis: {
+				primary: { title: "Temperature (°C)" },
+				secondary: { title: "Air Pressure (hPa)", anchor: "x", overlaying: "y", side: "right" },
 			},
 		},
 		{
@@ -122,12 +119,9 @@ const Probio = () => {
 				{ x: chartData.timestamps, y: chartData.air_humidity, type: "scatter", mode: "lines", title: "Air Humidity", color: "third", yaxis: "y2" },
 			],
 			xaxis: { title: "Days" },
-			yaxis: { title: "Temperature (°C)" },
-			yaxis2: {
-				title: "Air Humidity (%)",
-				anchor: "x",
-				overlaying: "y",
-				side: "right",
+			yaxis: {
+				primary: { title: "Temperature (°C)" },
+				secondary: { title: "Air Humidity (%)", anchor: "x", overlaying: "y", side: "right" },
 			},
 		},
 		{
@@ -137,12 +131,9 @@ const Probio = () => {
 				{ x: chartData.timestamps, y: chartData.air_humidity, type: "scatter", mode: "lines", title: "Air Humidity", color: "third", yaxis: "y2" },
 			],
 			xaxis: { title: "Days" },
-			yaxis: { title: "Air Pressure (hPa)" },
-			yaxis2: {
-				title: "Air Humidity (%)",
-				anchor: "x",
-				overlaying: "y",
-				side: "right",
+			yaxis: {
+				primary: { title: "Air Pressure (hPa)" },
+				secondary: { title: "Air Humidity (%)", anchor: "x", overlaying: "y", side: "right" },
 			},
 		},
 		{
@@ -153,12 +144,9 @@ const Probio = () => {
 				{ x: chartData.timestamps, y: chartData.air_humidity, type: "scatter", mode: "lines", title: "Air Humidity", color: "third", yaxis: "y2" },
 			],
 			xaxis: { title: "Days" },
-			yaxis: { title: "Temperature (°C)" },
-			yaxis2: {
-				title: "Pressure (hPa) / Humidity (%)",
-				anchor: "x",
-				overlaying: "y",
-				side: "right",
+			yaxis: {
+				primary: { title: "Temperature (°C)" },
+				secondary: { title: "Pressure (hPa) / Humidity (%)", anchor: "x", overlaying: "y", side: "right" },
 			},
 		},
 	], [chartData]);
@@ -197,12 +185,9 @@ const Probio = () => {
 				{ x: oatData.timestamps, y: oatData.average_temperature, type: "scatter", mode: "lines", title: "Avg Temperature", color: "goldenrod", yaxis: "y2" },
 			],
 			xaxis: { title: "Days" },
-			yaxis: { title: "Precipitation and Water Demand(mm)" },
-			yaxis2: {
-				title: "Avg Temperature (°C)",
-				anchor: "x",
-				overlaying: "y",
-				side: "right",
+			yaxis: {
+				primary: { title: "Precipitation and Water Demand(mm)" },
+				secondary: { title: "Avg Temperature (°C)", anchor: "x", overlaying: "y", side: "right" },
 			},
 			shapes: oatData.timestamps.map((timestamp, index) => ({
 				type: "line",
@@ -235,7 +220,6 @@ const Probio = () => {
 											height="300px"
 											xaxis={card.xaxis}
 											yaxis={card.yaxis}
-											yaxis2={card.yaxis2}
 										/>
 									) : (<DataWarning minHeight="300px" />
 									)}
@@ -258,7 +242,6 @@ const Probio = () => {
 												height="300px"
 												xaxis={card.xaxis}
 												yaxis={card.yaxis}
-												yaxis2={card.yaxis2}
 												shapes={card.shapes}
 											/>
 										) : (<DataWarning minHeight="300px" />
