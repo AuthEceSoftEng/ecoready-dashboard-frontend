@@ -9,14 +9,13 @@ export const magnetConfigs = (countryKey, indicatorKey = null) => {
 	};
 
 	// Country filter applied to all queries
-	const countryFilter = [
+	const countryFilter = countryKey === "EU" ? [] : [
 		{
 			property_name: "key",
 			operator: "eq",
 			property_value: countryKey,
 		},
 	];
-
 	const indicatorFilter = [
 		{
 			property_name: "indicator",
