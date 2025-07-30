@@ -1,4 +1,4 @@
-import { MenuItem, Select, FormControl, InputLabel, ListSubheader } from "@mui/material";
+import { MenuItem, Select, FormControl, InputLabel, ListSubheader, Chip, Box } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 
 const useStyles = makeStyles((theme) => ({
@@ -136,9 +136,36 @@ const Dropdown = ({
 	items = [],
 	value,
 	subheader = false,
+	multiple = false,
 	onChange,
 }) => {
 	const classes = useStyles();
+
+	// Custom render for multiple selection
+	const renderValue = (selected) => {
+		if (!multiple) return selected;
+
+		if (selected.length === 0) {
+			return placeholder;
+		}
+
+		return (
+			<Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+				{selected.map((key) => (
+					<Chip
+						key={key}
+						label={key}
+						size="small"
+						sx={{
+							height: "20px",
+							backgroundColor: `${background}.light`,
+							color: "white",
+						}}
+					/>
+				))}
+			</Box>
+		);
+	};
 
 	return (
 		<FormControl fullWidth={!width}>
@@ -168,18 +195,20 @@ const Dropdown = ({
 				labelId={`${id}-label`}
 				value={value}
 				label={placeholder}
-				className={classes[`${background}_${(filled ? "filled" : "outlined")}`]}
+				multiple={multiple}
+				renderValue={multiple ? renderValue : undefined}
+				className={classes[`${background}_${filled ? "filled" : "outlined"}`]}
 				color={background}
 				size={size}
 				style={{ color, width, height }}
 				autoWidth={!width}
 				classes={{
-					filled: classes[`${background}_${(filled ? "filled" : "outlined")}`],
-					iconFilled: classes[`${background}_${(filled ? "filled" : "outlined")}`],
+					filled: classes[`${background}_${filled ? "filled" : "outlined"}`],
+					iconFilled: classes[`${background}_${filled ? "filled" : "outlined"}`],
 				}}
 				sx={{
 					">.MuiOutlinedInput-notchedOutline": {
-						border: (filled) ? "none" : "1px solid",
+						border: filled ? "none" : "1px solid",
 						borderColor: `${background}.main`,
 					},
 					".MuiSelect-icon": {

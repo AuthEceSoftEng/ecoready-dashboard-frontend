@@ -60,6 +60,8 @@ const SELECTION_COLOR = colors.third; // Gold color for selected indicator
 
 const getRiskColor = (level) => RISK_COLOR_MAP[level] || "#BDBDBD";
 
+const isOpportunityIndicator = (indicator) => indicator === "Contribution of the sector to economic development";
+
 const getRiskScaleAxis = () => ({
 	tickmode: "array",
 	tickvals: [0, 1, 2, 3, 4, 5],
@@ -89,13 +91,11 @@ const getLevelOrder = (level, isOpportunity = false) => {
 	return RISK_LEVEL_ORDER[level] === undefined ? 0 : RISK_LEVEL_ORDER[level];
 };
 
-const isOpportunityIndicator = (indicator) => indicator === "Contribution of the sector to economic development";
-
 // ============================================================================
 // CHART CREATION FUNCTIONS
 // ============================================================================
 
-const createCountryIndicatorsChart = (riskAssessmentData, selectedIndicator = null) => {
+const createCountryIndicatorsChart = (riskAssessmentData, OpportunityIndicator, selectedIndicator = null) => {
 	if (riskAssessmentData.length === 0) return [];
 
 	const dataByLevel = {};
@@ -106,7 +106,7 @@ const createCountryIndicatorsChart = (riskAssessmentData, selectedIndicator = nu
 	// Group data by risk level, separating risk and opportunity indicators
 	for (const item of riskAssessmentData) {
 		const { risk_level: level, score, indicator } = item;
-		const isOpportunity = isOpportunityIndicator(indicator);
+		const isOpportunity = OpportunityIndicator;
 		const isSelected = indicator === selectedIndicator;
 
 		const parentCategory = lcaIndicators.find((category) => category.options.includes(indicator));
@@ -157,11 +157,6 @@ const createCountryIndicatorsChart = (riskAssessmentData, selectedIndicator = nu
 			targetData[level].colors.push(isSelected ? SELECTION_COLOR : getRiskColor(level));
 		}
 	}
-
-	console.log("Risk data by level:", dataByLevel);
-	console.log("Opportunity data by level:", opportunityDataByLevel);
-	console.log("Selected risk data:", selectedRiskData);
-	console.log("Selected opportunity data:", selectedOpportunityData);
 
 	// Create traces for non-selected risk indicators
 	const riskTraces = Object.entries(dataByLevel).map(([level, data]) => ({
@@ -280,81 +275,39 @@ const createCountryIndicatorsChart = (riskAssessmentData, selectedIndicator = nu
 	];
 };
 
-// Update the createIndicatorRiskChart function for selected country highlighting
+// Updated createIndicatorRiskChart function to show only selected country
 const createIndicatorRiskChart = (indicatorsData, selectedIndicator, selectedCountry) => {
-	if (!selectedIndicator || indicatorsData.length === 0) return [];
+    if (!selectedIndicator || indicatorsData.length === 0) return [];
 
-	const indicatorRiskData = indicatorsData.filter((item) => item.indicator === selectedIndicator);
-	if (indicatorRiskData.length === 0) return [];
+    const selectedCountryValue = selectedCountry?.value || selectedCountry;
+    
+    // Filter for only the selected indicator and selected country
+    const indicatorData = indicatorsData.find((item) => 
+        item.indicator === selectedIndicator && item.key === selectedCountryValue
+    );
 
-	const isOpportunity = isOpportunityIndicator(selectedIndicator);
-	const selectedCountryValue = selectedCountry?.value || selectedCountry;
+    if (!indicatorData) return [];
 
-	// Process and sort data
-	const processedData = indicatorRiskData.map((item) => {
-		const country = europeanCountries.find((c) => c.value === item.key);
-		const isSelectedCountry = item.key === selectedCountryValue;
-		return {
-			country: country?.text || item.key,
-			score: getLevelOrder(item.risk_level, isOpportunity),
-			level: item.risk_level,
-			color: isSelectedCountry ? SELECTION_COLOR : getRiskColor(item.risk_level),
-			isSelected: isSelectedCountry,
-		};
-	}).sort((a, b) => b.score - a.score);
+    const isOpportunity = isOpportunityIndicator(selectedIndicator);
+    const country = europeanCountries.find((c) => c.value === selectedCountryValue);
+    
+    // Create single trace for the selected indicator in selected country
+    const trace = {
+        x: [country?.text || selectedCountryValue],
+        y: [getLevelOrder(indicatorData.risk_level, isOpportunity)],
+        type: "bar",
+        name: "Current Selection",
+        marker: { 
+            color: SELECTION_COLOR 
+        },
+        hovertemplate:
+            "<b>%{x}</b><br>"
+            + `<b>${isOpportunity ? "Opportunity" : "Risk"} Level:</b> ${indicatorData.risk_level}<br>`
+            + "<b>Score:</b> %{y}<br>"
+            + "<extra></extra>",
+    };
 
-	// Separate selected and non-selected countries
-	const selectedCountryData = processedData.filter((item) => item.isSelected);
-	const otherCountriesData = processedData.filter((item) => !item.isSelected);
-
-	// Group non-selected countries by risk level
-	const dataByLevel = {};
-	for (const item of otherCountriesData) {
-		if (!dataByLevel[item.level]) {
-			dataByLevel[item.level] = {
-				countries: [],
-				scores: [],
-				colors: [],
-			};
-		}
-
-		dataByLevel[item.level].countries.push(item.country);
-		dataByLevel[item.level].scores.push(item.score);
-		dataByLevel[item.level].colors.push(item.color);
-	}
-
-	// Create traces for non-selected countries
-	const traces = Object.entries(dataByLevel).map(([level, data]) => ({
-		x: data.countries,
-		y: data.scores,
-		type: "bar",
-		name: level.charAt(0).toUpperCase() + level.slice(1),
-		color: data.colors,
-		hovertemplate:
-			"<b>%{x}</b><br>"
-			+ `<b>${isOpportunity ? "Opportunity" : "Risk"} Level:</b> ${level}<br>`
-			+ "<b>Score:</b> %{y}<br>"
-			+ "<extra></extra>",
-	}));
-
-	// Add trace for selected country if it exists
-	if (selectedCountryData.length > 0) {
-		const selectedItem = selectedCountryData[0];
-		traces.push({
-			x: [selectedItem.country],
-			y: [selectedItem.score],
-			type: "bar",
-			name: "Current Selection",
-			color: SELECTION_COLOR,
-			hovertemplate:
-				"<b>%{x}</b><br>"
-				+ `<b>${isOpportunity ? "Opportunity" : "Risk"} Level:</b> ${selectedItem.level}<br>`
-				+ "<b>Score:</b> %{y}<br>"
-				+ "<extra></extra>",
-		});
-	}
-
-	return traces;
+    return [trace];
 };
 
 // Replace the createCategoryBarChart function around line 350
@@ -452,7 +405,7 @@ const createCategoryBarChart = (riskAssessmentData, selectedIndicator, selectedC
 				yaxis: "y",
 				hovertemplate:
 					"<b>%{customdata[0]}</b><br>"
-					+ "(<i>%{customdata[2]}</i>)<br>"
+					+ "<i>%{customdata[2]}</i><br>"
 					+ "<b>Risk Level:</b> <i>%{customdata[1]}</i><br>"
 					+ "<extra></extra>",
 				customdata: otherRiskData.indicators.map((indicator, index) => [
@@ -561,7 +514,32 @@ const createCategoryBarChart = (riskAssessmentData, selectedIndicator, selectedC
 		}
 	}
 
-	return traces;
+	// Create result object with traces and optional shape
+	const result = { traces };
+
+	// Add shape for separator line in "Economic & Social Development" category
+	if (parentCategory.label === "Economic & Social Development"
+		&& chartData.riskIndicators.length > 0 && chartData.opportunityIndicators.length > 0) {
+		// Calculate the position for the separator line (between risk and opportunity indicators)
+		const separatorPosition = chartData.riskIndicators.length - 0.5;
+
+		result.shapes = [{
+			type: "line",
+			xref: "x",
+			x0: separatorPosition,
+			x1: separatorPosition,
+			yref: "paper",
+			y0: 0,
+			y1: 1,
+			line: {
+				color: "#666666",
+				width: 2,
+				dash: "dash",
+			},
+		}];
+	}
+
+	return result;
 };
 
 // ============================================================================
@@ -570,7 +548,7 @@ const createCategoryBarChart = (riskAssessmentData, selectedIndicator, selectedC
 
 const useSelections = () => {
 	const [selections, setSelections] = useState({
-		country: EU_COUNTRIES[0],
+		country: EU_COUNTRIES[1],
 		indicator: lcaIndicators[0].options[0],
 	});
 
@@ -590,7 +568,7 @@ const useSelections = () => {
 	return { selections, updateCountry, updateIndicator };
 };
 
-const useChartData = (selections, dataSets) => {
+const useChartData = (dataSets) => {
 	const metrics = useMemo(() => dataSets?.metrics || [], [dataSets]);
 	const indicatorsData = useMemo(() => dataSets?.indicators || [], [dataSets]);
 
@@ -618,39 +596,26 @@ const useChartData = (selections, dataSets) => {
 const LcaMag = () => {
 	const { selections, updateCountry, updateIndicator } = useSelections();
 
-	console.log("Selected Country:", selections.country);
-	console.log("Selected Indicator:", selections.indicator);
+	const [isOpportunityState, setIsOpportunityState] = useState(false);
+
+	// Update state when indicator changes
+	useEffect(() => {
+		setIsOpportunityState(isOpportunityIndicator(selections.indicator));
+	}, [selections.indicator]);
+
+	// const isOpportunity = (indicator) => indicator === "Contribution of the sector to economic development";
 
 	const fetchConfigs = useMemo(() => {
 		const countryValue = selections.country?.value || selections.country;
-		console.log("Selected Country Value:", countryValue);
 		return magnetConfigs(countryValue, selections.indicator || null);
 	}, [selections.country, selections.indicator]);
 
 	const { state } = useInit(organization, fetchConfigs);
 	const { isLoading, dataSets } = state;
 
-	const { riskAssessmentData, indicatorsData } = useChartData(selections, dataSets);
-
-	console.log("Filtered Metrics:", riskAssessmentData);
-
-	// Form configurations
-	const yearPickerRef = useRef();
-	const yearPickerProps = useMemo(() => [{
-		key: "year-picker",
-		customType: "date-picker",
-		width: "150px",
-		sublabel: "Select Year",
-		views: ["year"],
-		value: new Date("2024-01-01"),
-		minDate: new Date("2024-01-01"),
-		maxDate: new Date("2024-12-31"),
-		onChange: (newValue) => {
-			if (newValue) {
-				console.log("Selected year:", newValue);
-			}
-		},
-	}], []);
+	const { riskAssessmentData, indicatorsData } = useChartData(dataSets);
+	console.log("Risk Assessment Data:", riskAssessmentData);
+	console.log("Indicators Data:", indicatorsData);
 
 	// Dropdown configurations
 	const countryDropdown = useMemo(() => ({
@@ -671,8 +636,9 @@ const LcaMag = () => {
 	}), [selections.indicator, updateIndicator]);
 
 	// Chart data memoization
-	const countryIndicatorsChartData = useMemo(() => createCountryIndicatorsChart(riskAssessmentData, selections.indicator),
+	const countryIndicatorsChartData = useMemo(() => createCountryIndicatorsChart(riskAssessmentData, isOpportunityIndicator(selections.indicator), selections.indicator),
 		[riskAssessmentData, selections.indicator]);
+	console.log("Country Indicators Chart Data:", countryIndicatorsChartData);
 
 	const indicatorRiskByCountryData = useMemo(() => createIndicatorRiskChart(indicatorsData, selections.indicator, selections.country),
 		[indicatorsData, selections.indicator, selections.country]);
@@ -691,8 +657,6 @@ const LcaMag = () => {
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
 			<StickyBand
 				dropdownContent={[countryDropdown, indicatorDropdown]}
-				formRef={yearPickerRef}
-				formContent={yearPickerProps}
 			/>
 
 			{/* Conditional Charts */}
@@ -700,8 +664,11 @@ const LcaMag = () => {
 				<Grid item xs={12} md={12}>
 					<Grid container spacing={1}>
 						{/* Risk Scores Across EU Countries */}
-						<Grid item xs={12} md={6}>
-							<Card title={`${selections.indicator} - ${isOpportunityIndicator ? "Opportunity" : "Risk"} Scores Across EU Countries`}>
+						<Grid item xs={12} md={6} sx={{ display: "flex" }}>
+							<Card
+								title={`${selections.indicator} - ${isOpportunityState ? "Opportunity" : "Risk"} Scores Across ${selections.country.text}`}
+								height="500px"
+							>
 								{indicatorsData.length === 0 ? (
 									<DataWarning
 										minHeight="400px"
@@ -711,19 +678,22 @@ const LcaMag = () => {
 									<Plot
 										data={indicatorRiskByCountryData}
 										height="400px"
+										showLegend={false}
 										yaxis={getYAxisForIndicator(selections.indicator)}
 										xaxis={{ tickangle: 45 }}
 										layout={{
-											margin: { l: 110, t: 10 },
-										}}
+											margin: { l: 110, t: 10, b: 80 },										}}
 									/>
 								)}
 							</Card>
 						</Grid>
 
 						{/* Category Indicators */}
-						<Grid item xs={12} lg={6}>
-							<Card title={`${selections.country.text}'s ${selectedCategory?.label || "Category"} Indicators`}>
+						<Grid item xs={12} lg={6} sx={{ display: "flex" }}>
+							<Card
+								title={`${selections.country.text}'s ${selectedCategory?.label || "Category"} Indicators`}
+								height="500px"
+							>
 								{riskAssessmentData.length === 0 ? (
 									<DataWarning
 										minHeight="400px"
@@ -731,10 +701,10 @@ const LcaMag = () => {
 									/>
 								) : (
 									<Plot
-										data={categoryBarChartData}
+										data={categoryBarChartData.traces}
 										height="400px"
 										showLegend={false}
-										yaxis={{ 
+										yaxis={{
 											primary: getRiskScaleAxis(),
 											secondary: isOpportunityIndicator ? {
 												...getOpportunityScaleAxis(),
@@ -746,6 +716,7 @@ const LcaMag = () => {
 										layout={{
 											margin: { l: 110, r: 110, t: 10, b: 100 },
 										}}
+										shapes={categoryBarChartData.shapes}
 									/>
 								)}
 							</Card>
