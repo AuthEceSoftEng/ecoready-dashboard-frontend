@@ -1,5 +1,7 @@
-import { MenuItem, Select, FormControl, InputLabel, ListSubheader, Chip, Box } from "@mui/material";
+import { MenuItem, Select, FormControl, InputLabel, ListSubheader, Box, ListItemText } from "@mui/material";
 import { makeStyles } from "@mui/styles";
+
+import Checkbox from "./Checkbox.js";
 
 const useStyles = makeStyles((theme) => ({
 	primary_filled: {
@@ -124,6 +126,9 @@ const useStyles = makeStyles((theme) => ({
 	},
 }));
 
+// Helper function to get item value
+const getItemValue = (item) => (typeof item === "string" ? item : item.text || item.value);
+
 const Dropdown = ({
 	id = "custom-dropdown",
 	size = "",
@@ -152,19 +157,30 @@ const Dropdown = ({
 		return (
 			<Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
 				{selected.map((key) => (
-					<Chip
+					<Box
 						key={key}
-						label={key}
-						size="small"
 						sx={{
-							height: "20px",
-							backgroundColor: `${background}.light`,
+							px: 1,
+							py: 0.25,
+							borderRadius: "4px",
+							backgroundColor: `${background}.main`,
 							color: "white",
+							fontSize: "0.75rem",
+							fontWeight: "medium",
 						}}
-					/>
+					>
+						{key}
+					</Box>
 				))}
 			</Box>
 		);
+	};
+
+	// Helper function to check if item is selected
+	const isItemSelected = (item) => {
+		if (!multiple || !Array.isArray(value)) return false;
+		const itemValue = getItemValue(item);
+		return value.includes(itemValue);
 	};
 
 	return (
@@ -236,11 +252,31 @@ const Dropdown = ({
 									key={`item-${index}-${optIndex}`}
 									value={option}
 									sx={{
-										pl: 4, // Adds left padding to indent the items
+										pl: 4,
 										backgroundColor: "rgba(0, 0, 0, 0.02)",
 									}}
 								>
-									{option}
+									{multiple && (
+										<Checkbox
+											checked={isItemSelected(option)}
+											sx={{
+												color: `${background}.main`,
+												"&.Mui-checked": {
+													color: `${background}.main`,
+												},
+											}}
+										/>
+									)}
+									<ListItemText
+										primary={option}
+										sx={{
+											"& .MuiListItemText-primary": {
+												overflow: "hidden",
+												textOverflow: "ellipsis",
+												whiteSpace: "nowrap",
+											},
+										}}
+									/>
 								</MenuItem>
 							)),
 						];
@@ -264,20 +300,61 @@ const Dropdown = ({
 									key={`item-${index}-${prodIndex}`}
 									value={product}
 									sx={{
-										pl: 4, // Adds left padding to indent the items
+										pl: 4,
 										backgroundColor: "rgba(0, 0, 0, 0.02)",
 									}}
 								>
-									{product}
+									{multiple && (
+										<Checkbox
+											checked={isItemSelected(product)}
+											sx={{
+												color: `${background}.main`,
+												"&.Mui-checked": {
+													color: `${background}.main`,
+												},
+											}}
+										/>
+									)}
+									<ListItemText
+										primary={product}
+										sx={{
+											"& .MuiListItemText-primary": {
+												overflow: "hidden",
+												textOverflow: "ellipsis",
+												whiteSpace: "nowrap",
+											},
+										}}
+									/>
 								</MenuItem>
 							)),
 						];
 					}
-					// Handle regular items (no subheader)
 
+					// Handle regular items (no subheader)
+					const itemValue = getItemValue(item);
 					return (
-						<MenuItem key={`item-${index}`} value={typeof item === "string" ? item : item.text || item.value}>
-							{typeof item === "string" ? item : item.text || item.value}
+						<MenuItem key={`item-${index}`} value={itemValue}>
+							{multiple && (
+								<Checkbox
+									checked={isItemSelected(item)}
+									sx={{
+										color: `${background}.main`,
+										"&.Mui-checked": {
+											color: `${background}.main`,
+										},
+									}}
+								/>
+							)}
+							<ListItemText
+								primary={itemValue}
+								sx={{
+									"& .MuiListItemText-primary": {
+										overflow: "hidden",
+										textOverflow: "ellipsis",
+										whiteSpace: "nowrap",
+									},
+								}}
+							/>
 						</MenuItem>
 					);
 				})}
