@@ -6,6 +6,7 @@ import colors from "../_colors.scss";
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
 import useInit from "../utils/screen-init.js";
+import { Dropdown } from "../components/Dropdown.js";
 import { magnetConfigs, organization } from "../config/MagnetConfig.js";
 import { extractFields, isValidArray, groupByKey, findKeyByText } from "../utils/data-handling-functions.js";
 import { LoadingIndicator, StickyBand, DataWarning } from "../utils/rendering-items.js";
@@ -94,179 +95,115 @@ const getLevelOrder = (level, isOpportunity = false) => {
 // ============================================================================
 // CHART CREATION FUNCTIONS
 // ============================================================================
+// Create a unified data processing function
+const processIndicatorData = (item, selectedIndicator) => {
+	const { risk_level: level, score, indicator } = item;
+	const isOpportunity = isOpportunityIndicator(indicator);
+	const isSelected = indicator === selectedIndicator;
+
+	const parentCategory = lcaIndicators.find((category) => category.options.includes(indicator));
+	const indicatorIndex = parentCategory?.options.indexOf(indicator) ?? -1;
+	const description = parentCategory?.desc[indicatorIndex] || "No description available";
+
+	return {
+		level,
+		score,
+		indicator,
+		isOpportunity,
+		isSelected,
+		category: parentCategory?.label || "Unknown Category",
+		description,
+		levelOrder: getLevelOrder(level, isOpportunity),
+		color: isSelected ? SELECTION_COLOR : getRiskColor(level),
+		truncatedIndicator: truncateText(indicator, isOpportunity ? 25 : 30),
+	};
+};
+
+// Simplified data grouping function
+const groupDataByLevel = (processedData, isOpportunity) => {
+	const grouped = {};
+
+	for (const item of processedData
+		.filter((item) => item.isOpportunity === isOpportunity)) {
+		if (!grouped[item.level]) {
+			grouped[item.level] = {
+				indicators: [],
+				scores: [],
+				colors: [],
+				fullIndicators: [],
+				categories: [],
+				descriptions: [],
+			};
+		}
+
+		const group = grouped[item.level];
+		group.indicators.push(item.truncatedIndicator);
+		group.fullIndicators.push(item.indicator);
+		group.categories.push(item.category);
+		group.descriptions.push(item.description);
+		group.scores.push(item.levelOrder);
+		group.colors.push(item.color);
+	}
+
+	return grouped;
+};
+
+// Simplified hover template creation
+const createHoverTemplate = (isOpportunity) => {
+	const levelType = isOpportunity ? "Opportunity" : "Risk";
+	return "<b>%{customdata[0]}</b><br>"
+		+ "<b>Description:</b> %{customdata[2]}<br>"
+		+ "<b>Category:</b> <i>%{customdata[1]}</i><br>"
+		+ `<b>${levelType} Level:</b> <i>%{x}</i><br>`
+		+ "<extra></extra>";
+};
+
+// Simplified trace creation
+const createTraces = (groupedData, isOpportunity, isSelected = false) => Object.entries(groupedData).map(([level, data]) => ({
+	x: data.scores,
+	y: data.indicators,
+	type: "bar",
+	orientation: "h",
+	name: isSelected ? "Current Selection"
+		: `${level.charAt(0).toUpperCase() + level.slice(1)}${isOpportunity ? " (Opportunity)" : ""}`,
+	color: isSelected ? SELECTION_COLOR : data.colors,
+	text: data.scores.map(() => level.toUpperCase()),
+	...(isOpportunity && { xaxis: "x2" }),
+	hovertemplate: createHoverTemplate(isOpportunity),
+	customdata: data.fullIndicators.map((indicator, index) => [
+		indicator,
+		data.categories[index],
+		data.descriptions[index],
+	]),
+}));
 
 const createCountryIndicatorsChart = (riskAssessmentData, OpportunityIndicator, selectedIndicator = null) => {
 	if (riskAssessmentData.length === 0) return [];
 
-	const dataByLevel = {};
-	const opportunityDataByLevel = {};
-	const selectedRiskData = {};
-	const selectedOpportunityData = {};
+	const processedData = riskAssessmentData.map((item) => processIndicatorData(item, selectedIndicator));
 
-	// Group data by risk level, separating risk and opportunity indicators
-	for (const item of riskAssessmentData) {
-		const { risk_level: level, score, indicator } = item;
-		const isOpportunity = OpportunityIndicator;
-		const isSelected = indicator === selectedIndicator;
+	// Separate selected and non-selected data
+	const selectedData = processedData.filter((item) => item.isSelected);
+	const nonSelectedData = processedData.filter((item) => !item.isSelected);
 
-		const parentCategory = lcaIndicators.find((category) => category.options.includes(indicator));
-		const indicatorIndex = parentCategory?.options.indexOf(indicator) ?? -1;
-		const description = parentCategory?.desc[indicatorIndex] || "No description available";
+	// Group data by type and selection status
+	const groupedRisk = groupDataByLevel(nonSelectedData, false);
+	const groupedOpportunity = groupDataByLevel(nonSelectedData, true);
+	const selectedRisk = groupDataByLevel(selectedData, false);
+	const selectedOpportunity = groupDataByLevel(selectedData, true);
 
-		if (isOpportunity) {
-			// Process opportunity indicators
-			const targetData = isSelected ? selectedOpportunityData : opportunityDataByLevel;
+	// Create traces
+	const riskTraces = createTraces(groupedRisk, false);
+	const opportunityTraces = createTraces(groupedOpportunity, true);
+	const selectedRiskTraces = createTraces(selectedRisk, false, true);
+	const selectedOpportunityTraces = createTraces(selectedOpportunity, true, true);
 
-			if (!targetData[level]) {
-				targetData[level] = {
-					indicators: [],
-					scores: [],
-					colors: [],
-					fullIndicators: [],
-					categories: [],
-					descriptions: [],
-				};
-			}
+	// Sort and combine
+	const sortedRiskTraces = riskTraces.sort((a, b) => getLevelOrder(a.name.toLowerCase(), false) - getLevelOrder(b.name.toLowerCase(), false));
 
-			targetData[level].indicators.push(indicator);
-			targetData[level].fullIndicators.push(indicator);
-			targetData[level].categories.push(parentCategory?.label || "Unknown Category");
-			targetData[level].descriptions.push(description);
-			targetData[level].scores.push(getLevelOrder(level, true));
-			targetData[level].colors.push(isSelected ? SELECTION_COLOR : getRiskColor(level));
-		} else {
-			// Process risk indicators
-			const targetData = isSelected ? selectedRiskData : dataByLevel;
+	const sortedOpportunityTraces = opportunityTraces.sort((a, b) => getLevelOrder(a.name.toLowerCase().replace(" (opportunity)", ""), true)
+		- getLevelOrder(b.name.toLowerCase().replace(" (opportunity)", ""), true));
 
-			if (!targetData[level]) {
-				targetData[level] = {
-					indicators: [],
-					scores: [],
-					colors: [],
-					fullIndicators: [],
-					categories: [],
-					descriptions: [],
-				};
-			}
-
-			targetData[level].indicators.push(indicator);
-			targetData[level].fullIndicators.push(indicator);
-			targetData[level].categories.push(parentCategory?.label || "Unknown Category");
-			targetData[level].descriptions.push(description);
-			targetData[level].scores.push(getLevelOrder(level, false));
-			targetData[level].colors.push(isSelected ? SELECTION_COLOR : getRiskColor(level));
-		}
-	}
-
-	// Create traces for non-selected risk indicators
-	const riskTraces = Object.entries(dataByLevel).map(([level, data]) => ({
-		x: data.scores,
-		y: data.indicators.map((indicator) => truncateText(indicator, 30)),
-		type: "bar",
-		orientation: "h",
-		name: level.charAt(0).toUpperCase() + level.slice(1),
-		color: data.colors,
-		text: data.scores.map(() => level.toUpperCase()),
-		hovertemplate:
-			"<b>%{customdata[0]}</b><br>"
-			+ "<b>Description:</b> %{customdata[2]}<br>"
-			+ "<b>Category:</b> <i>%{customdata[1]}</i><br>"
-			+ "<b>Risk Level:</b> <i>%{x}</i><br>"
-			+ "<extra></extra>",
-		customdata: data.fullIndicators.map((indicator, index) => [
-			indicator,
-			data.categories[index],
-			data.descriptions[index],
-		]),
-	}));
-
-	// Create traces for non-selected opportunity indicators
-	const opportunityTraces = Object.entries(opportunityDataByLevel).map(([level, data]) => ({
-		x: data.scores,
-		y: data.indicators.map((indicator) => truncateText(indicator, 25)),
-		type: "bar",
-		orientation: "h",
-		name: `${level.charAt(0).toUpperCase() + level.slice(1)} (Opportunity)`,
-		color: data.colors,
-		text: data.scores.map(() => level.toUpperCase()),
-		xaxis: "x2",
-		hovertemplate:
-			"<b>%{customdata[0]}</b><br>"
-			+ "<b>Description:</b> %{customdata[2]}<br>"
-			+ "<b>Category:</b> <i>%{customdata[1]}</i><br>"
-			+ "<b>Opportunity Level:</b> <i>%{x}</i><br>"
-			+ "<extra></extra>",
-		customdata: data.fullIndicators.map((indicator, index) => [
-			indicator,
-			data.categories[index],
-			data.descriptions[index],
-		]),
-	}));
-
-	// Create traces for selected risk indicators
-	const selectedRiskTraces = Object.entries(selectedRiskData).map(([level, data]) => ({
-		x: data.scores,
-		y: data.indicators.map((indicator) => truncateText(indicator, 30)),
-		type: "bar",
-		orientation: "h",
-		name: "Current Selection",
-		color: SELECTION_COLOR,
-		text: data.scores.map(() => level.toUpperCase()),
-		hovertemplate:
-			"<b>%{customdata[0]}</b><br>"
-			+ "<b>Description:</b> %{customdata[2]}<br>"
-			+ "<b>Category:</b> <i>%{customdata[1]}</i><br>"
-			+ "<b>Risk Level:</b> <i>%{x}</i><br>"
-			+ "<extra></extra>",
-		customdata: data.fullIndicators.map((indicator, index) => [
-			indicator,
-			data.categories[index],
-			data.descriptions[index],
-		]),
-	}));
-
-	// Create traces for selected opportunity indicators
-	const selectedOpportunityTraces = Object.entries(selectedOpportunityData).map(([level, data]) => ({
-		x: data.scores,
-		y: data.indicators.map((indicator) => truncateText(indicator, 25)),
-		type: "bar",
-		orientation: "h",
-		name: "Current Selection",
-		color: SELECTION_COLOR,
-		text: data.scores.map(() => level.toUpperCase()),
-		xaxis: "x2",
-		hovertemplate:
-			"<b>%{customdata[0]}</b><br>"
-			+ "<b>Description:</b> %{customdata[2]}<br>"
-			+ "<b>Category:</b> <i>%{customdata[1]}</i><br>"
-			+ "<b>Opportunity Level:</b> <i>%{x}</i><br>"
-			+ "<extra></extra>",
-		customdata: data.fullIndicators.map((indicator, index) => [
-			indicator,
-			data.categories[index],
-			data.descriptions[index],
-		]),
-	}));
-
-	// Sort risk traces by level (lowest to highest)
-	const sortedRiskTraces = riskTraces.sort((a, b) => {
-		const aLevel = a.name.toLowerCase();
-		const bLevel = b.name.toLowerCase();
-		const aLevelValue = getLevelOrder(aLevel, false);
-		const bLevelValue = getLevelOrder(bLevel, false);
-		return aLevelValue - bLevelValue;
-	});
-
-	// Sort opportunity traces by level (lowest to highest)
-	const sortedOpportunityTraces = opportunityTraces.sort((a, b) => {
-		const aLevel = a.name.toLowerCase().replace(" (opportunity)", "");
-		const bLevel = b.name.toLowerCase().replace(" (opportunity)", "");
-		const aLevelValue = getLevelOrder(aLevel, true);
-		const bLevelValue = getLevelOrder(bLevel, true);
-		return aLevelValue - bLevelValue;
-	});
-
-	// Combine all trace arrays
 	return [
 		...sortedOpportunityTraces,
 		...sortedRiskTraces,
@@ -277,37 +214,35 @@ const createCountryIndicatorsChart = (riskAssessmentData, OpportunityIndicator, 
 
 // Updated createIndicatorRiskChart function to show only selected country
 const createIndicatorRiskChart = (indicatorsData, selectedIndicator, selectedCountry) => {
-    if (!selectedIndicator || indicatorsData.length === 0) return [];
+	if (!selectedIndicator || indicatorsData.length === 0) return [];
 
-    const selectedCountryValue = selectedCountry?.value || selectedCountry;
-    
-    // Filter for only the selected indicator and selected country
-    const indicatorData = indicatorsData.find((item) => 
-        item.indicator === selectedIndicator && item.key === selectedCountryValue
-    );
+	const selectedCountryValue = selectedCountry?.value || selectedCountry;
 
-    if (!indicatorData) return [];
+	// Filter for only the selected indicator and selected country
+	const indicatorData = indicatorsData.find((item) => item.indicator === selectedIndicator && item.key === selectedCountryValue);
 
-    const isOpportunity = isOpportunityIndicator(selectedIndicator);
-    const country = europeanCountries.find((c) => c.value === selectedCountryValue);
-    
-    // Create single trace for the selected indicator in selected country
-    const trace = {
-        x: [country?.text || selectedCountryValue],
-        y: [getLevelOrder(indicatorData.risk_level, isOpportunity)],
-        type: "bar",
-        name: "Current Selection",
-        marker: { 
-            color: SELECTION_COLOR 
-        },
-        hovertemplate:
-            "<b>%{x}</b><br>"
-            + `<b>${isOpportunity ? "Opportunity" : "Risk"} Level:</b> ${indicatorData.risk_level}<br>`
-            + "<b>Score:</b> %{y}<br>"
-            + "<extra></extra>",
-    };
+	if (!indicatorData) return [];
 
-    return [trace];
+	const isOpportunity = isOpportunityIndicator(selectedIndicator);
+	const country = europeanCountries.find((c) => c.value === selectedCountryValue);
+
+	// Create single trace for the selected indicator in selected country
+	const parentCategory = lcaIndicators.find((category) => category.options.includes(selectedIndicator));
+	const indicatorIndex = parentCategory?.options.indexOf(selectedIndicator) ?? -1;
+	const description = parentCategory?.desc[indicatorIndex] || "No description available";
+
+	const trace = {
+		x: [country?.text || selectedCountryValue],
+		y: [getLevelOrder(indicatorData.risk_level, isOpportunity)],
+		type: "bar",
+		hovertemplate:
+			"<b>%{x}</b><br>"
+			+ "<b>Description:</b> <br>"
+			+ `${description}<br>`
+			+ "<extra></extra>",
+	};
+
+	return [trace];
 };
 
 // Replace the createCategoryBarChart function around line 350
@@ -550,43 +485,108 @@ const useSelections = () => {
 	const [selections, setSelections] = useState({
 		country: EU_COUNTRIES[1],
 		indicator: lcaIndicators[0].options[0],
+		compareCountries: [EU_COUNTRIES[1].text],
 	});
+
+	const updateSelection = useCallback((key, value) => {
+		setSelections((prev) => ({ ...prev, [key]: value }));
+	}, []);
 
 	const updateCountry = useCallback((countryText) => {
 		const country = EU_COUNTRIES.find((c) => c.text === countryText);
-		setSelections((prev) => ({ ...prev, country }));
+		setSelections((prev) => ({
+			...prev,
+			country,
+			compareCountries: [countryText], // Reinitiate with new country selection
+		}));
 	}, []);
 
 	const updateIndicator = useCallback((selectedOption) => {
 		const selectedCategory = lcaIndicators.find((cat) => cat.options.includes(selectedOption));
-		setSelections((prev) => ({
-			...prev,
-			indicator: selectedCategory ? selectedOption : "",
-		}));
-	}, []);
+		updateSelection("indicator", selectedCategory ? selectedOption : "");
+	}, [updateSelection]);
 
-	return { selections, updateCountry, updateIndicator };
+	const updateCompareCountries = useCallback((selectedCountries) => {
+		updateSelection("compareCountries", selectedCountries);
+	}, [updateSelection]);
+
+	return { selections, updateCountry, updateIndicator, updateCompareCountries };
 };
 
-const useChartData = (dataSets) => {
-	const metrics = useMemo(() => dataSets?.metrics || [], [dataSets]);
-	const indicatorsData = useMemo(() => dataSets?.indicators || [], [dataSets]);
+const useChartData = (dataSets, selectedCountry, compareCountries) => {
+	const { metrics, indicatorsData, selectedCountryMetrics } = useMemo(() => {
+		if (!dataSets || Object.keys(dataSets).length === 0) {
+			return { metrics: [], indicatorsData: [], selectedCountryMetrics: [] };
+		}
 
-	const { allIndicatorOptions, riskAssessmentData } = useMemo(() => {
+		let allMetrics = [];
+		let indicators = [];
+		let selectedCountryMetrics = [];
+
+		// Get the selected country's data specifically
+		if (selectedCountry) {
+			const selectedCountryCode = selectedCountry?.value || selectedCountry;
+			const metricsKey = `metrics_${selectedCountryCode}`;
+			if (dataSets[metricsKey]) {
+				selectedCountryMetrics = dataSets[metricsKey];
+			}
+		}
+
+		// Get data for compare countries (includes selected country) - for first chart only
+		if (compareCountries && compareCountries.length > 0) {
+			for (const countryText of compareCountries) {
+				const country = EU_COUNTRIES.find((c) => c.text === countryText);
+				const countryCode = country?.value;
+
+				if (countryCode) {
+					const metricsKey = `metrics_${countryCode}`;
+					if (dataSets[metricsKey]) {
+						allMetrics = [...allMetrics, ...dataSets[metricsKey]];
+					}
+				}
+			}
+		}
+
+		// If no metrics from compare countries, use selected country data
+		if (allMetrics.length === 0) {
+			allMetrics = selectedCountryMetrics;
+		}
+
+		// Get indicators data - try "indicators" first, then fallback to country-specific
+		if (dataSets.indicators) {
+			indicators = dataSets.indicators;
+		} else if (selectedCountry) {
+			const selectedCountryCode = selectedCountry?.value || selectedCountry;
+			const indicatorsKey = `indicators_${selectedCountryCode}`;
+			if (dataSets[indicatorsKey]) {
+				indicators = dataSets[indicatorsKey];
+			}
+		}
+
+		return { metrics: allMetrics, indicatorsData: indicators, selectedCountryMetrics };
+	}, [dataSets, selectedCountry, compareCountries]);
+
+	const { allIndicatorOptions, riskAssessmentData, selectedCountryRiskData } = useMemo(() => {
 		if (metrics.length === 0) {
-			return { allIndicatorOptions: new Set(), riskAssessmentData: [] };
+			return {
+				allIndicatorOptions: new Set(),
+				riskAssessmentData: [],
+				selectedCountryRiskData: [],
+			};
 		}
 
 		const options = new Set(lcaIndicators.flatMap((category) => category.options));
 		const filteredData = metrics.filter((metric) => options.has(metric.indicator));
+		const selectedCountryFiltered = selectedCountryMetrics.filter((metric) => options.has(metric.indicator));
 
 		return {
 			allIndicatorOptions: options,
 			riskAssessmentData: filteredData,
+			selectedCountryRiskData: selectedCountryFiltered,
 		};
-	}, [metrics]);
+	}, [metrics, selectedCountryMetrics]);
 
-	return { riskAssessmentData, indicatorsData };
+	return { riskAssessmentData, indicatorsData, selectedCountryRiskData };
 };
 
 // ============================================================================
@@ -594,7 +594,7 @@ const useChartData = (dataSets) => {
 // ============================================================================
 
 const LcaMag = () => {
-	const { selections, updateCountry, updateIndicator } = useSelections();
+	const { selections, updateCountry, updateIndicator, updateCompareCountries } = useSelections();
 
 	const [isOpportunityState, setIsOpportunityState] = useState(false);
 
@@ -607,22 +607,30 @@ const LcaMag = () => {
 
 	const fetchConfigs = useMemo(() => {
 		const countryValue = selections.country?.value || selections.country;
-		return magnetConfigs(countryValue, selections.indicator || null);
-	}, [selections.country, selections.indicator]);
+		const compareCountries = (selections.compareCountries || []).map((countryText) => {
+			const country = EU_COUNTRIES.find((c) => c.text === countryText);
+			return country ? country.value : countryText;
+		});
+		return magnetConfigs(compareCountries, selections.indicator || null);
+	}, [selections.country, selections.indicator, selections.compareCountries]);
+	console.log("Fetch Configs:", fetchConfigs);
 
 	const { state } = useInit(organization, fetchConfigs);
 	const { isLoading, dataSets } = state;
 
-	const { riskAssessmentData, indicatorsData } = useChartData(dataSets);
+	const { riskAssessmentData, indicatorsData } = useChartData(dataSets, selections.country, selections.compareCountries);
 	console.log("Risk Assessment Data:", riskAssessmentData);
 	console.log("Indicators Data:", indicatorsData);
 
-	// Dropdown configurations
+	const groupedByCountryRiskData = useMemo(() => groupByKey(riskAssessmentData, "key"), [riskAssessmentData]);
+	console.log("Grouped by Country Risk Data:", groupedByCountryRiskData);
+
+	// Dropdown configurations with proper null checks
 	const countryDropdown = useMemo(() => ({
 		id: "country-dropdown",
 		label: "Select Country",
 		items: EU_COUNTRIES,
-		value: selections.country.text,
+		value: selections.country?.text || "",
 		onChange: (event) => updateCountry(event.target.value),
 	}), [selections.country, updateCountry]);
 
@@ -635,16 +643,27 @@ const LcaMag = () => {
 		onChange: (event) => updateIndicator(event.target.value),
 	}), [selections.indicator, updateIndicator]);
 
-	// Chart data memoization
-	const countryIndicatorsChartData = useMemo(() => createCountryIndicatorsChart(riskAssessmentData, isOpportunityIndicator(selections.indicator), selections.indicator),
-		[riskAssessmentData, selections.indicator]);
-	console.log("Country Indicators Chart Data:", countryIndicatorsChartData);
+	const countryCompareDropdown = useMemo(() => ({
+		id: "country-compare-dropdown",
+		label: "Select Countries to Compare",
+		items: EU_COUNTRIES.filter((country) => country.value !== selections.country?.value),
+		multiple: true,
+		value: selections.compareCountries, // Use the array state
+		onChange: (event) => updateCompareCountries(event.target.value), // Use the correct function
+	}), [selections.country, selections.compareCountries, updateCompareCountries]);
 
 	const indicatorRiskByCountryData = useMemo(() => createIndicatorRiskChart(indicatorsData, selections.indicator, selections.country),
 		[indicatorsData, selections.indicator, selections.country]);
 
 	const categoryBarChartData = useMemo(() => createCategoryBarChart(riskAssessmentData, selections.indicator, selections.country),
 		[riskAssessmentData, selections.indicator, selections.country]);
+
+	// Chart data memoization
+	const countryIndicatorsChartData = useMemo(() => {
+		const selectedCountryCode = selections.country?.value || selections.country;
+		const countryRiskData = riskAssessmentData.filter((item) => item.key === selectedCountryCode);
+		return createCountryIndicatorsChart(countryRiskData, isOpportunityIndicator(selections.indicator), selections.indicator);
+	}, [riskAssessmentData, selections.indicator, selections.country]);
 
 	const selectedCategory = useMemo(() => lcaIndicators.find((cat) => cat.options.includes(selections.indicator)),
 		[selections.indicator]);
@@ -655,10 +674,7 @@ const LcaMag = () => {
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
-			<StickyBand
-				dropdownContent={[countryDropdown, indicatorDropdown]}
-			/>
-
+			<StickyBand dropdownContent={[countryDropdown, indicatorDropdown]} />
 			{/* Conditional Charts */}
 			{selections.indicator && (
 				<Grid item xs={12} md={12}>
@@ -675,15 +691,19 @@ const LcaMag = () => {
 										message="No indicator data available"
 									/>
 								) : (
-									<Plot
-										data={indicatorRiskByCountryData}
-										height="400px"
-										showLegend={false}
-										yaxis={getYAxisForIndicator(selections.indicator)}
-										xaxis={{ tickangle: 45 }}
-										layout={{
-											margin: { l: 110, t: 10, b: 80 },										}}
-									/>
+									<>
+										<StickyBand sticky={false} dropdownContent={[countryCompareDropdown]} />
+										<Plot
+											data={indicatorRiskByCountryData}
+											height="400px"
+											showLegend={false}
+											yaxis={getYAxisForIndicator(selections.indicator)}
+											xaxis={{ tickangle: 0 }}
+											layout={{
+												margin: { l: 110, t: 10, b: 80 },
+											}}
+										/>
+									</>
 								)}
 							</Card>
 						</Grid>
@@ -726,7 +746,7 @@ const LcaMag = () => {
 			)}
 
 			{/* All Indicators for Selected Country */}
-			<Grid item xs={12}>
+			<Grid item xs={12} mb={2}>
 				<Card title={`All Indicators - ${selections.country.text}`}>
 					{isLoading ? (
 						<LoadingIndicator minHeight="400px" />
