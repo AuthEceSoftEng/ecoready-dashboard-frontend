@@ -177,7 +177,94 @@ const createTraces = (groupedData, isOpportunity, isSelected = false) => Object.
 	]),
 }));
 
-const createCountryIndicatorsChart = (riskAssessmentData, OpportunityIndicator, selectedIndicator = null) => {
+// Updated createIndicatorRiskChart function to handle new indicatorsData structure
+const createIndicatorRiskChart = (indicatorsData, selectedIndicator, selectedCountry, compareCountries = []) => {
+	if (!selectedIndicator || !indicatorsData || Object.keys(indicatorsData).length === 0) return [];
+
+	const isOpportunity = isOpportunityIndicator(selectedIndicator);
+
+	// Get parent category and description for the selected indicator
+	const parentCategory = lcaIndicators.find((category) => category.options.includes(selectedIndicator));
+	const indicatorIndex = parentCategory?.options.indexOf(selectedIndicator) ?? -1;
+	const description = parentCategory?.desc[indicatorIndex] || "No description available";
+
+	// Create a Set of all countries to include (selected + compare countries)
+	const allCountries = new Set();
+
+	// Always include the selected country
+	if (selectedCountry) {
+		allCountries.add(selectedCountry?.value || selectedCountry);
+	}
+
+	// Add compare countries
+	if (compareCountries && compareCountries.length > 0) {
+		if (compareCountries.includes("European Union")) {
+			// Add all countries that have data in indicatorsData
+			for (const countryValue of Object.keys(indicatorsData)) {
+				allCountries.add(countryValue);
+			}
+		} else {
+			for (const countryText of compareCountries) {
+				const country = EU_COUNTRIES.find((c) => c.text === countryText);
+				if (country) {
+					allCountries.add(country.value);
+				}
+			}
+		}
+	}
+
+	// If no countries are selected, return empty
+	if (allCountries.size === 0) return [];
+
+	// Create data arrays for all countries
+	const countryNames = [];
+	const riskLevels = [];
+	const customData = [];
+
+	// Process each country
+	for (const countryValue of allCountries) {
+		let indicatorData = null;
+
+		// Check if this country has data in indicatorsData
+		if (indicatorsData[countryValue]) {
+			const countryData = indicatorsData[countryValue];
+
+			// Find the specific indicator in this country's data
+			indicatorData = countryData.find((item) => item.indicator === selectedIndicator);
+		}
+
+		if (indicatorData) {
+			const country = europeanCountries.find((c) => c.value === countryValue);
+			const countryName = country?.text || countryValue;
+
+			countryNames.push(countryName);
+			riskLevels.push(getLevelOrder(indicatorData.risk_level, isOpportunity));
+			customData.push([countryName, indicatorData.risk_level, description]);
+		}
+	}
+
+	// Create a single trace with all countries
+	if (countryNames.length > 0) {
+		const trace = {
+			x: countryNames,
+			y: riskLevels,
+			type: "bar",
+			hovertemplate:
+				"<b>%{customdata[0]}</b><br>"
+				+ `<b>${isOpportunity ? "Opportunity" : "Risk"} Level:</b> %{customdata[1]}<br>`
+				+ "<b>Description:</b><br>"
+				+ "%{customdata[2]}<br>"
+				+ "<extra></extra>",
+			customdata: customData,
+		};
+
+		return [trace];
+	}
+
+	return [];
+};
+
+const createCountryIndicatorsChart = (riskAssessmentData, selectedIndicator = null) => {
 	if (riskAssessmentData.length === 0) return [];
 
 	const processedData = riskAssessmentData.map((item) => processIndicatorData(item, selectedIndicator));
@@ -210,39 +297,6 @@ const createCountryIndicatorsChart = (riskAssessmentData, OpportunityIndicator, 
 		...selectedOpportunityTraces,
 		...selectedRiskTraces,
 	];
-};
-
-// Updated createIndicatorRiskChart function to show only selected country
-const createIndicatorRiskChart = (indicatorsData, selectedIndicator, selectedCountry) => {
-	if (!selectedIndicator || indicatorsData.length === 0) return [];
-
-	const selectedCountryValue = selectedCountry?.value || selectedCountry;
-
-	// Filter for only the selected indicator and selected country
-	const indicatorData = indicatorsData.find((item) => item.indicator === selectedIndicator && item.key === selectedCountryValue);
-
-	if (!indicatorData) return [];
-
-	const isOpportunity = isOpportunityIndicator(selectedIndicator);
-	const country = europeanCountries.find((c) => c.value === selectedCountryValue);
-
-	// Create single trace for the selected indicator in selected country
-	const parentCategory = lcaIndicators.find((category) => category.options.includes(selectedIndicator));
-	const indicatorIndex = parentCategory?.options.indexOf(selectedIndicator) ?? -1;
-	const description = parentCategory?.desc[indicatorIndex] || "No description available";
-
-	const trace = {
-		x: [country?.text || selectedCountryValue],
-		y: [getLevelOrder(indicatorData.risk_level, isOpportunity)],
-		type: "bar",
-		hovertemplate:
-			"<b>%{x}</b><br>"
-			+ "<b>Description:</b> <br>"
-			+ `${description}<br>`
-			+ "<extra></extra>",
-	};
-
-	return [trace];
 };
 
 // Replace the createCategoryBarChart function around line 350
@@ -514,21 +568,23 @@ const useSelections = () => {
 };
 
 const useChartData = (dataSets, selectedCountry, compareCountries) => {
-	const { metrics, indicatorsData, selectedCountryMetrics } = useMemo(() => {
+	const { metrics, indicatorsData, selectedCountryMetrics, countryMetrics } = useMemo(() => {
 		if (!dataSets || Object.keys(dataSets).length === 0) {
-			return { metrics: [], indicatorsData: [], selectedCountryMetrics: [] };
+			return { metrics: [], indicatorsData: [], selectedCountryMetrics: [], countryMetrics: {} };
 		}
 
 		let allMetrics = [];
 		let indicators = [];
 		let selectedCountryMetrics = [];
+		const countryMetrics = {}; // Store metrics for each country individually
+		const selectedCountryCode = selectedCountry?.value || selectedCountry;
 
 		// Get the selected country's data specifically
 		if (selectedCountry) {
-			const selectedCountryCode = selectedCountry?.value || selectedCountry;
 			const metricsKey = `metrics_${selectedCountryCode}`;
 			if (dataSets[metricsKey]) {
 				selectedCountryMetrics = dataSets[metricsKey];
+				countryMetrics[selectedCountryCode] = dataSets[metricsKey];
 			}
 		}
 
@@ -541,7 +597,12 @@ const useChartData = (dataSets, selectedCountry, compareCountries) => {
 				if (countryCode) {
 					const metricsKey = `metrics_${countryCode}`;
 					if (dataSets[metricsKey]) {
-						allMetrics = [...allMetrics, ...dataSets[metricsKey]];
+						const countryData = dataSets[metricsKey];
+						// Filter out elements where key matches selectedCountry when dealing with EU data
+						const filteredData = metricsKey === "metrics_EU"
+							? countryData.filter((item) => item.key !== selectedCountryCode)
+							: countryData;
+						allMetrics = [...allMetrics, ...filteredData];
 					}
 				}
 			}
@@ -555,38 +616,41 @@ const useChartData = (dataSets, selectedCountry, compareCountries) => {
 		// Get indicators data - try "indicators" first, then fallback to country-specific
 		if (dataSets.indicators) {
 			indicators = dataSets.indicators;
-		} else if (selectedCountry) {
-			const selectedCountryCode = selectedCountry?.value || selectedCountry;
-			const indicatorsKey = `indicators_${selectedCountryCode}`;
-			if (dataSets[indicatorsKey]) {
-				indicators = dataSets[indicatorsKey];
-			}
 		}
 
-		return { metrics: allMetrics, indicatorsData: indicators, selectedCountryMetrics };
+		return { metrics: allMetrics, indicatorsData: indicators, selectedCountryMetrics, countryMetrics };
 	}, [dataSets, selectedCountry, compareCountries]);
 
-	const { allIndicatorOptions, riskAssessmentData, selectedCountryRiskData } = useMemo(() => {
+	const { allIndicatorOptions, riskAssessmentData, selectedCountryRiskData, countryRiskData } = useMemo(() => {
 		if (metrics.length === 0) {
 			return {
 				allIndicatorOptions: new Set(),
 				riskAssessmentData: [],
 				selectedCountryRiskData: [],
+				countryRiskData: {},
 			};
 		}
 
 		const options = new Set(lcaIndicators.flatMap((category) => category.options));
+		console.log("Available Metrics:", metrics);
 		const filteredData = metrics.filter((metric) => options.has(metric.indicator));
 		const selectedCountryFiltered = selectedCountryMetrics.filter((metric) => options.has(metric.indicator));
+
+		// Create filtered data for each country
+		const countryRiskData = {};
+		for (const [countryCode, countryData] of Object.entries(countryMetrics)) {
+			countryRiskData[countryCode] = countryData.filter((metric) => options.has(metric.indicator));
+		}
 
 		return {
 			allIndicatorOptions: options,
 			riskAssessmentData: filteredData,
 			selectedCountryRiskData: selectedCountryFiltered,
+			countryRiskData,
 		};
-	}, [metrics, selectedCountryMetrics]);
+	}, [metrics, selectedCountryMetrics, countryMetrics]);
 
-	return { riskAssessmentData, indicatorsData, selectedCountryRiskData };
+	return { riskAssessmentData, indicatorsData, selectedCountryRiskData, countryRiskData };
 };
 
 // ============================================================================
@@ -606,17 +670,16 @@ const LcaMag = () => {
 	// const isOpportunity = (indicator) => indicator === "Contribution of the sector to economic development";
 
 	const fetchConfigs = useMemo(() => {
-		const countryValue = selections.country?.value || selections.country;
 		const compareCountries = (selections.compareCountries || []).map((countryText) => {
 			const country = EU_COUNTRIES.find((c) => c.text === countryText);
 			return country ? country.value : countryText;
 		});
 		return magnetConfigs(compareCountries, selections.indicator || null);
-	}, [selections.country, selections.indicator, selections.compareCountries]);
-	console.log("Fetch Configs:", fetchConfigs);
+	}, [selections.indicator, selections.compareCountries]);
 
 	const { state } = useInit(organization, fetchConfigs);
 	const { isLoading, dataSets } = state;
+	console.log("Data Sets:", dataSets);
 
 	const { riskAssessmentData, indicatorsData } = useChartData(dataSets, selections.country, selections.compareCountries);
 	console.log("Risk Assessment Data:", riskAssessmentData);
@@ -652,8 +715,12 @@ const LcaMag = () => {
 		onChange: (event) => updateCompareCountries(event.target.value), // Use the correct function
 	}), [selections.country, selections.compareCountries, updateCompareCountries]);
 
-	const indicatorRiskByCountryData = useMemo(() => createIndicatorRiskChart(indicatorsData, selections.indicator, selections.country),
-		[indicatorsData, selections.indicator, selections.country]);
+	const indicatorRiskByCountryData = useMemo(() => createIndicatorRiskChart(
+		groupedByCountryRiskData,
+		selections.indicator,
+		selections.country,
+		selections.compareCountries,
+	), [groupedByCountryRiskData, selections.indicator, selections.country, selections.compareCountries]);
 
 	const categoryBarChartData = useMemo(() => createCategoryBarChart(riskAssessmentData, selections.indicator, selections.country),
 		[riskAssessmentData, selections.indicator, selections.country]);
@@ -661,9 +728,12 @@ const LcaMag = () => {
 	// Chart data memoization
 	const countryIndicatorsChartData = useMemo(() => {
 		const selectedCountryCode = selections.country?.value || selections.country;
-		const countryRiskData = riskAssessmentData.filter((item) => item.key === selectedCountryCode);
-		return createCountryIndicatorsChart(countryRiskData, isOpportunityIndicator(selections.indicator), selections.indicator);
-	}, [riskAssessmentData, selections.indicator, selections.country]);
+
+		// Use the grouped data directly instead of filtering
+		const countryRiskData = groupedByCountryRiskData[selectedCountryCode] || [];
+
+		return createCountryIndicatorsChart(countryRiskData, selections.indicator);
+	}, [groupedByCountryRiskData, selections.indicator, selections.country]);
 
 	const selectedCategory = useMemo(() => lcaIndicators.find((cat) => cat.options.includes(selections.indicator)),
 		[selections.indicator]);
@@ -698,7 +768,7 @@ const LcaMag = () => {
 											height="400px"
 											showLegend={false}
 											yaxis={getYAxisForIndicator(selections.indicator)}
-											xaxis={{ tickangle: 0 }}
+											xaxis={{ tickangle: selections.compareCountries.includes("European Union") ? 45 : 0 }}
 											layout={{
 												margin: { l: 110, t: 10, b: 80 },
 											}}

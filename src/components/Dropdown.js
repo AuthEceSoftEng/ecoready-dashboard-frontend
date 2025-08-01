@@ -1,4 +1,4 @@
-import { MenuItem, Select, FormControl, InputLabel, ListSubheader, Box, ListItemText } from "@mui/material";
+import { MenuItem, Select, FormControl, InputLabel, ListSubheader, ListItemText } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 
 import Checkbox from "./Checkbox.js";
@@ -154,26 +154,7 @@ const Dropdown = ({
 			return placeholder;
 		}
 
-		return (
-			<Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-				{selected.map((key) => (
-					<Box
-						key={key}
-						sx={{
-							px: 1,
-							py: 0.25,
-							borderRadius: "4px",
-							backgroundColor: `${background}.main`,
-							color: "white",
-							fontSize: "0.75rem",
-							fontWeight: "medium",
-						}}
-					>
-						{key}
-					</Box>
-				))}
-			</Box>
-		);
+		return selected.join(", ");
 	};
 
 	// Helper function to check if item is selected

@@ -24,11 +24,15 @@ export const magnetConfigs = (countryKeys, indicatorKey = null) => {
 
 	// Data metrics configuration
 	const dataConfig = countryKeys && countryKeys.length > 0
-		? countryKeys.map((country) => ({
+		? countryKeys.map((country, index) => ({
 			...baseConfig,
 			params: JSON.stringify({
 				attributes,
-				filters: createCountryFilter(country),
+				filters: index === 0
+					? createCountryFilter(country)
+					: country === "EU"
+						? indicatorFilter
+						: [...createCountryFilter(country), ...indicatorFilter],
 			}),
 			plotId: `metrics_${country}`,
 		})) : [];
