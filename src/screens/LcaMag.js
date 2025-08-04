@@ -1,12 +1,12 @@
 import { useLocation } from "react-router-dom";
 import { Grid, Button, Typography } from "@mui/material";
-import { memo, useMemo, useState, useCallback, useRef, useEffect } from "react";
+import { memo, useMemo, useState, useCallback, useEffect } from "react";
 
 import colors from "../_colors.scss";
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
+import Footer from "../components/Footer.js";
 import useInit from "../utils/screen-init.js";
-import { Dropdown } from "../components/Dropdown.js";
 import { magnetConfigs, organization } from "../config/MagnetConfig.js";
 import { extractFields, isValidArray, groupByKey, findKeyByText } from "../utils/data-handling-functions.js";
 import { LoadingIndicator, StickyBand, DataWarning } from "../utils/rendering-items.js";
@@ -42,14 +42,14 @@ const RISK_LEVEL_ORDER = {
 	"medium risk": 3,
 	"low risk": 2,
 	"very low risk": 1,
-	"no data": 0,
+	"no data": 0.05,
 };
 
 const OPPORTUNITY_LEVEL_ORDER = {
 	"high opportunity": 3,
 	"medium opportunity": 2,
 	"low opportunity": 1,
-	"no opportunity": 0,
+	"no opportunity": 0.05,
 };
 
 // Selected item colors
@@ -65,7 +65,7 @@ const isOpportunityIndicator = (indicator) => indicator === "Contribution of the
 
 const getRiskScaleAxis = () => ({
 	tickmode: "array",
-	tickvals: [0, 1, 2, 3, 4, 5],
+	tickvals: [0.05, 1, 2, 3, 4, 5],
 	ticktext: ["No Data", "Very Low Risk", "Low Risk", "Medium Risk", "High Risk", "Very High Risk"],
 	range: [0, 5],
 });
@@ -148,11 +148,33 @@ const groupDataByLevel = (processedData, isOpportunity) => {
 	return grouped;
 };
 
+// Add a utility function to wrap text
+const wrapText = (text, maxLength = 50) => {
+	if (!text || text.length <= maxLength) return text;
+
+	const words = text.split(" ");
+	const lines = [];
+	let currentLine = "";
+
+	for (const word of words) {
+		if ((currentLine + word).length <= maxLength) {
+			currentLine += (currentLine ? " " : "") + word;
+		} else {
+			if (currentLine) lines.push(currentLine);
+			currentLine = word;
+		}
+	}
+
+	if (currentLine) lines.push(currentLine);
+
+	return lines.join("<br>");
+};
+
 // Simplified hover template creation
 const createHoverTemplate = (isOpportunity) => {
 	const levelType = isOpportunity ? "Opportunity" : "Risk";
 	return "<b>%{customdata[0]}</b><br>"
-		+ "<b>Description:</b> %{customdata[2]}<br>"
+		+ "<b>Description:</b><br>%{customdata[2]}<br>"
 		+ "<b>Category:</b> <i>%{customdata[1]}</i><br>"
 		+ `<b>${levelType} Level:</b> <i>%{x}</i><br>`
 		+ "<extra></extra>";
@@ -205,9 +227,9 @@ const createIndicatorRiskChart = (indicatorsData, selectedIndicator, selectedCou
 			}
 		} else {
 			for (const countryText of compareCountries) {
-				const country = EU_COUNTRIES.find((c) => c.text === countryText);
-				if (country) {
-					allCountries.add(country.value);
+				const countryValue = findKeyByText(EU_COUNTRIES, countryText);
+				if (countryValue !== countryText) { // Only add if found
+					allCountries.add(countryValue);
 				}
 			}
 		}
@@ -234,8 +256,8 @@ const createIndicatorRiskChart = (indicatorsData, selectedIndicator, selectedCou
 		}
 
 		if (indicatorData) {
-			const country = europeanCountries.find((c) => c.value === countryValue);
-			const countryName = country?.text || countryValue;
+			const countryDetails = EU_COUNTRIES.find((c) => c.value === countryValue);
+			const countryName = countryDetails?.text || countryValue;
 
 			countryNames.push(countryName);
 			riskLevels.push(getLevelOrder(indicatorData.risk_level, isOpportunity));
@@ -255,7 +277,11 @@ const createIndicatorRiskChart = (indicatorsData, selectedIndicator, selectedCou
 				+ "<b>Description:</b><br>"
 				+ "%{customdata[2]}<br>"
 				+ "<extra></extra>",
-			customdata: customData,
+			customdata: customData.map(([country, level, desc]) => [
+				country,
+				level,
+				wrapText(desc, 60), // Wrap description text
+			]),
 		};
 
 		return [trace];
@@ -394,13 +420,13 @@ const createCategoryBarChart = (riskAssessmentData, selectedIndicator, selectedC
 				yaxis: "y",
 				hovertemplate:
 					"<b>%{customdata[0]}</b><br>"
-					+ "<i>%{customdata[2]}</i><br>"
+					+ "<b>Description:</b><br>%{customdata[2]}<br>"
 					+ "<b>Risk Level:</b> <i>%{customdata[1]}</i><br>"
 					+ "<extra></extra>",
 				customdata: otherRiskData.indicators.map((indicator, index) => [
 					indicator,
 					otherRiskData.levels[index],
-					otherRiskData.descriptions[index],
+					wrapText(otherRiskData.descriptions[index], 60),
 				]),
 			});
 		}
@@ -475,7 +501,7 @@ const createCategoryBarChart = (riskAssessmentData, selectedIndicator, selectedC
 				customdata: otherOpportunityData.indicators.map((indicator, index) => [
 					indicator,
 					otherOpportunityData.levels[index],
-					otherOpportunityData.descriptions[index],
+					wrapText(otherOpportunityData.descriptions[index], 60),
 				]),
 			});
 		}
@@ -547,11 +573,16 @@ const useSelections = () => {
 	}, []);
 
 	const updateCountry = useCallback((countryText) => {
-		const country = EU_COUNTRIES.find((c) => c.text === countryText);
+		// Replace this:
+		// const country = EU_COUNTRIES.find((c) => c.text === countryText);
+
+		// With this:
+		const country = findKeyByText(EU_COUNTRIES, countryText, true);
+
 		setSelections((prev) => ({
 			...prev,
 			country,
-			compareCountries: [countryText], // Reinitiate with new country selection
+			compareCountries: [countryText],
 		}));
 	}, []);
 
@@ -591,10 +622,9 @@ const useChartData = (dataSets, selectedCountry, compareCountries) => {
 		// Get data for compare countries (includes selected country) - for first chart only
 		if (compareCountries && compareCountries.length > 0) {
 			for (const countryText of compareCountries) {
-				const country = EU_COUNTRIES.find((c) => c.text === countryText);
-				const countryCode = country?.value;
+				const countryCode = findKeyByText(EU_COUNTRIES, countryText);
 
-				if (countryCode) {
+				if (countryCode !== countryText) { // Only proceed if country was found
 					const metricsKey = `metrics_${countryCode}`;
 					if (dataSets[metricsKey]) {
 						const countryData = dataSets[metricsKey];
@@ -670,18 +700,15 @@ const LcaMag = () => {
 	// const isOpportunity = (indicator) => indicator === "Contribution of the sector to economic development";
 
 	const fetchConfigs = useMemo(() => {
-		const compareCountries = (selections.compareCountries || []).map((countryText) => {
-			const country = EU_COUNTRIES.find((c) => c.text === countryText);
-			return country ? country.value : countryText;
-		});
+		const compareCountries = (selections.compareCountries || []).map((countryText) => findKeyByText(EU_COUNTRIES, countryText));
+
 		return magnetConfigs(compareCountries, selections.indicator || null);
 	}, [selections.indicator, selections.compareCountries]);
 
 	const { state } = useInit(organization, fetchConfigs);
 	const { isLoading, dataSets } = state;
-	console.log("Data Sets:", dataSets);
 
-	const { riskAssessmentData, indicatorsData } = useChartData(dataSets, selections.country, selections.compareCountries);
+	const { riskAssessmentData, indicatorsData, selectedCountryRiskData, countryRiskData } = useChartData(dataSets, selections.country, selections.compareCountries);
 	console.log("Risk Assessment Data:", riskAssessmentData);
 	console.log("Indicators Data:", indicatorsData);
 
@@ -708,7 +735,7 @@ const LcaMag = () => {
 
 	const countryCompareDropdown = useMemo(() => ({
 		id: "country-compare-dropdown",
-		label: "Select Countries to Compare",
+		label: "Compare Countries",
 		items: EU_COUNTRIES.filter((country) => country.value !== selections.country?.value),
 		multiple: true,
 		value: selections.compareCountries, // Use the array state
@@ -722,8 +749,8 @@ const LcaMag = () => {
 		selections.compareCountries,
 	), [groupedByCountryRiskData, selections.indicator, selections.country, selections.compareCountries]);
 
-	const categoryBarChartData = useMemo(() => createCategoryBarChart(riskAssessmentData, selections.indicator, selections.country),
-		[riskAssessmentData, selections.indicator, selections.country]);
+	const categoryBarChartData = useMemo(() => createCategoryBarChart(selectedCountryRiskData, selections.indicator, selections.country),
+		[selectedCountryRiskData, selections.indicator, selections.country]);
 
 	// Chart data memoization
 	const countryIndicatorsChartData = useMemo(() => {
@@ -745,7 +772,7 @@ const LcaMag = () => {
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
 			<StickyBand dropdownContent={[countryDropdown, indicatorDropdown]} />
-			{/* Conditional Charts */}
+
 			{selections.indicator && (
 				<Grid item xs={12} md={12}>
 					<Grid container spacing={1}>
@@ -755,7 +782,9 @@ const LcaMag = () => {
 								title={`${selections.indicator} - ${isOpportunityState ? "Opportunity" : "Risk"} Scores Across ${selections.country.text}`}
 								height="500px"
 							>
-								{indicatorsData.length === 0 ? (
+								{isLoading ? (
+									<LoadingIndicator minHeight="400px" />
+								) : indicatorsData.length === 0 ? (
 									<DataWarning
 										minHeight="400px"
 										message="No indicator data available"
@@ -792,7 +821,7 @@ const LcaMag = () => {
 								) : (
 									<Plot
 										data={categoryBarChartData.traces}
-										height="400px"
+										height="450px"
 										showLegend={false}
 										yaxis={{
 											primary: getRiskScaleAxis(),
@@ -837,6 +866,26 @@ const LcaMag = () => {
 					)}
 				</Card>
 			</Grid>
+			{/* Footer */}
+
+			<Footer
+				sticky
+				customMessage={(
+					<>
+						<Typography component="span" sx={{ fontWeight: "bold", fontSize: "0.875rem" }}>
+							{"Acknowledgement of Data Source:"}
+						</Typography>
+						{" "}
+						{"The Observatory presents aggregated results based on data from the PSILCA database by GreenDelta GmbH, used under a Business Starter license. All rights to the data remain with GreenDelta. No raw data is disclosed."}
+						<br />
+					</>
+				)}
+				customLink={{
+					url: "https://www.greendelta.com",
+					text: "Learn more at: https://www.greendelta.com",
+				}}
+				showDefaultCopyright={false}
+			/>
 
 		</Grid>
 	);
