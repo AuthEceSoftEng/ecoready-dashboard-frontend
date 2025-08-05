@@ -26,11 +26,11 @@ const RISK_COLOR_MAP = {
 	"high risk": "#f45c36ff",
 	"very high risk": "#e10202ff",
 
-	// Opportunity levels - Blue/Teal tones
+	// Opportunity levels
 	"no opportunity": "#9E9E9E",
-	"low opportunity": "#f45c36ff",
-	"medium opportunity": "#FF9800",
-	"high opportunity": "#4CAF50",
+	"low opportunity": "#4DB6AC",
+	"medium opportunity": "#26A69A",
+	"high opportunity": "#00695C",
 
 	// Data availability
 	"no data": "#757575",
@@ -52,14 +52,16 @@ const OPPORTUNITY_LEVEL_ORDER = {
 	"no opportunity": 0.05,
 };
 
-// Selected item colors
-const SELECTION_COLOR = colors.third; // Gold color for selected indicator
-
 // ============================================================================
 // UTILITY FUNCTIONS
 // ============================================================================
 
 const getRiskColor = (level) => RISK_COLOR_MAP[level] || "#BDBDBD";
+
+// Add this new function
+const capitalizeWords = (str) => {
+    return str.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+};
 
 const isOpportunityIndicator = (indicator) => indicator === "Contribution of the sector to economic development";
 
@@ -72,7 +74,7 @@ const getRiskScaleAxis = () => ({
 
 const getOpportunityScaleAxis = () => ({
 	tickmode: "array",
-	tickvals: [0, 1, 2, 3],
+	tickvals: [0.05, 1, 2, 3],
 	ticktext: ["No Opportunity", "Low Opportunity", "Medium Opportunity", "High Opportunity"],
 	range: [0, 3],
 });
@@ -114,7 +116,7 @@ const processIndicatorData = (item, selectedIndicator) => {
 		category: parentCategory?.label || "Unknown Category",
 		description,
 		levelOrder: getLevelOrder(level, isOpportunity),
-		color: isSelected ? SELECTION_COLOR : getRiskColor(level),
+		color: getRiskColor(level),
 		truncatedIndicator: truncateText(indicator, isOpportunity ? 25 : 30),
 	};
 };
@@ -124,7 +126,7 @@ const groupDataByLevel = (processedData, isOpportunity) => {
 	const grouped = {};
 
 	for (const item of processedData
-		.filter((item) => item.isOpportunity === isOpportunity)) {
+		.filter((row) => row.isOpportunity === isOpportunity)) {
 		if (!grouped[item.level]) {
 			grouped[item.level] = {
 				indicators: [],
@@ -180,24 +182,35 @@ const createHoverTemplate = (isOpportunity) => {
 		+ "<extra></extra>";
 };
 
-// Simplified trace creation
-const createTraces = (groupedData, isOpportunity, isSelected = false) => Object.entries(groupedData).map(([level, data]) => ({
-	x: data.scores,
-	y: data.indicators,
-	type: "bar",
-	orientation: "h",
-	name: isSelected ? "Current Selection"
-		: `${level.charAt(0).toUpperCase() + level.slice(1)}${isOpportunity ? " (Opportunity)" : ""}`,
-	color: isSelected ? SELECTION_COLOR : data.colors,
-	text: data.scores.map(() => level.toUpperCase()),
-	...(isOpportunity && { xaxis: "x2" }),
-	hovertemplate: createHoverTemplate(isOpportunity),
-	customdata: data.fullIndicators.map((indicator, index) => [
-		indicator,
-		data.categories[index],
-		data.descriptions[index],
-	]),
-}));
+// Update the createTraces function to handle bold formatting for selected indicator
+const createTraces = (groupedData, isOpportunity, selectedIndicator = null) => Object.entries(groupedData).map(([level, data]) => {
+	const trace = {
+		x: data.scores,
+		y: data.indicators.map((indicator, index) => {
+			// Make the selected indicator bold
+			const fullIndicator = data.fullIndicators[index];
+			if (selectedIndicator && fullIndicator === selectedIndicator) {
+				return `<b>${indicator}</b>`;
+			}
+
+			return indicator;
+		}),
+		type: "bar",
+		orientation: "h",
+		xaxis: isOpportunity ? "x2" : "x1",
+		name: `${level.charAt(0).toUpperCase() + level.slice(1)}`,
+		color: data.colors,
+		text: data.scores.map(() => level.toUpperCase()),
+		hovertemplate: createHoverTemplate(isOpportunity),
+		customdata: data.fullIndicators.map((indicator, index) => [
+			indicator,
+			data.categories[index],
+			data.descriptions[index],
+		]),
+	};
+
+	return trace;
+});
 
 // Updated createIndicatorRiskChart function to handle new indicatorsData structure
 const createIndicatorRiskChart = (indicatorsData, selectedIndicator, selectedCountry, compareCountries = []) => {
@@ -273,13 +286,13 @@ const createIndicatorRiskChart = (indicatorsData, selectedIndicator, selectedCou
 			type: "bar",
 			hovertemplate:
 				"<b>%{customdata[0]}</b><br>"
-				+ `<b>${isOpportunity ? "Opportunity" : "Risk"} Level:</b> %{customdata[1]}<br>`
 				+ "<b>Description:</b><br>"
 				+ "%{customdata[2]}<br>"
+				+ `<b>${isOpportunity ? "Opportunity" : "Risk"} Level:</b> %{customdata[1]}<br>`
 				+ "<extra></extra>",
 			customdata: customData.map(([country, level, desc]) => [
 				country,
-				level,
+				capitalizeWords(level), // Changed from level.charAt(0).toUpperCase() + level.slice(1)
 				wrapText(desc, 60), // Wrap description text
 			]),
 		};
@@ -295,37 +308,71 @@ const createCountryIndicatorsChart = (riskAssessmentData, selectedIndicator = nu
 
 	const processedData = riskAssessmentData.map((item) => processIndicatorData(item, selectedIndicator));
 
-	// Separate selected and non-selected data
-	const selectedData = processedData.filter((item) => item.isSelected);
-	const nonSelectedData = processedData.filter((item) => !item.isSelected);
-
 	// Group data by type and selection status
-	const groupedRisk = groupDataByLevel(nonSelectedData, false);
-	const groupedOpportunity = groupDataByLevel(nonSelectedData, true);
-	const selectedRisk = groupDataByLevel(selectedData, false);
-	const selectedOpportunity = groupDataByLevel(selectedData, true);
+	const groupedRisk = groupDataByLevel(processedData, false);
+	const groupedOpportunity = groupDataByLevel(processedData, true);
 
-	// Create traces
-	const riskTraces = createTraces(groupedRisk, false);
-	const opportunityTraces = createTraces(groupedOpportunity, true);
-	const selectedRiskTraces = createTraces(selectedRisk, false, true);
-	const selectedOpportunityTraces = createTraces(selectedOpportunity, true, true);
+	// Define all possible levels from RISK_COLOR_MAP
+	const allRiskLevels = ["very low risk", "low risk", "medium risk", "high risk", "very high risk", "no data"];
+	const allOpportunityLevels = ["no opportunity", "low opportunity", "medium opportunity", "high opportunity"];
 
-	// Sort and combine
-	const sortedRiskTraces = riskTraces.sort((a, b) => getLevelOrder(a.name.toLowerCase(), false) - getLevelOrder(b.name.toLowerCase(), false));
+	// Create traces for existing data
+	const riskTraces = createTraces(groupedRisk, false, selectedIndicator);
+	const opportunityTraces = createTraces(groupedOpportunity, true, selectedIndicator);
 
-	const sortedOpportunityTraces = opportunityTraces.sort((a, b) => getLevelOrder(a.name.toLowerCase().replace(" (opportunity)", ""), true)
-		- getLevelOrder(b.name.toLowerCase().replace(" (opportunity)", ""), true));
+	// Create dummy traces for missing risk levels
+	const existingRiskLevels = Object.keys(groupedRisk);
+	const missingRiskLevels = allRiskLevels.filter((level) => !existingRiskLevels.includes(level));
+
+	const dummyRiskTraces = missingRiskLevels.map((level) => ({
+		x: [],
+		y: [],
+		type: "bar",
+		orientation: "h",
+		xaxis: "x1",
+		name: `${level.charAt(0).toUpperCase() + level.slice(1)}`,
+		color: getRiskColor(level),
+		showlegend: true,
+		hovertemplate: "<extra></extra>",
+	}));
+
+	// Create dummy traces for missing opportunity levels
+	const existingOpportunityLevels = Object.keys(groupedOpportunity);
+	const missingOpportunityLevels = allOpportunityLevels.filter((level) => !existingOpportunityLevels.includes(level));
+
+	const dummyOpportunityTraces = missingOpportunityLevels.map((level) => ({
+		x: [level],
+		y: [null],
+		type: "bar",
+		orientation: "h",
+		xaxis: "x2",
+		name: `${level.charAt(0).toUpperCase() + level.slice(1)}`,
+		color: getRiskColor(level),
+		showlegend: true,
+		opacity: 0,
+		hovertemplate: "<extra></extra>",
+	}));
+
+	// Sort and combine all traces
+	const sortedRiskTraces = [...riskTraces, ...dummyRiskTraces].sort((a, b) => {
+		const levelA = a.name.toLowerCase();
+		const levelB = b.name.toLowerCase();
+		return getLevelOrder(levelA, false) - getLevelOrder(levelB, false);
+	});
+
+	const sortedOpportunityTraces = [...opportunityTraces, ...dummyOpportunityTraces].sort((a, b) => {
+		const levelA = a.name.toLowerCase().replace(" (opportunity)", "");
+		const levelB = b.name.toLowerCase().replace(" (opportunity)", "");
+		return getLevelOrder(levelA, true) - getLevelOrder(levelB, true);
+	});
 
 	return [
-		...sortedOpportunityTraces,
 		...sortedRiskTraces,
-		...selectedOpportunityTraces,
-		...selectedRiskTraces,
+		...sortedOpportunityTraces,
 	];
 };
 
-// Replace the createCategoryBarChart function around line 350
+// Replace the createCategoryBarChart function
 const createCategoryBarChart = (riskAssessmentData, selectedIndicator, selectedCountry) => {
 	if (!selectedIndicator) return [];
 
@@ -363,14 +410,14 @@ const createCategoryBarChart = (riskAssessmentData, selectedIndicator, selectedC
 				chartData.opportunityIndicators.push(indicator);
 				chartData.opportunityScores.push(getLevelOrder(level, true));
 				chartData.opportunityLevels.push(level);
-				chartData.opportunityColors.push(isSelected ? SELECTION_COLOR : getRiskColor(level));
+				chartData.opportunityColors.push(getRiskColor(level));
 				chartData.opportunityDescriptions.push(description);
 				chartData.opportunitySelected.push(isSelected);
 			} else {
 				chartData.riskIndicators.push(indicator);
 				chartData.riskScores.push(getLevelOrder(level, false));
 				chartData.riskLevels.push(level);
-				chartData.riskColors.push(isSelected ? SELECTION_COLOR : getRiskColor(level));
+				chartData.riskColors.push(getRiskColor(level));
 				chartData.riskDescriptions.push(description);
 				chartData.riskSelected.push(isSelected);
 			}
@@ -385,6 +432,7 @@ const createCategoryBarChart = (riskAssessmentData, selectedIndicator, selectedC
 			indicators: [],
 			scores: [],
 			levels: [],
+			colors: [],
 			descriptions: [],
 		};
 		const otherRiskData = {
@@ -400,6 +448,7 @@ const createCategoryBarChart = (riskAssessmentData, selectedIndicator, selectedC
 				selectedRiskData.indicators.push(indicator);
 				selectedRiskData.scores.push(chartData.riskScores[index]);
 				selectedRiskData.levels.push(chartData.riskLevels[index]);
+				selectedRiskData.colors.push(chartData.riskColors[index]);
 				selectedRiskData.descriptions.push(chartData.riskDescriptions[index]);
 			} else {
 				otherRiskData.indicators.push(indicator);
@@ -425,7 +474,7 @@ const createCategoryBarChart = (riskAssessmentData, selectedIndicator, selectedC
 					+ "<extra></extra>",
 				customdata: otherRiskData.indicators.map((indicator, index) => [
 					indicator,
-					otherRiskData.levels[index],
+					capitalizeWords(otherRiskData.levels[index]), // Changed
 					wrapText(otherRiskData.descriptions[index], 60),
 				]),
 			});
@@ -434,11 +483,10 @@ const createCategoryBarChart = (riskAssessmentData, selectedIndicator, selectedC
 		// Add trace for selected risk indicator
 		if (selectedRiskData.indicators.length > 0) {
 			traces.push({
-				x: selectedRiskData.indicators.map((indicator) => truncateText(indicator, 20)),
+				x: selectedRiskData.indicators.map((indicator) => `<b>${truncateText(indicator, 15)}</b>`), // Make selected indicator bold
 				y: selectedRiskData.scores,
 				type: "bar",
-				name: "Current Selection",
-				color: SELECTION_COLOR,
+				color: selectedRiskData.colors,
 				yaxis: "y",
 				hovertemplate:
 					"<b>%{customdata[0]}</b><br>"
@@ -447,7 +495,7 @@ const createCategoryBarChart = (riskAssessmentData, selectedIndicator, selectedC
 					+ "<extra></extra>",
 				customdata: selectedRiskData.indicators.map((indicator, index) => [
 					indicator,
-					selectedRiskData.levels[index],
+					capitalizeWords(selectedRiskData.levels[index]), // Changed
 					selectedRiskData.descriptions[index],
 				]),
 			});
@@ -460,6 +508,7 @@ const createCategoryBarChart = (riskAssessmentData, selectedIndicator, selectedC
 			indicators: [],
 			scores: [],
 			levels: [],
+			colors: [],
 			descriptions: [],
 		};
 		const otherOpportunityData = {
@@ -475,6 +524,7 @@ const createCategoryBarChart = (riskAssessmentData, selectedIndicator, selectedC
 				selectedOpportunityData.indicators.push(indicator);
 				selectedOpportunityData.scores.push(chartData.opportunityScores[index]);
 				selectedOpportunityData.levels.push(chartData.opportunityLevels[index]);
+				selectedOpportunityData.colors.push(chartData.opportunityColors[index]);
 				selectedOpportunityData.descriptions.push(chartData.opportunityDescriptions[index]);
 			} else {
 				otherOpportunityData.indicators.push(indicator);
@@ -500,7 +550,7 @@ const createCategoryBarChart = (riskAssessmentData, selectedIndicator, selectedC
 					+ "<extra></extra>",
 				customdata: otherOpportunityData.indicators.map((indicator, index) => [
 					indicator,
-					otherOpportunityData.levels[index],
+					capitalizeWords(otherOpportunityData.levels[index]), // Changed
 					wrapText(otherOpportunityData.descriptions[index], 60),
 				]),
 			});
@@ -509,11 +559,10 @@ const createCategoryBarChart = (riskAssessmentData, selectedIndicator, selectedC
 		// Add trace for selected opportunity indicator
 		if (selectedOpportunityData.indicators.length > 0) {
 			traces.push({
-				x: selectedOpportunityData.indicators.map((indicator) => truncateText(indicator, 20)),
+				x: selectedOpportunityData.indicators.map((indicator) => `<b>${truncateText(indicator, 20)}</b>`), // Make selected indicator bold
 				y: selectedOpportunityData.scores,
 				type: "bar",
-				name: "Current Selection",
-				color: SELECTION_COLOR,
+				color: selectedOpportunityData.colors,
 				yaxis: "y2",
 				hovertemplate:
 					"<b>%{customdata[0]}</b><br>"
@@ -522,7 +571,7 @@ const createCategoryBarChart = (riskAssessmentData, selectedIndicator, selectedC
 					+ "<extra></extra>",
 				customdata: selectedOpportunityData.indicators.map((indicator, index) => [
 					indicator,
-					selectedOpportunityData.levels[index],
+					capitalizeWords(selectedOpportunityData.levels[index]), // Changed
 					selectedOpportunityData.descriptions[index],
 				]),
 			});
@@ -651,7 +700,7 @@ const useChartData = (dataSets, selectedCountry, compareCountries) => {
 		return { metrics: allMetrics, indicatorsData: indicators, selectedCountryMetrics, countryMetrics };
 	}, [dataSets, selectedCountry, compareCountries]);
 
-	const { allIndicatorOptions, riskAssessmentData, selectedCountryRiskData, countryRiskData } = useMemo(() => {
+	const { allIndicatorOptions, riskAssessmentData, selectedCountryRiskData } = useMemo(() => {
 		if (metrics.length === 0) {
 			return {
 				allIndicatorOptions: new Set(),
@@ -662,7 +711,6 @@ const useChartData = (dataSets, selectedCountry, compareCountries) => {
 		}
 
 		const options = new Set(lcaIndicators.flatMap((category) => category.options));
-		console.log("Available Metrics:", metrics);
 		const filteredData = metrics.filter((metric) => options.has(metric.indicator));
 		const selectedCountryFiltered = selectedCountryMetrics.filter((metric) => options.has(metric.indicator));
 
@@ -676,11 +724,10 @@ const useChartData = (dataSets, selectedCountry, compareCountries) => {
 			allIndicatorOptions: options,
 			riskAssessmentData: filteredData,
 			selectedCountryRiskData: selectedCountryFiltered,
-			countryRiskData,
 		};
 	}, [metrics, selectedCountryMetrics, countryMetrics]);
 
-	return { riskAssessmentData, indicatorsData, selectedCountryRiskData, countryRiskData };
+	return { riskAssessmentData, indicatorsData, selectedCountryRiskData };
 };
 
 // ============================================================================
@@ -708,12 +755,8 @@ const LcaMag = () => {
 	const { state } = useInit(organization, fetchConfigs);
 	const { isLoading, dataSets } = state;
 
-	const { riskAssessmentData, indicatorsData, selectedCountryRiskData, countryRiskData } = useChartData(dataSets, selections.country, selections.compareCountries);
-	console.log("Risk Assessment Data:", riskAssessmentData);
-	console.log("Indicators Data:", indicatorsData);
-
+	const { riskAssessmentData, indicatorsData, selectedCountryRiskData } = useChartData(dataSets, selections.country, selections.compareCountries);
 	const groupedByCountryRiskData = useMemo(() => groupByKey(riskAssessmentData, "key"), [riskAssessmentData]);
-	console.log("Grouped by Country Risk Data:", groupedByCountryRiskData);
 
 	// Dropdown configurations with proper null checks
 	const countryDropdown = useMemo(() => ({
@@ -752,15 +795,7 @@ const LcaMag = () => {
 	const categoryBarChartData = useMemo(() => createCategoryBarChart(selectedCountryRiskData, selections.indicator, selections.country),
 		[selectedCountryRiskData, selections.indicator, selections.country]);
 
-	// Chart data memoization
-	const countryIndicatorsChartData = useMemo(() => {
-		const selectedCountryCode = selections.country?.value || selections.country;
-
-		// Use the grouped data directly instead of filtering
-		const countryRiskData = groupedByCountryRiskData[selectedCountryCode] || [];
-
-		return createCountryIndicatorsChart(countryRiskData, selections.indicator);
-	}, [groupedByCountryRiskData, selections.indicator, selections.country]);
+	const countryIndicatorsChartData = useMemo(() => createCountryIndicatorsChart(selectedCountryRiskData, selections.indicator), [selections.indicator, selectedCountryRiskData]); // ✅ Specific dependencies
 
 	const selectedCategory = useMemo(() => lcaIndicators.find((cat) => cat.options.includes(selections.indicator)),
 		[selections.indicator]);
@@ -800,6 +835,7 @@ const LcaMag = () => {
 											xaxis={{ tickangle: selections.compareCountries.includes("European Union") ? 45 : 0 }}
 											layout={{
 												margin: { l: 110, t: 10, b: 80 },
+												dragmode: false,
 											}}
 										/>
 									</>
@@ -834,6 +870,7 @@ const LcaMag = () => {
 										}}
 										layout={{
 											margin: { l: 110, r: 110, t: 10, b: 100 },
+											dragmode: false,
 										}}
 										shapes={categoryBarChartData.shapes}
 									/>
@@ -858,9 +895,18 @@ const LcaMag = () => {
 						<Plot
 							height="600px"
 							data={countryIndicatorsChartData}
-							xaxis={{ primary: { ...getRiskScaleAxis() }, secondary: { ...getOpportunityScaleAxis(), anchor: "y", overlaying: "x", side: "top" } }}
+							xaxis={{
+								primary: getRiskScaleAxis(),
+								secondary: {
+									...getOpportunityScaleAxis(),
+									anchor: "y",
+									overlaying: "x1",
+									side: "top",
+								},
+							}}
 							layout={{
-								margin: { l: 220, r: 40, t: 10, b: 20 },
+								margin: { l: 220, r: 40, t: 40, b: 20 },
+								dragmode: false,
 							}}
 						/>
 					)}
