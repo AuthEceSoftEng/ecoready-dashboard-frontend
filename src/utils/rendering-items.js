@@ -69,6 +69,7 @@ export const StickyBand = ({ sticky = true, dropdownContent = [], formRef, formC
 					height={dropdown.height || "40px"}
 					background={dropdown.color ?? "primary"}
 					subheader={dropdown.subheader}
+					multiple={dropdown.multiple}
 					onChange={dropdown.onChange}
 				/>
 			</Grid>

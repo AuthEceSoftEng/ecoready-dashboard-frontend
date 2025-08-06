@@ -5,7 +5,7 @@ const RadioButtons = ({
 	value = "",
 	onChange,
 	row = false,
-	color = "secondary",
+	color = "third",
 	size = "medium",
 	labelPlacement = "end",
 	disabled = false,
