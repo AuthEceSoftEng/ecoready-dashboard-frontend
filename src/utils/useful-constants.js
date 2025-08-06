@@ -124,7 +124,7 @@ export const europeanCountries = [
 	// Region 1: AT - CZ - DK - FI - HU - LT - PL - SE - SK
 	// Region 2: BE - DE - FR - NL
 	// Region 3: BG - ES - HR - IT - PT - RO
-	{ value: "EU", text: "European Union", flag: "🇪🇺", region: "EU Average", isEU: false },
+	{ value: "EU", text: "European Union", flag: "🇪🇺", region: "EU Average", isEU: true },
 	{ value: "AL", text: "Albania", flag: "🇦🇱", isEU: false },
 	{ value: "AT", text: "Austria", flag: "🇦🇹", region: "Region 1", isEU: true },
 	{ value: "BE", text: "Belgium", flag: "🇧🇪", region: "Region 2", isEU: true },

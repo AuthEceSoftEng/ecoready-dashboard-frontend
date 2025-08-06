@@ -1,6 +1,14 @@
 export const organization = "magnet_data";
 
-export const magnetConfigs = (countryKey, indicatorKey = null) => {
+const attributes = ["key", "indicator", "score", "risk_level"];
+
+const createCountryFilter = (country) => [{
+	property_name: "key",
+	operator: "eq",
+	property_value: country,
+}];
+
+export const magnetConfigs = (countryKeys, indicatorKey = null) => {
 	// Common configuration
 	const baseConfig = {
 		project: "magnetdata",
@@ -8,42 +16,39 @@ export const magnetConfigs = (countryKey, indicatorKey = null) => {
 		type: "data",
 	};
 
-	// Country filter applied to all queries
-	const countryFilter = [
-		{
-			property_name: "key",
-			operator: "eq",
-			property_value: countryKey,
-		},
-	];
-
-	const indicatorFilter = [
-		{
-			property_name: "indicator",
-			operator: "eq",
-			property_value: indicatorKey,
-		},
-	];
+	const indicatorFilter = indicatorKey ? [{
+		property_name: "indicator",
+		operator: "eq",
+		property_value: indicatorKey,
+	}] : [];
 
 	// Data metrics configuration
-	const dataConfig = [{
-		...baseConfig,
-		params: JSON.stringify({
-			attributes: ["key", "indicator", "score", "risk_level"],
-			filters: countryFilter,
-		}),
-		plotId: "metrics",
-	},
-	{
-		...baseConfig,
-		params: JSON.stringify({
-			attributes: ["key", "indicator", "score", "risk_level"],
-			filters: indicatorFilter,
-		}),
-		plotId: "indicators",
-	}];
+	const dataConfig = countryKeys && countryKeys.length > 0
+		? countryKeys.map((country, index) => ({
+			...baseConfig,
+			params: JSON.stringify({
+				attributes,
+				filters: index === 0
+					? createCountryFilter(country)
+					: country === "EU"
+						? indicatorFilter
+						: [...createCountryFilter(country), ...indicatorFilter],
+			}),
+			plotId: `metrics_${country}`,
+		})) : [];
 
-	// Return all configurations
+	// Add indicator-specific config only if indicatorKey is provided
+	if (indicatorKey) {
+		dataConfig.push({
+			...baseConfig,
+			params: JSON.stringify({
+				attributes,
+				filters: [...createCountryFilter(countryKeys[0]), ...indicatorFilter],
+			}),
+			plotId: "indicators",
+		});
+	}
+
 	return dataConfig;
 };
 
