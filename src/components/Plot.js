@@ -78,6 +78,7 @@ const Plot = ({
 					x: d.x,
 					y: d.y,
 					z: d.z,
+					xaxis: d.xaxis,
 					yaxis: d.yaxis,
 					type: d.type,
 					name: d.name || d.title,
