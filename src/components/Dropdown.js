@@ -1,5 +1,7 @@
-import { MenuItem, Select, FormControl, InputLabel, ListSubheader } from "@mui/material";
+import { MenuItem, Select, FormControl, InputLabel, ListSubheader, ListItemText } from "@mui/material";
 import { makeStyles } from "@mui/styles";
+
+import Checkbox from "./Checkbox.js";
 
 const useStyles = makeStyles((theme) => ({
 	primary_filled: {
@@ -124,6 +126,9 @@ const useStyles = makeStyles((theme) => ({
 	},
 }));
 
+// Helper function to get item value
+const getItemValue = (item) => (typeof item === "string" ? item : item.text || item.value);
+
 const Dropdown = ({
 	id = "custom-dropdown",
 	size = "",
@@ -136,9 +141,28 @@ const Dropdown = ({
 	items = [],
 	value,
 	subheader = false,
+	multiple = false,
 	onChange,
 }) => {
 	const classes = useStyles();
+
+	// Custom render for multiple selection
+	const renderValue = (selected) => {
+		if (!multiple) return selected;
+
+		if (selected.length === 0) {
+			return placeholder;
+		}
+
+		return selected.join(", ");
+	};
+
+	// Helper function to check if item is selected
+	const isItemSelected = (item) => {
+		if (!multiple || !Array.isArray(value)) return false;
+		const itemValue = getItemValue(item);
+		return value.includes(itemValue);
+	};
 
 	return (
 		<FormControl fullWidth={!width}>
@@ -168,18 +192,20 @@ const Dropdown = ({
 				labelId={`${id}-label`}
 				value={value}
 				label={placeholder}
-				className={classes[`${background}_${(filled ? "filled" : "outlined")}`]}
+				multiple={multiple}
+				renderValue={multiple ? renderValue : undefined}
+				className={classes[`${background}_${filled ? "filled" : "outlined"}`]}
 				color={background}
 				size={size}
 				style={{ color, width, height }}
 				autoWidth={!width}
 				classes={{
-					filled: classes[`${background}_${(filled ? "filled" : "outlined")}`],
-					iconFilled: classes[`${background}_${(filled ? "filled" : "outlined")}`],
+					filled: classes[`${background}_${filled ? "filled" : "outlined"}`],
+					iconFilled: classes[`${background}_${filled ? "filled" : "outlined"}`],
 				}}
 				sx={{
 					">.MuiOutlinedInput-notchedOutline": {
-						border: (filled) ? "none" : "1px solid",
+						border: filled ? "none" : "1px solid",
 						borderColor: `${background}.main`,
 					},
 					".MuiSelect-icon": {
@@ -207,11 +233,31 @@ const Dropdown = ({
 									key={`item-${index}-${optIndex}`}
 									value={option}
 									sx={{
-										pl: 4, // Adds left padding to indent the items
+										pl: 4,
 										backgroundColor: "rgba(0, 0, 0, 0.02)",
 									}}
 								>
-									{option}
+									{multiple && (
+										<Checkbox
+											checked={isItemSelected(option)}
+											sx={{
+												color: `${background}.main`,
+												"&.Mui-checked": {
+													color: `${background}.main`,
+												},
+											}}
+										/>
+									)}
+									<ListItemText
+										primary={option}
+										sx={{
+											"& .MuiListItemText-primary": {
+												overflow: "hidden",
+												textOverflow: "ellipsis",
+												whiteSpace: "nowrap",
+											},
+										}}
+									/>
 								</MenuItem>
 							)),
 						];
@@ -235,20 +281,61 @@ const Dropdown = ({
 									key={`item-${index}-${prodIndex}`}
 									value={product}
 									sx={{
-										pl: 4, // Adds left padding to indent the items
+										pl: 4,
 										backgroundColor: "rgba(0, 0, 0, 0.02)",
 									}}
 								>
-									{product}
+									{multiple && (
+										<Checkbox
+											checked={isItemSelected(product)}
+											sx={{
+												color: `${background}.main`,
+												"&.Mui-checked": {
+													color: `${background}.main`,
+												},
+											}}
+										/>
+									)}
+									<ListItemText
+										primary={product}
+										sx={{
+											"& .MuiListItemText-primary": {
+												overflow: "hidden",
+												textOverflow: "ellipsis",
+												whiteSpace: "nowrap",
+											},
+										}}
+									/>
 								</MenuItem>
 							)),
 						];
 					}
-					// Handle regular items (no subheader)
 
+					// Handle regular items (no subheader)
+					const itemValue = getItemValue(item);
 					return (
-						<MenuItem key={`item-${index}`} value={typeof item === "string" ? item : item.text || item.value}>
-							{typeof item === "string" ? item : item.text || item.value}
+						<MenuItem key={`item-${index}`} value={itemValue}>
+							{multiple && (
+								<Checkbox
+									checked={isItemSelected(item)}
+									sx={{
+										color: `${background}.main`,
+										"&.Mui-checked": {
+											color: `${background}.main`,
+										},
+									}}
+								/>
+							)}
+							<ListItemText
+								primary={itemValue}
+								sx={{
+									"& .MuiListItemText-primary": {
+										overflow: "hidden",
+										textOverflow: "ellipsis",
+										whiteSpace: "nowrap",
+									},
+								}}
+							/>
 						</MenuItem>
 					);
 				})}
