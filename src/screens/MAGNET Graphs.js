@@ -1,11 +1,11 @@
 import { useLocation } from "react-router-dom";
-import { Grid, Typography } from "@mui/material";
+import { Grid, Typography, Box } from "@mui/material";
 import { memo, useMemo, useState, useCallback, useEffect, useRef } from "react";
 
 import Card from "../components/Card.js";
+import { HighlightBackgroundButton } from "../components/Buttons.js";
 import Plot from "../components/Plot.js";
 import Footer from "../components/Footer.js";
-import Tooltip from "../components/Tooltip.js";
 import useInit from "../utils/screen-init.js";
 import { magnetConfigs, organization } from "../config/MagnetConfig.js";
 import { extractFields, isValidArray, groupByKey, findKeyByText } from "../utils/data-handling-functions.js";
@@ -862,7 +862,16 @@ const LcaMag = () => {
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
-			<StickyBand dropdownContent={[countryDropdown, indicatorDropdown]} />
+			<StickyBand
+				dropdownContent={[countryDropdown, indicatorDropdown]}
+				toggleContent={(
+					<>
+						<HighlightBackgroundButton title="Metrics" />
+						<HighlightBackgroundButton title="Map" />
+					</>
+				)}
+				togglePlacing="center"
+			/>
 
 			{selections.indicator && (
 				<>

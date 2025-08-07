@@ -102,11 +102,6 @@ const Map = () => {
 		setFilters((prev) => ({ ...prev, year: newValue.$y })); // Select only the year from the resulting object
 	}, []);
 
-	const keys = useMemo(() => ({
-		product: findKeyByText(products, filters.product),
-	}), [filters.product]);
-	console.log("Keys", keys);
-
 	const yearPickerRef = useRef();
 	const yearPickerProps = useMemo(() => [
 		{
@@ -200,13 +195,8 @@ const Map = () => {
 
 	// Add effect to monitor data readiness
 	useEffect(() => {
-		if (
-			enhancedGeoJsonData
-			&& statistics.every((statistic) => (Array.isArray(statistic.values) ? statistic.values : []).length > 0)
-		) {
-			console.log("Data is ready:", { enhancedGeoJsonData });
-			setIsDataReady(true);
-		}
+		if (enhancedGeoJsonData && statistics.every((statistic) => (Array.isArray(statistic.values) ? statistic.values : []).length > 0)
+		) { setIsDataReady(true); }
 	}, [enhancedGeoJsonData, statistics]);
 
 	// Then modify the geodata creation:
