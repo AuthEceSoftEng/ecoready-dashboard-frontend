@@ -139,7 +139,7 @@ const MapComponent = ({
 
 	return (
 		<Grid container style={{ width: "100%", height: "100%" }}>
-			<Grid item xs={12} style={{ width: "100%", height: "100%" }}>
+			<Grid item xs={12} style={{ width: "100%", height: "100%</Grid>" }}>
 				<MapContainer
 					style={{ width: "100%", height: "100%" }}
 					center={center}

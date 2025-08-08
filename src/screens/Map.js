@@ -10,7 +10,6 @@ import useInit from "../utils/screen-init.js";
 import { mapInfoConfigs, organization } from "../config/MapInfoConfig.js";
 import { LoadingIndicator, StickyBand } from "../utils/rendering-items.js";
 import { europeanCountries, products, labs } from "../utils/useful-constants.js";
-import { findKeyByText } from "../utils/data-handling-functions.js";
 
 const excludedProducts = new Set(["Oilseeds", "Cereals", "Sheep/Goat Meat"]);
 const mapProducts = products.filter((product) => !excludedProducts.has(product.text)).map((product) => product);
