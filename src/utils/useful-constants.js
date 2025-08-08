@@ -478,7 +478,7 @@ export const lcaIndicators = [
 		label: "Wage & Working Conditions",
 		options: [
 			"Gender wage gap",
-			"Living wage, per month",
+			"Living wage, per month (AV)",
 			"Minimum wage, per month",
 			"Weekly hours of work per employee",
 			"Violations of mandatory health and safety standards",
