@@ -21,65 +21,52 @@ export const getColor = (value, range = [0, 100]) => {
 	return scaleQuantize().domain(range).range(choroplethColors)(value);
 };
 
-const TheLegendControl = ({ gdata, selectedLayerIndex }) => {
-	if (!gdata || gdata.length === 0 || selectedLayerIndex >= gdata.length) return null;
-	// console.log("Legend control updated with:", gdata[selectedLayerIndex]);
+// Add this new function for categorical colors (risk/opportunity levels)
+export const getCategoricalColor = (level, colorMap) => colorMap[level] || colors.greyDark;
 
-	const selectedLayer = gdata[selectedLayerIndex];
-	return (
-		<div
-			style={{
-				position: "absolute",
-				top: "10px", // Distance from the top of the map
-				left: "50%", // Center horizontally
-				transform: "translateX(-50%)", // Adjust for centering
-				zIndex: 1000,
-			}}
-		>
-			<div
-				style={{
-					backgroundColor: "white",
-					border: "2px solid rgba(0,0,0,0.2)",
-					borderRadius: "5px",
-					padding: "10px",
-					boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)", // Optional for better appearance
-				}}
-			>
-				<Legend
-					title={selectedLayer.name}
-					min={selectedLayer.range[0]}
-					max={selectedLayer.range[1]}
-					unit={selectedLayer.unit}
-					colorscale={selectedLayer.style.fillColor}
-				/>
+// Update the Legend component to handle both continuous and categorical data
+const Legend = ({ min, max, unit, colorscale = choroplethColors, levels = null, colorMap = null, isCategorical = false }) => {
+	if (isCategorical && levels && colorMap) {
+		// Categorical legend for risk/opportunity levels
+		return (
+			<div style={{ height: "100%", padding: "3px", borderRadius: "2px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+				<div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+					{levels.map((level) => (
+						<div key={level} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px" }}>
+							<div
+								style={{
+									width: "20px",
+									height: "15px",
+									backgroundColor: colorMap[level],
+									borderRadius: "2px",
+									border: "1px solid rgba(0,0,0,0.2)",
+								}}
+							/>
+							<span style={{ textTransform: "capitalize" }}>{level}</span>
+						</div>
+					))}
+				</div>
 			</div>
-		</div>
-	);
-};
+		);
+	}
 
-const Legend = ({ min, max, unit, colorscale = choroplethColors }) => {
+	// Original continuous legend
 	const mean = (min + max) / 2;
-
 	const { formattedNumberMax } = formatNumber(max, "Max");
 	const { formattedNumberMean } = formatNumber(mean, "Mean");
 	const { formattedNumberMin } = formatNumber(min, "Min");
 
-	/* <h4 style={{ margin: "0 10px 0 0" }}>{title}</h4> */
 	return (
 		<div style={{ height: "100%", padding: "3px", borderRadius: "2px", display: "flex", flexDirection: "row", alignItems: "center" }}>
-
 			<div style={{ display: "flex", flexDirection: "column", alignItems: "center", height: "100%" }}>
-				{/* Gradient bar */}
 				<div
 					style={{
-						width: "200px", // Set a fixed width for the gradient bar
-						height: "20px", // Adjust height for the bar
+						width: "200px",
+						height: "20px",
 						background: `linear-gradient(to right, ${colorscale.join(", ")})`,
 						borderRadius: "2px",
 					}}
 				/>
-
-				{/* Value labels below the gradient bar */}
 				<div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between", fontSize: "12px", width: "200px", marginTop: "5px" }}>
 					<span>
 						{formattedNumberMin}
@@ -97,6 +84,45 @@ const Legend = ({ min, max, unit, colorscale = choroplethColors }) => {
 						{unit}
 					</span>
 				</div>
+			</div>
+		</div>
+	);
+};
+
+// Update TheLegendControl to pass through the new props
+const TheLegendControl = ({ gdata, selectedLayerIndex }) => {
+	if (!gdata || gdata.length === 0 || selectedLayerIndex >= gdata.length) return null;
+
+	const selectedLayer = gdata[selectedLayerIndex];
+	return (
+		<div
+			style={{
+				position: "absolute",
+				top: "10px",
+				left: "50%",
+				transform: "translateX(-50%)",
+				zIndex: 1000,
+			}}
+		>
+			<div
+				style={{
+					backgroundColor: "white",
+					border: "2px solid rgba(0,0,0,0.2)",
+					borderRadius: "5px",
+					padding: "10px",
+					boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+				}}
+			>
+				<Legend
+					title={selectedLayer.name}
+					min={selectedLayer.range[0]}
+					max={selectedLayer.range[1]}
+					unit={selectedLayer.unit}
+					colorscale={selectedLayer.colorscale || choroplethColors}
+					levels={selectedLayer.levels}
+					colorMap={selectedLayer.colorMap}
+					isCategorical={selectedLayer.isCategorical || false}
+				/>
 			</div>
 		</div>
 	);
