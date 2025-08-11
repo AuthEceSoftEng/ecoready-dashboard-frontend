@@ -5,13 +5,15 @@ import { memo, useMemo, useState, useCallback, useEffect, useRef } from "react";
 import Card from "../components/Card.js";
 import { HighlightBackgroundButton } from "../components/Buttons.js";
 import Plot from "../components/Plot.js";
-import MapComponent, { getColor } from "../components/Map.js";
 import Footer from "../components/Footer.js";
 import useInit from "../utils/screen-init.js";
 import { magnetConfigs, organization } from "../config/MagnetConfig.js";
 import { extractFields, isValidArray, groupByKey, findKeyByText } from "../utils/data-handling-functions.js";
 import { LoadingIndicator, StickyBand, DataWarning } from "../utils/rendering-items.js";
 import { europeanCountries, lcaIndicators } from "../utils/useful-constants.js";
+
+import MagnetMap from "./MAGNET Map.js";
+import colors from "../_colors.scss";
 
 // ============================================================================
 // CONSTANTS AND STATIC DATA
@@ -24,20 +26,20 @@ const OPPORTUNITY_LEVELS = ["no opportunity", "low opportunity", "medium opportu
 
 const RISK_COLOR_MAP = {
 	// Risk levels - Green to Red gradient
-	"very low risk": "#4CAF50",
-	"low risk": "#8BC34A",
-	"medium risk": "#FF9800",
-	"high risk": "#f45c36ff",
-	"very high risk": "#e10202ff",
+	"very low risk": colors.riskVeryLow,
+	"low risk": colors.riskLow,
+	"medium risk": colors.riskMedium,
+	"high risk": colors.riskHigh,
+	"very high risk": colors.riskVeryHigh,
 
 	// Opportunity levels
-	"no opportunity": "#9E9E9E",
-	"low opportunity": "#4DB6AC",
-	"medium opportunity": "#26A69A",
-	"high opportunity": "#00695C",
+	"no opportunity": colors.opportunityNo,
+	"low opportunity": colors.opportunityLow,
+	"medium opportunity": colors.opportunityMedium,
+	"high opportunity": colors.opportunityHigh,
 
 	// Data availability
-	"no data": "#757575",
+	"no data": colors.noData,
 };
 
 const RISK_LEVEL_ORDER = {
@@ -828,6 +830,7 @@ const LcaMag = () => {
 	const { state } = useInit(organization, fetchConfigs);
 	const { isLoading, dataSets } = state;
 	console.log("Data Sets:", dataSets);
+	console.log("EU Dataset:", dataSets?.metrics_EU);
 
 	const { riskAssessmentData, indicatorsData, selectedCountryRiskData } = useChartData(dataSets, selections.country, selections.compareCountries);
 	const groupedByCountryRiskData = useMemo(() => groupByKey(riskAssessmentData, "key"), [riskAssessmentData]);
@@ -910,13 +913,7 @@ const LcaMag = () => {
 				defaultChecked: true,
 				name: "Physical Map",
 			},
-			// topographical: {
-			// show: true,
-			// hiddable: true,
-			// defaultChecked: false,
-			// name: "Topographical Map",
 		},
-		// },
 	}), []);
 
 	// ============================================================================
@@ -1078,7 +1075,7 @@ const LcaMag = () => {
 			{/* Map Section */}
 			{selections.tab === "Map" && (
 				<Grid container xs={12} style={{ width: "100%", height: "calc(100vh - 220px)" }}>
-					<MapComponent {...mapConfig} />
+					<MagnetMap dataEU={dataSets.metrics_EU} opportunity={isOpportunityState} isLoading={isLoading} />
 				</Grid>
 			)}
 
@@ -1107,3 +1104,12 @@ const LcaMag = () => {
 };
 
 export default memo(LcaMag);
+
+export {
+	getRiskColor,
+	RISK_COLOR_MAP,
+	RISK_LEVELS,
+	OPPORTUNITY_LEVELS,
+	RISK_LEVEL_ORDER,
+	OPPORTUNITY_LEVEL_ORDER,
+};

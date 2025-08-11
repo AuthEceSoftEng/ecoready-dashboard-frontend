@@ -138,6 +138,7 @@ const Map = () => {
 			};
 		});
 	}, [fetchConfigs, dataSets]);
+	console.log(statistics);
 
 	const dropdownContent = useMemo(() => ([
 		{
@@ -198,7 +199,7 @@ const Map = () => {
 		) { setIsDataReady(true); }
 	}, [enhancedGeoJsonData, statistics]);
 
-	// Then modify the geodata creation:
+	// Modify the geodata creation:
 	const geodata = useMemo(() => {
 		if (!isDataReady || !enhancedGeoJsonData || statistics.length === 0) return []; // Safeguard
 
@@ -243,7 +244,7 @@ const Map = () => {
 			};
 		});
 	}, [isDataReady, enhancedGeoJsonData, statistics]);
-	// console.log("Geodata", geodata); // Debugging output
+	console.log("Geodata:", geodata);
 
 	// Create markers for labs with coordinates
 	const markers = useMemo(() => (
