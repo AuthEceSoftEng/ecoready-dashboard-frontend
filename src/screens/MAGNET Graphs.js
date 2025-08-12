@@ -1,67 +1,16 @@
-import { useLocation } from "react-router-dom";
 import { Grid, Typography } from "@mui/material";
 import { memo, useMemo, useState, useCallback, useEffect, useRef } from "react";
 
 import Card from "../components/Card.js";
-import { HighlightBackgroundButton } from "../components/Buttons.js";
 import Plot from "../components/Plot.js";
-import Footer from "../components/Footer.js";
-import useInit from "../utils/screen-init.js";
-import { magnetConfigs, organization } from "../config/MagnetConfig.js";
-import { extractFields, isValidArray, groupByKey, findKeyByText } from "../utils/data-handling-functions.js";
+import { groupByKey, findKeyByText } from "../utils/data-handling-functions.js";
 import { LoadingIndicator, StickyBand, DataWarning } from "../utils/rendering-items.js";
-import { europeanCountries, lcaIndicators } from "../utils/useful-constants.js";
-
-import MagnetMap from "./MAGNET Map.js";
-import colors from "../_colors.scss";
-
-// ============================================================================
-// CONSTANTS AND STATIC DATA
-// ============================================================================
-
-const EU_COUNTRIES = europeanCountries.filter((country) => country.isEU === true);
-
-const RISK_LEVELS = ["very low risk", "low risk", "medium risk", "high risk", "very high risk", "no data"];
-const OPPORTUNITY_LEVELS = ["no opportunity", "low opportunity", "medium opportunity", "high opportunity"];
-
-const RISK_COLOR_MAP = {
-	// Risk levels - Green to Red gradient
-	"very low risk": colors.riskVeryLow,
-	"low risk": colors.riskLow,
-	"medium risk": colors.riskMedium,
-	"high risk": colors.riskHigh,
-	"very high risk": colors.riskVeryHigh,
-
-	// Opportunity levels
-	"no opportunity": colors.opportunityNo,
-	"low opportunity": colors.opportunityLow,
-	"medium opportunity": colors.opportunityMedium,
-	"high opportunity": colors.opportunityHigh,
-
-	// Data availability
-	"no data": colors.noData,
-};
-
-const RISK_LEVEL_ORDER = {
-	"very high risk": 5,
-	"high risk": 4,
-	"medium risk": 3,
-	"low risk": 2,
-	"very low risk": 1,
-	"no data": 0.05,
-};
-
-const OPPORTUNITY_LEVEL_ORDER = {
-	"high opportunity": 3,
-	"medium opportunity": 2,
-	"low opportunity": 1,
-	"no opportunity": 0.05,
-};
+import { europeanCountries, lcaIndicators, OPPORTUNITY_LEVELS, RISK_LEVELS, RISK_COLOR_MAP, OPPORTUNITY_LEVEL_ORDER, RISK_LEVEL_ORDER } from "../utils/useful-constants.js";
 
 // ============================================================================
 // UTILITY FUNCTIONS
 // ============================================================================
-
+const EU_COUNTRIES = europeanCountries.filter((country) => country.isEU === true);
 // Get levels in processing order
 const getAllLevels = (isOpportunity = false) => (isOpportunity ? OPPORTUNITY_LEVELS : RISK_LEVELS);
 
@@ -658,71 +607,6 @@ const createCategoryBarChart = (riskAssessmentData, selectedIndicator, selectedC
 // CUSTOM HOOKS
 // ============================================================================
 
-const useSelections = () => {
-	const [selections, setSelections] = useState({
-		country: EU_COUNTRIES[1],
-		indicator: lcaIndicators[0].options[0],
-		compareCountries: [EU_COUNTRIES[1].text],
-		asc: true,
-		tab: "Metrics",
-	});
-
-	// Add state to store previous compare countries when switching to Map
-	const [previousCompareCountries, setPreviousCompareCountries] = useState([EU_COUNTRIES[1].text]);
-
-	const updateSelection = useCallback((key, value) => {
-		setSelections((prev) => ({ ...prev, [key]: value }));
-	}, []);
-
-	const updateCountry = useCallback((countryText) => {
-		const country = findKeyByText(EU_COUNTRIES, countryText, true);
-
-		setSelections((prev) => ({
-			...prev,
-			country,
-			compareCountries: [countryText],
-		}));
-	}, []);
-
-	const updateIndicator = useCallback((selectedOption) => {
-		const selectedCategory = lcaIndicators.find((cat) => cat.options.includes(selectedOption));
-		updateSelection("indicator", selectedCategory ? selectedOption : "");
-	}, [updateSelection]);
-
-	const updateCompareCountries = useCallback((selectedCountries) => {
-		updateSelection("compareCountries", selectedCountries);
-	}, [updateSelection]);
-
-	// New function to handle tab changes with compare countries logic
-	const updateTab = useCallback((newTab) => {
-		setSelections((prev) => {
-			if (newTab === "Map" && prev.tab !== "Map") {
-				// Switching to Map: save current state and set European Union
-				setPreviousCompareCountries(prev.compareCountries);
-				return {
-					...prev,
-					tab: newTab,
-					compareCountries: [...previousCompareCountries, "European Union"],
-				};
-			}
-
-			if (newTab === "Metrics" && prev.tab === "Map") {
-				// Switching from Map to Metrics: restore previous state
-				return {
-					...prev,
-					tab: newTab,
-					compareCountries: previousCompareCountries,
-				};
-			}
-
-			// No change in tab or other transitions
-			return { ...prev, tab: newTab };
-		});
-	}, [previousCompareCountries]); // Remove updateCompareCountries from dependencies
-
-	return { selections, updateSelection, updateTab, updateCountry, updateIndicator, updateCompareCountries };
-};
-
 const useChartData = (dataSets, selectedCountry, compareCountries) => {
 	const { metrics, indicatorsData, selectedCountryMetrics, countryMetrics } = useMemo(() => {
 		if (!dataSets || Object.keys(dataSets).length === 0) {
@@ -810,48 +694,17 @@ const useChartData = (dataSets, selectedCountry, compareCountries) => {
 // MAIN COMPONENT
 // ============================================================================
 
-const LcaMag = () => {
-	const { selections, updateSelection, updateTab, updateCountry, updateIndicator, updateCompareCountries } = useSelections();
-
-	const [isOpportunityState, setIsOpportunityState] = useState(false);
-
-	// Update state when indicator changes
-	useEffect(() => {
-		setIsOpportunityState(isOpportunityIndicator(selections.indicator));
-	}, [selections.indicator]);
-
-	const fetchConfigs = useMemo(() => {
-		const compareCountries = (selections.compareCountries || []).map((countryText) => findKeyByText(EU_COUNTRIES, countryText));
-		console.log("Compare Countries Keys:", compareCountries);
-
-		return magnetConfigs(compareCountries, selections.indicator || null);
-	}, [selections.indicator, selections.compareCountries]);
-
-	const { state } = useInit(organization, fetchConfigs);
-	const { isLoading, dataSets } = state;
-	console.log("Data Sets:", dataSets);
-	console.log("EU Dataset:", dataSets?.metrics_EU);
-
+const MAGNETGraphs = ({
+	selections,
+	updateSelection,
+	updateCompareCountries,
+	dataSets,
+	isLoading,
+	isOpportunityState,
+}) => {
+	console.log("MAGNETGraphs component rendered with selections:", selections);
 	const { riskAssessmentData, indicatorsData, selectedCountryRiskData } = useChartData(dataSets, selections.country, selections.compareCountries);
 	const groupedByCountryRiskData = useMemo(() => groupByKey(riskAssessmentData, "key"), [riskAssessmentData]);
-
-	// Dropdown configurations with proper null checks
-	const countryDropdown = useMemo(() => ({
-		id: "country-dropdown",
-		label: "Select Country",
-		items: EU_COUNTRIES,
-		value: selections.country?.text || "",
-		onChange: (event) => updateCountry(event.target.value),
-	}), [selections.country, updateCountry]);
-
-	const indicatorDropdown = useMemo(() => ({
-		id: "indicator-dropdown",
-		label: "Select Indicator",
-		items: lcaIndicators,
-		value: selections.indicator,
-		subheader: true,
-		onChange: (event) => updateIndicator(event.target.value),
-	}), [selections.indicator, updateIndicator]);
 
 	const countryCompareDropdown = useMemo(() => ({
 		id: "country-compare-dropdown",
@@ -902,166 +755,58 @@ const LcaMag = () => {
 		return selectedCategory.desc[indicatorIndex] || "No description available for this indicator.";
 	}, [selections.indicator, selectedCategory]);
 
-	const mapConfig = useMemo(() => ({
-		scrollWheelZoom: true,
-		zoom: 4,
-		center: [55.499_383, 28.527_665],
-		layers: {
-			physical: {
-				show: true,
-				hiddable: false,
-				defaultChecked: true,
-				name: "Physical Map",
-			},
-		},
-	}), []);
-
 	// ============================================================================
 	// RENDER
 	// ============================================================================
 
 	return (
 		<Grid container style={{ width: "100%", height: "100%" }} display="flex" direction="row" justifyContent="space-around" spacing={1}>
-			<StickyBand
-				dropdownContent={selections.tab === "Metrics" ? [countryDropdown, indicatorDropdown] : [indicatorDropdown]}
-				toggleContent={(
-					<>
-						<HighlightBackgroundButton
-							title="Metrics"
-							onClick={() => updateTab("Metrics")}
-						/>
-						<HighlightBackgroundButton
-							title="Map"
-							onClick={() => updateTab("Map")}
-						/>
-					</>
-				)}
-				togglePlacing="center"
-			/>
 
-			{selections.tab === "Metrics" && (
-				<>
-					{/* Indicator Description Card */}
-					<Grid item xs={12}>
-						<Card title={`About: ${selections.indicator}`}>
-							<Typography
-								variant="heading2"
-								sx={{
-									padding: 1,
-									lineHeight: 1,
-									textAlign: "center",
-									display: "flex",
-									alignItems: "center",
-									justifyContent: "center",
-								}}
-							>
-								{indicatorDescription}
-							</Typography>
-						</Card>
-					</Grid>
+			{/* Indicator Description Card */}
+			<Grid item xs={12}>
+				<Card title={`About: ${selections.indicator}`}>
+					<Typography
+						variant="heading2"
+						sx={{
+							padding: 1,
+							lineHeight: 1,
+							textAlign: "center",
+							display: "flex",
+							alignItems: "center",
+							justifyContent: "center",
+						}}
+					>
+						{indicatorDescription}
+					</Typography>
+				</Card>
+			</Grid>
 
-					<Grid item xs={12} md={12}>
-						<Grid container spacing={1}>
-							{/* Risk Scores Across EU Countries */}
-							<Grid item xs={12} md={6} sx={{ display: "flex" }}>
-								<Card
-									title={`${selections.indicator} - ${isOpportunityState ? "Opportunity" : "Risk"} Scores Across ${selections.country.text}`}
-									height="500px"
-								>
-									{isLoading ? (
-										<LoadingIndicator minHeight="400px" />
-									) : indicatorsData.length === 0 ? (
-										<DataWarning
-											minHeight="400px"
-											message="No indicator data available"
-										/>
-									) : (
-										<>
-											<StickyBand sticky={false} dropdownContent={[countryCompareDropdown]} />
-											<Plot
-												data={indicatorRiskByCountryData}
-												height="400px"
-												showLegend={false}
-												yaxis={getYAxisForIndicator(selections.indicator)}
-												xaxis={{ tickangle: selections.compareCountries.includes("European Union") ? 45 : 0 }}
-												layout={{
-													margin: { l: 130, t: 10, b: 80 },
-													dragmode: false,
-												}}
-											/>
-										</>
-									)}
-								</Card>
-							</Grid>
-
-							{/* Category Indicators */}
-							<Grid item xs={12} lg={6} sx={{ display: "flex" }}>
-								<Card
-									title={`${selections.country.text}'s ${selectedCategory?.label || "Category"} Indicators`}
-									height="500px"
-								>
-									{isLoading ? (
-										<LoadingIndicator minHeight="450px" />
-									) : riskAssessmentData.length === 0 ? (
-										<DataWarning
-											minHeight="400px"
-											message="No indicator data available for the selected category"
-										/>
-									) : (
-										<Plot
-											showLegend
-											data={categoryBarChartData.traces}
-											height="450px"
-											yaxis={{
-												primary: getRiskScaleAxis(),
-												secondary: {
-													...getOpportunityScaleAxis(),
-													anchor: "x",
-													overlaying: "y",
-													side: "right",
-												},
-											}}
-											layout={{
-												margin: { l: 95, r: categoryBarChartData.isOpportunityState ? 250 : 130, t: 10, b: 100 },
-												dragmode: false,
-												legend: { x: categoryBarChartData.isOpportunityState ? 1.55 : 1 },
-											}}
-											shapes={categoryBarChartData.shapes}
-										/>
-									)}
-								</Card>
-							</Grid>
-						</Grid>
-					</Grid>
-
-					{/* All Indicators for Selected Country */}
-					<Grid item xs={12}>
-						<Card title={`All Indicators - ${selections.country.text}`}>
+			<Grid item xs={12} md={12}>
+				<Grid container spacing={1}>
+					{/* Risk Scores Across EU Countries */}
+					<Grid item xs={12} md={6} sx={{ display: "flex" }}>
+						<Card
+							title={`${selections.indicator} - ${isOpportunityState ? "Opportunity" : "Risk"} Scores Across ${selections.country.text}`}
+							height="500px"
+						>
 							{isLoading ? (
 								<LoadingIndicator minHeight="400px" />
-							) : riskAssessmentData.length === 0 ? (
+							) : indicatorsData.length === 0 ? (
 								<DataWarning
 									minHeight="400px"
-									message="No indicator data available for the selected country"
+									message="No indicator data available"
 								/>
 							) : (
 								<>
-									<StickyBand sticky={false} formRef={radioRef} formContent={[sortOrderRadio]} />
-
+									<StickyBand sticky={false} dropdownContent={[countryCompareDropdown]} />
 									<Plot
-										height="600px"
-										data={countryIndicatorsChartData}
-										xaxis={{
-											primary: getRiskScaleAxis(),
-											secondary: {
-												...getOpportunityScaleAxis(),
-												anchor: "y",
-												overlaying: "x1",
-												side: "top",
-											},
-										}}
+										data={indicatorRiskByCountryData}
+										height="400px"
+										showLegend={false}
+										yaxis={getYAxisForIndicator(selections.indicator)}
+										xaxis={{ tickangle: selections.compareCountries.includes("European Union") ? 45 : 0 }}
 										layout={{
-											margin: { l: 220, r: 40, t: 15, b: 20 },
+											margin: { l: 130, t: 10, b: 80 },
 											dragmode: false,
 										}}
 									/>
@@ -1069,47 +814,85 @@ const LcaMag = () => {
 							)}
 						</Card>
 					</Grid>
-				</>
-			)}
 
-			{/* Map Section */}
-			{selections.tab === "Map" && (
-				<Grid container xs={12} style={{ width: "100%", height: "calc(100vh - 220px)" }}>
-					<MagnetMap dataEU={dataSets.metrics_EU} opportunity={isOpportunityState} isLoading={isLoading} />
+					{/* Category Indicators */}
+					<Grid item xs={12} lg={6} sx={{ display: "flex" }}>
+						<Card
+							title={`${selections.country.text}'s ${selectedCategory?.label || "Category"} Indicators`}
+							height="500px"
+						>
+							{isLoading ? (
+								<LoadingIndicator minHeight="450px" />
+							) : riskAssessmentData.length === 0 ? (
+								<DataWarning
+									minHeight="400px"
+									message="No indicator data available for the selected category"
+								/>
+							) : (
+								<Plot
+									showLegend
+									data={categoryBarChartData.traces}
+									height="450px"
+									yaxis={{
+										primary: getRiskScaleAxis(),
+										secondary: {
+											...getOpportunityScaleAxis(),
+											anchor: "x",
+											overlaying: "y",
+											side: "right",
+										},
+									}}
+									layout={{
+										margin: { l: 95, r: categoryBarChartData.isOpportunityState ? 250 : 130, t: 10, b: 100 },
+										dragmode: false,
+										legend: { x: categoryBarChartData.isOpportunityState ? 1.55 : 1 },
+									}}
+									shapes={categoryBarChartData.shapes}
+								/>
+							)}
+						</Card>
+					</Grid>
 				</Grid>
-			)}
+			</Grid>
 
-			{/* Footer */}
-			<Footer
-				sticky
-				customMessage={(
-					<>
-						<Typography component="span" sx={{ fontWeight: "bold", fontSize: "0.875rem" }}>
-							{"Acknowledgement of Data Source:"}
-						</Typography>
-						{" "}
-						{"The Observatory presents aggregated results based on data from the PSILCA database by GreenDelta GmbH, used under a Business Starter license. All rights to the data remain with GreenDelta. No raw data is disclosed."}
-						<br />
-					</>
-				)}
-				customLink={{
-					url: "https://www.greendelta.com",
-					text: "Learn more at: https://www.greendelta.com",
-				}}
-				showDefaultCopyright={false}
-			/>
+			{/* All Indicators for Selected Country */}
+			<Grid item xs={12}>
+				<Card title={`All Indicators - ${selections.country.text}`}>
+					{isLoading ? (
+						<LoadingIndicator minHeight="400px" />
+					) : riskAssessmentData.length === 0 ? (
+						<DataWarning
+							minHeight="400px"
+							message="No indicator data available for the selected country"
+						/>
+					) : (
+						<>
+							<StickyBand sticky={false} formRef={radioRef} formContent={[sortOrderRadio]} />
+
+							<Plot
+								height="600px"
+								data={countryIndicatorsChartData}
+								xaxis={{
+									primary: getRiskScaleAxis(),
+									secondary: {
+										...getOpportunityScaleAxis(),
+										anchor: "y",
+										overlaying: "x1",
+										side: "top",
+									},
+								}}
+								layout={{
+									margin: { l: 220, r: 40, t: 15, b: 20 },
+									dragmode: false,
+								}}
+							/>
+						</>
+					)}
+				</Card>
+			</Grid>
 		</Grid>
-
 	);
 };
 
-export default memo(LcaMag);
+export default memo(MAGNETGraphs);
 
-export {
-	getRiskColor,
-	RISK_COLOR_MAP,
-	RISK_LEVELS,
-	OPPORTUNITY_LEVELS,
-	RISK_LEVEL_ORDER,
-	OPPORTUNITY_LEVEL_ORDER,
-};

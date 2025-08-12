@@ -13,12 +13,12 @@ const urls = {
 };
 
 const choroplethColors = [colors.choropleth1, colors.choropleth2, colors.choropleth3, colors.choropleth4, colors.choropleth5];
-export const getColor = (value, range = [0, 100]) => {
+export const getColor = (value, range = [0, 100], colorRange = choroplethColors) => {
 	if (value === null || value === undefined || value === "N/A" || value === "-") {
 		return colors.greyDark;
 	}
 
-	return scaleQuantize().domain(range).range(choroplethColors)(value);
+	return scaleQuantize().domain(range).range(colorRange)(value);
 };
 
 // Add this new function for categorical colors (risk/opportunity levels)
@@ -89,18 +89,22 @@ const Legend = ({ min, max, unit, colorscale = choroplethColors, levels = null, 
 	);
 };
 
-// Update TheLegendControl to pass through the new props
+// Update TheLegendControl to position categorical legends on the right side
 const TheLegendControl = ({ gdata, selectedLayerIndex }) => {
 	if (!gdata || gdata.length === 0 || selectedLayerIndex >= gdata.length) return null;
 
 	const selectedLayer = gdata[selectedLayerIndex];
+	const isCategorical = selectedLayer.isCategorical || false;
+
 	return (
 		<div
 			style={{
 				position: "absolute",
 				top: "10px",
-				left: "50%",
-				transform: "translateX(-50%)",
+				...(isCategorical
+					? { right: "10px", top: "60px" }
+					: { left: "50%", transform: "translateX(-50%)" }
+				),
 				zIndex: 1000,
 			}}
 		>
@@ -121,7 +125,7 @@ const TheLegendControl = ({ gdata, selectedLayerIndex }) => {
 					colorscale={selectedLayer.colorscale || choroplethColors}
 					levels={selectedLayer.levels}
 					colorMap={selectedLayer.colorMap}
-					isCategorical={selectedLayer.isCategorical || false}
+					isCategorical={isCategorical}
 				/>
 			</div>
 		</div>

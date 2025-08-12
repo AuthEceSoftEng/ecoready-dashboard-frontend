@@ -64,7 +64,7 @@ import Map from "./screens/Map.js";
 import Mapexamp from "./examples/Map.js";
 import ProductsOverview from "./screens/Products.js";
 import DataView from "./screens/DataView.js";
-import LcaMag from "./screens/MAGNET Graphs.js";
+import LcaMag from "./screens/MAGNET.js";
 import Efsa from "./screens/Efsa.js";
 
 const {

@@ -4,10 +4,7 @@ import { memo, useMemo, useState, useEffect } from "react";
 import colors from "../_colors.scss";
 import MapComponent, { getCategoricalColor } from "../components/Map.js";
 import { LoadingIndicator } from "../utils/rendering-items.js";
-import { europeanCountries } from "../utils/useful-constants.js";
-
-// Import your color utilities from MAGNET Graphs
-import { getRiskColor, RISK_COLOR_MAP, RISK_LEVELS, OPPORTUNITY_LEVELS } from "./MAGNET Graphs.js";
+import { europeanCountries, OPPORTUNITY_LEVELS, RISK_LEVELS, RISK_COLOR_MAP } from "../utils/useful-constants.js";
 
 // ============================================================================
 // MAIN COMPONENT
@@ -89,7 +86,7 @@ const MagnetMap = ({
 						...feature.properties,
 						flag: country?.flag || "", // Add flag emoji
 						value: dataEU.find((p) => p.key === (country?.value))?.score || "-",
-						level: dataEU.find((p) => p.key === (country?.value))?.level || "no data",
+						level: dataEU.find((p) => p.key === (country?.value))?.risk_level || "no data",
 					},
 				};
 			}),
