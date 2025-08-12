@@ -598,193 +598,39 @@ export const lcaIndicators = [
 	},
 ];
 
-export const riskAssessmentData = {
-	countries: ["CZ", "EL", "BE"],
-	indicators: {
-		"Active involvement of enterprises in corruption and bribery": {
-			CZ: { level: "low risk", score: 2 },
-			EL: { level: "low risk", score: 2 },
-			BE: { level: "low risk", score: 2 },
-		},
-		"Children in employment, total": {
-			CZ: { level: "very low risk", score: 1 },
-			EL: { level: "very low risk", score: 1 },
-			BE: { level: "very low risk", score: 1 },
-		},
-		"Contribution of the sector to economic development": {
-			CZ: { level: "low opportunity", score: 1 },
-			EL: { level: "low opportunity", score: 1 },
-			BE: { level: "no opportunity", score: 0 },
-		},
-		"Emigration rate": {
-			CZ: { level: "low risk", score: 2 },
-			EL: { level: "high risk", score: 4 },
-			BE: { level: "medium risk", score: 3 },
-		},
-		"Evidence of violations of laws and employment regulations": {
-			CZ: { level: "medium risk", score: 3 },
-			EL: { level: "medium risk", score: 3 },
-			BE: { level: "medium risk", score: 3 },
-		},
-		"Frequency of forced labour": {
-			CZ: { level: "very low risk", score: 1 },
-			EL: { level: "low risk", score: 2 },
-			BE: { level: "very low risk", score: 1 },
-		},
-		"Gender wage gap": {
-			CZ: { level: "high risk", score: 4 },
-			EL: { level: "medium risk", score: 3 },
-			BE: { level: "low risk", score: 2 },
-		},
-		"Goods produced by forced labour": {
-			CZ: { level: "no data", score: "N/A" },
-			EL: { level: "no data", score: "N/A" },
-			BE: { level: "no data", score: "N/A" },
-		},
-		"Health expenditure, total": {
-			CZ: { level: "medium risk", score: 3 },
-			EL: { level: "medium risk", score: 3 },
-			BE: { level: "low risk", score: 2 },
-		},
-		"Illiteracy rate, total": {
-			CZ: { level: "very low risk", score: 1 },
-			EL: { level: "very low risk", score: 1 },
-			BE: { level: "very low risk", score: 1 },
-		},
-		"Immigration rate": {
-			CZ: { level: "very low risk", score: 1 },
-			EL: { level: "very low risk", score: 1 },
-			BE: { level: "medium risk", score: 3 },
-		},
-		"Indigenous People Rights Protection Index": {
-			CZ: { level: "no data", score: "N/A" },
-			EL: { level: "no data", score: "N/A" },
-			BE: { level: "no data", score: "N/A" },
-		},
-		"International migrant workers in the sector": {
-			CZ: { level: "no data", score: "N/A" },
-			EL: { level: "no data", score: "N/A" },
-			BE: { level: "no data", score: "N/A" },
-		},
-		"Life expectancy at birth": {
-			CZ: { level: "very low risk", score: 1 },
-			EL: { level: "no risk", score: 0 },
-			BE: { level: "no risk", score: 0 },
-		},
-		"Living wage, per month": {
-			CZ: { level: "high risk", score: 4 },
-			EL: { level: "high risk", score: 4 },
-			BE: { level: "very high risk", score: 5 },
-		},
-		"Membership in an initiative that promotes social responsibility along the supply chain": {
-			CZ: { level: "no data", score: "N/A" },
-			EL: { level: "no data", score: "N/A" },
-			BE: { level: "no data", score: "N/A" },
-		},
-		"Men in the sectoral labour force": {
-			CZ: { level: "very low risk", score: 1 },
-			EL: { level: "very low risk", score: 1 },
-			BE: { level: "very low risk", score: 1 },
-		},
-		"Minimum wage, per month": {
-			CZ: { level: "very high risk", score: 5 },
-			EL: { level: "low risk", score: 2 },
-			BE: { level: "medium risk", score: 3 },
-		},
-		"Number of asylum seekers in relation to total population": {
-			CZ: { level: "very low risk", score: 1 },
-			EL: { level: "very high risk", score: 5 },
-			BE: { level: "high risk", score: 4 },
-		},
-		"Presence of anti-competitive behaviour or violation of anti-trust and monopoly legislation": {
-			CZ: { level: "no data", score: "N/A" },
-			EL: { level: "no data", score: "N/A" },
-			BE: { level: "no data", score: "N/A" },
-		},
-		"Presence of indigenous population": {
-			CZ: { level: "no risk", score: 0 },
-			EL: { level: "no risk", score: 0 },
-			BE: { level: "no risk", score: 0 },
-		},
-		"Presence of sufficient safety measures": {
-			CZ: { level: "low risk", score: 2 },
-			EL: { level: "low risk", score: 2 },
-			BE: { level: "low risk", score: 2 },
-		},
-		"Public expenditure on education": {
-			CZ: { level: "medium risk", score: 3 },
-			EL: { level: "medium risk", score: 3 },
-			BE: { level: "medium risk", score: 3 },
-		},
-		"Public sector corruption": {
-			CZ: { level: "high risk", score: 4 },
-			EL: { level: "very high risk", score: 5 },
-			BE: { level: "medium risk", score: 3 },
-		},
-		"Rate of fatal accidents at workplace": {
-			CZ: { level: "very low risk", score: 1 },
-			EL: { level: "very low risk", score: 1 },
-			BE: { level: "very low risk", score: 1 },
-		},
-		"Rate of non-fatal accidents at workplace": {
-			CZ: { level: "very low risk", score: 1 },
-			EL: { level: "very low risk", score: 1 },
-			BE: { level: "very low risk", score: 1 },
-		},
-		"Right of Association": {
-			CZ: { level: "no risk", score: 0 },
-			EL: { level: "no risk", score: 0 },
-			BE: { level: "no risk", score: 0 },
-		},
-		"Right of Collective bargaining": {
-			CZ: { level: "no risk", score: 0 },
-			EL: { level: "no risk", score: 0 },
-			BE: { level: "no risk", score: 0 },
-		},
-		"Right to Strike": {
-			CZ: { level: "no risk", score: 0 },
-			EL: { level: "no risk", score: 0 },
-			BE: { level: "no risk", score: 0 },
-		},
-		"Sanitation coverage": {
-			CZ: { level: "high risk", score: 4 },
-			EL: { level: "very high risk", score: 5 },
-			BE: { level: "very low risk", score: 1 },
-		},
-		"Social security expenditures": {
-			CZ: { level: "medium risk", score: 3 },
-			EL: { level: "low risk", score: 2 },
-			BE: { level: "low risk", score: 2 },
-		},
-		"Trade union density": {
-			CZ: { level: "very high risk", score: 5 },
-			EL: { level: "very high risk", score: 5 },
-			BE: { level: "medium risk", score: 3 },
-		},
-		"Trafficking in persons": {
-			CZ: { level: "low risk", score: 2 },
-			EL: { level: "medium risk", score: 3 },
-			BE: { level: "low risk", score: 2 },
-		},
-		"Violations of mandatory health and safety standards": {
-			CZ: { level: "high risk", score: 4 },
-			EL: { level: "no data", score: "N/A" },
-			BE: { level: "no data", score: "N/A" },
-		},
-		"Weekly hours of work per employee": {
-			CZ: { level: "high risk", score: 4 },
-			EL: { level: "high risk", score: 4 },
-			BE: { level: "medium risk", score: 3 },
-		},
-		"Women in the sectoral labour force": {
-			CZ: { level: "medium risk", score: 3 },
-			EL: { level: "very low risk", score: 1 },
-			BE: { level: "low risk", score: 2 },
-		},
-		"Workers affected by natural disasters": {
-			CZ: { level: "very high risk", score: 5 },
-			EL: { level: "very low risk", score: 1 },
-			BE: { level: "very low risk", score: 1 },
-		},
-	},
+export const RISK_LEVELS = ["very low risk", "low risk", "medium risk", "high risk", "very high risk", "no data"];
+export const OPPORTUNITY_LEVELS = ["no opportunity", "low opportunity", "medium opportunity", "high opportunity"];
+
+export const RISK_COLOR_MAP = {
+	// Risk levels - Green to Red gradient
+	"very low risk": colors.riskVeryLow,
+	"low risk": colors.riskLow,
+	"medium risk": colors.riskMedium,
+	"high risk": colors.riskHigh,
+	"very high risk": colors.riskVeryHigh,
+
+	// Opportunity levels
+	"no opportunity": colors.opportunityNo,
+	"low opportunity": colors.opportunityLow,
+	"medium opportunity": colors.opportunityMedium,
+	"high opportunity": colors.opportunityHigh,
+
+	// Data availability
+	"no data": colors.noData,
+};
+
+export const RISK_LEVEL_ORDER = {
+	"very high risk": 5,
+	"high risk": 4,
+	"medium risk": 3,
+	"low risk": 2,
+	"very low risk": 1,
+	"no data": 0.05,
+};
+
+export const OPPORTUNITY_LEVEL_ORDER = {
+	"high opportunity": 3,
+	"medium opportunity": 2,
+	"low opportunity": 1,
+	"no opportunity": 0.05,
 };
