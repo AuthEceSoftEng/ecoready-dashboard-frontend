@@ -1,13 +1,11 @@
-import { useLocation } from "react-router-dom";
 import { Grid } from "@mui/material";
 import { memo, useMemo, useState, useCallback, useRef, useEffect } from "react";
 
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
-import Dropdown from "../components/Dropdown.js";
 import efsaConfigs, { organization } from "../config/EfsaConfig.js";
 import useInit from "../utils/screen-init.js";
-import { isValidArray, generateYearsArray, groupByKey } from "../utils/data-handling-functions.js";
+import { isValidArray, groupByKey } from "../utils/data-handling-functions.js";
 import { cardFooter, LoadingIndicator, StickyBand, DataWarning } from "../utils/rendering-items.js";
 
 const countries = ["Austria", "Belgium", "Bulgaria", "Croatia", "Denmark", "France", "Germany", "Greece", "Ireland", "Italy", "Lithuania", "Netherlands", "Poland", "Portugal", "Republic of north macedonia", "Romania", "Serbia", "Slovakia", "Spain", "Ukraine", "United kingdom"];
@@ -50,20 +48,22 @@ const Efsa = () => {
 	], [handleYearChange, year]);
 
 	const fetchConfigs = useMemo(
-		() => (selectedCountry ? efsaConfigs(selectedCountry.toLowerCase(), year) : null),
-		[selectedCountry, year],
+		() => (selectedCountry ? efsaConfigs(selectedCountry.toLowerCase(), selectedContaminant, selectedProduct, year) : null),
+		[selectedCountry, selectedContaminant, selectedProduct, year],
 	);
 
 	const { state } = useInit(organization, fetchConfigs);
 
 	const { isLoading, dataSets, minutesAgo } = state;
-	const data = useMemo(() => dataSets?.metrics || [], [dataSets]);
+	console.log("Efsa dataSets:", dataSets);
+	const contaminantData = useMemo(() => dataSets?.metrics_contaminant || [], [dataSets]);
+	const productData = useMemo(() => dataSets?.metrics_product || [], [dataSets]);
 	const timelineData = useMemo(() => dataSets?.timeline || [], [dataSets]);
-	console.log("Efsa data:", data);
+	console.log("Timeline data:", timelineData);
 
 	const { uniqueChartProducts, uniqueChartContaminants, uniqueTimelineProducts, uniqueTimelineContaminants } = useMemo(() => {
 		// Early return if no data
-		if ((!data?.length) && (!timelineData?.length)) {
+		if ((!contaminantData?.length) && (!productData?.length) && (!timelineData?.length)) {
 			return { uniqueChartProducts: [], uniqueChartContaminants: [], uniqueTimelineProducts: [], uniqueTimelineContaminants: [] };
 		}
 
@@ -73,11 +73,18 @@ const Efsa = () => {
 		const timelineContaminantsSet = new Set();
 
 		// Process data array
-		if (data) {
-			for (const item of data) {
+		if (contaminantData) {
+			for (const item of contaminantData) {
 				if (item.resval > 0) {
 					chartProductsSet.add(item.key);
-					chartContaminantsSet.add(item.param);
+				}
+			}
+		}
+
+		if (productData) {
+			for (const item of productData) {
+				if (item.resval > 0) {
+					chartProductsSet.add(item.param);
 				}
 			}
 		}
@@ -97,20 +104,27 @@ const Efsa = () => {
 			uniqueTimelineProducts: [...timelineProductsSet].sort(),
 			uniqueTimelineContaminants: [...timelineContaminantsSet].sort(),
 		};
-	}, [data, timelineData]);
+	}, [contaminantData, productData, timelineData]);
+
+	console.log("Efsa uniqueChartProducts:", uniqueChartProducts);
+	console.log("Efsa uniqueTimelineProducts:", uniqueTimelineProducts);
 
 	// Combined grouped data
-	const { dataGroupedByProduct, dataGroupedByContaminant } = useMemo(() => {
-		if (!isValidArray(data)) return { dataGroupedByProduct: {}, dataGroupedByContaminant: {} };
-
+	const { dataGroupedByProduct, dataGroupedByContaminant, timelineGroupedByProduct, timelineGroupedByContaminant } = useMemo(() => {
 		// Filter data to only include items with keys/params that exist in uniqueChartProducts/uniqueChartContaminants
 		const filteredData = data.filter((item) => uniqueChartProducts.includes(item.key) && uniqueChartContaminants.includes(item.param));
 
 		return {
 			dataGroupedByProduct: groupByKey(filteredData, "key"),
 			dataGroupedByContaminant: groupByKey(filteredData, "param"),
+			timelineGroupedByProduct: groupByKey(timelineData, "key"),
+			timelineGroupedByContaminant: groupByKey(timelineData, "param"),
 		};
-	}, [data, uniqueChartProducts, uniqueChartContaminants]);
+	}, [data, uniqueChartProducts, uniqueChartContaminants, timelineData]);
+	console.log("Efsa dataGroupedByProduct:", dataGroupedByProduct);
+	console.log("Efsa dataGroupedByContaminant:", dataGroupedByContaminant);
+	console.log("Efsa timelineGroupedByProduct:", timelineGroupedByProduct);
+	console.log("Efsa timelineGroupedByContaminant:", timelineGroupedByContaminant);
 
 	const countryDropdown = useMemo(() => createDropdown(
 		"country-dropdown",
@@ -145,7 +159,7 @@ const Efsa = () => {
 		"Select Product",
 		uniqueTimelineProducts,
 		selectedProductTimeline,
-		(e) => setSelectedProduct(e.target.value),
+		(e) => setSelectedProductTimeline(e.target.value),
 	), [uniqueTimelineProducts, selectedProductTimeline]);
 
 	const contaminantTimelineDropdown = useMemo(() => createDropdown(
@@ -153,7 +167,7 @@ const Efsa = () => {
 		"Select Contaminant",
 		uniqueTimelineContaminants,
 		selectedContaminantTimeline,
-		(e) => setSelectedContaminant(e.target.value),
+		(e) => setSelectedContaminantTimeline(e.target.value),
 	), [uniqueTimelineContaminants, selectedContaminantTimeline]);
 
 	useEffect(() => {
@@ -186,36 +200,10 @@ const Efsa = () => {
 				y: contaminantData.map((item) => item.resval),
 				type: "bar",
 				color: "third",
-				name: "Residue Value",
-			},
-			{
-				x: contaminantData.map((item) => truncateLabel(item.key)),
-				y: contaminantData.map((item) => item.resloq),
-				type: "scatter",
-				mode: "lines",
-				name: "LOQ",
-				line: { color: "goldenrod", dash: "dash", width: 2 },
+				title: "Residue Value",
 			},
 		];
 	}, [dataGroupedByContaminant, selectedContaminant]);
-
-	const productChartData = useMemo(() => {
-		if (!selectedProduct || Object.keys(dataGroupedByProduct).length === 0) return [];
-
-		const productData = dataGroupedByProduct[selectedProduct] || [];
-		console.log("Efsa productData:", productData);
-
-		return [
-			{
-				x: productData.map((item) => truncateLabel(item.param)), // Use truncated labels
-				y: productData.map((item) => item.resval),
-				text: productData.map((item) => item.param), // Full text for hover
-				type: "bar",
-				name: "Residue Value",
-				color: "colors.third",
-			},
-		];
-	}, [dataGroupedByProduct, selectedProduct]);
 
 	const contaminantChartLayout = useMemo(() => {
 		// Get LOQ value and unit (same for all products)
@@ -224,20 +212,9 @@ const Efsa = () => {
 		const unit = contaminantData.length > 0 ? contaminantData[0].resunit : "";
 
 		return {
-			xaxis: {
-				title: "Food Products",
-				automargin: true,
-			},
-			yaxis: {
-				title: unit ? `Residue Value (${unit})` : "Residue Value",
-				automargin: true,
-			},
-			margin: {
-				l: 80, // Left margin for y-axis
-				r: 50, // Right margin
-				t: 50, // Top margin
-				b: 80, // Bottom margin for x-axis
-			},
+			xaxis: { automargin: true },
+			yaxis: { title: unit ? `Residue Value (${unit})` : "Residue Value", automargin: true },
+			margin: { l: 80, r: 50, t: 50, b: 80 },
 			shapes: loqValue > 0 ? [{
 				type: "line",
 				xref: "paper",
@@ -255,9 +232,22 @@ const Efsa = () => {
 		};
 	}, [selectedContaminant, dataGroupedByContaminant]);
 
-	const contaminantTimelineData = useMemo(() => dataSets?.contaminantTimeline || [], [dataSets]);
-	console.log("Efsa contaminantTimelineData:", contaminantTimelineData);
-	const productTimelineData = useMemo(() => dataSets?.productTimeline || [], [dataSets]);
+	const productChartData = useMemo(() => {
+		if (!selectedProduct || Object.keys(dataGroupedByProduct).length === 0) return [];
+
+		const productData = dataGroupedByProduct[selectedProduct] || [];
+
+		return [
+			{
+				x: productData.map((item) => truncateLabel(item.param)), // Use truncated labels
+				y: productData.map((item) => item.resval),
+				text: productData.map((item) => item.param), // Full text for hover
+				type: "bar",
+				title: "Residue Value",
+				color: "colors.third",
+			},
+		];
+	}, [dataGroupedByProduct, selectedProduct]);
 
 	const productChartLayout = useMemo(() => {
 		if (!selectedProduct || Object.keys(dataGroupedByProduct).length === 0) {
@@ -283,20 +273,9 @@ const Efsa = () => {
 		}));
 
 		return {
-			xaxis: {
-				title: "Contaminants",
-				automargin: true,
-			},
-			yaxis: {
-				title: unit ? `Residue Value (${unit})` : "Residue Value",
-				automargin: true,
-			},
-			margin: {
-				l: 80, // Left margin for y-axis
-				r: 50, // Right margin
-				t: 50, // Top margin
-				b: 80, // Bottom margin for x-axis
-			},
+			xaxis: { automargin: true },
+			yaxis: { title: unit ? `Residue Value (${unit})` : "Residue Value", automargin: true },
+			margin: { l: 80, r: 50, t: 50, b: 80 },
 			shapes,
 		};
 	}, [selectedProduct, dataGroupedByProduct]);
@@ -321,27 +300,16 @@ const Efsa = () => {
 				type: "bar",
 			};
 		});
-	}, [data, uniqueChartProducts, uniqueChartContaminants, dataGroupedByContaminant]);
+	}, [uniqueChartProducts, uniqueChartContaminants, dataGroupedByContaminant]);
 
 	const stackedBarChartLayout = useMemo(() => {
 		// Get unit from first data point (assuming all have same unit)
 		const unit = data.length > 0 ? data[0].resunit : "";
 
 		return {
-			xaxis: {
-				title: "Food Products",
-				automargin: true,
-			},
-			yaxis: {
-				title: unit ? `Total Residue Value (${unit})` : "Total Residue Value",
-				automargin: true,
-			},
-			margin: {
-				l: 80,
-				r: 50,
-				t: 50,
-				b: 100,
-			},
+			xaxis: { title: "Food Products", automargin: true },
+			yaxis: { title: unit ? `Total Residue Value (${unit})` : "Total Residue Value", automargin: true },
+			margin: { l: 80, r: 50, t: 50, b: 100 },
 			showlegend: true,
 			legend: {
 				orientation: "v", // Vertical legend to show contaminant names clearly
@@ -352,58 +320,151 @@ const Efsa = () => {
 		};
 	}, [data]);
 
+	const contaminantTimelineData = useMemo(() => {
+		if (!selectedContaminantTimeline || Object.keys(timelineGroupedByContaminant).length === 0) return [];
+
+		const contaminantData = timelineGroupedByContaminant[selectedContaminantTimeline] || [];
+		console.log("Efsa contaminantTimelineData:", contaminantData);
+
+		// Group the contaminant data by product (key) to create separate lines
+		const productGroups = groupByKey(contaminantData, "key");
+		const colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"];
+
+		// Create a trace for each product
+		return Object.keys(productGroups).map((productKey, index) => {
+			const productData = productGroups[productKey];
+
+			return {
+				x: productData.map((item) => item.timestamp),
+				y: productData.map((item) => item.resval),
+				type: "scatter",
+				mode: "lines+markers",
+				title: truncateLabel(productKey),
+				line: { color: colors[index % colors.length] },
+			};
+		});
+	}, [timelineGroupedByContaminant, selectedContaminantTimeline]);
+
+	const contaminantTimelineLayout = useMemo(() => {
+		if (!selectedContaminantTimeline || Object.keys(timelineGroupedByContaminant).length === 0) {
+			return {
+				xaxis: { title: "Date" },
+				yaxis: { title: "Residue Value" },
+			};
+		}
+
+		const contaminantData = timelineGroupedByContaminant[selectedContaminantTimeline] || [];
+		const unit = contaminantData.length > 0 ? contaminantData[0].resunit : "";
+		const loqValue = contaminantData.length > 0 ? contaminantData[0].resloq : 0;
+
+		return {
+			xaxis: {
+				title: "Date",
+				automargin: true,
+			},
+			yaxis: {
+				title: unit ? `Residue Value (${unit})` : "Residue Value",
+				automargin: true,
+			},
+			margin: {
+				l: 80,
+				r: 50,
+				t: 50,
+				b: 80,
+			},
+			showlegend: true,
+			legend: {
+				orientation: "v",
+				y: 1,
+				x: 1.02,
+				xanchor: "left",
+			},
+			shapes: loqValue > 0 ? [{
+				type: "line",
+				xref: "paper",
+				x0: 0,
+				x1: 1,
+				yref: "y",
+				y0: loqValue,
+				y1: loqValue,
+				line: {
+					color: "goldenrod",
+					width: 2,
+					dash: "dash",
+				},
+			}] : [],
+		};
+	}, [selectedContaminantTimeline, timelineGroupedByContaminant]);
+	const productTimelineData = useMemo(() => {
+		if (!selectedProductTimeline || Object.keys(timelineGroupedByProduct).length === 0) return [];
+
+		const productData = timelineGroupedByProduct[selectedProductTimeline] || [];
+		console.log("Efsa productTimelineData:", productData);
+
+		// Group the product data by contaminant (param) to create separate lines
+		const contaminantGroups = groupByKey(productData, "param");
+		const colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"];
+
+		// Create a trace for each contaminant
+		return Object.keys(contaminantGroups).map((contaminantKey, index) => {
+			const contaminantData = contaminantGroups[contaminantKey];
+
+			return {
+				x: contaminantData.map((item) => item.timestamp),
+				y: contaminantData.map((item) => item.resval),
+				type: "scatter",
+				mode: "lines+markers",
+				title: truncateLabel(contaminantKey),
+				line: { color: colors[index % colors.length] },
+			};
+		});
+	}, [timelineGroupedByProduct, selectedProductTimeline]);
+
+	const productTimelineLayout = useMemo(() => {
+		if (!selectedProductTimeline || Object.keys(timelineGroupedByProduct).length === 0) {
+			return {
+				xaxis: { title: "Date" },
+				yaxis: { title: "Residue Value" },
+			};
+		}
+
+		const productData = timelineGroupedByProduct[selectedProductTimeline] || [];
+		const unit = productData.length > 0 ? productData[0].resunit : "";
+
+		return {
+			xaxis: { title: "Date", automargin: true },
+			yaxis: { title: unit ? `Residue Value (${unit})` : "Residue Value", automargin: true },
+			margin: { l: 80, r: 50, t: 50, b: 80 },
+		};
+	}, [selectedProductTimeline, timelineGroupedByProduct]);
+
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
 			<StickyBand dropdownContent={countryDropdown} formRef={yearPickerRef} formContent={yearPickerProps} />
-
-			{/* Add this new card for the stacked bar chart */}
-			<Grid item xs={12}>
-				<Card
-					title="All Contaminants by Food Product (Stacked)"
-					footer={isLoading ? undefined : cardFooter({ minutesAgo })}
-				>
-					{isLoading ? (
-						<LoadingIndicator minHeight="300px" />
-					) : uniqueChartProducts.length === 0 || uniqueChartContaminants.length === 0 ? (
-						<DataWarning message="No data available for the selected country and year" />
-					) : isValidArray(stackedBarChartData) && stackedBarChartData.length > 0 ? (
-						<Grid item xs={12}>
-							<Plot
-								scrollZoom
-								data={stackedBarChartData}
-								barmode="stack" // This is what makes it stack vertically
-								displayBar={false}
-								xaxis={stackedBarChartLayout.xaxis}
-								yaxis={stackedBarChartLayout.yaxis}
-							/>
-						</Grid>
-					) : (
-						<DataWarning message="No measurements available for stacked visualization" />
-					)}
-				</Card>
-			</Grid>
 
 			<Grid item xs={12} sm={12} md={6}>
 				<Card
 					title="Foods with Risky Contaminant Levels"
 					footer={isLoading ? undefined : cardFooter({ minutesAgo })}
 				>
-					<StickyBand sticky={false} dropdownContent={contaminantChartDropdown} />
 					{isLoading ? (
 						<LoadingIndicator minHeight="300px" />
 					) : uniqueChartContaminants.length === 0 ? (
 						<DataWarning message="No contaminant measurements available for the selected country and year" />
 					) : isValidArray(contaminantChartData[0]?.x) ? (
-						<Grid item xs={12} md={12}>
-							<Plot
-								scrollZoom
-								data={contaminantChartData}
-								showLegend={false}
-								shapes={contaminantChartLayout.shapes}
-								xaxis={contaminantChartLayout.xaxis}
-								yaxis={contaminantChartLayout.yaxis}
-							/>
-						</Grid>
+						<>
+							<StickyBand sticky={false} dropdownContent={contaminantChartDropdown} />
+							<Grid item xs={12} md={12}>
+								<Plot
+									scrollZoom
+									data={contaminantChartData}
+									showLegend={false}
+									shapes={contaminantChartLayout.shapes}
+									xaxis={contaminantChartLayout.xaxis}
+									yaxis={contaminantChartLayout.yaxis}
+								/>
+							</Grid>
+						</>
 					) : (
 						<DataWarning message={`No measurements exceeding LOQ found for ${selectedContaminant}. All levels are compliant with EU health standards.`} />
 					)}
@@ -415,24 +476,110 @@ const Efsa = () => {
 					title="Contaminants in Selected Food Product"
 					footer={isLoading ? undefined : cardFooter({ minutesAgo })}
 				>
-					<StickyBand sticky={false} dropdownContent={productChartDropdown} />
+
 					{isLoading ? (
 						<LoadingIndicator minHeight="300px" />
 					) : uniqueChartProducts.length === 0 ? (
 						<DataWarning message="No product measurements available for the selected country and year" />
 					) : isValidArray(productChartData[0]?.x) ? (
-						<Grid item xs={12} md={12}>
+						<>
+							<StickyBand sticky={false} dropdownContent={productChartDropdown} />
+							<Grid item xs={12} md={12}>
+								<Plot
+									scrollZoom
+									showLegend={false}
+									data={productChartData}
+									shapes={productChartLayout.shapes}
+									xaxis={productChartLayout.xaxis}
+									yaxis={productChartLayout.yaxis}
+								/>
+							</Grid>
+						</>
+					) : (
+						<DataWarning message={`No measurements exceeding LOQ found for ${selectedProduct}. All levels are compliant with EU health standards.`} />
+					)}
+				</Card>
+			</Grid>
+
+			<Grid item xs={12} md={12}>
+				<Card
+					title="Total Contaminants per Food Product"
+					footer={isLoading ? undefined : cardFooter({ minutesAgo })}
+				>
+					{isLoading ? (
+						<LoadingIndicator minHeight="300px" />
+					) : uniqueChartProducts.length === 0 || uniqueChartContaminants.length === 0 ? (
+						<DataWarning message="No data available for the selected country and year" />
+					) : isValidArray(stackedBarChartData) && stackedBarChartData.length > 0 ? (
+						<Grid item xs={12}>
 							<Plot
 								scrollZoom
-								showLegend={false}
-								data={productChartData}
-								shapes={productChartLayout.shapes}
-								xaxis={productChartLayout.xaxis}
-								yaxis={productChartLayout.yaxis}
+								height="499px"
+								data={stackedBarChartData}
+								barmode="stack"
+								displayBar={false}
+								xaxis={stackedBarChartLayout.xaxis}
+								yaxis={stackedBarChartLayout.yaxis}
 							/>
 						</Grid>
 					) : (
-						<DataWarning message={`No measurements exceeding LOQ found for ${selectedProduct}. All levels are compliant with EU health standards.`} />
+						<DataWarning message="No measurements available for stacked visualization" />
+					)}
+				</Card>
+			</Grid>
+
+			<Grid item xs={12} sm={12} md={6} mt={1}>
+				<Card
+					title="Contaminant Timeline"
+					footer={isLoading ? undefined : cardFooter({ minutesAgo })}
+				>
+					{isLoading ? (
+						<LoadingIndicator minHeight="300px" />
+					) : uniqueTimelineContaminants.length === 0 ? (
+						<DataWarning message="No contaminant measurements available for the selected country and year" />
+					) : isValidArray(contaminantTimelineData[0]?.x) ? (
+						<>
+							<StickyBand sticky={false} dropdownContent={contaminantTimelineDropdown} />
+							<Grid item xs={12} md={12}>
+								<Plot
+									scrollZoom
+									showLegend
+									data={contaminantTimelineData}
+									shapes={contaminantTimelineLayout.shapes}
+									xaxis={contaminantTimelineLayout.xaxis}
+									yaxis={contaminantTimelineLayout.yaxis}
+								/>
+							</Grid>
+						</>
+					) : (
+						<DataWarning message={`No measurements found for ${selectedContaminantTimeline}.`} />
+					)}
+				</Card>
+			</Grid>
+
+			<Grid item xs={12} sm={12} md={6} mt={1} mb={2}>
+				<Card
+					title="Product Timeline"
+					footer={isLoading ? undefined : cardFooter({ minutesAgo })}
+				>
+					{isLoading ? (
+						<LoadingIndicator minHeight="300px" />
+					) : uniqueTimelineProducts.length === 0 ? (
+						<DataWarning message="No product measurements available for the selected country and year" />
+					) : isValidArray(productTimelineData[0]?.x) ? (
+						<>
+							<StickyBand sticky={false} dropdownContent={productTimelineDropdown} />
+							<Grid item xs={12} md={12}>
+								<Plot
+									scrollZoom
+									data={productTimelineData}
+									xaxis={productTimelineLayout.xaxis}
+									yaxis={productTimelineLayout.yaxis}
+								/>
+							</Grid>
+						</>
+					) : (
+						<DataWarning message={`No measurements found for ${selectedProductTimeline}.`} />
 					)}
 				</Card>
 			</Grid>
