@@ -599,7 +599,7 @@ export const lcaIndicators = [
 ];
 
 export const RISK_LEVELS = ["very low risk", "low risk", "medium risk", "high risk", "very high risk", "no data"];
-export const OPPORTUNITY_LEVELS = ["no opportunity", "low opportunity", "medium opportunity", "high opportunity"];
+export const OPPORTUNITY_LEVELS = ["high opportunity", "medium opportunity", "low opportunity", "no opportunity"];
 
 export const RISK_COLOR_MAP = {
 	// Risk levels - Green to Red gradient

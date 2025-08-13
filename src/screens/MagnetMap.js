@@ -60,7 +60,6 @@ const MagnetMap = ({
 		fetch("/european_countries.json")
 			.then((response) => {
 				if (!response.ok) {
-					// console.log("Response status:", response.status);
 					throw new Error("Network response was not ok");
 				}
 
@@ -77,15 +76,13 @@ const MagnetMap = ({
 		return {
 			...geoJsonData,
 			features: geoJsonData.features.map((feature) => {
-				const country = europeanCountries.find(
-					(c) => c.text === feature.properties.name,
-				);
+				const country = europeanCountries.find((c) => c.text === feature.properties.name);
 				return {
 					...feature,
 					properties: {
 						...feature.properties,
 						flag: country?.flag || "", // Add flag emoji
-						value: dataEU.find((p) => p.key === (country?.value))?.score || "-",
+						value: dataEU.find((p) => p.key === (country?.value))?.score ?? "-",
 						level: dataEU.find((p) => p.key === (country?.value))?.risk_level || "no data",
 					},
 				};
@@ -106,7 +103,7 @@ const MagnetMap = ({
 		if (!isDataReady || !enhancedGeoJsonData || dataEU.length === 0) return []; // Safeguard
 
 		const isOpportunity = opportunity;
-		const levelName = isOpportunity ? "Opportunity Level" : "Risk Level";
+		const levelName = isOpportunity ? "Opportunity Score" : "Risk Score";
 		const levels = isOpportunity ? OPPORTUNITY_LEVELS : RISK_LEVELS;
 
 		return [{
@@ -137,7 +134,6 @@ const MagnetMap = ({
 			defaultChecked: true,
 		}];
 	}, [isDataReady, enhancedGeoJsonData, dataEU, opportunity]);
-	console.log("Geodata:", geodata);
 
 	// Map configuration
 	const mapConfig = useMemo(() => ({
