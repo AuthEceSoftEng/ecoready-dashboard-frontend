@@ -1,4 +1,3 @@
-import { useLocation } from "react-router-dom";
 import { Grid, Typography } from "@mui/material";
 import { memo, useMemo, useState, useCallback, useEffect } from "react";
 
@@ -10,8 +9,8 @@ import { findKeyByText } from "../utils/data-handling-functions.js";
 import { StickyBand } from "../utils/rendering-items.js";
 import { europeanCountries, lcaIndicators } from "../utils/useful-constants.js";
 
-import MagnetMap from "./MAGNET Map.js";
-import MAGNETGraphs from "./MAGNET Graphs.js";
+import MagnetMap from "./MagnetMap.js";
+import MAGNETGraphs from "./MagnetGraphs.js";
 
 // ============================================================================
 // CONSTANTS AND STATIC DATA
@@ -95,7 +94,6 @@ const useSelections = () => {
 
 const LcaMag = () => {
 	const { selections, updateSelection, updateTab, updateCountry, updateIndicator, updateCompareCountries } = useSelections();
-	console.log("MAGNET component rendered with selections!!!!!!!!!!!!!!!!!!!!:", selections);
 
 	const [isOpportunityState, setIsOpportunityState] = useState(false);
 
@@ -116,11 +114,11 @@ const LcaMag = () => {
 	// Dropdown configurations with proper null checks
 	const countryDropdown = useMemo(() => ({
 		id: "country-dropdown",
-		label: "Select Country",
-		items: EU_COUNTRIES,
-		value: selections.country?.text || "",
+		label: selections.tab === "Metrics" ? "Select Country" : "",
+		items: selections.tab === "Metrics" ? EU_COUNTRIES : [EU_COUNTRIES[0]],
+		value: selections.tab === "Metrics" ? selections.country?.text : EU_COUNTRIES[0].text,
 		onChange: (event) => updateCountry(event.target.value),
-	}), [selections.country, updateCountry]);
+	}), [selections.country?.text, selections.tab, updateCountry]);
 
 	const indicatorDropdown = useMemo(() => ({
 		id: "indicator-dropdown",
@@ -131,16 +129,6 @@ const LcaMag = () => {
 		onChange: (event) => updateIndicator(event.target.value),
 	}), [selections.indicator, updateIndicator]);
 
-	// const selectedCategory = useMemo(() => lcaIndicators.find((cat) => cat.options.includes(selections.indicator)),
-	// 	[selections.indicator]);
-
-	// // Add this new useMemo for the indicator description
-	// const indicatorDescription = useMemo(() => {
-	// 	if (!selections.indicator || !selectedCategory) return "";
-
-	// 	const indicatorIndex = selectedCategory.options.indexOf(selections.indicator);
-	// 	return selectedCategory.desc[indicatorIndex] || "No description available for this indicator.";
-	// }, [selections.indicator, selectedCategory]);
 	// ============================================================================
 	// RENDER
 	// ============================================================================
@@ -148,7 +136,7 @@ const LcaMag = () => {
 	return (
 		<Grid container style={{ width: "100%", height: "100%" }} display="flex" direction="row" justifyContent="space-around" spacing={1}>
 			<StickyBand
-				dropdownContent={selections.tab === "Metrics" ? [countryDropdown, indicatorDropdown] : [indicatorDropdown]}
+				dropdownContent={[countryDropdown, indicatorDropdown]}
 				toggleContent={(
 					<>
 						<HighlightBackgroundButton
@@ -164,7 +152,7 @@ const LcaMag = () => {
 				togglePlacing="center"
 			/>
 
-			{selections.tab === "Metrics" && selections.country && selections.indicator && (
+			{selections.tab === "Metrics" && (
 				<MAGNETGraphs
 					selections={selections}
 					updateSelection={updateSelection}
@@ -182,12 +170,11 @@ const LcaMag = () => {
 				</Grid>
 			)}
 
-			{/* Footer */}
 			<Footer
 				sticky
 				customMessage={(
 					<>
-						<Typography component="span" sx={{ fontWeight: "bold", fontSize: "0.875rem" }}>
+						<Typography component="span" sx={{ fontWeight: "bold", fontSize: "0.975rem" }}>
 							{"Acknowledgement of Data Source:"}
 						</Typography>
 						{" "}
