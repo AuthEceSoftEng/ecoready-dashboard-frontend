@@ -56,14 +56,14 @@ const Efsa = () => {
 
 	const { isLoading, dataSets, minutesAgo } = state;
 	console.log("Efsa dataSets:", dataSets);
-	const contaminantData = useMemo(() => dataSets?.metrics_contaminant || [], [dataSets]);
-	const productData = useMemo(() => dataSets?.metrics_product || [], [dataSets]);
+	const data = useMemo(() => dataSets?.metrics || [], [dataSets]);
+	// const contaminantData = useMemo(() => dataSets?.metrics_contaminant || [], [dataSets]);
+	// const productData = useMemo(() => dataSets?.metrics_product || [], [dataSets]);
 	const timelineData = useMemo(() => dataSets?.timeline || [], [dataSets]);
-	console.log("Timeline data:", timelineData);
 
 	const { uniqueChartProducts, uniqueChartContaminants, uniqueTimelineProducts, uniqueTimelineContaminants } = useMemo(() => {
 		// Early return if no data
-		if ((!contaminantData?.length) && (!productData?.length) && (!timelineData?.length)) {
+		if ((!data?.length) && (!timelineData?.length)) {
 			return { uniqueChartProducts: [], uniqueChartContaminants: [], uniqueTimelineProducts: [], uniqueTimelineContaminants: [] };
 		}
 
@@ -73,21 +73,22 @@ const Efsa = () => {
 		const timelineContaminantsSet = new Set();
 
 		// Process data array
-		if (contaminantData) {
-			for (const item of contaminantData) {
+		if (data) {
+			for (const item of data) {
 				if (item.resval > 0) {
 					chartProductsSet.add(item.key);
+					chartContaminantsSet.add(item.param);
 				}
 			}
 		}
 
-		if (productData) {
-			for (const item of productData) {
-				if (item.resval > 0) {
-					chartProductsSet.add(item.param);
-				}
-			}
-		}
+		// if (productData) {
+		// 	for (const item of productData) {
+		// 		if (item.resval > 0) {
+		// 			chartProductsSet.add(item.param);
+		// 		}
+		// 	}
+		// }
 
 		// Process timelineData array
 		if (timelineData) {
@@ -104,7 +105,7 @@ const Efsa = () => {
 			uniqueTimelineProducts: [...timelineProductsSet].sort(),
 			uniqueTimelineContaminants: [...timelineContaminantsSet].sort(),
 		};
-	}, [contaminantData, productData, timelineData]);
+	}, [data, timelineData]);
 
 	console.log("Efsa uniqueChartProducts:", uniqueChartProducts);
 	console.log("Efsa uniqueTimelineProducts:", uniqueTimelineProducts);
@@ -300,7 +301,7 @@ const Efsa = () => {
 				type: "bar",
 			};
 		});
-	}, [uniqueChartProducts, uniqueChartContaminants, dataGroupedByContaminant]);
+	}, [data, uniqueChartProducts, uniqueChartContaminants, dataGroupedByContaminant]);
 
 	const stackedBarChartLayout = useMemo(() => {
 		// Get unit from first data point (assuming all have same unit)
@@ -451,7 +452,7 @@ const Efsa = () => {
 						<LoadingIndicator minHeight="300px" />
 					) : uniqueChartContaminants.length === 0 ? (
 						<DataWarning message="No contaminant measurements available for the selected country and year" />
-					) : isValidArray(contaminantChartData[0]?.x) ? (
+					) : isValidArray(contaminantChartData[0]?.x) && (
 						<>
 							<StickyBand sticky={false} dropdownContent={contaminantChartDropdown} />
 							<Grid item xs={12} md={12}>
@@ -465,9 +466,7 @@ const Efsa = () => {
 								/>
 							</Grid>
 						</>
-					) : (
-						<DataWarning message={`No measurements exceeding LOQ found for ${selectedContaminant}. All levels are compliant with EU health standards.`} />
-					)}
+					) }
 				</Card>
 			</Grid>
 
@@ -481,7 +480,7 @@ const Efsa = () => {
 						<LoadingIndicator minHeight="300px" />
 					) : uniqueChartProducts.length === 0 ? (
 						<DataWarning message="No product measurements available for the selected country and year" />
-					) : isValidArray(productChartData[0]?.x) ? (
+					) : isValidArray(productChartData[0]?.x) && (
 						<>
 							<StickyBand sticky={false} dropdownContent={productChartDropdown} />
 							<Grid item xs={12} md={12}>
@@ -495,8 +494,6 @@ const Efsa = () => {
 								/>
 							</Grid>
 						</>
-					) : (
-						<DataWarning message={`No measurements exceeding LOQ found for ${selectedProduct}. All levels are compliant with EU health standards.`} />
 					)}
 				</Card>
 			</Grid>
