@@ -23,11 +23,11 @@ const createDropdown = (id, label, items, value, onChange) => ([{
 
 const Efsa = () => {
 	const [selectedCountry, setSelectedCountry] = useState(countries[0]);
-	const [selectedContaminant, setSelectedContaminant] = useState("");
-	const [selectedProduct, setSelectedProduct] = useState("");
-	const [selectedContaminantTimeline, setSelectedContaminantTimeline] = useState("");
-	const [selectedProductTimeline, setSelectedProductTimeline] = useState("");
-	const [year, setYear] = useState("2021");
+	const [selectedContaminant, setSelectedContaminant] = useState(null);
+	const [selectedProduct, setSelectedProduct] = useState(null);
+	const [selectedContaminantTimeline, setSelectedContaminantTimeline] = useState(null);
+	const [selectedProductTimeline, setSelectedProductTimeline] = useState(null);
+	const [year, setYear] = useState("2023");
 
 	const handleYearChange = useCallback((newValue) => {
 		setYear(newValue.$y);
@@ -42,14 +42,14 @@ const Efsa = () => {
 			views: ["year"],
 			value: new Date(`${year}-01-01`),
 			minDate: new Date("2011-01-01"),
-			maxDate: new Date("2021-12-31"),
+			maxDate: new Date("2023-12-31"),
 			onChange: handleYearChange,
 		},
 	], [handleYearChange, year]);
 
 	const fetchConfigs = useMemo(
-		() => (selectedCountry ? efsaConfigs(selectedCountry.toLowerCase(), selectedContaminant, selectedProduct, year) : null),
-		[selectedCountry, selectedContaminant, selectedProduct, year],
+		() => (selectedCountry ? efsaConfigs(selectedCountry.toLowerCase(), year) : null),
+		[selectedCountry, year],
 	);
 
 	const { state } = useInit(organization, fetchConfigs);
@@ -57,8 +57,6 @@ const Efsa = () => {
 	const { isLoading, dataSets, minutesAgo } = state;
 	console.log("Efsa dataSets:", dataSets);
 	const data = useMemo(() => dataSets?.metrics || [], [dataSets]);
-	// const contaminantData = useMemo(() => dataSets?.metrics_contaminant || [], [dataSets]);
-	// const productData = useMemo(() => dataSets?.metrics_product || [], [dataSets]);
 	const timelineData = useMemo(() => dataSets?.timeline || [], [dataSets]);
 
 	const { uniqueChartProducts, uniqueChartContaminants, uniqueTimelineProducts, uniqueTimelineContaminants } = useMemo(() => {
@@ -81,14 +79,6 @@ const Efsa = () => {
 				}
 			}
 		}
-
-		// if (productData) {
-		// 	for (const item of productData) {
-		// 		if (item.resval > 0) {
-		// 			chartProductsSet.add(item.param);
-		// 		}
-		// 	}
-		// }
 
 		// Process timelineData array
 		if (timelineData) {
@@ -122,10 +112,6 @@ const Efsa = () => {
 			timelineGroupedByContaminant: groupByKey(timelineData, "param"),
 		};
 	}, [data, uniqueChartProducts, uniqueChartContaminants, timelineData]);
-	console.log("Efsa dataGroupedByProduct:", dataGroupedByProduct);
-	console.log("Efsa dataGroupedByContaminant:", dataGroupedByContaminant);
-	console.log("Efsa timelineGroupedByProduct:", timelineGroupedByProduct);
-	console.log("Efsa timelineGroupedByContaminant:", timelineGroupedByContaminant);
 
 	const countryDropdown = useMemo(() => createDropdown(
 		"country-dropdown",
@@ -139,14 +125,6 @@ const Efsa = () => {
 		},
 	), [selectedCountry, uniqueChartContaminants]);
 
-	const productChartDropdown = useMemo(() => createDropdown(
-		"product-dropdown",
-		"Select Product",
-		uniqueChartProducts,
-		selectedProduct,
-		(e) => setSelectedProduct(e.target.value),
-	), [uniqueChartProducts, selectedProduct]);
-
 	const contaminantChartDropdown = useMemo(() => createDropdown(
 		"contaminant-dropdown",
 		"Select Contaminant",
@@ -155,13 +133,13 @@ const Efsa = () => {
 		(e) => setSelectedContaminant(e.target.value),
 	), [uniqueChartContaminants, selectedContaminant]);
 
-	const productTimelineDropdown = useMemo(() => createDropdown(
-		"product-timeline-dropdown",
+	const productChartDropdown = useMemo(() => createDropdown(
+		"product-dropdown",
 		"Select Product",
-		uniqueTimelineProducts,
-		selectedProductTimeline,
-		(e) => setSelectedProductTimeline(e.target.value),
-	), [uniqueTimelineProducts, selectedProductTimeline]);
+		uniqueChartProducts,
+		selectedProduct,
+		(e) => setSelectedProduct(e.target.value),
+	), [uniqueChartProducts, selectedProduct]);
 
 	const contaminantTimelineDropdown = useMemo(() => createDropdown(
 		"contaminant-timeline-dropdown",
@@ -170,6 +148,14 @@ const Efsa = () => {
 		selectedContaminantTimeline,
 		(e) => setSelectedContaminantTimeline(e.target.value),
 	), [uniqueTimelineContaminants, selectedContaminantTimeline]);
+
+	const productTimelineDropdown = useMemo(() => createDropdown(
+		"product-timeline-dropdown",
+		"Select Product",
+		uniqueTimelineProducts,
+		selectedProductTimeline,
+		(e) => setSelectedProductTimeline(e.target.value),
+	), [uniqueTimelineProducts, selectedProductTimeline]);
 
 	useEffect(() => {
 		// Reset selected contaminant and product when country changes
@@ -285,12 +271,14 @@ const Efsa = () => {
 	const stackedBarChartData = useMemo(() => {
 		if (!isValidArray(data) || uniqueChartProducts.length === 0 || uniqueChartContaminants.length === 0) return [];
 
-		// Use grouped data for O(1) lookups instead of O(n) searches
-		return uniqueChartContaminants.map((contaminant) => {
-			const contaminantData = dataGroupedByContaminant[contaminant] || [];
+		// Sort contaminants alphabetically and reverse to fix legend order
+		const sortedContaminants = [...uniqueChartContaminants].sort().reverse();
 
+		// Use dataGroupedByProduct for O(1) lookups
+		return sortedContaminants.map((contaminant) => {
 			const contaminantValues = uniqueChartProducts.map((product) => {
-				const dataPoint = contaminantData.find((item) => item.key === product);
+				const productData = dataGroupedByProduct[product] || [];
+				const dataPoint = productData.find((item) => item.param === contaminant);
 				return dataPoint ? dataPoint.resval : 0;
 			});
 
@@ -301,7 +289,7 @@ const Efsa = () => {
 				type: "bar",
 			};
 		});
-	}, [data, uniqueChartProducts, uniqueChartContaminants, dataGroupedByContaminant]);
+	}, [data, uniqueChartProducts, uniqueChartContaminants, dataGroupedByProduct]);
 
 	const stackedBarChartLayout = useMemo(() => {
 		// Get unit from first data point (assuming all have same unit)
@@ -349,7 +337,6 @@ const Efsa = () => {
 	const contaminantTimelineLayout = useMemo(() => {
 		if (!selectedContaminantTimeline || Object.keys(timelineGroupedByContaminant).length === 0) {
 			return {
-				xaxis: { title: "Date" },
 				yaxis: { title: "Residue Value" },
 			};
 		}
@@ -359,20 +346,12 @@ const Efsa = () => {
 		const loqValue = contaminantData.length > 0 ? contaminantData[0].resloq : 0;
 
 		return {
-			xaxis: {
-				title: "Date",
-				automargin: true,
-			},
+			xaxis: { automargin: true },
 			yaxis: {
 				title: unit ? `Residue Value (${unit})` : "Residue Value",
 				automargin: true,
 			},
-			margin: {
-				l: 80,
-				r: 50,
-				t: 50,
-				b: 80,
-			},
+			margin: { l: 80, r: 50, t: 50, b: 80 },
 			showlegend: true,
 			legend: {
 				orientation: "v",
@@ -423,17 +402,13 @@ const Efsa = () => {
 
 	const productTimelineLayout = useMemo(() => {
 		if (!selectedProductTimeline || Object.keys(timelineGroupedByProduct).length === 0) {
-			return {
-				xaxis: { title: "Date" },
-				yaxis: { title: "Residue Value" },
-			};
+			return { yaxis: { title: "Residue Value" } };
 		}
 
 		const productData = timelineGroupedByProduct[selectedProductTimeline] || [];
 		const unit = productData.length > 0 ? productData[0].resunit : "";
 
 		return {
-			xaxis: { title: "Date", automargin: true },
 			yaxis: { title: unit ? `Residue Value (${unit})` : "Residue Value", automargin: true },
 			margin: { l: 80, r: 50, t: 50, b: 80 },
 		};
@@ -466,7 +441,7 @@ const Efsa = () => {
 								/>
 							</Grid>
 						</>
-					) }
+					)}
 				</Card>
 			</Grid>
 
