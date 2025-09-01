@@ -50,7 +50,7 @@ const useSelections = () => {
 	}, []);
 
 	const updateIndicator = useCallback((selectedOption) => {
-		const selectedCategory = lcaIndicators.find((cat) => cat.options.includes(selectedOption));
+		const selectedCategory = lcaIndicators.find((cat) => cat.options.some((option) => option.value === selectedOption));
 		updateSelection("indicator", selectedCategory ? selectedOption : "");
 	}, [updateSelection]);
 
@@ -99,13 +99,13 @@ const LcaMag = () => {
 
 	// Update state when indicator changes
 	useEffect(() => {
-		setIsOpportunityState(isOpportunityIndicator(selections.indicator));
+		setIsOpportunityState(isOpportunityIndicator(selections.indicator.text));
 	}, [selections.indicator]);
 
 	const fetchConfigs = useMemo(() => {
 		const compareCountries = (selections.compareCountries || []).map((countryText) => findKeyByText(EU_COUNTRIES, countryText));
 
-		return magnetConfigs(compareCountries, selections.indicator || null);
+		return magnetConfigs(compareCountries, selections.indicator.value || null);
 	}, [selections.indicator, selections.compareCountries]);
 
 	const { state } = useInit(organization, fetchConfigs);
@@ -124,7 +124,7 @@ const LcaMag = () => {
 		id: "indicator-dropdown",
 		label: "Select Indicator",
 		items: lcaIndicators,
-		value: selections.indicator,
+		value: selections.indicator.text,
 		subheader: true,
 		onChange: (event) => updateIndicator(event.target.value),
 	}), [selections.indicator, updateIndicator]);
@@ -178,7 +178,7 @@ const LcaMag = () => {
 							{"Acknowledgement of Data Source:"}
 						</Typography>
 						{" "}
-						{"The Observatory presents aggregated results based on data from the PSILCA database by GreenDelta GmbH, used under a Business Starter license. All rights to the data remain with GreenDelta. No raw data is disclosed."}
+						{"The Observatory presents aggregated results based on data from the PSILCA database (v3.1.1) by GreenDelta GmbH, extracted in 2024. All rights to the data remain with GreenDelta. No raw data is disclosed."}
 						<br />
 					</>
 				)}

@@ -1,6 +1,6 @@
 export const organization = "efsa";
 
-const efsaConfigs = (country, contaminant = null, product = null, year = null) => {
+const efsaConfigs = (country, year = null) => {
 	// Always include the main data config
 	const configs = [
 		{
