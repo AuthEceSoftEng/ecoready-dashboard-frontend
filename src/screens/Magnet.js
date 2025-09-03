@@ -50,8 +50,17 @@ const useSelections = () => {
 	}, []);
 
 	const updateIndicator = useCallback((selectedOption) => {
-		const selectedCategory = lcaIndicators.find((cat) => cat.options.some((option) => option.value === selectedOption));
-		updateSelection("indicator", selectedCategory ? selectedOption : "");
+		// Find the selected option object
+		let selectedOptionObj = null;
+		for (const category of lcaIndicators) {
+			const option = category.options.find((opt) => opt.value === selectedOption);
+			if (option) {
+				selectedOptionObj = option;
+				break;
+			}
+		}
+
+		updateSelection("indicator", selectedOptionObj || lcaIndicators[0].options[0]);
 	}, [updateSelection]);
 
 	const updateCompareCountries = useCallback((selectedCountries) => {
@@ -99,17 +108,26 @@ const LcaMag = () => {
 
 	// Update state when indicator changes
 	useEffect(() => {
-		setIsOpportunityState(isOpportunityIndicator(selections.indicator.text));
+		const indicatorValue = typeof selections.indicator === "string"
+			? selections.indicator
+			: selections.indicator?.value;
+		setIsOpportunityState(isOpportunityIndicator(indicatorValue));
 	}, [selections.indicator]);
+
+	console.log("Indicator changed:", selections.indicator);
 
 	const fetchConfigs = useMemo(() => {
 		const compareCountries = (selections.compareCountries || []).map((countryText) => findKeyByText(EU_COUNTRIES, countryText));
+		const indicatorValue = typeof selections.indicator === "string"
+			? selections.indicator
+			: selections.indicator?.value;
 
-		return magnetConfigs(compareCountries, selections.indicator.value || null);
+		return magnetConfigs(compareCountries, indicatorValue || null);
 	}, [selections.indicator, selections.compareCountries]);
 
 	const { state } = useInit(organization, fetchConfigs);
 	const { isLoading, dataSets } = state;
+	console.log("Data sets:", dataSets);
 
 	// Dropdown configurations with proper null checks
 	const countryDropdown = useMemo(() => ({
@@ -124,7 +142,7 @@ const LcaMag = () => {
 		id: "indicator-dropdown",
 		label: "Select Indicator",
 		items: lcaIndicators,
-		value: selections.indicator.text,
+		value: selections.indicator.value,
 		subheader: true,
 		onChange: (event) => updateIndicator(event.target.value),
 	}), [selections.indicator, updateIndicator]);
