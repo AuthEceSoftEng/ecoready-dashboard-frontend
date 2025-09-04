@@ -634,3 +634,24 @@ export const OPPORTUNITY_LEVEL_ORDER = {
 	"low opportunity": 1,
 	"no opportunity": 0.05,
 };
+
+export const UNIT_CONVERSION_FACTORS = {
+	// Direct mapping for common units to mg/kg
+	"gram/hectoliter": 10,
+	"gram/kilogram": 1000,
+	"gram/litre": 1000,
+	"microgram/gram": 1,
+	"microgram/kilogram": 0.001,
+	"microgram/litre": 0.001,
+	"microgram/millilitre": 1,
+	"milligram/gram": 1000,
+	"milligram/kilogram": 1,
+	"milligram/litre": 1,
+	"milligram/millilitre": 1000,
+	"nanogram/gram": 0.001,
+	"nanogram/kilogram": 0.000_001,
+	"nanogram/litre": 0.000_001,
+	"nanogram/millilitre": 0.001,
+	"picogram/gram": 0.000_001,
+	"picogram/kilogram": 0.000_000_001,
+};
