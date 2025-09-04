@@ -35,102 +35,9 @@ const efsaConfigs = (country, year = null) => {
 						},
 					] : []),
 				],
-				// order_by: {
-				// 	field: "timestamp",
-				// 	order: "asc",
-				// },
 			}),
 			plotId: "metrics",
 		},
-		// {
-		// 	type: "data",
-		// 	project: "efsaproject",
-		// 	collection: "efsa_data",
-		// 	params: JSON.stringify({
-		// 		attributes: ["key", "resval", "resunit", "resloq"],
-		// 		filters: [
-		// 			{
-		// 				property_name: "resval",
-		// 				operator: "gt",
-		// 				property_value: 0,
-		// 			},
-		// 			// Conditionally include contaminant filter
-		// 			...(contaminant ? [{
-		// 				property_name: "param",
-		// 				operator: "eq",
-		// 				property_value: contaminant,
-		// 			}] : []),
-		// 			// Conditionally include country filter
-		// 			...(country ? [{
-		// 				property_name: "sampcountry",
-		// 				operator: "eq",
-		// 				property_value: country,
-		// 			}] : []),
-		// 			// Conditionally include year filters
-		// 			...(year ? [
-		// 				{
-		// 					property_name: "timestamp",
-		// 					operator: "gte",
-		// 					property_value: `${year}-01-01`,
-		// 				},
-		// 				{
-		// 					property_name: "timestamp",
-		// 					operator: "lte",
-		// 					property_value: `${year}-12-31`,
-		// 				},
-		// 			] : []),
-		// 		],
-		// 		// order_by: {
-		// 		// 	field: "timestamp",
-		// 		// 	order: "asc",
-		// 		// },
-		// 	}),
-		// 	plotId: "metrics_contaminant",
-		// },
-		// {
-		// 	type: "data",
-		// 	project: "efsaproject",
-		// 	collection: "efsa_data",
-		// 	params: JSON.stringify({
-		// 		attributes: ["param", "resval", "resunit", "resloq"],
-		// 		filters: [
-		// 			{
-		// 				property_name: "resval",
-		// 				operator: "gt",
-		// 				property_value: 0,
-		// 			},
-		// 			...product ? [{
-		// 				property_name: "key",
-		// 				operator: "eq",
-		// 				property_value: product,
-		// 			}] : [],
-		// 			// Conditionally include country filter
-		// 			...(country ? [{
-		// 				property_name: "sampcountry",
-		// 				operator: "eq",
-		// 				property_value: country,
-		// 			}] : []),
-		// 			// Conditionally include year filters
-		// 			...(year ? [
-		// 				{
-		// 					property_name: "timestamp",
-		// 					operator: "gte",
-		// 					property_value: `${year}-01-01`,
-		// 				},
-		// 				{
-		// 					property_name: "timestamp",
-		// 					operator: "lte",
-		// 					property_value: `${year}-12-31`,
-		// 				},
-		// 			] : []),
-		// 		],
-		// 		// order_by: {
-		// 		// 	field: "timestamp",
-		// 		// 	order: "asc",
-		// 		// },
-		// 	}),
-		// 	plotId: "metrics_product",
-		// },
 		{
 			type: "data",
 			project: "efsaproject",
@@ -139,6 +46,7 @@ const efsaConfigs = (country, year = null) => {
 				attributes: [
 					"timestamp", "key", "param",
 					"resval", "resunit", "resloq",
+					"nr_measure", "nr_measurements_exceeding_legallimit",
 				],
 				filters: [
 					// Conditionally include country filter
@@ -155,6 +63,31 @@ const efsaConfigs = (country, year = null) => {
 			}),
 			plotId: "timeline",
 		},
+		// {
+		// 	type: "data",
+		// 	project: "efsaproject",
+		// 	collection: "efsa_data",
+		// 	params: JSON.stringify({
+		// 		attributes: ["timestamp", "param", "nr_measure", "nr_measurements_exceeding_legallimit"],
+		// 		filters: [
+		// 			...(country ? [{
+		// 				property_name: "sampcountry",
+		// 				operator: "eq",
+		// 				property_value: country,
+		// 			}] : []),
+		// 			...(product ? [{
+		// 				property_name: "key",
+		// 				operator: "eq",
+		// 				property_value: product,
+		// 			}] : []),
+		// 		],
+		// 		order_by: {
+		// 			field: "timestamp",
+		// 			order: "asc",
+		// 		},
+		// 	}),
+		// 	plotId: "measurements_timeline",
+		// },
 	];
 
 	return configs;
