@@ -63,6 +63,28 @@ const getYAxisForIndicator = (indicator) => (indicator === "Contribution of the 
 
 const truncateText = (text, maxLength) => (text.length > maxLength ? `${text.slice(0, maxLength)}...` : text);
 
+// Add a utility function to wrap text
+const wrapText = (text, maxLength = 50) => {
+	if (!text || text.length <= maxLength) return text;
+
+	const words = text.split(" ");
+	const lines = [];
+	let currentLine = "";
+
+	for (const word of words) {
+		if ((`${currentLine} ${word}`).length <= maxLength) {
+			currentLine += (currentLine ? " " : "") + word;
+		} else {
+			if (currentLine) lines.push(currentLine);
+			currentLine = word;
+		}
+	}
+
+	if (currentLine) lines.push(currentLine);
+
+	return lines.join("<br>");
+};
+
 // Update the utility function to handle both scales
 const getLevelOrder = (level, isOpportunity = false) => {
 	if (isOpportunity) {
@@ -92,7 +114,7 @@ const processIndicatorData = (item, selectedIndicator) => {
 		description: categoryInfo?.description || "No description available",
 		levelOrder: getLevelOrder(level, isOpportunity),
 		color: getRiskColor(level),
-		truncatedIndicator: truncateText(indicator, isOpportunity ? 25 : 30),
+		truncatedIndicator: truncateText(indicator, isOpportunity ? 30 : 40),
 	};
 };
 
@@ -124,28 +146,6 @@ const groupDataByLevel = (processedData, isOpportunity) => {
 	}
 
 	return Object.fromEntries(grouped);
-};
-
-// Add a utility function to wrap text
-const wrapText = (text, maxLength = 50) => {
-	if (!text || text.length <= maxLength) return text;
-
-	const words = text.split(" ");
-	const lines = [];
-	let currentLine = "";
-
-	for (const word of words) {
-		if ((currentLine + word).length <= maxLength) {
-			currentLine += (currentLine ? " " : "") + word;
-		} else {
-			if (currentLine) lines.push(currentLine);
-			currentLine = word;
-		}
-	}
-
-	if (currentLine) lines.push(currentLine);
-
-	return lines.join("<br>");
 };
 
 // Simplified hover template creation
@@ -283,8 +283,6 @@ const createIndicatorRiskChart = (indicatorsData, selectedIndicator, selectedCou
 			type: "bar",
 			hovertemplate:
 				"<b>%{customdata[0]}</b><br>"
-				// + "<b>Description:</b><br>"
-				// + "%{customdata[2]}<br>"
 				+ `<b>${isOpportunity ? "Opportunity" : "Risk"} Level:</b> <i>%{customdata[1]}</i><br>`
 				+ "<extra></extra>",
 			customdata: customData.map(([country, level, desc]) => [
@@ -445,7 +443,7 @@ const createCategoryBarChart = (riskAssessmentData, selectedIndicator, selectedC
 
 		if (otherRiskData.indicators.length > 0) {
 			traces.push({
-				x: otherRiskData.indicators.map((indicator) => truncateText(indicator, 20)),
+				x: otherRiskData.indicators.map((indicator) => wrapText(indicator, 15)),
 				y: otherRiskData.scores,
 				type: "bar",
 				color: otherRiskData.colors,
@@ -462,7 +460,7 @@ const createCategoryBarChart = (riskAssessmentData, selectedIndicator, selectedC
 
 		if (selectedRiskData.indicators.length > 0) {
 			traces.push({
-				x: selectedRiskData.indicators.map((indicator) => `<b>${truncateText(indicator, 15)}</b>`),
+				x: selectedRiskData.indicators.map((indicator) => `<b>${wrapText(indicator, 15)}</b>`),
 				y: selectedRiskData.scores,
 				type: "bar",
 				color: selectedRiskData.colors,
@@ -486,7 +484,7 @@ const createCategoryBarChart = (riskAssessmentData, selectedIndicator, selectedC
 
 		if (otherOpportunityData.indicators.length > 0) {
 			traces.push({
-				x: otherOpportunityData.indicators.map((indicator) => truncateText(indicator, 20)),
+				x: otherOpportunityData.indicators.map((indicator) => wrapText(indicator, 25)),
 				y: otherOpportunityData.scores,
 				type: "bar",
 				color: otherOpportunityData.colors,
@@ -503,7 +501,7 @@ const createCategoryBarChart = (riskAssessmentData, selectedIndicator, selectedC
 
 		if (selectedOpportunityData.indicators.length > 0) {
 			traces.push({
-				x: selectedOpportunityData.indicators.map((indicator) => `<b>${truncateText(indicator, 20)}</b>`),
+				x: selectedOpportunityData.indicators.map((indicator) => `<b>${wrapText(indicator, 25)}</b>`),
 				y: selectedOpportunityData.scores,
 				type: "bar",
 				color: selectedOpportunityData.colors,
@@ -780,6 +778,7 @@ const MAGNETGraphs = ({
 									showLegend
 									data={categoryBarChartData.traces}
 									height="450px"
+									xaxis={{ tickangle: 0 }}
 									yaxis={{
 										primary: getRiskScaleAxis(),
 										secondary: {
@@ -790,10 +789,9 @@ const MAGNETGraphs = ({
 										},
 									}}
 									layout={{
-										margin: { l: 95, r: categoryBarChartData.isOpportunityState ? 250 : 130, t: 10, b: 100 },
+										margin: { l: 95, r: categoryBarChartData.isOpportunityState ? 250 : 130, t: 10, b: 120 }, // Increased bottom margin
 										dragmode: false,
 										legend: { x: categoryBarChartData.isOpportunityState ? 1.55 : 1 },
-
 										hoverlabel: { align: "left" },
 									}}
 									shapes={categoryBarChartData.shapes}
@@ -831,7 +829,7 @@ const MAGNETGraphs = ({
 									},
 								}}
 								layout={{
-									margin: { l: 220, r: 40, t: 15, b: 20 },
+									margin: { l: 250, r: 40, t: 15, b: 20 },
 									dragmode: false,
 									hoverlabel: { align: "left" },
 								}}
