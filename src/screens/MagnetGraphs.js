@@ -4,7 +4,7 @@ import { memo, useMemo, useRef } from "react";
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
 import { groupByKey, findKeyByText } from "../utils/data-handling-functions.js";
-import { LoadingIndicator, StickyBand, DataWarning } from "../utils/rendering-items.js";
+import { wrapText, LoadingIndicator, StickyBand, DataWarning } from "../utils/rendering-items.js";
 import { europeanCountries, lcaIndicators, OPPORTUNITY_LEVELS, RISK_LEVELS, RISK_COLOR_MAP, OPPORTUNITY_LEVEL_ORDER, RISK_LEVEL_ORDER } from "../utils/useful-constants.js";
 
 // ============================================================================
@@ -62,28 +62,6 @@ const getYAxisForIndicator = (indicator) => (indicator === "Contribution of the 
 	: getRiskScaleAxis());
 
 const truncateText = (text, maxLength) => (text.length > maxLength ? `${text.slice(0, maxLength)}...` : text);
-
-// Add a utility function to wrap text
-const wrapText = (text, maxLength = 50) => {
-	if (!text || text.length <= maxLength) return text;
-
-	const words = text.split(" ");
-	const lines = [];
-	let currentLine = "";
-
-	for (const word of words) {
-		if ((`${currentLine} ${word}`).length <= maxLength) {
-			currentLine += (currentLine ? " " : "") + word;
-		} else {
-			if (currentLine) lines.push(currentLine);
-			currentLine = word;
-		}
-	}
-
-	if (currentLine) lines.push(currentLine);
-
-	return lines.join("<br>");
-};
 
 // Update the utility function to handle both scales
 const getLevelOrder = (level, isOpportunity = false) => {
@@ -158,7 +136,6 @@ const createHoverTemplate = (isOpportunity) => {
 		+ "<extra></extra>";
 };
 
-// Add after wrapText function:
 const createStandardHoverTemplate = (levelType, includeDescription = true) => {
 	let template = "<b>%{customdata[0]}</b><br>";
 	template += includeDescription ? "<b>Description:</b><br>%{customdata[2]}<br>" : "(<i>%{customdata[2]}</i>)<br>";

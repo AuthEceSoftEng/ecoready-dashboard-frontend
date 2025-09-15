@@ -104,3 +104,25 @@ export const DataWarning = ({
 		<Typography variant="h6" fontWeight="bold" sx={{ textAlign: "center" }}>{message}</Typography>
 	</Grid>
 );
+
+// Add a utility function to wrap text
+export const wrapText = (text, maxLength = 50) => {
+	if (!text || text.length <= maxLength) return text;
+
+	const words = text.split(" ");
+	const lines = [];
+	let currentLine = "";
+
+	for (const word of words) {
+		if ((`${currentLine} ${word}`).length <= maxLength) {
+			currentLine += (currentLine ? " " : "") + word;
+		} else {
+			if (currentLine) lines.push(currentLine);
+			currentLine = word;
+		}
+	}
+
+	if (currentLine) lines.push(currentLine);
+
+	return lines.join("<br>");
+};
