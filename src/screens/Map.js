@@ -10,7 +10,6 @@ import useInit from "../utils/screen-init.js";
 import { mapInfoConfigs, organization } from "../config/MapInfoConfig.js";
 import { LoadingIndicator, StickyBand } from "../utils/rendering-items.js";
 import { europeanCountries, products, labs } from "../utils/useful-constants.js";
-import { findKeyByText } from "../utils/data-handling-functions.js";
 
 const excludedProducts = new Set(["Oilseeds", "Cereals", "Sheep/Goat Meat"]);
 const mapProducts = products.filter((product) => !excludedProducts.has(product.text)).map((product) => product);
@@ -102,11 +101,6 @@ const Map = () => {
 		setFilters((prev) => ({ ...prev, year: newValue.$y })); // Select only the year from the resulting object
 	}, []);
 
-	const keys = useMemo(() => ({
-		product: findKeyByText(products, filters.product),
-	}), [filters.product]);
-	console.log("Keys", keys);
-
 	const yearPickerRef = useRef();
 	const yearPickerProps = useMemo(() => [
 		{
@@ -144,6 +138,7 @@ const Map = () => {
 			};
 		});
 	}, [fetchConfigs, dataSets]);
+	console.log(statistics);
 
 	const dropdownContent = useMemo(() => ([
 		{
@@ -200,16 +195,11 @@ const Map = () => {
 
 	// Add effect to monitor data readiness
 	useEffect(() => {
-		if (
-			enhancedGeoJsonData
-			&& statistics.every((statistic) => (Array.isArray(statistic.values) ? statistic.values : []).length > 0)
-		) {
-			console.log("Data is ready:", { enhancedGeoJsonData });
-			setIsDataReady(true);
-		}
+		if (enhancedGeoJsonData && statistics.every((statistic) => (Array.isArray(statistic.values) ? statistic.values : []).length > 0)
+		) { setIsDataReady(true); }
 	}, [enhancedGeoJsonData, statistics]);
 
-	// Then modify the geodata creation:
+	// Modify the geodata creation:
 	const geodata = useMemo(() => {
 		if (!isDataReady || !enhancedGeoJsonData || statistics.length === 0) return []; // Safeguard
 
@@ -254,7 +244,7 @@ const Map = () => {
 			};
 		});
 	}, [isDataReady, enhancedGeoJsonData, statistics]);
-	// console.log("Geodata", geodata); // Debugging output
+	console.log("Geodata:", geodata);
 
 	// Create markers for labs with coordinates
 	const markers = useMemo(() => (

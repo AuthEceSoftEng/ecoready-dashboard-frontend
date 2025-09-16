@@ -231,7 +231,7 @@ const Dropdown = ({
 							...item.options.map((option, optIndex) => (
 								<MenuItem
 									key={`item-${index}-${optIndex}`}
-									value={option}
+									value={option.value} // Use option.value instead of option
 									sx={{
 										pl: 4,
 										backgroundColor: "rgba(0, 0, 0, 0.02)",
@@ -249,7 +249,7 @@ const Dropdown = ({
 										/>
 									)}
 									<ListItemText
-										primary={option}
+										primary={option.text} // Use option.text for display
 										sx={{
 											"& .MuiListItemText-primary": {
 												overflow: "hidden",

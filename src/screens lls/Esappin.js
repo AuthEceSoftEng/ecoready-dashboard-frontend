@@ -18,21 +18,28 @@ const PRODUCTS = [
 	{ value: "Rapsfeld H2", text: "Rapsfeld H2" },
 ];
 
+const YEAR = 2024;
+const INITIAL_MONTH = 10;
+const MIN_DATE = new Date(2024, 8, 1);
+const MAX_DATE = new Date(2024, 10, 30);
+
+// Move getMonthDetails outside component since it doesn't depend on props/state
+const getMonthDetails = (month) => {
+	const paddedMonth = String(monthNames[month].no).padStart(2, "0");
+	const lastDay = new Date(YEAR, monthNames[month].no, 0).getDate();
+	return {
+		paddedMonth,
+		lastDay,
+		dateRange: {
+			month,
+			startDate: `${YEAR}-${paddedMonth}-01`,
+			endDate: `${YEAR}-${paddedMonth}-${lastDay}`,
+		},
+	};
+};
+
 const Esappin = () => {
-	const getMonthDetails = useMemo(() => (month) => {
-		const paddedMonth = String(monthNames[month].no).padStart(2, "0");
-		const lastDay = new Date(2024, monthNames[month].no, 0).getDate();
-		return {
-			paddedMonth,
-			lastDay,
-			dateRange: {
-				month,
-				startDate: `2024-${paddedMonth}-01`,
-				endDate: `2024-${paddedMonth}-${lastDay}`,
-			},
-		};
-	}, []);
-	const customDate = useMemo(() => getCustomDateTime(2024, 10), []);
+	const customDate = useMemo(() => getCustomDateTime(YEAR, INITIAL_MONTH), []);
 	const [dateRange, setDateRange] = useState(
 		() => getMonthDetails(customDate.getMonth()).dateRange,
 	);
@@ -50,7 +57,7 @@ const Esappin = () => {
 		const newMonth = newValue.$d.getMonth();
 
 		debouncedSetMonth(getMonthDetails(newMonth).dateRange, setDateRange);
-	}, [debouncedSetMonth, getMonthDetails]);
+	}, [debouncedSetMonth]);
 
 	const year = customDate.getFullYear();
 
@@ -80,8 +87,8 @@ const Esappin = () => {
 			type: "desktop",
 			sublabel: "Select Month",
 			views: ["month"],
-			minDate: new Date(2024, 8, 1),
-			maxDate: new Date(2024, 10, 30),
+			minDate: MIN_DATE,
+			maxDate: MAX_DATE,
 			value: customDate,
 			labelSize: 12,
 			onChange: handleMonthChange,
@@ -119,6 +126,7 @@ const Esappin = () => {
 
 		const precipSum = isValidArray(dataSets?.precipitationSum)
 			? dataSets.precipitationSum.find((item) => item.key === product.value)?.sum_precipitation_sum : null;
+
 		return { maxTemp, minTemp, precipSum };
 	}, [dataSets, product]);
 
