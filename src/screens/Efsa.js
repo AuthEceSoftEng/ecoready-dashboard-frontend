@@ -48,29 +48,53 @@ const Efsa = () => {
 	const [selectedProductTimeline, setSelectedProductTimeline] = useState(null);
 	const [selectedProductContaminationTimeline, setSelectedProductContaminationTimeline] = useState(null);
 	const [selectedContaminantForProduct, setSelectedContaminantForProduct] = useState(null);
-	const [year, setYear] = useState("2023");
+	const [yearContaminant, setYearContaminant] = useState("2023");
+	const [yearProduct, setYearProduct] = useState("2023");
 
-	const handleYearChange = useCallback((newValue) => {
-		setYear(newValue.$y);
+	// Create separate year change handlers
+	const handleContaminantYearChange = useCallback((newValue) => {
+		setYearContaminant(newValue.$y);
 	}, []);
-	const yearPickerRef = useRef();
-	const yearPickerProps = useMemo(() => [
+
+	const handleProductYearChange = useCallback((newValue) => {
+		setYearProduct(newValue.$y);
+	}, []);
+
+	const productYearPickerRef = useRef(null);
+	const productYearPickerProps = useMemo(() => [
 		{
-			key: "year-picker",
+			key: "product-year-picker",
 			customType: "date-picker",
 			width: "150px",
 			sublabel: "Select Year",
 			views: ["year"],
-			value: new Date(`${year}-01-01`),
+			value: new Date(`${yearProduct}-01-01`),
 			minDate: new Date("2011-01-01"),
 			maxDate: new Date("2023-12-31"),
-			onChange: handleYearChange,
+			onChange: handleProductYearChange,
 		},
-	], [handleYearChange, year]);
+	], [handleProductYearChange, yearProduct]);
 
+	// Create separate year picker props for each chart
+	const contaminantYearPickerRef = useRef(null);
+	const contaminantYearPickerProps = useMemo(() => [
+		{
+			key: "contaminant-year-picker",
+			customType: "date-picker",
+			width: "150px",
+			sublabel: "Select Year",
+			views: ["year"],
+			value: new Date(`${yearContaminant}-01-01`),
+			minDate: new Date("2011-01-01"),
+			maxDate: new Date("2023-12-31"),
+			onChange: handleContaminantYearChange,
+		},
+	], [handleContaminantYearChange, yearContaminant]);
+
+	// You'll need to modify your fetchConfigs to handle both years
 	const fetchConfigs = useMemo(
-		() => (selectedCountry ? efsaConfigs(selectedCountry.toLowerCase(), year) : null),
-		[selectedCountry, year],
+		() => (selectedCountry ? efsaConfigs(selectedCountry.toLowerCase()) : null),
+		[selectedCountry],
 	);
 
 	const { state } = useInit(organization, fetchConfigs);
@@ -79,10 +103,9 @@ const Efsa = () => {
 	console.log("Efsa dataSets:", dataSets);
 
 	const processedData = useMemo(() => {
-		const rawMetrics = dataSets?.metrics || [];
 		const rawTimeline = dataSets?.timeline || [];
 
-		if (rawMetrics.length === 0 && rawTimeline.length === 0) {
+		if (rawTimeline.length === 0) {
 			return {
 				metrics: [],
 				timeline: [],
@@ -95,38 +118,6 @@ const Efsa = () => {
 				timelineGroupedByProduct: {},
 				timelineGroupedByContaminant: {},
 			};
-		}
-
-		// Single pass processing for metrics
-		const processedMetrics = [];
-		const chartProductsSet = new Set();
-		const chartContaminantsSet = new Set();
-		const dataGroupedByProduct = {};
-		const dataGroupedByContaminant = {};
-
-		for (const item of rawMetrics) {
-			const processedItem = {
-				...item,
-				originalResval: item.resval,
-				originalResunit: item.resunit,
-				resval: convertToStandardUnitCached(item.resval, item.resunit),
-				resloq: convertToStandardUnitCached(item.resloq, item.resunit),
-				resunit: TARGET_UNIT,
-			};
-
-			processedMetrics.push(processedItem);
-
-			if (processedItem.resval > 0) {
-				chartProductsSet.add(item.key);
-				chartContaminantsSet.add(item.param);
-
-				// Group while processing - O(1) operation
-				if (!dataGroupedByProduct[item.key]) dataGroupedByProduct[item.key] = [];
-				dataGroupedByProduct[item.key].push(processedItem);
-
-				if (!dataGroupedByContaminant[item.param]) dataGroupedByContaminant[item.param] = [];
-				dataGroupedByContaminant[item.param].push(processedItem);
-			}
 		}
 
 		// Single pass processing for timeline
@@ -158,9 +149,47 @@ const Efsa = () => {
 			timelineGroupedByContaminant[item.param].push(processedItem);
 		}
 
+		// Create metrics data from timeline data filtered by selected years
+		const contaminantYearInt = Number.parseInt(yearContaminant);
+		const productYearInt = Number.parseInt(yearProduct);
+
+		const chartProductsSet = new Set();
+		const chartContaminantsSet = new Set();
+		const dataGroupedByProduct = {};
+		const dataGroupedByContaminant = {};
+
+		// Filter for contaminant chart (first chart)
+		const contaminantMetrics = processedTimeline.filter((item) => {
+			const itemYear = new Date(item.timestamp).getFullYear();
+			return itemYear === contaminantYearInt && item.resval > 0;
+		});
+
+		// Group contaminant metrics by contaminant
+		for (const item of contaminantMetrics) {
+			chartContaminantsSet.add(item.param);
+
+			if (!dataGroupedByContaminant[item.param]) dataGroupedByContaminant[item.param] = [];
+			dataGroupedByContaminant[item.param].push(item);
+		}
+
+		// Filter for product chart (second chart)
+		const productMetrics = processedTimeline.filter((item) => {
+			const itemYear = new Date(item.timestamp).getFullYear();
+			return itemYear === productYearInt && item.resval > 0;
+		});
+
+		// Group product metrics by product
+		for (const item of productMetrics) {
+			chartProductsSet.add(item.key);
+
+			if (!dataGroupedByProduct[item.key]) dataGroupedByProduct[item.key] = [];
+			dataGroupedByProduct[item.key].push(item);
+		}
+
+		console.log("Data Grouped By Product:", dataGroupedByProduct);
+		console.log("Data Grouped By Contaminant:", dataGroupedByContaminant);
+
 		return {
-			metrics: processedMetrics,
-			timeline: processedTimeline,
 			uniqueChartProducts: [...chartProductsSet].sort(),
 			uniqueChartContaminants: [...chartContaminantsSet].sort(),
 			uniqueTimelineProducts: [...timelineProductsSet].sort(),
@@ -170,12 +199,10 @@ const Efsa = () => {
 			timelineGroupedByProduct,
 			timelineGroupedByContaminant,
 		};
-	}, [dataSets?.metrics, dataSets?.timeline]);
+	}, [dataSets?.timeline, yearContaminant, yearProduct]);
 
 	// Now use destructuring to get the values you need
 	const {
-		metrics: data,
-		timeline: timelineData,
 		uniqueChartProducts,
 		uniqueChartContaminants,
 		uniqueTimelineProducts,
@@ -313,7 +340,7 @@ const Efsa = () => {
 				tickmode: "array",
 				tickvals: contaminantData.map((_, index) => index),
 				ticktext: contaminantData.map((item) => wrapText(item.key, 20)),
-				tickangle: 45,
+				tickangle: 40,
 			},
 			yaxis: { title: `Residue Value (${TARGET_UNIT})`, automargin: true },
 			hoverlabel: { align: "left" },
@@ -554,6 +581,30 @@ const Efsa = () => {
 
 		if (contaminantData.length === 0) return [];
 
+		// Exceeding limit percentage scatter plot
+		const exceedingLimitData = {
+			x: contaminantData.map((item) => item.timestamp),
+			y: contaminantData.map((item) => {
+				const exceedingLimit = item.nr_measurements_exceeding_legallimit || 0;
+				const totalMeasurements = item.nr_measure || 1;
+				return (exceedingLimit / totalMeasurements) * 100;
+			}),
+			type: "scatter",
+			mode: "lines+markers",
+			name: "Measurements Exceeding Legal Limit (%)",
+			hovertemplate: "%{customdata}<extra></extra>",
+			customdata: contaminantData.map((item) => {
+				const exceedingLimit = item.nr_measurements_exceeding_legallimit || 0;
+				const totalMeasurements = item.nr_measure || 1;
+				const percentage = ((exceedingLimit / totalMeasurements) * 100).toFixed(2);
+				return `<b>Product</b>: ${item.key || "Unknown"}
+				<br><b>Contaminant</b>: ${selectedContaminantForProduct}
+				<br><b>Percentage Exceeding Limit</b>: ${percentage}%
+				<br><b>Exceeding Measurements</b>: ${exceedingLimit}/${totalMeasurements}<br>`;
+			}),
+			yaxis: "y2",
+		};
+
 		const measurementCountData = {
 			x: contaminantData.map((item) => item.timestamp),
 			y: contaminantData.map((item) => item.nr_measure || 0),
@@ -568,31 +619,7 @@ const Efsa = () => {
 			yaxis: "y",
 		};
 
-		// Exceeding limit percentage scatter plot
-		const exceedingLimitData = {
-			x: contaminantData.map((item) => item.timestamp),
-			y: contaminantData.map((item) => {
-				const exceedingLimit = item.nr_measurements_exceeding_legallimit || 0;
-				const totalMeasurements = item.nr_measure || 1;
-				return (exceedingLimit / totalMeasurements) * 100;
-			}),
-			type: "scatter",
-			mode: "lines+markers",
-			name: "Measurements Exceeding LOQ (%)",
-			hovertemplate: "%{customdata}<extra></extra>",
-			customdata: contaminantData.map((item) => {
-				const exceedingLimit = item.nr_measurements_exceeding_legallimit || 0;
-				const totalMeasurements = item.nr_measure || 1;
-				const percentage = ((exceedingLimit / totalMeasurements) * 100).toFixed(2);
-				return `<b>Product</b>: ${item.key || "Unknown"}
-				<br><b>Contaminant</b>: ${selectedContaminantForProduct}
-				<br><b>Percentage Exceeding Limit</b>: ${percentage}%
-				<br><b>Exceeding Measurements</b>: ${exceedingLimit}/${totalMeasurements}<br>`;
-			}),
-			yaxis: "y2",
-		};
-
-		return [measurementCountData, exceedingLimitData];
+		return [exceedingLimitData, measurementCountData];
 	}, [timelineGroupedByProduct, selectedProductContaminationTimeline, selectedContaminantForProduct]);
 
 	// Update the layouts
@@ -604,8 +631,8 @@ const Efsa = () => {
 					xaxis: { automargin: true },
 				},
 				combinedMeasurements: {
-					yaxis: { title: "Number of Measurements" },
-					yaxis2: { title: "Measurements Exceeding LOQ (%)", side: "right", overlaying: "y", range: [0, 100] },
+					yaxis: { title: "Measurements Exceeding Legal Limit (%)", nticks: 5 },
+					yaxis2: { title: "Number of Measurements", nticks: 5 },
 					xaxis: { automargin: true },
 				},
 			};
@@ -628,14 +655,16 @@ const Efsa = () => {
 					primary: {
 						title: "Number of Measurements",
 						automargin: true,
+						anchor: "x",
+						side: "right",
+						nticks: 5,
 					},
 					secondary: {
-						title: "Measurements Exceeding LOQ (%)",
+						title: "Measurements Exceeding Legal Limit (%)",
 						automargin: true,
 						range: [0, 100],
-						anchor: "x",
 						overlaying: "y",
-						side: "right",
+						nticks: 6,
 					},
 				},
 			},
@@ -647,32 +676,32 @@ const Efsa = () => {
 	//= ===============================================================================
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
-			<StickyBand dropdownContent={[countryDropdown]} formRef={yearPickerRef} formContent={yearPickerProps} />
+			<StickyBand dropdownContent={[countryDropdown]} />
 
 			<Grid item xs={12} sm={12} md={6}>
 				<Card
 					title="Foods with Risky Contaminant Levels"
 					footer={isLoading ? undefined : cardFooter({ minutesAgo })}
 				>
+					<StickyBand sticky={false} dropdownContent={[contaminantChartDropdown]} formRef={contaminantYearPickerRef} formContent={contaminantYearPickerProps} />
 					{isLoading ? (
 						<LoadingIndicator minHeight="300px" />
 					) : uniqueChartContaminants.length === 0 ? (
 						<DataWarning message="No contaminant measurements available for the selected country and year" />
 					) : isValidArray(contaminantChartData[0]?.x) && (
-						<>
-							<StickyBand sticky={false} dropdownContent={[contaminantChartDropdown]} />
-							<Grid item xs={12} md={12}>
-								<Plot
-									scrollZoom
-									data={contaminantChartData}
-									showLegend={false}
-									shapes={contaminantChartLayout.shapes}
-									xaxis={contaminantChartLayout.xaxis}
-									yaxis={contaminantChartLayout.yaxis}
-									layout={{ hoverlabel: contaminantChartLayout.hoverlabel }}
-								/>
-							</Grid>
-						</>
+
+						<Grid item xs={12} md={12}>
+							<Plot
+								scrollZoom
+								data={contaminantChartData}
+								showLegend={false}
+								shapes={contaminantChartLayout.shapes}
+								xaxis={contaminantChartLayout.xaxis}
+								yaxis={contaminantChartLayout.yaxis}
+								layout={{ hoverlabel: contaminantChartLayout.hoverlabel }}
+							/>
+						</Grid>
+
 					)}
 				</Card>
 			</Grid>
@@ -682,26 +711,25 @@ const Efsa = () => {
 					title="Contaminants in Food Product"
 					footer={isLoading ? undefined : cardFooter({ minutesAgo })}
 				>
-
+					<StickyBand sticky={false} dropdownContent={[productChartDropdown]} formRef={productYearPickerRef} formContent={productYearPickerProps} />
 					{isLoading ? (
 						<LoadingIndicator minHeight="300px" />
 					) : uniqueChartProducts.length === 0 ? (
 						<DataWarning message="No product measurements available for the selected country and year" />
 					) : isValidArray(productChartData[0]?.x) && (
-						<>
-							<StickyBand sticky={false} dropdownContent={[productChartDropdown]} />
-							<Grid item xs={12} md={12}>
-								<Plot
-									scrollZoom
-									showLegend={false}
-									data={productChartData}
-									shapes={productChartLayout.shapes}
-									xaxis={productChartLayout.xaxis}
-									yaxis={productChartLayout.yaxis}
-									layout={{ hoverlabel: productChartLayout.hoverlabel }}
-								/>
-							</Grid>
-						</>
+
+						<Grid item xs={12} md={12}>
+							<Plot
+								scrollZoom
+								showLegend={false}
+								data={productChartData}
+								shapes={productChartLayout.shapes}
+								xaxis={productChartLayout.xaxis}
+								yaxis={productChartLayout.yaxis}
+								layout={{ hoverlabel: productChartLayout.hoverlabel }}
+							/>
+						</Grid>
+
 					)}
 				</Card>
 			</Grid>
