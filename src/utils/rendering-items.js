@@ -33,7 +33,7 @@ export const LoadingIndicator = ({ message = "Loading data...", minHeight = "200
 	</Grid>
 );
 
-export const StickyBand = ({ sticky = true, dropdownContent = [], formRef, formContent, toggleContent }) => (
+export const StickyBand = ({ sticky = true, dropdownContent = [], formRef, formContent, toggleContent, togglePlacing }) => (
 	<Grid
 		container
 		display="flex"
@@ -53,7 +53,7 @@ export const StickyBand = ({ sticky = true, dropdownContent = [], formRef, formC
 		}}
 	>
 		{toggleContent && (
-			<Grid item sx={{ display: "flex", justifyContent: "flex-end", alignItems: "center", minWidth: "fit-content", flexShrink: 0 }} xs={6} sm={3} md={1}>
+			<Grid item sx={{ display: "flex", justifyContent: togglePlacing ?? "flex-end", alignItems: "center", minWidth: "fit-content", flexShrink: 0 }} xs={6} sm={3} md={6}>
 				{toggleContent}
 			</Grid>
 		)}
@@ -104,3 +104,25 @@ export const DataWarning = ({
 		<Typography variant="h6" fontWeight="bold" sx={{ textAlign: "center" }}>{message}</Typography>
 	</Grid>
 );
+
+// Add a utility function to wrap text
+export const wrapText = (text, maxLength = 50) => {
+	if (!text || text.length <= maxLength) return text;
+
+	const words = text.split(" ");
+	const lines = [];
+	let currentLine = "";
+
+	for (const word of words) {
+		if ((`${currentLine} ${word}`).length <= maxLength) {
+			currentLine += (currentLine ? " " : "") + word;
+		} else {
+			if (currentLine) lines.push(currentLine);
+			currentLine = word;
+		}
+	}
+
+	if (currentLine) lines.push(currentLine);
+
+	return lines.join("<br>");
+};
