@@ -100,7 +100,6 @@ const Efsa = () => {
 	const { state } = useInit(organization, fetchConfigs);
 
 	const { isLoading, dataSets, minutesAgo } = state;
-	console.log("Efsa dataSets:", dataSets);
 
 	const processedData = useMemo(() => {
 		const rawTimeline = dataSets?.timeline || [];
@@ -150,8 +149,8 @@ const Efsa = () => {
 		}
 
 		// Create metrics data from timeline data filtered by selected years
-		const contaminantYearInt = Number.parseInt(yearContaminant);
-		const productYearInt = Number.parseInt(yearProduct);
+		const contaminantYearInt = Number.parseInt(yearContaminant, 10);
+		const productYearInt = Number.parseInt(yearProduct, 10);
 
 		const chartProductsSet = new Set();
 		const chartContaminantsSet = new Set();
@@ -185,9 +184,6 @@ const Efsa = () => {
 			if (!dataGroupedByProduct[item.key]) dataGroupedByProduct[item.key] = [];
 			dataGroupedByProduct[item.key].push(item);
 		}
-
-		console.log("Data Grouped By Product:", dataGroupedByProduct);
-		console.log("Data Grouped By Contaminant:", dataGroupedByContaminant);
 
 		return {
 			uniqueChartProducts: [...chartProductsSet].sort(),
@@ -270,7 +266,6 @@ const Efsa = () => {
 
 		const productData = timelineGroupedByProduct[selectedProductContaminationTimeline] || [];
 		const contaminants = [...new Set(productData.map((item) => item.param))].sort();
-		console.log("Available contaminants for product:", selectedProductContaminationTimeline, contaminants);
 		return contaminants;
 	}, [timelineGroupedByProduct, selectedProductContaminationTimeline]);
 
@@ -318,10 +313,9 @@ const Efsa = () => {
 				x: contaminantData.map((_, index) => index), // Use indices
 				y: contaminantData.map((item) => item.resval),
 				hovertemplate: "%{customdata}<extra></extra>",
-				customdata: contaminantData.map((item) => `
-					<b>Product</b>: ${item.key.replaceAll(/\b\w/g, (l) => l.toUpperCase())}<br>
-					<b>Residue Value</b>: ${item.resval.toExponential(2)} ${item.resunit}<br>
-					<b>LOQ</b>: ${item.resloq.toExponential(2)} ${item.resunit}`),
+				customdata: contaminantData.map((item) => `<b>Product</b>: ${item.key.replaceAll(/\b\w/g, (l) => l.toUpperCase())}<br>`
+					+ `<b>Residue Value</b>: ${item.resval.toExponential(2)} ${item.resunit}<br>`
+					+ `<b>LOQ</b>: ${item.resloq.toExponential(2)} ${item.resunit}`),
 				type: "bar",
 				color: "third",
 				title: "Residue Value",
@@ -371,10 +365,9 @@ const Efsa = () => {
 				x: productData.map((_, index) => index), // Use indices
 				y: productData.map((item) => item.resval),
 				hovertemplate: "%{customdata}<extra></extra>",
-				customdata: productData.map((item) => `
-					<b>Contaminant</b>: ${item.param.replaceAll(/\b\w/g, (l) => l.toUpperCase())}<br>
-					<b>Residue Value</b>: ${item.resval.toExponential(2)} ${item.resunit}<br>
-					<b>LOQ</b>: ${item.resloq.toExponential(2)} ${item.resunit}`),
+				customdata: productData.map((item) => `<b>Contaminant</b>: ${wrapText(item.param.replaceAll(/\b\w/g, (l) => l.toUpperCase()), 30)}<br>`
+				+ `<b>Residue Value</b>: ${item.resval.toExponential(2)} ${item.resunit}<br>`
+				+ `<b>LOQ</b>: ${item.resloq.toExponential(2)} ${item.resunit}`),
 				type: "bar",
 				color: "colors.third",
 			},
@@ -485,10 +478,9 @@ const Efsa = () => {
 				type: "scatter",
 				mode: "lines+markers",
 				hovertemplate: "%{customdata}<extra></extra>",
-				customdata: productData.map((item) => `
-					<b>Product</b>: ${item.key.replaceAll(/\b\w/g, (l) => l.toUpperCase())}<br>
-					<b>Residue Value</b>: ${item.resval.toExponential(2)}<br>
-					<b>LOQ</b>: ${item.resloq.toExponential(2)} ${item.resunit}`),
+				customdata: productData.map((item) => `<b>Product</b>: ${item.key.replaceAll(/\b\w/g, (l) => l.toUpperCase())}<br>`
+				+	`<b>Residue Value</b>: ${item.resval.toExponential(2)}<br>`
+				+	`<b>LOQ</b>: ${item.resloq.toExponential(2)} ${item.resunit}`),
 				title: truncateLabel(productKey),
 				color: colors[index % colors.length],
 			};
@@ -558,10 +550,9 @@ const Efsa = () => {
 				mode: "lines+markers",
 				name: truncateLabel(contaminantKey),
 				hovertemplate: "%{customdata}<extra></extra>",
-				customdata: contaminantData.map((item) => `
-					<b>Contaminant</b>: ${contaminantKey.replaceAll(/\b\w/g, (l) => l.toUpperCase())}<br>
-					<b>Residue Value</b>: ${item.resval.toExponential(2)} ${item.resunit}<br>
-					<b>LOQ</b>: ${item.resloq.toExponential(2)} ${item.resunit}`),
+				customdata: contaminantData.map((item) => `<b>Contaminant</b>: ${wrapText(contaminantKey.replaceAll(/\b\w/g, (l) => l.toUpperCase()), 30)}<br>`
+					+ `<b>Residue Value</b>: ${item.resval.toExponential(2)} ${item.resunit}<br>`
+					+ `<b>LOQ</b>: ${item.resloq.toExponential(2)} ${item.resunit}`),
 				color: colors[index % colors.length],
 			};
 		});
@@ -577,7 +568,6 @@ const Efsa = () => {
 
 		// Filter data for the specific contaminant
 		const contaminantData = productData.filter((item) => item.param === selectedContaminantForProduct);
-		console.log("Filtered data for product-contaminant:", selectedProductContaminationTimeline, selectedContaminantForProduct, contaminantData);
 
 		if (contaminantData.length === 0) return [];
 
@@ -597,10 +587,10 @@ const Efsa = () => {
 				const exceedingLimit = item.nr_measurements_exceeding_legallimit || 0;
 				const totalMeasurements = item.nr_measure || 1;
 				const percentage = ((exceedingLimit / totalMeasurements) * 100).toFixed(2);
-				return `<b>Product</b>: ${item.key || "Unknown"}
-				<br><b>Contaminant</b>: ${selectedContaminantForProduct}
-				<br><b>Percentage Exceeding Limit</b>: ${percentage}%
-				<br><b>Exceeding Measurements</b>: ${exceedingLimit}/${totalMeasurements}<br>`;
+				return `<b>Product</b>: ${item.key || "Unknown"}`
+					+ `<br><b>Contaminant</b>: ${selectedContaminantForProduct}`
+					+ `<br><b>Percentage Exceeding Limit</b>: ${percentage}%`
+					+ `<br><b>Exceeding Measurements</b>: ${exceedingLimit}/${totalMeasurements}<br>`;
 			}),
 			yaxis: "y2",
 		};
@@ -611,9 +601,8 @@ const Efsa = () => {
 			type: "bar",
 			name: "Measurement Count",
 			hovertemplate: "%{customdata}<extra></extra>",
-			customdata: contaminantData.map((item) => `
-						<b>Product</b>: ${item.key || "Unknown"}<br>
-						<b>Number of Measurements</b>: ${item.nr_measure || 0}<br>`),
+			customdata: contaminantData.map((item) => `<b>Product</b>: ${item.key || "Unknown"}<br>`
+						+ `<b>Number of Measurements</b>: ${item.nr_measure || 0}<br>`),
 			color: "#D3D3D3",
 			showLegend: false,
 			yaxis: "y",
@@ -766,23 +755,21 @@ const Efsa = () => {
 					title="Contaminant Timeline"
 					footer={isLoading ? undefined : cardFooter({ minutesAgo })}
 				>
+					<StickyBand sticky={false} dropdownContent={[contaminantTimelineDropdown]} />
 					{isLoading ? (
 						<LoadingIndicator minHeight="300px" />
 					) : uniqueTimelineContaminants.length === 0 ? (
 						<DataWarning message="No contaminant measurements available for the selected country and year" />
 					) : isValidArray(contaminantTimelineData[0]?.x) ? (
-						<>
-							<StickyBand sticky={false} dropdownContent={[contaminantTimelineDropdown]} />
-							<Grid item xs={12} md={12}>
-								<Plot
-									scrollZoom
-									showLegend
-									data={contaminantTimelineData}
-									shapes={contaminantTimelineLayout.shapes}
-									yaxis={contaminantTimelineLayout.yaxis}
-								/>
-							</Grid>
-						</>
+						<Grid item xs={12} md={12}>
+							<Plot
+								scrollZoom
+								showLegend
+								data={contaminantTimelineData}
+								shapes={contaminantTimelineLayout.shapes}
+								yaxis={contaminantTimelineLayout.yaxis}
+							/>
+						</Grid>
 					) : (
 						<DataWarning message={`No measurements found for ${selectedContaminantTimeline}.`} />
 					)}
@@ -794,24 +781,22 @@ const Efsa = () => {
 					title="Product Timeline - Residue Values"
 					footer={isLoading ? undefined : cardFooter({ minutesAgo })}
 				>
+					<StickyBand sticky={false} dropdownContent={[productTimelineDropdown]} />
 					{isLoading ? (
 						<LoadingIndicator minHeight="300px" />
 					) : uniqueTimelineProducts.length === 0 ? (
 						<DataWarning message="No product measurements available for the selected country and year" />
 					) : isValidArray(productTimelineData.residueValues) && productTimelineData.residueValues.length > 0 ? (
-						<>
-							<StickyBand sticky={false} dropdownContent={[productTimelineDropdown]} />
-							<Grid item xs={12} md={12}>
-								<Plot
-									scrollZoom
-									data={productTimelineData.residueValues}
-									xaxis={productTimelineLayouts.residueValues.xaxis}
-									yaxis={productTimelineLayouts.residueValues.yaxis}
-									showlegend={productTimelineLayouts.residueValues.showlegend}
-									layout={{ legend: productTimelineLayouts.residueValues.legend, hoverlabel: { align: "left" } }}
-								/>
-							</Grid>
-						</>
+						<Grid item xs={12} md={12}>
+							<Plot
+								scrollZoom
+								data={productTimelineData.residueValues}
+								xaxis={productTimelineLayouts.residueValues.xaxis}
+								yaxis={productTimelineLayouts.residueValues.yaxis}
+								showlegend={productTimelineLayouts.residueValues.showlegend}
+								layout={{ legend: productTimelineLayouts.residueValues.legend, hoverlabel: { align: "left" } }}
+							/>
+						</Grid>
 					) : (
 						<DataWarning message={`No measurements found for ${selectedProductTimeline}.`} />
 					)}
@@ -822,25 +807,23 @@ const Efsa = () => {
 					title="Product Timeline - Measurements & Legal Limit Violations"
 					footer={isLoading ? undefined : cardFooter({ minutesAgo })}
 				>
+					<StickyBand sticky={false} dropdownContent={[productTimelineContaminantDropdown, contaminantForProductDropdown]} />
 					{isLoading ? (
-						<LoadingIndicator minHeight="300px" />
+						<LoadingIndicator minHeight="400px" />
 					) : uniqueTimelineProducts.length === 0 ? (
 						<DataWarning message="No product measurements available for the selected country and year" />
-					) : isValidArray(productCombinedTimelineData) && productCombinedTimelineData.length > 0 ? (
-						<>
-							<StickyBand sticky={false} dropdownContent={[productTimelineContaminantDropdown, contaminantForProductDropdown]} />
-							<Grid item xs={12} md={12}>
-								<Plot
-									scrollZoom
-									data={productCombinedTimelineData}
-									yaxis={productTimelineLayouts.combinedMeasurements.yaxis}
-									showlegend={productTimelineLayouts.combinedMeasurements.showlegend}
-									layout={{ legend: productTimelineLayouts.combinedMeasurements.legend }}
-								/>
-							</Grid>
-						</>
+					) : isValidArray(productCombinedTimelineData) && productCombinedTimelineData?.length > 0 ? (
+						<Grid item xs={12} md={12}>
+							<Plot
+								scrollZoom
+								data={productCombinedTimelineData}
+								yaxis={productTimelineLayouts.combinedMeasurements.yaxis}
+								showlegend={productTimelineLayouts.combinedMeasurements.showlegend}
+								layout={{ legend: productTimelineLayouts.combinedMeasurements.legend }}
+							/>
+						</Grid>
 					) : (
-						<DataWarning message={`No measurements found for ${selectedProductContaminationTimeline}.`} />
+						<LoadingIndicator minHeight="400px" />
 					)}
 				</Card>
 			</Grid>
