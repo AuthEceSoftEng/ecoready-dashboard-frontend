@@ -4,7 +4,7 @@ import { memo, useMemo, useRef } from "react";
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
 import { groupByKey, findKeyByText } from "../utils/data-handling-functions.js";
-import { wrapText, LoadingIndicator, StickyBand, DataWarning } from "../utils/rendering-items.js";
+import { wrapText, truncateText, LoadingIndicator, StickyBand, DataWarning } from "../utils/rendering-items.js";
 import { europeanCountries, lcaIndicators, OPPORTUNITY_LEVELS, RISK_LEVELS, RISK_COLOR_MAP, OPPORTUNITY_LEVEL_ORDER, RISK_LEVEL_ORDER } from "../utils/useful-constants.js";
 
 // ============================================================================
@@ -60,8 +60,6 @@ const getOpportunityScaleAxis = () => ({
 const getYAxisForIndicator = (indicator) => (indicator === "Contribution of the sector to economic development"
 	? getOpportunityScaleAxis()
 	: getRiskScaleAxis());
-
-const truncateText = (text, maxLength) => (text.length > maxLength ? `${text.slice(0, maxLength)}...` : text);
 
 // Update the utility function to handle both scales
 const getLevelOrder = (level, isOpportunity = false) => {
