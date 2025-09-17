@@ -105,7 +105,6 @@ export const DataWarning = ({
 	</Grid>
 );
 
-// Add a utility function to wrap text
 export const wrapText = (text, maxLength = 50) => {
 	if (!text || text.length <= maxLength) return text;
 
@@ -126,3 +125,5 @@ export const wrapText = (text, maxLength = 50) => {
 
 	return lines.join("<br>");
 };
+
+export const truncateText = (text, maxLength = 15) => (text.length > maxLength ? `${text.slice(0, maxLength)}...` : text);
