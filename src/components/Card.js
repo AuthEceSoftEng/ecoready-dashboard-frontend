@@ -37,7 +37,6 @@ const Card = ({
 			boxSizing: "border-box", // Ensure padding is included in the width
 			overflow: "hidden", // Prevent content overflow
 			borderRadius,
-			// New interactive styles
 			cursor: clickable ? "pointer" : "default",
 			transition: "all 0.2s ease-in-out",
 			boxShadow: transparent ? elevation : null, // Add shadow based on elevation
@@ -60,6 +59,7 @@ const Card = ({
 				alignItems="center"
 				boxSizing="border-box" // Ensure padding is included in the width
 				borderRadius={borderRadius}
+				sx={{ flexShrink: 0 }} // Prevent title from shrinking
 			>
 				{typeof title === "string" ? (
 					<Typography variant="body" component="h2" sx={{ fontWeight: "bold", fontSize: titleFontSize }}>
@@ -90,6 +90,7 @@ const Card = ({
 				justifyContent="space-between"
 				alignItems="center"
 				boxSizing="border-box" // Ensure padding is included in the width
+				sx={{ flexShrink: 0 }} // Prevent footer from shrinking
 			>
 				{typeof footer === "string" ? (
 					<Typography variant="h6" component="h2" align="left" fontSize={footerFontSize}>
