@@ -34,15 +34,7 @@ const PaginationControls = ({ currentPage, totalPages, onPageChange, itemsPerPag
 				color="text.secondary"
 				sx={{ fontSize: "0.875rem" }}
 			>
-				{"Showing "}
-				{startItem}
-				{"-"}
-				{endItem}
-				{" "}
-				{"of"}
-				{totalItems}
-				{" "}
-				{"items"}
+				{`Showing ${startItem}-${endItem} of ${totalItems} items`}
 			</Typography>
 		</Box>
 	);

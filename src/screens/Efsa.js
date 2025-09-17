@@ -883,7 +883,7 @@ const Efsa = () => {
 					<StickyBand sticky={false} formRef={stackedYearPickerRef} formContent={stackedYearPickerProps} />
 					{isLoading ? (
 						<LoadingIndicator minHeight="300px" />
-					) : dataGroupedByStacked.length === 0 ? (
+					) : Object.keys(dataGroupedByStacked).length === 0 ? (
 						<DataWarning message="No data available for the selected country and year" />
 					) : isValidArray(stackedBarChartData) && stackedBarChartData.length > 0 ? (
 						<Grid item xs={12}>
