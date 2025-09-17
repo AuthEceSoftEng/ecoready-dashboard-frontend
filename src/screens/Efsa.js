@@ -3,6 +3,7 @@ import { memo, useMemo, useState, useCallback, useRef, useEffect } from "react";
 
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
+import PaginationControls from "../components/Pagination.js";
 import efsaConfigs, { organization } from "../config/EfsaConfig.js";
 import useInit from "../utils/screen-init.js";
 import { isValidArray, groupByKey } from "../utils/data-handling-functions.js";
@@ -12,6 +13,10 @@ import { UNIT_CONVERSION_FACTORS } from "../utils/useful-constants.js";
 const countries = ["Austria", "Belgium", "Bulgaria", "Croatia", "Denmark", "France", "Germany", "Greece", "Ireland", "Italy", "Lithuania", "Luxembourg", "Netherlands", "Poland", "Portugal", "Republic of north macedonia", "Romania", "Serbia", "Slovakia", "Spain", "Ukraine", "United kingdom"];
 
 const TARGET_UNIT = "mg/kg"; // Your standard unit
+
+const ITEMS_PER_PAGE = 6; // for pagination
+
+const MAX_LABEL_LENGTH = 10; // for truncating long labels
 
 const CONVERSION_CACHE = new Map();
 
@@ -40,6 +45,10 @@ const createDropdown = (id, label, items, value, onChange) => ({
 	onChange,
 });
 
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+
 const Efsa = () => {
 	const [selectedCountry, setSelectedCountry] = useState(countries[0]);
 	const [selectedContaminant, setSelectedContaminant] = useState(null);
@@ -50,6 +59,12 @@ const Efsa = () => {
 	const [selectedContaminantForProduct, setSelectedContaminantForProduct] = useState(null);
 	const [yearContaminant, setYearContaminant] = useState("2023");
 	const [yearProduct, setYearProduct] = useState("2023");
+	const [yearStacked, setYearStacked] = useState("2023");
+
+	// Add pagination state
+	const [contaminantChartPage, setContaminantChartPage] = useState(0);
+	const [productChartPage, setProductChartPage] = useState(0);
+	const [stackedBarChartPage, setStackedBarChartPage] = useState(0);
 
 	// Create separate year change handlers
 	const handleContaminantYearChange = useCallback((newValue) => {
@@ -58,6 +73,10 @@ const Efsa = () => {
 
 	const handleProductYearChange = useCallback((newValue) => {
 		setYearProduct(newValue.$y);
+	}, []);
+
+	const handleStackedYearChange = useCallback((newValue) => {
+		setYearStacked(newValue.$y);
 	}, []);
 
 	const productYearPickerRef = useRef(null);
@@ -75,7 +94,6 @@ const Efsa = () => {
 		},
 	], [handleProductYearChange, yearProduct]);
 
-	// Create separate year picker props for each chart
 	const contaminantYearPickerRef = useRef(null);
 	const contaminantYearPickerProps = useMemo(() => [
 		{
@@ -90,6 +108,21 @@ const Efsa = () => {
 			onChange: handleContaminantYearChange,
 		},
 	], [handleContaminantYearChange, yearContaminant]);
+
+	const stackedYearPickerRef = useRef(null);
+	const stackedYearPickerProps = useMemo(() => [
+		{
+			key: "stacked-year-picker",
+			customType: "date-picker",
+			width: "150px",
+			sublabel: "Select Year",
+			views: ["year"],
+			value: new Date(`${yearStacked}-01-01`),
+			minDate: new Date("2011-01-01"),
+			maxDate: new Date("2023-12-31"),
+			onChange: handleStackedYearChange,
+		},
+	], [handleStackedYearChange, yearStacked]);
 
 	// You'll need to modify your fetchConfigs to handle both years
 	const fetchConfigs = useMemo(
@@ -106,14 +139,13 @@ const Efsa = () => {
 
 		if (rawTimeline.length === 0) {
 			return {
-				metrics: [],
-				timeline: [],
 				uniqueChartProducts: [],
 				uniqueChartContaminants: [],
 				uniqueTimelineProducts: [],
 				uniqueTimelineContaminants: [],
 				dataGroupedByProduct: {},
 				dataGroupedByContaminant: {},
+				dataGroupedByStacked: {},
 				timelineGroupedByProduct: {},
 				timelineGroupedByContaminant: {},
 			};
@@ -151,11 +183,14 @@ const Efsa = () => {
 		// Create metrics data from timeline data filtered by selected years
 		const contaminantYearInt = Number.parseInt(yearContaminant, 10);
 		const productYearInt = Number.parseInt(yearProduct, 10);
+		const stackedYearInt = Number.parseInt(yearStacked, 10);
 
 		const chartProductsSet = new Set();
 		const chartContaminantsSet = new Set();
+		const stackedContaminantsSet = new Set();
 		const dataGroupedByProduct = {};
 		const dataGroupedByContaminant = {};
+		const dataGroupedByStacked = {};
 
 		// Filter for contaminant chart (first chart)
 		const contaminantMetrics = processedTimeline.filter((item) => {
@@ -185,26 +220,42 @@ const Efsa = () => {
 			dataGroupedByProduct[item.key].push(item);
 		}
 
+		// Filter for stacked bar chart (third chart)
+		const stackedMetrics = processedTimeline.filter((item) => {
+			const itemYear = new Date(item.timestamp).getFullYear();
+			return itemYear === stackedYearInt && item.resval > 0;
+		});
+		for (const item of stackedMetrics) {
+			stackedContaminantsSet.add(item.param);
+
+			if (!dataGroupedByStacked[item.key]) dataGroupedByStacked[item.key] = [];
+			dataGroupedByStacked[item.key].push(item);
+		}
+
 		return {
 			uniqueChartProducts: [...chartProductsSet].sort(),
 			uniqueChartContaminants: [...chartContaminantsSet].sort(),
+			uniqueStackedContaminants: [...stackedContaminantsSet].sort().reverse(),
 			uniqueTimelineProducts: [...timelineProductsSet].sort(),
 			uniqueTimelineContaminants: [...timelineContaminantsSet].sort(),
 			dataGroupedByProduct,
 			dataGroupedByContaminant,
+			dataGroupedByStacked,
 			timelineGroupedByProduct,
 			timelineGroupedByContaminant,
 		};
-	}, [dataSets?.timeline, yearContaminant, yearProduct]);
+	}, [dataSets?.timeline, yearContaminant, yearProduct, yearStacked]);
 
 	// Now use destructuring to get the values you need
 	const {
 		uniqueChartProducts,
 		uniqueChartContaminants,
+		uniqueStackedContaminants,
 		uniqueTimelineProducts,
 		uniqueTimelineContaminants,
 		dataGroupedByProduct,
 		dataGroupedByContaminant,
+		dataGroupedByStacked,
 		timelineGroupedByProduct,
 		timelineGroupedByContaminant,
 	} = processedData;
@@ -277,6 +328,11 @@ const Efsa = () => {
 		(e) => setSelectedContaminantForProduct(e.target.value),
 	), [availableContaminantsForProduct, selectedContaminantForProduct]);
 
+	// ===================================================================
+	// EFFECTS
+	// ===================================================================
+	// When country changes, reset selected contaminant and product to first available options
+
 	useEffect(() => {
 		// Reset selected contaminant and product when country changes
 		if (selectedCountry && uniqueChartContaminants.length > 0) {
@@ -303,76 +359,109 @@ const Efsa = () => {
 		}
 	}, [selectedProductContaminationTimeline, availableContaminantsForProduct]);
 
+	// Reset pagination when country changes
+	useEffect(() => {
+		setContaminantChartPage(0);
+		setProductChartPage(0);
+		setStackedBarChartPage(0); // Add this line
+	}, [selectedCountry]);
+
+	// Reset pagination when contaminant changes
+	useEffect(() => {
+		setContaminantChartPage(0);
+	}, [selectedContaminant]);
+
+	// Reset pagination when product changes
+	useEffect(() => {
+		setProductChartPage(0);
+	}, [selectedProduct]);
+
+	// Reset pagination when year changes
+	useEffect(() => {
+		setStackedBarChartPage(0);
+	}, [yearContaminant, yearProduct]);
+
 	const contaminantChartData = useMemo(() => {
 		if (!selectedContaminant || Object.keys(dataGroupedByContaminant).length === 0) return [];
 
 		const contaminantData = dataGroupedByContaminant[selectedContaminant] || [];
 
+		// Apply pagination
+		const startIndex = contaminantChartPage * ITEMS_PER_PAGE;
+		const endIndex = startIndex + ITEMS_PER_PAGE;
+		const paginatedData = contaminantData.slice(startIndex, endIndex);
+
 		return [
 			{
-				x: contaminantData.map((_, index) => index), // Use indices
-				y: contaminantData.map((item) => item.resval),
+				x: paginatedData.map((_, index) => index),
+				y: paginatedData.map((item) => item.resval),
 				hovertemplate: "%{customdata}<extra></extra>",
-				customdata: contaminantData.map((item) => `<b>Product</b>: ${item.key.replaceAll(/\b\w/g, (l) => l.toUpperCase())}<br>`
+				customdata: paginatedData.map((item) => `<b>Product</b>: ${item.key.replaceAll(/\b\w/g, (l) => l.toUpperCase())}<br>`
 					+ `<b>Residue Value</b>: ${item.resval.toExponential(2)} ${item.resunit}<br>`
 					+ `<b>LOQ</b>: ${item.resloq.toExponential(2)} ${item.resunit}`),
 				type: "bar",
 				color: "third",
 				title: "Residue Value",
+				paginatedData, // Store for layout use
 			},
 		];
-	}, [dataGroupedByContaminant, selectedContaminant]);
+	}, [dataGroupedByContaminant, selectedContaminant, contaminantChartPage]);
 
 	const contaminantChartLayout = useMemo(() => {
-		// Get LOQ value and unit (same for all products)
-		const contaminantData = dataGroupedByContaminant[selectedContaminant] || [];
-		const loqValue = contaminantData.length > 0 ? contaminantData[0].resloq : 0;
+		const paginatedData = contaminantChartData[0]?.paginatedData || [];
+
+		const shapes = paginatedData.map((item, index) => ({
+			type: "line",
+			xref: "x",
+			x0: index - 0.45,
+			x1: index + 0.5,
+			yref: "y",
+			y0: item.resloq,
+			y1: item.resloq,
+			line: {
+				color: "goldenrod",
+				width: 2,
+				dash: "dash",
+			},
+		}));
 
 		return {
 			xaxis: {
 				automargin: true,
 				tickmode: "array",
-				tickvals: contaminantData.map((_, index) => index),
-				ticktext: contaminantData.map((item) => wrapText(item.key, 20)),
-				tickangle: 40,
+				tickvals: paginatedData.map((_, index) => index),
+				ticktext: paginatedData.map((item) => wrapText(item.key, MAX_LABEL_LENGTH)),
+				tickangle: 0,
 			},
 			yaxis: { title: `Residue Value (${TARGET_UNIT})`, automargin: true },
 			hoverlabel: { align: "left" },
-			shapes: loqValue > 0 ? [{
-				type: "line",
-				xref: "paper",
-				x0: 0,
-				x1: 1,
-				yref: "y",
-				y0: loqValue,
-				y1: loqValue,
-				line: {
-					color: "goldenrod",
-					width: 2,
-					dash: "dash",
-				},
-			}] : [],
+			shapes,
 		};
-	}, [selectedContaminant, dataGroupedByContaminant]);
+	}, [contaminantChartData]);
 
 	const productChartData = useMemo(() => {
 		if (!selectedProduct || Object.keys(dataGroupedByProduct).length === 0) return [];
 
 		const productData = dataGroupedByProduct[selectedProduct] || [];
+		// Apply pagination
+		const startIndex = productChartPage * ITEMS_PER_PAGE;
+		const endIndex = startIndex + ITEMS_PER_PAGE;
+		const paginatedData = productData.slice(startIndex, endIndex);
 
 		return [
 			{
-				x: productData.map((_, index) => index), // Use indices
-				y: productData.map((item) => item.resval),
+				x: paginatedData.map((_, index) => index),
+				y: paginatedData.map((item) => item.resval),
 				hovertemplate: "%{customdata}<extra></extra>",
-				customdata: productData.map((item) => `<b>Contaminant</b>: ${wrapText(item.param.replaceAll(/\b\w/g, (l) => l.toUpperCase()), 30)}<br>`
-				+ `<b>Residue Value</b>: ${item.resval.toExponential(2)} ${item.resunit}<br>`
-				+ `<b>LOQ</b>: ${item.resloq.toExponential(2)} ${item.resunit}`),
+				customdata: paginatedData.map((item) => `<b>Contaminant</b>: ${wrapText(item.param.replaceAll(/\b\w/g, (l) => l.toUpperCase()), MAX_LABEL_LENGTH)}<br>`
+					+ `<b>Residue Value</b>: ${item.resval.toExponential(2)} ${item.resunit}<br>`
+					+ `<b>LOQ</b>: ${item.resloq.toExponential(2)} ${item.resunit}`),
 				type: "bar",
 				color: "colors.third",
+				paginatedData, // Store for layout use
 			},
 		];
-	}, [dataGroupedByProduct, selectedProduct]);
+	}, [dataGroupedByProduct, selectedProduct, productChartPage]);
 
 	const productChartLayout = useMemo(() => {
 		if (!selectedProduct || Object.keys(dataGroupedByProduct).length === 0) {
@@ -382,14 +471,14 @@ const Efsa = () => {
 			};
 		}
 
-		const productData = dataGroupedByProduct[selectedProduct] || [];
+		const paginatedData = productChartData[0]?.paginatedData || [];
 
 		// Create individual shapes for each contaminant's LOQ line
-		const shapes = productData.map((item, index) => ({
+		const shapes = paginatedData.map((item, index) => ({
 			type: "line",
 			xref: "x",
 			x0: index - 0.45, // Start before the bar
-			x1: index + 0.45, // End after the bar
+			x1: index + 0.5, // End after the bar
 			yref: "y",
 			y0: item.resloq,
 			y1: item.resloq,
@@ -400,61 +489,85 @@ const Efsa = () => {
 			xaxis: {
 				automargin: true,
 				tickmode: "array",
-				tickvals: productData.map((_, index) => index),
-				ticktext: productData.map((item) => wrapText(item.param, 15)),
+				tickvals: paginatedData.map((_, index) => index),
+				ticktext: paginatedData.map((item) => wrapText(item.param, MAX_LABEL_LENGTH)),
+				tickangle: 0,
 			},
 			yaxis: { title: `Residue Value (${TARGET_UNIT})`, automargin: true },
 			hoverlabel: { align: "left" },
 			margin: { l: 80, r: 50, t: 50, b: 120 },
 			shapes,
 		};
-	}, [selectedProduct, dataGroupedByProduct]);
+	}, [selectedProduct, dataGroupedByProduct, productChartData]);
 
-	// // Add this new useMemo after the existing chart data calculations
-	// const stackedBarChartData = useMemo(() => {
-	// 	if (!isValidArray(data) || uniqueChartProducts.length === 0 || uniqueChartContaminants.length === 0) return [];
+	const stackedBarChartData = useMemo(() => {
+		if (!isValidArray(dataSets?.timeline) || uniqueStackedContaminants.length === 0) return [];
+		console.log("Rendering stacked bar chart with dataGroupedByStacked:", dataGroupedByStacked);
 
-	// 	// Sort contaminants alphabetically and reverse to fix legend order
-	// 	const sortedContaminants = [...uniqueChartContaminants].sort().reverse();
+		// Get all products that have data
+		const availableProducts = Object.keys(dataGroupedByStacked);
 
-	// 	// Use dataGroupedByProduct for O(1) lookups
-	// 	return sortedContaminants.map((contaminant) => {
-	// 		const contaminantValues = uniqueChartProducts.map((product) => {
-	// 			const productData = dataGroupedByProduct[product] || [];
-	// 			const dataPoint = productData.find((item) => item.param === contaminant);
-	// 			return dataPoint ? dataPoint.resval : 0;
-	// 		});
+		if (availableProducts.length === 0) return [];
 
-	// 		const hoverText = uniqueChartProducts.map((product) => {
-	// 			const productData = dataGroupedByProduct[product] || [];
-	// 			const dataPoint = productData.find((item) => item.param === contaminant);
-	// 			return dataPoint
-	// 				? `<b>Product</b>: ${product.replaceAll(/\b\w/g, (l) => l.toUpperCase())}<br><b>Contaminant</b>: ${contaminant.replaceAll(/\b\w/g, (l) => l.toUpperCase())}<br><b>Residue Value</b>: ${dataPoint.resval.toExponential(2)} ${dataPoint.resunit}`
-	// 				: `<b>Product</b>: ${product.replaceAll(/\b\w/g, (l) => l.toUpperCase())}<br><b>Contaminant</b>: ${contaminant.replaceAll(/\b\w/g, (l) => l.toUpperCase())}<br>No data`;
-	// 		});
+		const startIndex = stackedBarChartPage * ITEMS_PER_PAGE * 2; // Show more items per page for better visibility
+		const endIndex = startIndex + ITEMS_PER_PAGE * 2;
+		const paginatedProducts = availableProducts.slice(startIndex, endIndex);
 
-	// 		return {
-	// 			x: uniqueChartProducts.map((product) => truncateLabel(product)),
-	// 			y: contaminantValues,
-	// 			hovertemplate: "%{customdata}<extra></extra>",
-	// 			customdata: hoverText,
-	// 			title: truncateLabel(contaminant),
-	// 			type: "bar",
-	// 		};
-	// 	});
-	// }, [data, uniqueChartProducts, uniqueChartContaminants, dataGroupedByProduct]);
+		// Find contaminants that are actually present in the current page's products
+		const contaminantsInCurrentPage = new Set();
+		paginatedProducts.forEach(product => {
+			const productData = dataGroupedByStacked[product] || [];
+			productData.forEach(item => {
+				contaminantsInCurrentPage.add(item.param);
+			});
+		});
 
-	// const stackedBarChartLayout = useMemo(() => ({
-	// 	xaxis: { title: "Food Products", automargin: true },
-	// 	yaxis: { title: `Total Residue Value (${TARGET_UNIT})`, automargin: true },
-	// 	showlegend: true,
-	// 	legend: {
-	// 		y: 1,
-	// 		x: 1.25,
-	// 		xanchor: "left",
-	// 	},
-	// 	hoverlabel: { align: "left" },
-	// }), []);
+		// Filter to only show contaminants that exist in current page
+		const availableContaminantsForPage = uniqueStackedContaminants.filter(contaminant =>
+			contaminantsInCurrentPage.has(contaminant)
+		);
+
+		// Create one trace per contaminant (only for contaminants in current page)
+		return availableContaminantsForPage.map((contaminant) => {
+			const contaminantValues = paginatedProducts.map((product) => {
+				const productData = dataGroupedByStacked[product] || [];
+				const dataPoint = productData.find((item) => item.param === contaminant);
+				return dataPoint ? dataPoint.resval : 0;
+			});
+
+			const hoverText = paginatedProducts.map((product) => {
+				const productData = dataGroupedByStacked[product] || [];
+				const dataPoint = productData.find((item) => item.param === contaminant);
+				return dataPoint
+					? `<b>Product</b>: ${product.replaceAll(/\b\w/g, (l) => l.toUpperCase())}`
+					+ `<br><b>Contaminant</b>: ${contaminant.replaceAll(/\b\w/g, (l) => l.toUpperCase())}`
+					+ `<br><b>Residue Value</b>: ${dataPoint.resval.toExponential(2)} ${dataPoint.resunit}`
+					: `<b>Product</b>: ${product.replaceAll(/\b\w/g, (l) => l.toUpperCase())}`
+					+ `<br><b>Contaminant</b>: ${contaminant.replaceAll(/\b\w/g, (l) => l.toUpperCase())}<br>No data`;
+			});
+
+			return {
+				x: paginatedProducts.map((product) => truncateLabel(product)),
+				y: contaminantValues,
+				name: truncateLabel(contaminant),
+				hovertemplate: "%{customdata}<extra></extra>",
+				customdata: hoverText,
+				type: "bar",
+			};
+		});
+	}, [dataSets?.timeline, uniqueStackedContaminants, dataGroupedByStacked, stackedBarChartPage]);
+
+	const stackedBarChartLayout = useMemo(() => ({
+		xaxis: { title: "Food Products", automargin: true },
+		yaxis: { title: `Total Residue Value (${TARGET_UNIT})`, automargin: true },
+		showlegend: true,
+		legend: {
+			y: 1,
+			x: 1.25,
+			xanchor: "left",
+		},
+		hoverlabel: { align: "left" },
+	}), []);
 
 	const contaminantTimelineData = useMemo(() => {
 		if (!selectedContaminantTimeline || Object.keys(timelineGroupedByContaminant).length === 0) return [];
@@ -479,8 +592,8 @@ const Efsa = () => {
 				mode: "lines+markers",
 				hovertemplate: "%{customdata}<extra></extra>",
 				customdata: productData.map((item) => `<b>Product</b>: ${item.key.replaceAll(/\b\w/g, (l) => l.toUpperCase())}<br>`
-				+	`<b>Residue Value</b>: ${item.resval.toExponential(2)}<br>`
-				+	`<b>LOQ</b>: ${item.resloq.toExponential(2)} ${item.resunit}`),
+					+ `<b>Residue Value</b>: ${item.resval.toExponential(2)}<br>`
+					+ `<b>LOQ</b>: ${item.resloq.toExponential(2)} ${item.resunit}`),
 				title: truncateLabel(productKey),
 				color: colors[index % colors.length],
 			};
@@ -489,9 +602,7 @@ const Efsa = () => {
 
 	const contaminantTimelineLayout = useMemo(() => {
 		if (!selectedContaminantTimeline || Object.keys(timelineGroupedByContaminant).length === 0) {
-			return {
-				yaxis: { title: "Residue Value" },
-			};
+			return { yaxis: { title: "Residue Value" } };
 		}
 
 		const contaminantData = timelineGroupedByContaminant[selectedContaminantTimeline] || [];
@@ -533,7 +644,6 @@ const Efsa = () => {
 
 		// Group the product data by contaminant (param) to create separate lines
 		const contaminantGroups = groupByKey(productData, "param");
-		console.log("Contaminant Groups:", contaminantGroups);
 		const colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"];
 
 		// Sort contaminant keys alphabetically before creating traces
@@ -550,7 +660,7 @@ const Efsa = () => {
 				mode: "lines+markers",
 				name: truncateLabel(contaminantKey),
 				hovertemplate: "%{customdata}<extra></extra>",
-				customdata: contaminantData.map((item) => `<b>Contaminant</b>: ${wrapText(contaminantKey.replaceAll(/\b\w/g, (l) => l.toUpperCase()), 30)}<br>`
+				customdata: contaminantData.map((item) => `<b>Contaminant</b>: ${wrapText(contaminantKey.replaceAll(/\b\w/g, (l) => l.toUpperCase()), MAX_LABEL_LENGTH)}<br>`
 					+ `<b>Residue Value</b>: ${item.resval.toExponential(2)} ${item.resunit}<br>`
 					+ `<b>LOQ</b>: ${item.resloq.toExponential(2)} ${item.resunit}`),
 				color: colors[index % colors.length],
@@ -602,7 +712,7 @@ const Efsa = () => {
 			name: "Measurement Count",
 			hovertemplate: "%{customdata}<extra></extra>",
 			customdata: contaminantData.map((item) => `<b>Product</b>: ${item.key || "Unknown"}<br>`
-						+ `<b>Number of Measurements</b>: ${item.nr_measure || 0}<br>`),
+				+ `<b>Number of Measurements</b>: ${item.nr_measure || 0}<br>`),
 			color: "#D3D3D3",
 			showLegend: false,
 			yaxis: "y",
@@ -667,7 +777,7 @@ const Efsa = () => {
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
 			<StickyBand dropdownContent={[countryDropdown]} />
 
-			<Grid item xs={12} sm={12} md={6}>
+			<Grid item xs={12} sm={12} md={6} display="flex">
 				<Card
 					title="Foods with Risky Contaminant Levels"
 					footer={isLoading ? undefined : cardFooter({ minutesAgo })}
@@ -676,7 +786,7 @@ const Efsa = () => {
 					{isLoading ? (
 						<LoadingIndicator minHeight="300px" />
 					) : uniqueChartContaminants.length === 0 ? (
-						<DataWarning message="No contaminant measurements available for the selected country and year" />
+						<DataWarning message="No contaminant measurements available for the selected country and year" minHeight="450px" />
 					) : isValidArray(contaminantChartData[0]?.x) && (
 
 						<Grid item xs={12} md={12}>
@@ -692,10 +802,24 @@ const Efsa = () => {
 						</Grid>
 
 					)}
+					{(() => {
+						const totalItems = dataGroupedByContaminant[selectedContaminant]?.length || 0;
+						const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+
+						return (
+							<PaginationControls
+								currentPage={contaminantChartPage}
+								totalPages={totalPages}
+								itemsPerPage={ITEMS_PER_PAGE}
+								totalItems={totalItems}
+								onPageChange={setContaminantChartPage}
+							/>
+						);
+					})()}
 				</Card>
 			</Grid>
 
-			<Grid item xs={12} sm={12} md={6}>
+			<Grid item xs={12} sm={12} md={6} display="flex">
 				<Card
 					title="Contaminants in Food Product"
 					footer={isLoading ? undefined : cardFooter({ minutesAgo })}
@@ -704,7 +828,7 @@ const Efsa = () => {
 					{isLoading ? (
 						<LoadingIndicator minHeight="300px" />
 					) : uniqueChartProducts.length === 0 ? (
-						<DataWarning message="No product measurements available for the selected country and year" />
+						<DataWarning message="No product measurements available for the selected country and year" minHeight="450px" />
 					) : isValidArray(productChartData[0]?.x) && (
 
 						<Grid item xs={12} md={12}>
@@ -720,37 +844,66 @@ const Efsa = () => {
 						</Grid>
 
 					)}
+					{(() => {
+						const totalItems = dataGroupedByProduct[selectedProduct]?.length || 0;
+						const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+
+						return (
+							<PaginationControls
+								currentPage={productChartPage}
+								totalPages={totalPages}
+								itemsPerPage={ITEMS_PER_PAGE}
+								totalItems={totalItems}
+								onPageChange={setProductChartPage}
+							/>
+						);
+					})()}
 				</Card>
 			</Grid>
-			{/*
-				<Grid item xs={12} md={12}>
-					<Card
-						title="Total Contaminants per Food Product"
-						footer={isLoading ? undefined : cardFooter({ minutesAgo })}
-					>
-						{isLoading ? (
-							<LoadingIndicator minHeight="300px" />
-						) : uniqueChartProducts.length === 0 || uniqueChartContaminants.length === 0 ? (
-							<DataWarning message="No data available for the selected country and year" />
-						) : isValidArray(stackedBarChartData) && stackedBarChartData.length > 0 ? (
-							<Grid item xs={12}>
-								<Plot
-									scrollZoom
-									height="499px"
-									data={stackedBarChartData}
-									barmode="stack"
-									displayBar={false}
-									xaxis={stackedBarChartLayout.xaxis}
-									yaxis={stackedBarChartLayout.yaxis}
-								/>
-							</Grid>
-						) : (
-							<DataWarning message="No measurements available for stacked visualization" />
-						)}
-					</Card>
-				</Grid> */}
 
-			<Grid item xs={12} sm={12} md={6} mt={1}>
+			<Grid item xs={12} md={12}>
+				<Card
+					title="Total Contaminants per Food Product"
+					footer={isLoading ? undefined : cardFooter({ minutesAgo })}
+				>
+					<StickyBand sticky={false} formRef={stackedYearPickerRef} formContent={stackedYearPickerProps} />
+					{isLoading ? (
+						<LoadingIndicator minHeight="300px" />
+					) : dataGroupedByStacked.length === 0 ? (
+						<DataWarning message="No data available for the selected country and year" />
+					) : isValidArray(stackedBarChartData) && stackedBarChartData.length > 0 ? (
+						<Grid item xs={12}>
+							<Plot
+								scrollZoom
+								height="499px"
+								data={stackedBarChartData}
+								barmode="stack"
+								displayBar={false}
+								xaxis={stackedBarChartLayout.xaxis}
+								yaxis={stackedBarChartLayout.yaxis}
+							/>
+						</Grid>
+					) : (
+						<DataWarning message="No measurements available for stacked visualization" />
+					)}
+					{(() => {
+						const totalItems = Object.keys(dataGroupedByStacked).length;
+						const totalPages = Math.ceil(totalItems / (ITEMS_PER_PAGE * 2));
+
+						return (
+							<PaginationControls
+								currentPage={stackedBarChartPage}
+								totalPages={totalPages}
+								itemsPerPage={ITEMS_PER_PAGE * 2}
+								totalItems={totalItems}
+								onPageChange={setStackedBarChartPage}
+							/>
+						);
+					})()}
+				</Card>
+			</Grid>
+
+			<Grid item xs={12} sm={12} md={6} mt={1} display="flex">
 				<Card
 					title="Contaminant Timeline"
 					footer={isLoading ? undefined : cardFooter({ minutesAgo })}
@@ -759,7 +912,7 @@ const Efsa = () => {
 					{isLoading ? (
 						<LoadingIndicator minHeight="300px" />
 					) : uniqueTimelineContaminants.length === 0 ? (
-						<DataWarning message="No contaminant measurements available for the selected country and year" />
+						<DataWarning message="No contaminant measurements available for the selected country and year" minHeight="450px" />
 					) : isValidArray(contaminantTimelineData[0]?.x) ? (
 						<Grid item xs={12} md={12}>
 							<Plot
@@ -776,7 +929,7 @@ const Efsa = () => {
 				</Card>
 			</Grid>
 
-			<Grid item xs={12} sm={12} md={6} mt={1}>
+			<Grid item xs={12} sm={12} md={6} mt={1} display="flex">
 				<Card
 					title="Product Timeline - Residue Values"
 					footer={isLoading ? undefined : cardFooter({ minutesAgo })}
@@ -802,7 +955,7 @@ const Efsa = () => {
 					)}
 				</Card>
 			</Grid>
-			<Grid item xs={12} sm={12} md={12} mt={1} mb={2}>
+			<Grid item xs={12} sm={12} md={12} mt={1} mb={2} display="flex">
 				<Card
 					title="Product Timeline - Measurements & Legal Limit Violations"
 					footer={isLoading ? undefined : cardFooter({ minutesAgo })}
@@ -811,7 +964,7 @@ const Efsa = () => {
 					{isLoading ? (
 						<LoadingIndicator minHeight="400px" />
 					) : uniqueTimelineProducts.length === 0 ? (
-						<DataWarning message="No product measurements available for the selected country and year" />
+						<DataWarning message="No product measurements available for the selected country and year" minHeight="450px" />
 					) : isValidArray(productCombinedTimelineData) && productCombinedTimelineData?.length > 0 ? (
 						<Grid item xs={12} md={12}>
 							<Plot
