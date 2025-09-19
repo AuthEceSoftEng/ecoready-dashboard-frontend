@@ -12,9 +12,8 @@ const PRODUCTS = ["Overview", "Oats"];
 
 const Probio = () => {
 	const [startDate, setStartDate] = useState("2023-06-01");
-	const [endDate, setEndDate] = useState("2023-06-30");
+	const [endDate, setEndDate] = useState("2024-12-31");
 	const [product, setProduct] = useState(PRODUCTS[0]);
-	console.log("Selected Product:", product);
 
 	const handleProductChange = useCallback((event) => {
 		setProduct(event.target.value);
@@ -33,7 +32,7 @@ const Probio = () => {
 		() => debounce((date, setter) => {
 			const { currentDate } = calculateDates(date);
 			setter(currentDate);
-		}, 1500),
+		}, 2000),
 		[],
 	);
 
@@ -87,8 +86,6 @@ const Probio = () => {
 		"air_pressure", "air_humidity",
 	]), [metrics, extractMetricData]);
 
-	console.log("Chart Data:", chartData);
-
 	const graphConfigs = useMemo(() => [
 		{
 			title: "Temperature Evolution Per Day",
@@ -97,20 +94,20 @@ const Probio = () => {
 				{ x: chartData.timestamps, y: chartData.air_temperature_avg, type: "bar", title: "Avg", color: "secondary" },
 				{ x: chartData.timestamps, y: chartData.air_temperature_min, type: "bar", title: "Min", color: "third" },
 			],
-			xaxis: { title: "Days" },
 			yaxis: { title: "Temperature (°C)" },
+			legend: { y: 1, x: 1.05, xanchor: "left" },
 		},
 		{
 			title: "Air Temperature Vs Pressure Correlation",
 			data: [
 				{ x: chartData.timestamps, y: chartData.air_temperature_avg, type: "scatter", mode: "lines", title: "Avg Temperature", color: "secondary" },
-				{ x: chartData.timestamps, y: chartData.air_pressure, type: "scatter", mode: "lines", title: "Air Pressure", color: "third", yaxis: "y2" },
+				{ x: chartData.timestamps, y: chartData.air_pressure, type: "scatter", mode: "lines", title: "Air Pressure", color: "primary", yaxis: "y2" },
 			],
-			xaxis: { title: "Days" },
 			yaxis: {
 				primary: { title: "Temperature (°C)" },
 				secondary: { title: "Air Pressure (hPa)", anchor: "x", overlaying: "y", side: "right" },
 			},
+			legend: { y: 1, x: 1.1, xanchor: "left" },
 		},
 		{
 			title: "Air Temperature Vs Humidity Correlation",
@@ -118,11 +115,11 @@ const Probio = () => {
 				{ x: chartData.timestamps, y: chartData.air_temperature_avg, type: "scatter", mode: "lines", title: "Avg Temperature", color: "secondary" },
 				{ x: chartData.timestamps, y: chartData.air_humidity, type: "scatter", mode: "lines", title: "Air Humidity", color: "third", yaxis: "y2" },
 			],
-			xaxis: { title: "Days" },
 			yaxis: {
 				primary: { title: "Temperature (°C)" },
 				secondary: { title: "Air Humidity (%)", anchor: "x", overlaying: "y", side: "right" },
 			},
+			legend: { y: 1, x: 1.05, xanchor: "left" },
 		},
 		{
 			title: "Air Pressure Vs Humidity Correlation",
@@ -130,11 +127,11 @@ const Probio = () => {
 				{ x: chartData.timestamps, y: chartData.air_pressure, type: "scatter", mode: "lines", title: "Air Pressure", color: "primary" },
 				{ x: chartData.timestamps, y: chartData.air_humidity, type: "scatter", mode: "lines", title: "Air Humidity", color: "third", yaxis: "y2" },
 			],
-			xaxis: { title: "Days" },
 			yaxis: {
 				primary: { title: "Air Pressure (hPa)" },
 				secondary: { title: "Air Humidity (%)", anchor: "x", overlaying: "y", side: "right" },
 			},
+			legend: { y: 1, x: 1.05, xanchor: "left" },
 		},
 		{
 			title: "Complete Overview",
@@ -143,11 +140,11 @@ const Probio = () => {
 				{ x: chartData.timestamps, y: chartData.air_pressure, type: "scatter", mode: "lines", title: "Air Pressure", color: "primary", yaxis: "y2" },
 				{ x: chartData.timestamps, y: chartData.air_humidity, type: "scatter", mode: "lines", title: "Air Humidity", color: "third", yaxis: "y2" },
 			],
-			xaxis: { title: "Days" },
 			yaxis: {
 				primary: { title: "Temperature (°C)" },
 				secondary: { title: "Pressure (hPa) / Humidity (%)", anchor: "x", overlaying: "y", side: "right" },
 			},
+			legend: { y: 1, x: 1.05, xanchor: "left" },
 		},
 	], [chartData]);
 
@@ -158,37 +155,28 @@ const Probio = () => {
 
 	const oatGraphConfigs = useMemo(() => [
 		{
-			title: "Water Demands",
-			data: [
-				{ x: oatData.timestamps, y: oatData.sum_water_demand, type: "scatter", mode: "lines", title: "Sum of Water Demand ", color: "primary", showlegend: true },
-				{ x: oatData.timestamps, y: oatData.precipitation_sum, type: "scatter", mode: "lines", title: "Sum of Precipitation", color: "third", showlegend: true },
-			],
-			xaxis: { title: "Days" },
-			yaxis: { title: "Sums of Water Demand and Precipitation (mm)" },
-			shapes: oatData.timestamps.map((timestamp, index) => ({
-				type: "line",
-				x0: timestamp,
-				x1: timestamp,
-				y0: oatData.precipitation_sum[index],
-				y1: oatData.sum_water_demand[index],
-				line: {
-					color: oatData.precipitation_sum[index] < oatData.sum_water_demand[index] ? "goldenrod" : "green",
-					width: 2,
-				},
-			})),
-		},
-		{
 			title: "Complete Oats Overview",
 			data: [
 				{ x: oatData.timestamps, y: oatData.water_demand, type: "scatter", mode: "lines", title: "Water Demand", color: "primary" },
 				{ x: oatData.timestamps, y: oatData.precipitation, type: "scatter", mode: "lines", title: "Precipitation", color: "third" },
 				{ x: oatData.timestamps, y: oatData.average_temperature, type: "scatter", mode: "lines", title: "Avg Temperature", color: "goldenrod", yaxis: "y2" },
 			],
-			xaxis: { title: "Days" },
 			yaxis: {
-				primary: { title: "Precipitation and Water Demand(mm)" },
-				secondary: { title: "Avg Temperature (°C)", anchor: "x", overlaying: "y", side: "right" },
+				primary: {
+					title: "Precipitation and Water Demand(mm)",
+					range: [-2, 45],
+					dtick: 10,
+				},
+				secondary: {
+					title: "Avg Temperature (°C)",
+					anchor: "x",
+					overlaying: "y",
+					side: "right",
+					range: [-2, 45],
+					dtick: 10,
+				},
 			},
+			legend: { y: 1, x: 1.05, xanchor: "left" },
 			shapes: oatData.timestamps.map((timestamp, index) => ({
 				type: "line",
 				x0: timestamp,
@@ -197,6 +185,26 @@ const Probio = () => {
 				y1: oatData.water_demand[index],
 				line: {
 					color: oatData.precipitation[index] < oatData.water_demand[index] ? "goldenrod" : "green",
+					width: 2,
+				},
+			})),
+		},
+		{
+			title: "Water Demands",
+			data: [
+				{ x: oatData.timestamps, y: oatData.sum_water_demand, type: "scatter", mode: "lines", title: "Sum of Water Demand ", color: "primary", showlegend: true },
+				{ x: oatData.timestamps, y: oatData.precipitation_sum, type: "scatter", mode: "lines", title: "Sum of Precipitation", color: "third", showlegend: true },
+			],
+			yaxis: { title: "Water Demand/Precipitation Sums (mm)" },
+			legend: { y: 1, x: 1.05, xanchor: "left" },
+			shapes: oatData.timestamps.map((timestamp, index) => ({
+				type: "line",
+				x0: timestamp,
+				x1: timestamp,
+				y0: oatData.precipitation_sum[index],
+				y1: oatData.sum_water_demand[index],
+				line: {
+					color: oatData.precipitation_sum[index] < oatData.sum_water_demand[index] ? "goldenrod" : "green",
 					width: 2,
 				},
 			})),
@@ -218,10 +226,10 @@ const Probio = () => {
 											scrollZoom
 											data={card.data}
 											height="300px"
-											xaxis={card.xaxis}
 											yaxis={card.yaxis}
+											layout={{ legend: card.legend }}
 										/>
-									) : (<DataWarning minHeight="300px" />
+									) : (<DataWarning message="Please Select a Date Range between January 2023 and December 2023" minHeight="300px" />
 									)}
 								</Card>
 							</Grid>
@@ -240,11 +248,11 @@ const Probio = () => {
 												scrollZoom
 												data={card.data}
 												height="300px"
-												xaxis={card.xaxis}
 												yaxis={card.yaxis}
+												layout={{ legend: card.legend }}
 												shapes={card.shapes}
 											/>
-										) : (<DataWarning minHeight="300px" />
+										) : (<DataWarning message="Please Select a Date Range between January 2024 and December 2024" minHeight="300px" />
 										)}
 									</Card>
 								</Grid>
