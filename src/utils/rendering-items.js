@@ -114,7 +114,10 @@ export const wrapText = (text, maxLength = 50) => {
 	let currentLine = "";
 
 	for (const part of parts) {
-		if (part.trim() === " ") continue; // Skip empty parts
+		if (!part.trim()) {
+			// Skip empty parts
+			continue;
+		}
 
 		const testLine = String(currentLine) + part;
 
