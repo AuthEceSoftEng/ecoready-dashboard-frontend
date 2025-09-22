@@ -108,16 +108,21 @@ export const DataWarning = ({
 export const wrapText = (text, maxLength = 50) => {
 	if (!text || text.length <= maxLength) return text;
 
-	const words = text.split(" ");
+	// Split while preserving delimiters (/, -, and spaces)
+	const parts = text.split(/(\s|\/|-)/);
 	const lines = [];
 	let currentLine = "";
 
-	for (const word of words) {
-		if ((`${currentLine} ${word}`).length <= maxLength) {
-			currentLine += (currentLine ? " " : "") + word;
+	for (const part of parts) {
+		if (part.trim() === " ") continue; // Skip empty parts
+
+		const testLine = String(currentLine) + part;
+
+		if (testLine.length <= maxLength) {
+			currentLine = testLine;
 		} else {
 			if (currentLine) lines.push(currentLine);
-			currentLine = word;
+			currentLine = part;
 		}
 	}
 

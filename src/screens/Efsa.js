@@ -806,7 +806,7 @@ const Efsa = () => {
 				>
 					<StickyBand sticky={false} dropdownContent={[contaminantChartDropdown]} formRef={contaminantYearPickerRef} formContent={contaminantYearPickerProps} />
 					{isLoading ? (
-						<LoadingIndicator minHeight="400px" />
+						<LoadingIndicator minHeight="300px" />
 					) : uniqueChartContaminants.length === 0 ? (
 						<DataWarning message="No contaminant measurements available for the selected country and year" minHeight="450px" />
 					) : isValidArray(contaminantChartData[0]?.x) && (
@@ -848,7 +848,7 @@ const Efsa = () => {
 				>
 					<StickyBand sticky={false} dropdownContent={[productChartDropdown]} formRef={productYearPickerRef} formContent={productYearPickerProps} />
 					{isLoading ? (
-						<LoadingIndicator minHeight="400px" />
+						<LoadingIndicator minHeight="300px" />
 					) : uniqueChartProducts.length === 0 ? (
 						<DataWarning message="No product measurements available for the selected country and year" minHeight="450px" />
 					) : isValidArray(productChartData[0]?.x) && (
@@ -893,7 +893,7 @@ const Efsa = () => {
 				>
 					<StickyBand sticky={false} formRef={stackedYearPickerRef} formContent={stackedYearPickerProps} />
 					{isLoading ? (
-						<LoadingIndicator minHeight="400px" />
+						<LoadingIndicator minHeight="300px" />
 					) : Object.keys(dataStacked).length === 0 ? (
 						<DataWarning message="No data available for the selected country and year" />
 					) : isValidArray(stackedBarChartData) && stackedBarChartData.length > 0 ? (
