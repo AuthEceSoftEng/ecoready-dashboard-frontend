@@ -88,9 +88,9 @@ const ProductsScreen = () => {
 	const collectionOptions = useMemo(() => selectedProductDetails?.[selectedPriceCollection?.value] ?? null, [selectedProductDetails, selectedPriceCollection]);
 
 	const [priceOptions, setPriceOptions] = useState({
-		product: "Japonica" ?? null,
-		productType: "Avg" ?? null,
-		productVar: "Avg" ?? null,
+		product: "Japonica" ?? "",
+		productType: "Avg" ?? "",
+		productVar: "Avg" ?? "",
 		country: "Greece",
 	});
 
