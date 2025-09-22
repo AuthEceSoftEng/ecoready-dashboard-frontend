@@ -285,7 +285,6 @@ const Efsa = () => {
 			stacked: calculateRange(dataStacked),
 		};
 	}, [processedData, selectedContaminant, selectedProduct]);
-	console.log("Dynamic Ranges by Year:", dynamicRangesByYear);
 
 	// Now use destructuring to get the values you need
 	const {

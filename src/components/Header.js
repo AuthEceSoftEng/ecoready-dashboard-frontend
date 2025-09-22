@@ -285,7 +285,6 @@ const Header = ({ isAuthenticated }) => {
 	);
 
 	const pathnames = location.pathname.split("/").filter(Boolean);
-	console.log(pathnames, "!!!!!");
 	const crumps = [];
 	crumps.push(
 		<CrumpLink to="/">
