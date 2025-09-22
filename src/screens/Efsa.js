@@ -11,7 +11,8 @@ import { wrapText, truncateText, cardFooter, LoadingIndicator, StickyBand, DataW
 import { UNIT_CONVERSION_FACTORS } from "../utils/useful-constants.js";
 
 const countries = ["Austria", "Belgium", "Bulgaria", "Croatia", "Denmark", "France", "Germany", "Greece", "Ireland", "Italy", "Lithuania", "Luxembourg", "Netherlands", "Poland", "Portugal", "Republic of north macedonia", "Romania", "Serbia", "Slovakia", "Spain", "Ukraine", "United kingdom"];
-const COLORS = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"];
+const BASE_COLORS = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"];
+const GOLDEN_RATIO = 0.618_033_988_749_895;
 
 const TARGET_UNIT = "mg/kg"; // Your standard unit
 
@@ -35,13 +36,20 @@ const convertToStandardUnitCached = (value, unit) => {
 	return value * CONVERSION_CACHE.get(unit);
 };
 
+const getDistinctColor = (index) => {
+	if (index < BASE_COLORS.length) return BASE_COLORS[index];
+
+	// Generate color based on golden ratio for better distribution
+	const hue = ((index * GOLDEN_RATIO) % 1) * 360;
+	const saturation = 60 + (index % 4) * 10;
+	const lightness = 40 + (index % 3) * 15;
+
+	return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+};
+
 // Create a dropdown factory function
 const createDropdown = (id, label, items, value, onChange) => ({
-	id,
-	label,
-	items,
-	value,
-	onChange,
+	id, label, items, value, onChange,
 });
 
 // ============================================================================
@@ -59,8 +67,6 @@ const Efsa = () => {
 	const [yearContaminant, setYearContaminant] = useState("2023");
 	const [yearProduct, setYearProduct] = useState("2023");
 	const [yearStacked, setYearStacked] = useState("2023");
-
-	// Add pagination state
 	const [contaminantChartPage, setContaminantChartPage] = useState(0);
 	const [productChartPage, setProductChartPage] = useState(0);
 	const [stackedBarChartPage, setStackedBarChartPage] = useState(0);
@@ -68,7 +74,6 @@ const Efsa = () => {
 	const handleCountryChange = useCallback((e) => {
 		const newCountry = e.target.value;
 		setSelectedCountry(newCountry);
-		// Reset pagination and selections in batch
 		setContaminantChartPage(0);
 		setProductChartPage(0);
 		setStackedBarChartPage(0);
@@ -85,62 +90,39 @@ const Efsa = () => {
 	}, []);
 
 	// Create separate year change handlers
-	const handleContaminantYearChange = useCallback((newValue) => {
-		setYearContaminant(newValue.$y);
+	const createYearHandler = useCallback((setter) => (newValue) => {
+		setter(newValue.$y);
 	}, []);
 
-	const handleProductYearChange = useCallback((newValue) => {
-		setYearProduct(newValue.$y);
-	}, []);
+	const handleContaminantYearChange = useMemo(() => createYearHandler(setYearContaminant), [createYearHandler]);
+	const handleProductYearChange = useMemo(() => createYearHandler(setYearProduct), [createYearHandler]);
+	const handleStackedYearChange = useMemo(() => createYearHandler(setYearStacked), [createYearHandler]);
 
-	const handleStackedYearChange = useCallback((newValue) => {
-		setYearStacked(newValue.$y);
-	}, []);
+	// Year picker configurations - consolidated
+	const createYearPickerProps = useCallback((year, handler, key) => [{
+		key,
+		customType: "date-picker",
+		width: "150px",
+		sublabel: "Select Year",
+		views: ["year"],
+		value: new Date(`${year}-01-01`),
+		minDate: new Date("2011-01-01"),
+		maxDate: new Date("2023-12-31"),
+		onChange: handler,
+	}], []);
 
 	const productYearPickerRef = useRef(null);
-	const productYearPickerProps = useMemo(() => [
-		{
-			key: "product-year-picker",
-			customType: "date-picker",
-			width: "150px",
-			sublabel: "Select Year",
-			views: ["year"],
-			value: new Date(`${yearProduct}-01-01`),
-			minDate: new Date("2011-01-01"),
-			maxDate: new Date("2023-12-31"),
-			onChange: handleProductYearChange,
-		},
-	], [handleProductYearChange, yearProduct]);
-
 	const contaminantYearPickerRef = useRef(null);
-	const contaminantYearPickerProps = useMemo(() => [
-		{
-			key: "contaminant-year-picker",
-			customType: "date-picker",
-			width: "150px",
-			sublabel: "Select Year",
-			views: ["year"],
-			value: new Date(`${yearContaminant}-01-01`),
-			minDate: new Date("2011-01-01"),
-			maxDate: new Date("2023-12-31"),
-			onChange: handleContaminantYearChange,
-		},
-	], [handleContaminantYearChange, yearContaminant]);
-
 	const stackedYearPickerRef = useRef(null);
-	const stackedYearPickerProps = useMemo(() => [
-		{
-			key: "stacked-year-picker",
-			customType: "date-picker",
-			width: "150px",
-			sublabel: "Select Year",
-			views: ["year"],
-			value: new Date(`${yearStacked}-01-01`),
-			minDate: new Date("2011-01-01"),
-			maxDate: new Date("2023-12-31"),
-			onChange: handleStackedYearChange,
-		},
-	], [handleStackedYearChange, yearStacked]);
+
+	const productYearPickerProps = useMemo(() => createYearPickerProps(yearProduct, handleProductYearChange, "product-year-picker"),
+		[yearProduct, handleProductYearChange, createYearPickerProps]);
+
+	const contaminantYearPickerProps = useMemo(() => createYearPickerProps(yearContaminant, handleContaminantYearChange, "contaminant-year-picker"),
+		[yearContaminant, handleContaminantYearChange, createYearPickerProps]);
+
+	const stackedYearPickerProps = useMemo(() => createYearPickerProps(yearStacked, handleStackedYearChange, "stacked-year-picker"),
+		[yearStacked, handleStackedYearChange, createYearPickerProps]);
 
 	// You'll need to modify your fetchConfigs to handle both years
 	const fetchConfigs = useMemo(
@@ -163,29 +145,35 @@ const Efsa = () => {
 				uniqueTimelineContaminants: [],
 				dataGroupedByProduct: {},
 				dataGroupedByContaminant: {},
-				dataGroupedByStacked: {},
+				dataStacked: {},
 				timelineGroupedByProduct: {},
 				timelineGroupedByContaminant: {},
 			};
 		}
 
 		// Pre-parse years once
-		const contaminantYearInt = Number.parseInt(yearContaminant, 10);
-		const productYearInt = Number.parseInt(yearProduct, 10);
-		const stackedYearInt = Number.parseInt(yearStacked, 10);
+		const years = {
+			contaminant: Number.parseInt(yearContaminant, 10),
+			product: Number.parseInt(yearProduct, 10),
+			stacked: Number.parseInt(yearStacked, 10),
+		};
 
-		// Single pass with optimized processing
-		const timelineProductsSet = new Set();
-		const timelineContaminantsSet = new Set();
-		const chartProductsSet = new Set();
-		const chartContaminantsSet = new Set();
-		const stackedContaminantsSet = new Set();
+		// Initialize collections
+		const sets = {
+			timelineProducts: new Set(),
+			timelineContaminants: new Set(),
+			chartProducts: new Set(),
+			chartContaminants: new Set(),
+			stackedContaminants: new Set(),
+		};
 
-		const timelineGroupedByProduct = {};
-		const timelineGroupedByContaminant = {};
-		const dataGroupedByProduct = {};
-		const dataGroupedByContaminant = {};
-		const dataGroupedByStacked = {};
+		const groups = {
+			timelineByProduct: {},
+			timelineByContaminant: {},
+			dataByProduct: {},
+			dataByContaminant: {},
+			dataStacked: {},
+		};
 
 		for (const item of rawTimeline) {
 			const convertedResval = convertToStandardUnitCached(item.resval, item.resunit);
@@ -204,44 +192,100 @@ const Efsa = () => {
 			const itemYear = new Date(item.timestamp).getFullYear();
 
 			// Timeline data (all years)
-			timelineProductsSet.add(item.key);
-			timelineContaminantsSet.add(item.param);
+			sets.timelineProducts.add(item.key);
+			sets.timelineContaminants.add(item.param);
 
-			(timelineGroupedByProduct[item.key] ??= []).push(processedItem);
-			(timelineGroupedByContaminant[item.param] ??= []).push(processedItem);
+			(groups.timelineByProduct[item.key] ??= []).push(processedItem);
+			(groups.timelineByContaminant[item.param] ??= []).push(processedItem);
 
-			// Year-specific data - only process if needed and resval > 0
+			// Year-specific data - only if resval > 0
 			if (convertedResval > 0) {
-				if (itemYear === contaminantYearInt) {
-					chartContaminantsSet.add(item.param);
-					(dataGroupedByContaminant[item.param] ??= []).push(processedItem);
+				if (itemYear === years.contaminant) {
+					sets.chartContaminants.add(item.param);
+					(groups.dataByContaminant[item.param] ??= []).push(processedItem);
 				}
 
-				if (itemYear === productYearInt) {
-					chartProductsSet.add(item.key);
-					(dataGroupedByProduct[item.key] ??= []).push(processedItem);
+				if (itemYear === years.product) {
+					sets.chartProducts.add(item.key);
+					(groups.dataByProduct[item.key] ??= []).push(processedItem);
 				}
 
-				if (itemYear === stackedYearInt) {
-					stackedContaminantsSet.add(item.param);
-					(dataGroupedByStacked[item.key] ??= []).push(processedItem);
+				if (itemYear === years.stacked) {
+					sets.stackedContaminants.add(item.param);
+					(groups.dataStacked[item.key] ??= []).push(processedItem);
 				}
 			}
 		}
 
 		return {
-			uniqueChartProducts: [...chartProductsSet].sort(),
-			uniqueChartContaminants: [...chartContaminantsSet].sort(),
-			uniqueStackedContaminants: [...stackedContaminantsSet].sort().reverse(),
-			uniqueTimelineProducts: [...timelineProductsSet].sort(),
-			uniqueTimelineContaminants: [...timelineContaminantsSet].sort(),
-			dataGroupedByProduct,
-			dataGroupedByContaminant,
-			dataGroupedByStacked,
-			timelineGroupedByProduct,
-			timelineGroupedByContaminant,
+			uniqueChartProducts: [...sets.chartProducts].sort(),
+			uniqueChartContaminants: [...sets.chartContaminants].sort(),
+			uniqueStackedContaminants: [...sets.stackedContaminants].sort().reverse(),
+			uniqueTimelineProducts: [...sets.timelineProducts].sort(),
+			uniqueTimelineContaminants: [...sets.timelineContaminants].sort(),
+			dataGroupedByProduct: groups.dataByProduct,
+			dataGroupedByContaminant: groups.dataByContaminant,
+			dataStacked: groups.dataStacked,
+			timelineGroupedByProduct: groups.timelineByProduct,
+			timelineGroupedByContaminant: groups.timelineByContaminant,
 		};
 	}, [dataSets?.timeline, yearContaminant, yearProduct, yearStacked]);
+
+	const dynamicRangesByYear = useMemo(() => {
+		const {
+			dataGroupedByProduct,
+			dataGroupedByContaminant,
+			dataStacked,
+		} = processedData;
+
+		const calculateRange = (groupedData, filterKey = null, filterValue = null) => {
+			if (!groupedData || Object.keys(groupedData).length === 0) {
+				return [0, 100];
+			}
+
+			const allValues = [];
+			for (const key of Object.keys(groupedData)) {
+				const items = groupedData[key] || [];
+				for (const item of items) {
+					// Apply filter if specified
+					if (filterKey && filterValue && item[filterKey] !== filterValue) {
+						continue;
+					}
+
+					if (item.resval > 0) {
+						allValues.push(item.resval);
+					}
+				}
+			}
+
+			if (allValues.length === 0) {
+				return [0, 100];
+			}
+
+			const max = Math.max(...allValues);
+			const min = Math.min(...allValues);
+			const padding = (max - min) * 0.1 || max * 0.1 || 10;
+			return [Math.max(0, min - padding), max + padding];
+		};
+
+		return {
+			// For contaminant chart: filter by selected product if available
+			contaminant: calculateRange(
+				dataGroupedByContaminant,
+				selectedContaminant ? "param" : null,
+				selectedContaminant,
+			),
+			// For product chart: filter by selected contaminant if available
+			product: calculateRange(
+				dataGroupedByProduct,
+				selectedProduct ? "key" : null,
+				selectedProduct,
+			),
+			// Stacked chart uses all data
+			stacked: calculateRange(dataStacked),
+		};
+	}, [processedData, selectedContaminant, selectedProduct]);
+	console.log("Dynamic Ranges by Year:", dynamicRangesByYear);
 
 	// Now use destructuring to get the values you need
 	const {
@@ -252,7 +296,7 @@ const Efsa = () => {
 		uniqueTimelineContaminants,
 		dataGroupedByProduct,
 		dataGroupedByContaminant,
-		dataGroupedByStacked,
+		dataStacked,
 		timelineGroupedByProduct,
 		timelineGroupedByContaminant,
 	} = processedData;
@@ -327,63 +371,27 @@ const Efsa = () => {
 	// When country changes, reset selected contaminant and product to first available options
 
 	useEffect(() => {
-		// Reset selected contaminant and product when country changes
-		if (selectedCountry && uniqueChartContaminants.length > 0) {
-			setSelectedContaminant(uniqueChartContaminants[0]);
-		} else {
-			setSelectedContaminant(null); // Reset to null if no contaminants available
-		}
+		const resetSelections = () => {
+			setSelectedContaminant(uniqueChartContaminants[0] || null);
+			setSelectedProduct(uniqueChartProducts[0] || null);
+			setSelectedContaminantTimeline(uniqueTimelineContaminants[0] || null);
+			setSelectedProductTimeline(uniqueTimelineProducts[0] || null);
+			setSelectedProductContaminationTimeline(uniqueTimelineProducts[0] || null);
+		};
 
-		if (selectedCountry && uniqueChartProducts.length > 0) {
-			setSelectedProduct(uniqueChartProducts[0]);
-		} else {
-			setSelectedProduct(null); // Reset to null if no products available
-		}
-
-		if (selectedCountry && uniqueTimelineContaminants.length > 0) {
-			setSelectedContaminantTimeline(uniqueTimelineContaminants[0]);
-		} else {
-			setSelectedContaminantTimeline(null); // Reset to null if no contaminants available
-		}
-
-		if (selectedCountry && uniqueTimelineProducts.length > 0) {
-			setSelectedProductTimeline(uniqueTimelineProducts[0]);
-			setSelectedProductContaminationTimeline(uniqueTimelineProducts[0]);
-		} else {
-			setSelectedProductTimeline(null); // Reset to null if no products available
-			setSelectedProductContaminationTimeline(null);
-		}
+		resetSelections();
 	}, [selectedCountry, uniqueChartContaminants, uniqueChartProducts, uniqueTimelineContaminants, uniqueTimelineProducts]);
 
 	useEffect(() => {
-		if (selectedProductContaminationTimeline && availableContaminantsForProduct.length > 0) {
-			setSelectedContaminantForProduct(availableContaminantsForProduct[0]);
-		} else {
-			setSelectedContaminantForProduct(null); // Reset to null if no contaminants available
-		}
+		setSelectedContaminantForProduct(availableContaminantsForProduct[0] || null);
 	}, [selectedProductContaminationTimeline, availableContaminantsForProduct]);
 
-	// Reset pagination when country changes
+	// Reset pagination effects - consolidated
 	useEffect(() => {
 		setContaminantChartPage(0);
 		setProductChartPage(0);
-		setStackedBarChartPage(0); // Add this line
-	}, [selectedCountry]);
-
-	// Reset pagination when contaminant changes
-	useEffect(() => {
-		setContaminantChartPage(0);
-	}, [selectedContaminant]);
-
-	// Reset pagination when product changes
-	useEffect(() => {
-		setProductChartPage(0);
-	}, [selectedProduct]);
-
-	// Reset pagination when year changes
-	useEffect(() => {
 		setStackedBarChartPage(0);
-	}, [yearContaminant, yearProduct]);
+	}, [selectedCountry, selectedContaminant, selectedProduct, yearContaminant, yearProduct]);
 
 	const contaminantChartData = useMemo(() => {
 		if (!selectedContaminant || Object.keys(dataGroupedByContaminant).length === 0) return [];
@@ -433,11 +441,11 @@ const Efsa = () => {
 				ticktext: paginatedData.map((item) => wrapText(item.key, MAX_LABEL_LENGTH)),
 				tickangle: 0,
 			},
-			yaxis: { title: `Residue Value (${TARGET_UNIT})`, automargin: true },
+			yaxis: { title: `Residue Value (${TARGET_UNIT})`, automargin: true, range: dynamicRangesByYear.contaminant },
 			hoverlabel: { align: "left" },
 			shapes,
 		};
-	}, [contaminantChartData]);
+	}, [contaminantChartData, dynamicRangesByYear.contaminant]);
 
 	const productChartData = useMemo(() => {
 		if (!selectedProduct || Object.keys(dataGroupedByProduct).length === 0) return [];
@@ -493,18 +501,18 @@ const Efsa = () => {
 				ticktext: paginatedData.map((item) => wrapText(item.param, MAX_LABEL_LENGTH)),
 				tickangle: 0,
 			},
-			yaxis: { title: `Residue Value (${TARGET_UNIT})`, automargin: true },
+			yaxis: { title: `Residue Value (${TARGET_UNIT})`, automargin: true, range: dynamicRangesByYear.product },
 			hoverlabel: { align: "left" },
 			margin: { l: 80, r: 50, t: 50, b: 120 },
 			shapes,
 		};
-	}, [selectedProduct, dataGroupedByProduct, productChartData]);
+	}, [selectedProduct, dataGroupedByProduct, productChartData, dynamicRangesByYear.product]);
 
 	const stackedBarChartData = useMemo(() => {
 		if (!isValidArray(dataSets?.timeline) || uniqueStackedContaminants.length === 0) return [];
 
 		// Get all products that have data
-		const availableProducts = Object.keys(dataGroupedByStacked);
+		const availableProducts = Object.keys(dataStacked);
 
 		if (availableProducts.length === 0) return [];
 
@@ -515,7 +523,7 @@ const Efsa = () => {
 		// Find contaminants that are actually present in the current page's products
 		const contaminantsInCurrentPage = new Set();
 		for (const product of paginatedProducts) {
-			const productData = dataGroupedByStacked[product] || [];
+			const productData = dataStacked[product] || [];
 			for (const item of productData) {
 				contaminantsInCurrentPage.add(item.param);
 			}
@@ -527,13 +535,13 @@ const Efsa = () => {
 		// Create one trace per contaminant (only for contaminants in current page)
 		return availableContaminantsForPage.map((contaminant) => {
 			const contaminantValues = paginatedProducts.map((product) => {
-				const productData = dataGroupedByStacked[product] || [];
+				const productData = dataStacked[product] || [];
 				const dataPoint = productData.find((item) => item.param === contaminant);
 				return dataPoint ? dataPoint.resval : 0;
 			});
 
 			const hoverText = paginatedProducts.map((product) => {
-				const productData = dataGroupedByStacked[product] || [];
+				const productData = dataStacked[product] || [];
 				const dataPoint = productData.find((item) => item.param === contaminant);
 				return dataPoint
 					? `<b>Product</b>: ${product.replaceAll(/\b\w/g, (l) => l.toUpperCase())}`
@@ -552,15 +560,15 @@ const Efsa = () => {
 				type: "bar",
 			};
 		});
-	}, [dataSets?.timeline, uniqueStackedContaminants, dataGroupedByStacked, stackedBarChartPage]);
+	}, [dataSets?.timeline, uniqueStackedContaminants, dataStacked, stackedBarChartPage]);
 
 	const stackedBarChartLayout = useMemo(() => ({
 		xaxis: { title: "Food Products", automargin: true, tickangle: 0 },
-		yaxis: { title: `Total Residue Value (${TARGET_UNIT})`, automargin: true },
+		yaxis: { title: `Total Residue Value (${TARGET_UNIT})`, automargin: true, range: dynamicRangesByYear.stacked },
 		showlegend: true,
 		legend: { y: 1, x: 1.25, xanchor: "left" },
 		hoverlabel: { align: "left" },
-	}), []);
+	}), [dynamicRangesByYear.stacked]);
 
 	const contaminantTimelineData = useMemo(() => {
 		if (!selectedContaminantTimeline || Object.keys(timelineGroupedByContaminant).length === 0) return [];
@@ -598,7 +606,7 @@ const Efsa = () => {
 				hovertemplate: "%{customdata}<extra></extra>",
 				customdata: customData,
 				title: truncateText(productKey),
-				color: COLORS[index % COLORS.length],
+				color: getDistinctColor(index),
 			};
 		});
 	}, [timelineGroupedByContaminant, selectedContaminantTimeline]);
@@ -677,7 +685,7 @@ const Efsa = () => {
 				name: truncateText(contaminantKey),
 				hovertemplate: "%{customdata}<extra></extra>",
 				customdata: customData,
-				color: COLORS[index % COLORS.length],
+				color: getDistinctColor(index),
 			};
 		});
 
@@ -798,38 +806,38 @@ const Efsa = () => {
 				>
 					<StickyBand sticky={false} dropdownContent={[contaminantChartDropdown]} formRef={contaminantYearPickerRef} formContent={contaminantYearPickerProps} />
 					{isLoading ? (
-						<LoadingIndicator minHeight="300px" />
+						<LoadingIndicator minHeight="400px" />
 					) : uniqueChartContaminants.length === 0 ? (
 						<DataWarning message="No contaminant measurements available for the selected country and year" minHeight="450px" />
 					) : isValidArray(contaminantChartData[0]?.x) && (
+						<>
+							<Grid item xs={12} md={12}>
+								<Plot
+									scrollZoom
+									data={contaminantChartData}
+									showLegend={false}
+									shapes={contaminantChartLayout.shapes}
+									xaxis={contaminantChartLayout.xaxis}
+									yaxis={contaminantChartLayout.yaxis}
+									layout={{ hoverlabel: contaminantChartLayout.hoverlabel }}
+								/>
+							</Grid>
+							{(() => {
+								const totalItems = dataGroupedByContaminant[selectedContaminant]?.length || 0;
+								const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
 
-						<Grid item xs={12} md={12}>
-							<Plot
-								scrollZoom
-								data={contaminantChartData}
-								showLegend={false}
-								shapes={contaminantChartLayout.shapes}
-								xaxis={contaminantChartLayout.xaxis}
-								yaxis={contaminantChartLayout.yaxis}
-								layout={{ hoverlabel: contaminantChartLayout.hoverlabel }}
-							/>
-						</Grid>
-
+								return (
+									<PaginationControls
+										currentPage={contaminantChartPage}
+										totalPages={totalPages}
+										itemsPerPage={ITEMS_PER_PAGE}
+										totalItems={totalItems}
+										onPageChange={setContaminantChartPage}
+									/>
+								);
+							})()}
+						</>
 					)}
-					{(() => {
-						const totalItems = dataGroupedByContaminant[selectedContaminant]?.length || 0;
-						const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
-
-						return (
-							<PaginationControls
-								currentPage={contaminantChartPage}
-								totalPages={totalPages}
-								itemsPerPage={ITEMS_PER_PAGE}
-								totalItems={totalItems}
-								onPageChange={setContaminantChartPage}
-							/>
-						);
-					})()}
 				</Card>
 			</Grid>
 
@@ -840,38 +848,41 @@ const Efsa = () => {
 				>
 					<StickyBand sticky={false} dropdownContent={[productChartDropdown]} formRef={productYearPickerRef} formContent={productYearPickerProps} />
 					{isLoading ? (
-						<LoadingIndicator minHeight="300px" />
+						<LoadingIndicator minHeight="400px" />
 					) : uniqueChartProducts.length === 0 ? (
 						<DataWarning message="No product measurements available for the selected country and year" minHeight="450px" />
 					) : isValidArray(productChartData[0]?.x) && (
 
-						<Grid item xs={12} md={12}>
-							<Plot
-								scrollZoom
-								showLegend={false}
-								data={productChartData}
-								shapes={productChartLayout.shapes}
-								xaxis={productChartLayout.xaxis}
-								yaxis={productChartLayout.yaxis}
-								layout={{ hoverlabel: productChartLayout.hoverlabel }}
-							/>
-						</Grid>
+						<>
+							<Grid item xs={12} md={12}>
+								<Plot
+									scrollZoom
+									showLegend={false}
+									data={productChartData}
+									shapes={productChartLayout.shapes}
+									xaxis={productChartLayout.xaxis}
+									yaxis={productChartLayout.yaxis}
+									layout={{ hoverlabel: productChartLayout.hoverlabel }}
+								/>
+							</Grid>
+							{(() => {
+								const totalItems = dataGroupedByProduct[selectedProduct]?.length || 0;
+								const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+
+								return (
+									<PaginationControls
+										currentPage={productChartPage}
+										totalPages={totalPages}
+										itemsPerPage={ITEMS_PER_PAGE}
+										totalItems={totalItems}
+										onPageChange={setProductChartPage}
+									/>
+								);
+							})()}
+						</>
 
 					)}
-					{(() => {
-						const totalItems = dataGroupedByProduct[selectedProduct]?.length || 0;
-						const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
 
-						return (
-							<PaginationControls
-								currentPage={productChartPage}
-								totalPages={totalPages}
-								itemsPerPage={ITEMS_PER_PAGE}
-								totalItems={totalItems}
-								onPageChange={setProductChartPage}
-							/>
-						);
-					})()}
 				</Card>
 			</Grid>
 
@@ -882,38 +893,41 @@ const Efsa = () => {
 				>
 					<StickyBand sticky={false} formRef={stackedYearPickerRef} formContent={stackedYearPickerProps} />
 					{isLoading ? (
-						<LoadingIndicator minHeight="300px" />
-					) : Object.keys(dataGroupedByStacked).length === 0 ? (
+						<LoadingIndicator minHeight="400px" />
+					) : Object.keys(dataStacked).length === 0 ? (
 						<DataWarning message="No data available for the selected country and year" />
 					) : isValidArray(stackedBarChartData) && stackedBarChartData.length > 0 ? (
-						<Grid item xs={12}>
-							<Plot
-								scrollZoom
-								height="499px"
-								data={stackedBarChartData}
-								barmode="stack"
-								displayBar={false}
-								xaxis={stackedBarChartLayout.xaxis}
-								yaxis={stackedBarChartLayout.yaxis}
-							/>
-						</Grid>
+						<>
+							<Grid item xs={12}>
+								<Plot
+									scrollZoom
+									height="499px"
+									data={stackedBarChartData}
+									barmode="stack"
+									displayBar={false}
+									xaxis={stackedBarChartLayout.xaxis}
+									yaxis={stackedBarChartLayout.yaxis}
+								/>
+							</Grid>
+							{(() => {
+								const totalItems = Object.keys(dataStacked).length;
+								const totalPages = Math.ceil(totalItems / (ITEMS_PER_PAGE * 2));
+
+								return (
+									<PaginationControls
+										currentPage={stackedBarChartPage}
+										totalPages={totalPages}
+										itemsPerPage={ITEMS_PER_PAGE * 2}
+										totalItems={totalItems}
+										onPageChange={setStackedBarChartPage}
+									/>
+								);
+							})()}
+						</>
 					) : (
 						<DataWarning message="No measurements available for stacked visualization" />
 					)}
-					{(() => {
-						const totalItems = Object.keys(dataGroupedByStacked).length;
-						const totalPages = Math.ceil(totalItems / (ITEMS_PER_PAGE * 2));
 
-						return (
-							<PaginationControls
-								currentPage={stackedBarChartPage}
-								totalPages={totalPages}
-								itemsPerPage={ITEMS_PER_PAGE * 2}
-								totalItems={totalItems}
-								onPageChange={setStackedBarChartPage}
-							/>
-						);
-					})()}
 				</Card>
 			</Grid>
 
