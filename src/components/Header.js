@@ -170,7 +170,7 @@ const Header = ({ isAuthenticated }) => {
 			productName: product, // Store the product name
 		})));
 
-		return [...productEntries, ...mapEntries, ...subProductMapEntries, ...labEntries]; //...productionEntries, ...priceEntries, 
+		return [...productEntries, ...mapEntries, ...subProductMapEntries, ...labEntries]; // ...productionEntries, ...priceEntries,
 	}, []); // Memoize to avoid unnecessary recalculations
 
 	// const isMenuOpenServices = Boolean(anchorElServices);
@@ -296,13 +296,26 @@ const Header = ({ isAuthenticated }) => {
 		let text = capitalize(path);
 		// eslint-disable-next-line no-continue
 		if (path === "home") continue;
-		switch (path) {
-			case "file-upload": {
-				text = "File Upload";
-				break;
-			}
 
-			default:
+		// Check if the current full path matches any lab path
+		const currentPath = `../${pathnames.slice(0, ind + 1).join("/")}`;
+		const matchingLab = labs.find((lab) => lab.path === currentPath);
+		if (matchingLab) {
+			text = `Living Labs / ${matchingLab.title}`;
+		} else {
+			switch (path) {
+				case "file-upload": {
+					text = "File Upload";
+					break;
+				}
+
+				case "socialimpact": {
+					text = "Social Impact";
+					break;
+				}
+
+				default:
+			}
 		}
 
 		crumps.push(<CrumpLink to={`/${pathnames.slice(0, ind + 1).join("/")}`}>{text}</CrumpLink>);
