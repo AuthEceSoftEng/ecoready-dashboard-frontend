@@ -391,6 +391,7 @@ export const products = [
 		value: "sugar",
 		text: "Sugar",
 		collections: ["prices", "production"],
+		prices: [],
 		production: {
 			productionMetrics: [
 				{ value: "gross_production", text: "Gross Production" },
