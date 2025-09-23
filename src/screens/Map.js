@@ -7,7 +7,7 @@ import MapComponent, { getColor } from "../components/Map.js";
 import { SecondaryBackgroundButton } from "../components/Buttons.js";
 import Switch from "../components/Switch.js";
 import useInit from "../utils/screen-init.js";
-import { mapInfoConfigs, organization } from "../config/MapInfoConfig.js";
+import { mapInfoConfigs, organization } from "../config/ProductConfig.js";
 import { LoadingIndicator, StickyBand } from "../utils/rendering-items.js";
 import { europeanCountries, products, labs } from "../utils/useful-constants.js";
 
@@ -79,27 +79,52 @@ const onEachCountry = (feature, layer) => {
 	layer.bindPopup(popupContent);
 };
 
+// Map configuration
+const mapConfig = {
+	scrollWheelZoom: true,
+	zoom: 4,
+	center: [55.499_383, 28.527_665],
+	layers: {
+		physical: {
+			show: true,
+			hiddable: false,
+			defaultChecked: true,
+			name: "Physical Map",
+		},
+		// topographical: {
+		// show: true,
+		// hiddable: true,
+		// defaultChecked: false,
+		// name: "Topographical Map",
+	},
+};
+
 const Map = () => {
 	const location = useLocation();
 	const selectedProduct = location.state?.selectedProduct;
 	const navigate = useNavigate();
-	const [geoJsonData, setGeoJsonData] = useState(null);
-	const [showLegend, setShowLegend] = useState(false); // State for controlling legend visibility
-	// Update your state initialization
 	const [filters, setFilters] = useState({
 		year: "2024",
 		product: selectedProduct || "Rice",
 	});
 
-	const [isDataReady, setIsDataReady] = useState(false);
+	const [mapState, setMapState] = useState({
+		geoJsonData: null,
+		showLegend: false,
+		isDataReady: false,
+	});
 
 	const handleToggleLegend = () => {
-		setShowLegend((prev) => !prev); // Toggle legend visibility
+		setMapState((prev) => ({ ...prev, showLegend: !prev.showLegend })); // Toggle legend visibility
 	};
 
-	const handleYearChange = useCallback((newValue) => {
-		setFilters((prev) => ({ ...prev, year: newValue.$y })); // Select only the year from the resulting object
+	const updateFilter = useCallback((key, value) => {
+		setFilters((prev) => ({ ...prev, [key]: value }));
 	}, []);
+
+	const handleYearChange = useCallback((newValue) => {
+		updateFilter("year", newValue.$y);
+	}, [updateFilter]);
 
 	const yearPickerRef = useRef();
 	const yearPickerProps = useMemo(() => [
@@ -138,7 +163,6 @@ const Map = () => {
 			};
 		});
 	}, [fetchConfigs, dataSets]);
-	console.log(statistics);
 
 	const dropdownContent = useMemo(() => ([
 		{
@@ -148,13 +172,13 @@ const Map = () => {
 			value: filters.product,
 			subheader: true,
 			onChange: (event) => {
-				dispatch({ type: "FETCH_START" }); // Add loading state
-				setFilters((prev) => ({ ...prev, product: event.target.value }));
+				dispatch({ type: "FETCH_START" });
+				updateFilter("product", event.target.value);
 			},
 		},
 	].map((item) => ({
 		...item,
-	}))), [dispatch, filters.product]); // Add dispatch to dependencies
+	}))), [dispatch, filters.product, updateFilter]);
 
 	useEffect(() => {
 		// Load the GeoJSON file from the public directory
@@ -167,41 +191,49 @@ const Map = () => {
 
 				return response.json();
 			})
-			.then((data) => setGeoJsonData(data))
+			.then((data) => setMapState((prev) => ({ ...prev, geoJsonData: data })))
 			.catch((error) => console.error("Error loading GeoJSON:", error));
 	}, []);
 
-	// In the Map component, add this logic before creating geodata
-	const enhancedGeoJsonData = useMemo(() => {
-		if (!geoJsonData || statistics.length === 0) return null; // Check if statistics is populated
+	const useEnhancedGeoJsonData = (geoJsonData, stats) => useMemo(() => {
+		if (!geoJsonData || stats.length === 0) return null;
 
-		return statistics.map((statistic) => ({
+		return stats.map((statistic) => ({
 			...geoJsonData,
 			features: geoJsonData.features.map((feature) => {
 				const country = europeanCountries.find(
 					(c) => c.text === feature.properties.name,
 				);
+				const statisticValues = Array.isArray(statistic.values) ? statistic.values : [];
+				const value = statisticValues.find((p) => p.key === (statistic.perRegion ? country?.region : country?.value))?.[statistic.name] || "-";
+
 				return {
 					...feature,
 					properties: {
 						...feature.properties,
-						flag: country?.flag || "", // Add flag emoji
-						value: (Array.isArray(statistic.values) ? statistic.values : []).find((p) => p.key === (statistic.perRegion ? country?.region : country?.value))?.[statistic.name] || "-",
+						flag: country?.flag || "",
+						value,
+						metric: statistic.metric,
+						unit: statistic.unit,
 					},
 				};
 			}),
 		}));
-	}, [geoJsonData, statistics]);
+	}, [geoJsonData, stats]);
+
+	// Use the custom hook
+	const enhancedGeoJsonData = useEnhancedGeoJsonData(mapState.geoJsonData, statistics);
 
 	// Add effect to monitor data readiness
 	useEffect(() => {
-		if (enhancedGeoJsonData && statistics.every((statistic) => (Array.isArray(statistic.values) ? statistic.values : []).length > 0)
-		) { setIsDataReady(true); }
+		if (enhancedGeoJsonData && statistics.every((statistic) => (
+			Array.isArray(statistic.values) ? statistic.values : []).length > 0)
+		) { setMapState((prev) => ({ ...prev, isDataReady: true })); }
 	}, [enhancedGeoJsonData, statistics]);
 
 	// Modify the geodata creation:
 	const geodata = useMemo(() => {
-		if (!isDataReady || !enhancedGeoJsonData || statistics.length === 0) return []; // Safeguard
+		if (!mapState.isDataReady || !enhancedGeoJsonData || statistics.length === 0) return []; // Safeguard
 
 		return statistics.map((statistic, index) => {
 			// Ensure values is always an array and contains valid numbers
@@ -243,8 +275,7 @@ const Map = () => {
 				defaultChecked: index === 0,
 			};
 		});
-	}, [isDataReady, enhancedGeoJsonData, statistics]);
-	console.log("Geodata:", geodata);
+	}, [mapState.isDataReady, enhancedGeoJsonData, statistics]);
 
 	// Create markers for labs with coordinates
 	const markers = useMemo(() => (
@@ -262,27 +293,6 @@ const Map = () => {
 			})
 	), [navigate]);
 
-	// Map configuration
-	const mapConfig = useMemo(() => ({
-		scrollWheelZoom: true,
-		zoom: 4,
-		center: [55.499_383, 28.527_665],
-		layers: {
-			physical: {
-				show: true,
-				hiddable: false,
-				defaultChecked: true,
-				name: "Physical Map",
-			},
-			// topographical: {
-			// show: true,
-			// hiddable: true,
-			// defaultChecked: false,
-			// name: "Topographical Map",
-		},
-		// },
-	}), []);
-
 	return (
 		<Grid container style={{ width: "100%", height: "100%" }} direction="column">
 			{/* Top Menu Bar */}
@@ -297,7 +307,7 @@ const Map = () => {
 							<label htmlFor="legend-switch" style={{ marginRight: "8px", fontWeight: "bold" }}>{"Show Living Labs:"}</label>
 							<Switch
 								id="legend-switch"
-								checked={showLegend}
+								checked={mapState.showLegend}
 								size="medium"
 								color="primary"
 								onChange={handleToggleLegend}
@@ -309,8 +319,8 @@ const Map = () => {
 
 			{/* Main Content (Map) */}
 			<Grid item style={{ flexGrow: 1, width: "100%", height: "calc(100% - 47px)", borderRadius: "8px", overflow: "hidden" }}>
-				{isLoading || !isDataReady ? (<LoadingIndicator />
-				) : (<MapComponent {...mapConfig} geodata={geodata} markers={markers} showLegend={showLegend} />
+				{isLoading || !mapState.isDataReady ? (<LoadingIndicator />
+				) : (<MapComponent {...mapConfig} geodata={geodata} markers={markers} showLegend={mapState.showLegend} />
 				)}
 			</Grid>
 		</Grid>

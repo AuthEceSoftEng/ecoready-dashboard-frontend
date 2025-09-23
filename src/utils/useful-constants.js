@@ -617,7 +617,7 @@ export const RISK_COLOR_MAP = {
 	"high opportunity": colors.opportunityHigh,
 
 	// Data availability
-	"no data": colors.noData,
+	"no data": colors.greyDark,
 };
 
 export const RISK_LEVEL_ORDER = {
