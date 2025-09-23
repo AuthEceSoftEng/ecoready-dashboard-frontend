@@ -2,6 +2,20 @@
 import { calculateDates, findKeyByText } from "../utils/data-handling-functions.js";
 import { products } from "../utils/useful-constants.js";
 
+const fruitVegetables = new Set([
+	"abricots", "apples", "asparagus", "avocados", "beans", "cabbages",
+	"carrots", "cauliflowers", "cherries", "clementines", "courgettes",
+	"cucumbers", "egg plants, aubergines", "garlic", "kiwis", "leeks",
+	"lemons", "lettuces", "mandarins", "melons", "mushrooms, cultivated",
+	"nectarines", "onions", "oranges", "peaches", "pears", "peppers",
+	"plums", "satsumas", "strawberries", "table grapes", "tomatoes", "water melons",
+]);
+const dairyProducts = new Set(["butter", "butteroil", "cheddar", "cream", "edam", "emmental", "gouda", "smp", "wheypowder", "wmp"]); // "drinking milk",
+
+const proteinCrops = new Set(["Alfalfa", "Broad beans", "Chickpeas", "Lentils", "Lupins", "Peas"]);
+
+const cerealProducts = new Set(["barley", "wheat", "maize", "oats", "rye", "sorghum", "triticale"]);
+
 export const organization = "european_data";
 
 const UNITS = {
@@ -398,97 +412,105 @@ const createMapConfig = (project, collection, params, attributename, metric, uni
 	...(perRegion && { perRegion }),
 });
 
-export const getMapInfoConfigs = (globalProduct, year) => {
-	const productConfigs = {
-		Rice:
-			[
-				{
-					collection: "__prices__",
-					params: createMapParams(["price"], "avg", year),
-					attributename: "avg_price",
-					metric: "Average Price",
-					unit: getUnit(globalProduct),
-					plotId: "productPrices",
-				},
-				{
-					collection: "__production__",
-					params: createMapParams(["milled_rice_equivalent_quantity"], "sum", year),
-					attributename: "sum_milled_rice_equivalent_quantity",
-					metric: "Milled Rice Quantity",
-					unit: getUnit(globalProduct, "production"),
-					plotId: "productProduction1",
-				},
-				{
-					collection: "__production__",
-					params: createMapParams(["rice_husk_quantity"], "sum", year),
-					attributename: "sum_rice_husk_quantity",
-					metric: "Rice Husk Quantity",
-					unit: getUnit(globalProduct, "production"),
-					plotId: "productProduction2",
-				},
-			],
+const createPriceMapConfig = (project, collection, metric, unit, plotId, year, filters = [], perRegion = false) => {
+	const params = createMapParams("price", "avg", year, filters);
+	return createMapConfig(project, collection, params, "avg_price", metric, unit, plotId, perRegion);
+};
 
-		Beef:
-			[
-				{
-					collection: "__carcass_prices__",
-					params: createMapParams(["price"], "avg", year),
-					attributename: "avg_price",
-					metric: "Average Carcass Price",
-					unit: "€/100kg",
-					plotId: "productPrices",
-				},
-				{
-					collection: "__production__",
-					params: createMapParams(["tonnes"], "sum", year),
-					attributename: "sum_tonnes",
-					metric: "Production",
-					unit: "t",
-					plotId: "productProduction1",
-				},
-			],
+const createProductionMapConfig = (project, collection, attribute, metric, unit, plotId, year, filters = [], perRegion = false) => {
+	const params = createMapParams(attribute, "sum", year, filters);
+	return createMapConfig(project, collection, params, `sum_${attribute}`, metric, unit, plotId, perRegion);
+};
 
-		Cereals: (year, product) => {
-			const productnames = products.find((item) => item.value === product)?.priceProductType || [];
-			const cropnames = products.find((item) => item.value === product)?.productionProductType || [];
+export const mapInfoConfigs = (globalProduct, year) => {
+	const product = globalProduct.toLowerCase();
 
-			const priceConfigs = productnames.map((productname, index) => ({
-				collection: "__prices__",
-				params: createMapParams(["price"], "avg", year, [
-					{ property_name: "product_name", operator: "eq", property_value: productname },
-				]),
-				attributename: "avg_price",
-				metric: `Average Price (${productname})`,
-				unit: "€/t",
-				plotId: `productPrices${index + 1}`,
-			}));
+	if (product === "rice") {
+		return [
+			createPriceMapConfig("rice", "__prices__", "Average Price", "€/t", "productPrices", year),
+			createProductionMapConfig("rice", "__production__", "milled_rice_equivalent_quantity", "Milled Rice Quantity", "t", "productProduction1", year),
+			createProductionMapConfig("rice", "__production__", "rice_husk_quantity", "Rice Husk Quantity", "t", "productProduction2", year),
+		];
+	}
 
-			const productionConfigs = cropnames.map((cropname, index) => ({
-				collection: "__production__",
-				params: createMapParams(["gross_production"], "sum", year, [
-					{ property_name: "crop", operator: "eq", property_value: cropname },
-				]),
-				attributename: "sum_gross_production",
-				metric: `Gross Production (${cropname})`,
-				unit: "t",
-				plotId: `productProduction${index + 1}`,
-			}));
+	if (product === "beef") {
+		return [
+			createPriceMapConfig("beef", "__carcass_prices__", "Average Carcass Price", "€/100kg", "productPrices1", year),
+			createPriceMapConfig("beef", "__live_animal_prices__", "Average Animal Price", "€/100kg", "productPrices2", year),
+			createProductionMapConfig("beef", "__production__", "tonnes", "Production (tonnes)", "t", "productProduction1", year),
+			createProductionMapConfig("beef", "__production__", "heads", "Production (heads)", "", "productProduction2", year),
+			createProductionMapConfig("beef", "__production__", "kg_per_head", "Production (kg/head)", "kg/head", "productProduction3", year),
+		];
+	}
 
-			return [...priceConfigs, ...productionConfigs];
-		},
-	};
-	const config = productConfigs[globalProduct];
-	if (!config) return [{ type: "error" }];
+	if (product === "pigmeat") {
+		return [
+			createPriceMapConfig("pigmeat", "__carcass_prices__", "Average Carcass Price", "€/100kg", "productPrices", year),
+			createProductionMapConfig("pigmeat", "__production__", "tonnes", "Production (tonnes)", "t", "productProduction1", year),
+			createProductionMapConfig("pigmeat", "__production__", "heads", "Production (heads)", "", "productProduction2", year),
+			createProductionMapConfig("pigmeat", "__production__", "kg_per_head", "Production (kg/head)", "kg/head", "productProduction3", year),
+		];
+	}
 
-	const baseConfigs = config(year, globalProduct);
-	return baseConfigs.map((cfg) => createMapConfig(
-		globalProduct === "cereals" ? "cereals" : globalProduct,
-		cfg.collection,
-		cfg.params,
-		cfg.attributename,
-		cfg.metric,
-		cfg.unit,
-		cfg.plotId,
-		cfg.perRegion,
-	));
+	if (product === "poultry") {
+		return [
+			createPriceMapConfig("eggs_poultry", "__poultry_prices__", "Average Selling Price", "€/100kg", "productPrices", year, [{ property_name: "price_type", operator: "eq", property_value: "Selling price" }]),
+			createProductionMapConfig("eggs_poultry", "__poultry_production__", "tonnes", "Poultry Meat Production", "t", "productProduction", year, [{ property_name: "animal", operator: "eq", property_value: "Poultry meat" }]),
+		];
+	}
+
+	if (product === "eggs") {
+		return ["Barn", "Cage", "Free range", "Organic"].map((farmingMethod, index) => createPriceMapConfig("eggs_poultry", "__egg_prices__", `Average Selling Price (${farmingMethod})`, "€/100kg", `productPrices${index + 1}`, year, [{ property_name: "farming_method", operator: "eq", property_value: farmingMethod }]));
+	}
+
+	if (product === "wine") {
+		return [createPriceMapConfig("wine", "__prices__", "Average Price", "€/HL.", "productPrices", year)];
+	}
+
+	if (product === "olive oil") {
+		return [
+			createPriceMapConfig("olive_oil", "__prices__", "Average Price", "€/100kg", "productPrices", year),
+			createProductionMapConfig("olive_oil", "__annual_production__", "year_production_quantity", "Production", "t", "productProduction1", year),
+		];
+	}
+
+	if (product === "sugar") {
+		return [
+			createPriceMapConfig("sugar", "__prices__", "Average Price", "€/t", "productPrices", year, [], true),
+			createProductionMapConfig("sugar", "__production__", "gross_production", "Gross Production", "t", "productProduction1", year, [], true),
+		];
+	}
+
+	if (fruitVegetables.has(globalProduct)) {
+		return [createPriceMapConfig("fruit_vegetables", "__prices__", "Average Price", "€/100kg", "productPrices", year, [{ property_name: "product", operator: "eq", property_value: globalProduct }])];
+	}
+
+	if (dairyProducts.has(globalProduct)) {
+		return [createPriceMapConfig("milk_dairy", "__dairy_prices__", `Average Selling Price (${product})`, "€/100kg", "productPrices", year, [{ property_name: "product", operator: "eq", property_value: globalProduct.toUpperCase() }])];
+	}
+
+	if (product === "milk") {
+		return [
+			createPriceMapConfig("milk_dairy", "__raw_milk_prices__", "Average Price", "€/100kg", "productPrices", year),
+			createProductionMapConfig("milk_dairy", "__dairy_production__", "production", "Production", "t", "productProduction", year),
+		];
+	}
+
+	if (cerealProducts.has(product)) {
+		const productnames = products.find((item) => item.value === product)?.priceProductType || [];
+		const cropnames = products.find((item) => item.value === product)?.productionProductType || [];
+
+		const productData = productnames.map((productname, index) => createPriceMapConfig("cereals", "__prices__", `Average Price (${productname})`, "€/t", `productPrices${index + 1}`, year, [{ property_name: "product_name", operator: "eq", property_value: productname }]));
+
+		const cropData = cropnames.map((cropname, index) => createProductionMapConfig("cereals", "__production__", "gross_production", `Gross Production (${cropname})`, "t", `productProduction${index + 1}`, year, [{ property_name: "crop", operator: "eq", property_value: cropname }]));
+
+		return [...productData, ...cropData];
+	}
+
+	const formattedProd = globalProduct.charAt(0).toUpperCase() + globalProduct.slice(1).toLowerCase();
+	if (proteinCrops.has(formattedProd)) {
+		return [createPriceMapConfig("oilseeds_protein_crops", "__protein_crops_prices__", "Average Price", "€/t", "productPrices", year, [{ property_name: "product", operator: "eq", property_value: formattedProd }])];
+	}
+
+	return [{ type: "error", message: `Unknown product: ${globalProduct}` }];
 };
