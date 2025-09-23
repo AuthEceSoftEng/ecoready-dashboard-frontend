@@ -1,4 +1,4 @@
-import { Grid } from "@mui/material";
+import { Grid, shouldSkipGeneratingVar } from "@mui/material";
 import { memo, useMemo, useState, useCallback, useRef, useEffect } from "react";
 
 import Card from "../components/Card.js";
@@ -778,6 +778,7 @@ const Efsa = () => {
 						anchor: "x",
 						side: "right",
 						nticks: 5,
+						showgrid: false,
 					},
 					secondary: {
 						title: "Measurements Exceeding Legal Limit (%)",
@@ -791,9 +792,9 @@ const Efsa = () => {
 		};
 	}, [selectedProductTimeline, timelineGroupedByProduct]);
 
-	//= ===============================================================================
+	//================================================================================
 	// Render
-	//= ===============================================================================
+	//================================================================================
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
 			<StickyBand dropdownContent={[countryDropdown]} />
@@ -958,7 +959,7 @@ const Efsa = () => {
 
 			<Grid item xs={12} sm={12} md={6} mt={1} display="flex">
 				<Card
-					title="Product Timeline - Residue Values"
+					title="Product Timeline"
 					footer={isLoading ? undefined : cardFooter({ minutesAgo })}
 				>
 					<StickyBand sticky={false} dropdownContent={[productTimelineDropdown]} />
