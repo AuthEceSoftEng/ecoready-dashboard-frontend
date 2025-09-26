@@ -10,6 +10,12 @@ import { calculateDates, getCustomDateTime, debounce, isValidArray } from "../ut
 import { monthNames } from "../utils/useful-constants.js";
 import { cardFooter, LoadingIndicator, StickyBand } from "../utils/rendering-items.js";
 
+const PRODUCTS = [
+	{ value: "microgreens", text: "Microgreens" },
+	{ value: "babyleaf", text: "Baby Leaf" },
+	{ value: "lettucehead", text: "Lettuce Head" },
+];
+
 const EcoVItaLl = () => {
 	const [dateRange, setDateRange] = useState(() => getCustomDateTime(2024, 9), []);
 
@@ -49,7 +55,6 @@ const EcoVItaLl = () => {
 		},
 	], [handleMonthChange]);
 
-	console.log("EcoVItaLl.js", { month, currentDate, formattedBeginningOfMonth, formattedBeginningOfHour });
 	const fetchConfigs = useMemo(
 		() => ecoVitallConfigs(currentDate, formattedBeginningOfMonth, formattedBeginningOfHour),
 		[currentDate, formattedBeginningOfMonth, formattedBeginningOfHour],

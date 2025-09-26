@@ -237,7 +237,7 @@ export const getPriceConfigs = (globalProduct, startDate, endDate, differenceInD
 
 		Dairy: {
 			collection: "__dairy_prices__",
-			filters: [{ property_name: "product", operator: "eq", property_value: product.toUpperCase() }],
+			filters: [{ property_name: "product", operator: "eq", property_value: product?.toUpperCase() || "" }],
 		},
 
 		Oilseeds: {

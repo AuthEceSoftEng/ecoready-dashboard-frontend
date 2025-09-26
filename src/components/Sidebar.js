@@ -197,27 +197,19 @@ const Sidebar = ({ isSmall: sidebarIsSmall, onToggleSidebar }) => {
 			},
 		},
 		{
-			icon: <CrisisAlertRounded />,
-			text: "Contaminants",
-			handler: () => {
-				handleServicesMenuClose();
-				navigate("/contaminants");
-			},
-		},
-		{
-			icon: <Diversity3Rounded />,
-			text: "Social Impact",
-			handler: () => {
-				handleServicesMenuClose();
-				navigate("/socialimpact");
-			},
-		},
-		{
 			icon: <MapRounded />,
 			text: "Map",
 			handler: () => {
 				handleServicesMenuClose();
 				navigate("/Map");
+			},
+		},
+		{
+			icon: <CrisisAlertRounded />,
+			text: "Contaminants",
+			handler: () => {
+				handleServicesMenuClose();
+				navigate("/contaminants");
 			},
 		},
 		{
@@ -232,6 +224,14 @@ const Sidebar = ({ isSmall: sidebarIsSmall, onToggleSidebar }) => {
 				title: lab.title,
 				handler: () => navigate(lab.path),
 			})),
+		},
+		{
+			icon: <Diversity3Rounded />,
+			text: "Social Impact",
+			handler: () => {
+				handleServicesMenuClose();
+				navigate("/socialimpact");
+			},
 		},
 		//		{
 		//			// icon: inspectionIcon,

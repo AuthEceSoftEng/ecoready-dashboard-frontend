@@ -97,8 +97,11 @@ const useInit = (organization, fetchConfigs) => {
 				type: "FETCH_ERROR",
 				payload: { error: "No data received" },
 			});
+			refs.current.error("No data received");
 			return;
 		}
+
+		let successCount = 0;
 
 		// Process each response individually
 		for (const [index, item] of promiseStatus.entries()) {
@@ -110,6 +113,13 @@ const useInit = (organization, fetchConfigs) => {
 			// Check if response is empty or has issues
 			const isEmpty = !item?.response || (Array.isArray(item?.response) && item.response.length === 0);
 
+			if (isEmpty) {
+				const warningMessage = `No data available for ${plotId}`;
+				refs.current.warning(warningMessage);
+			} else {
+				successCount++;
+			}
+
 			dispatch({
 				type: isEmpty ? "FETCH_WARNING" : "FETCH_SUCCESS",
 				payload: {
@@ -119,6 +129,11 @@ const useInit = (organization, fetchConfigs) => {
 					warning: isEmpty ? `No data available for ${plotId}` : null,
 				},
 			});
+		}
+
+		// Show success message for successful data fetches
+		if (successCount > 0) {
+			refs.current.success("Data loaded successfully");
 		}
 	}, [fetchConfigs]);
 
