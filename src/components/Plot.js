@@ -138,6 +138,7 @@ const Plot = ({
 						}),
 					} : undefined,
 					domain: { x: [0, 1], y: [0, 1] },
+					automargin: true,
 					labels: d.labels,
 					textfont: { color: "white" },
 				};
