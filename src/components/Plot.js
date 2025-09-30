@@ -88,6 +88,9 @@ const Plot = ({
 					value: d.value,
 					r: d.r,
 					theta: d.theta,
+					boxpoints: d.boxpoints,
+					jitter: d.jitter,
+					pointpos: d.pointpos,
 					fill: d.fill,
 					showlegend: d.showlegend === undefined ? true : d.showlegend,
 					number: {
