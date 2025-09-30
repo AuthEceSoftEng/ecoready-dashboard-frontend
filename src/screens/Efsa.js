@@ -1,4 +1,4 @@
-import { Grid, shouldSkipGeneratingVar } from "@mui/material";
+import { Grid } from "@mui/material";
 import { memo, useMemo, useState, useCallback, useRef, useEffect } from "react";
 
 import Card from "../components/Card.js";

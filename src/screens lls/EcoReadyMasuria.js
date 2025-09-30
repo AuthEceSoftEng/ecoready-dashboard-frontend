@@ -51,7 +51,7 @@ const EcoReadyMasuria = () => {
 			sublabel: "Select Year",
 			views: ["year"],
 			value: year,
-			minDate: new Date("2000-12-31"),
+			minDate: new Date("2001-01-01"),
 			maxDate: new Date("2015-12-31"),
 			labelSize: 12,
 			onChange: handleYearChange,

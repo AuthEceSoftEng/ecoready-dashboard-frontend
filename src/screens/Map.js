@@ -221,7 +221,6 @@ const Map = () => {
 		}));
 	}, [geoJsonData, stats]);
 
-	// Use the custom hook
 	const enhancedGeoJsonData = useEnhancedGeoJsonData(mapState.geoJsonData, statistics);
 
 	// Add effect to monitor data readiness
