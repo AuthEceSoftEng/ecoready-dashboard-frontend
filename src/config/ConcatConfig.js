@@ -22,13 +22,13 @@ const createStatsConfig = (baseConfig, statsParams, attribute, stat, plotId, gro
 });
 
 // Data grouped by location configuration
-const createLocationProductionConfigs = (location) => {
-	const statsIntervalOnlyParams = {
-		interval: "every_12_months",
-	};
+const createLocationProductionConfigs = (location, metric) => [{
 
-	const baseStatsConfig = {
-		project: "wheat_data",
+	project: "wheat_data",
+	type: "data",
+	collection: collections.wheat,
+	params: JSON.stringify({
+		attributes: ["timestamp", "var_code", metric],
 		filters: [
 			{
 				property_name: "location",
@@ -36,16 +36,10 @@ const createLocationProductionConfigs = (location) => {
 				property_value: location,
 			},
 		],
-	};
-
-	return [
-		createStatsConfig(baseStatsConfig, statsIntervalOnlyParams, "yield_value", "sum", `yield_value_${location}`),
-		createStatsConfig(baseStatsConfig, statsIntervalOnlyParams, "height", "avg", `height_${location}`),
-		createStatsConfig(baseStatsConfig, statsIntervalOnlyParams, "hlw", "sum", `hlw_${location}`),
-		createStatsConfig(baseStatsConfig, statsIntervalOnlyParams, "tkw", "avg", `tkw_${location}`),
-		createStatsConfig(baseStatsConfig, statsIntervalOnlyParams, "ng", "avg", `ng_${location}`),
-	];
-};
+		order_by: { field: "timestamp", order: "asc" },
+	}),
+	plotId: "yieldMetrics",
+}];
 
 // Timeline data configuration (weather metrics over time)
 const createTimelineConfigs = (location, startDate, endDate) => [{
@@ -86,19 +80,19 @@ const createVarCodeGroupedConfigs = (location, year) => {
 
 	const baseStatsConfig = {
 		project: "wheat_data",
-		filters: {
+		filters: [{
 			property_name: "location",
 			operator: "eq",
 			property_value: location,
-		},
+		}],
 	};
 
 	return [
-		createStatsConfig(baseStatsConfig, statsFullParams, "yield_value", "sum", `yield_per_product_${location}`, "var_code"),
-		createStatsConfig(baseStatsConfig, statsFullParams, "height", "avg", `height_per_product_${location}`, "var_code"),
-		createStatsConfig(baseStatsConfig, statsFullParams, "hlw", "sum", `hlw_per_product_${location}`, "var_code"),
-		createStatsConfig(baseStatsConfig, statsFullParams, "tkw", "avg", `tkw_per_product_${location}`, "var_code"),
-		createStatsConfig(baseStatsConfig, statsFullParams, "ng", "avg", `grain_number_per_product_${location}`, "var_code"),
+		createStatsConfig(baseStatsConfig, statsFullParams, "yield_value", "sum", `yield_value_${location}`, "var_code"),
+		createStatsConfig(baseStatsConfig, statsFullParams, "height", "sum", `height_${location}`, "var_code"),
+		createStatsConfig(baseStatsConfig, statsFullParams, "hlw", "sum", `hlw_${location}`, "var_code"),
+		createStatsConfig(baseStatsConfig, statsFullParams, "tkw", "sum", `tkw_${location}`, "var_code"),
+		createStatsConfig(baseStatsConfig, statsFullParams, "ng", "sum", `ng_${location}`, "var_code"),
 	];
 };
 
