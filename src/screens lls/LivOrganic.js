@@ -5,7 +5,7 @@ import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
 import useInit from "../utils/screen-init.js";
 import { organization, livOrganicConfigs } from "../config/LivOrganicConfig.js";
-import { debounce, calculateDates, calculateDifferenceBetweenDates } from "../utils/data-handling-functions.js";
+import { calculateDates, calculateDifferenceBetweenDates } from "../utils/data-handling-functions.js";
 // import { monthNames } from "../utils/useful-constants.js";
 import { cardFooter, DataWarning, LoadingIndicator, StickyBand } from "../utils/rendering-items.js";
 
@@ -13,21 +13,12 @@ const LivOrganic = () => {
 	const [startDate, setStartDate] = useState("2024-06-01");
 	const [endDate, setEndDate] = useState("2024-07-01");
 
-	const debouncedSetDate = useMemo(
-		() => debounce((date, setter) => {
-			const { currentDate } = calculateDates(date);
-			setter(currentDate);
-		}, 0), // Reduced from 2700ms to 800ms
-		[],
-	);
-
 	const handleDateChange = useCallback((newValue, setter) => {
 		if (!newValue?.$d) return;
 
-		// Immediate visual feedback
-		setter(newValue.$d);
-		debouncedSetDate(newValue.$d, setter);
-	}, [debouncedSetDate]);
+		const { currentDate } = calculateDates(newValue.$d);
+		setter(currentDate);
+	}, []);
 
 	const formRefDate = useRef();
 
@@ -66,15 +57,24 @@ const LivOrganic = () => {
 
 	// Pre-compute data transformations
 	const chartData = useMemo(() => {
-		if (!isValidData) return [];
-		const timestamps = metrics.map((item) => item.timestamp);
-		return {
-			timestamps,
-			maxTemp: metrics.map((item) => item.max_temperature),
-			minTemp: metrics.map((item) => item.min_temperature),
-			solarRadiation: metrics.map((item) => item.solar_radiation),
-			precipitation: metrics.map((item) => item.precipitation),
+		const initialState = {
+			timestamps: [],
+			maxTemp: [],
+			minTemp: [],
+			solarRadiation: [],
+			precipitation: [],
 		};
+
+		if (!isValidData) { return initialState; }
+
+		return metrics.reduce((acc, item) => {
+			acc.timestamps.push(item.timestamp);
+			acc.maxTemp.push(item.max_temperature);
+			acc.minTemp.push(item.min_temperature);
+			acc.solarRadiation.push(item.solar_radiation);
+			acc.precipitation.push(item.precipitation);
+			return acc;
+		}, initialState);
 	}, [metrics, isValidData]);
 
 	const gaugeConfigs = useMemo(() => [
