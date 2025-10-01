@@ -5,7 +5,7 @@ import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
 import useInit from "../utils/screen-init.js";
 import lofsConfigs, { organization } from "../config/LofsConfig.js";
-import { getCustomDateTime, debounce, findKeyByText, isValidArray } from "../utils/data-handling-functions.js";
+import { getCustomDateTime, getMonthDetails, debounce, findKeyByText, isValidArray } from "../utils/data-handling-functions.js";
 import { cardFooter, LoadingIndicator, StickyBand, DataWarning } from "../utils/rendering-items.js";
 import { monthNames } from "../utils/useful-constants.js";
 
@@ -16,20 +16,6 @@ const STATIONS = [
 ];
 
 const LOFS = () => {
-	const getMonthDetails = useMemo(() => (month, year) => {
-		const paddedMonth = String(monthNames[month].no).padStart(2, "0");
-		const lastDay = new Date(year, monthNames[month].no, 0).getDate();
-		return {
-			paddedMonth,
-			lastDay,
-			dateRange: {
-				month,
-				year,
-				startDate: `${year}-${paddedMonth}-01`,
-				endDate: `${year}-${paddedMonth}-${lastDay}`,
-			},
-		};
-	}, []);
 	const customDate = useMemo(() => getCustomDateTime(2024, 10), []);
 	const [dateRange, setDateRange] = useState(
 		() => getMonthDetails(customDate.getMonth(), customDate.getFullYear()).dateRange,
@@ -49,7 +35,7 @@ const LOFS = () => {
 		const newYear = newValue.$d.getFullYear();
 
 		debouncedSetMonth(getMonthDetails(newMonth, newYear).dateRange, setDateRange);
-	}, [debouncedSetMonth, getMonthDetails]);
+	}, [debouncedSetMonth]);
 
 	const [station, setStation] = useState(STATIONS[0]);
 
@@ -92,7 +78,6 @@ const LOFS = () => {
 
 	const { state } = useInit(organization, fetchConfigs);
 	const { isLoading, dataSets, minutesAgo } = state;
-	console.log("dataSets", dataSets);
 	const metrics = useMemo(() => dataSets?.metrics || [], [dataSets]);
 
 	const indicatorValues = useMemo(() => {
@@ -209,26 +194,34 @@ const LOFS = () => {
 	], [indicatorValues]);
 
 	// Pre-compute chart data transformations
-	const chartData = useMemo(() => ({
-		// Time data
-		timestamps: metrics.map((item) => item.timestamp) || [],
+	const chartData = useMemo(() => {
+		const initialStructure = {
+			timestamps: [],
+			maxTemp: [],
+			minTemp: [],
+			eto: [],
+			rain: [],
+			humidity: [],
+			co2: [],
+			solarRadiation: [],
+			wind: [],
+		};
 
-		// Temperature data
-		maxTemp: metrics.map((item) => item.temp_max_c) || [],
-		minTemp: metrics.map((item) => item.temp_min_c) || [],
+		if (!isValidArray(metrics)) { return initialStructure; }
 
-		// Water data
-		eto: metrics.map((item) => item.etp_mm) || [],
-		rain: metrics.map((item) => item.rain_mm) || [],
-
-		// Humidity data - now we only have a single humidity value
-		humidity: metrics.map((item) => item.humidity_percent) || [],
-
-		co2: metrics.map((item) => item.co2_ppm) || [],
-		solarRadiation: metrics.map((item) => item.solar_radiation_mj_m2) || [],
-		wind: metrics.map((item) => item.wind_speed_2m) || [],
-
-	}), [metrics]);
+		return metrics.reduce((acc, item) => {
+			acc.timestamps.push(item.timestamp);
+			acc.maxTemp.push(item.temp_max_c);
+			acc.minTemp.push(item.temp_min_c);
+			acc.eto.push(item.etp_mm);
+			acc.rain.push(item.rain_mm);
+			acc.humidity.push(item.humidity_percent);
+			acc.co2.push(item.co2_ppm);
+			acc.solarRadiation.push(item.solar_radiation_mj_m2);
+			acc.wind.push(item.wind_speed_2m);
+			return acc;
+		}, initialStructure);
+	}, [metrics]);
 
 	const charts = useMemo(() => [
 		{
@@ -251,7 +244,6 @@ const LOFS = () => {
 					color: "third",
 				},
 			],
-			xaxis: { title: "Days" },
 			yaxis: { title: "Temperature (°C)" },
 		},
 		{
@@ -266,7 +258,6 @@ const LOFS = () => {
 					color: "primary",
 				},
 			],
-			xaxis: { title: "Days" },
 			yaxis: { title: "Wind Speed (m/s)" },
 		},
 		{
@@ -287,7 +278,6 @@ const LOFS = () => {
 					color: "goldenrod",
 				},
 			],
-			xaxis: { title: "Days" },
 			yaxis: { title: "Precipitation (mm)" },
 		},
 		{
@@ -302,7 +292,6 @@ const LOFS = () => {
 					color: "third",
 				},
 			],
-			xaxis: { title: "Days" },
 			yaxis: { title: "Humidity (%)" },
 		},
 		{
@@ -317,7 +306,6 @@ const LOFS = () => {
 					color: "secondary",
 				},
 			],
-			xaxis: { title: "Days" },
 			yaxis: { title: "CO2 (ppm)" },
 		},
 		{
@@ -332,7 +320,6 @@ const LOFS = () => {
 					color: "goldenrod",
 				},
 			],
-			xaxis: { title: "Days" },
 			yaxis: { title: "Solar Radiation (MJ/m²)" },
 		},
 		{
