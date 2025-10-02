@@ -88,6 +88,9 @@ const Plot = ({
 					value: d.value,
 					r: d.r,
 					theta: d.theta,
+					boxpoints: d.boxpoints,
+					jitter: d.jitter,
+					pointpos: d.pointpos,
 					fill: d.fill,
 					showlegend: d.showlegend === undefined ? true : d.showlegend,
 					number: {
@@ -138,6 +141,7 @@ const Plot = ({
 						}),
 					} : undefined,
 					domain: { x: [0, 1], y: [0, 1] },
+					automargin: true,
 					labels: d.labels,
 					textfont: { color: "white" },
 				};

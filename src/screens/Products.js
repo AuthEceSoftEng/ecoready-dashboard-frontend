@@ -62,6 +62,13 @@ const getUniqueCountries = (periodPrices, globalProduct) => {
 		.filter(Boolean);
 };
 
+const processDataByKey = (dataSets, keyPrefix) => {
+	if (!dataSets) return [];
+	return Object.keys(dataSets)
+		.filter((key) => key.startsWith(keyPrefix))
+		.map((key) => dataSets[key] || []);
+};
+
 const getMaxValue = (maxProd, prodTypeVal, country = "EU") => [
 	maxProd.flat().find((item) => item?.key === country && Object.keys(item || {}).includes(`max_${prodTypeVal}`))?.[`max_${prodTypeVal}`] || 0,
 ];
@@ -69,8 +76,6 @@ const getMaxValue = (maxProd, prodTypeVal, country = "EU") => [
 const ProductsScreen = () => {
 	const location = useLocation();
 	const selectedProduct = location.state?.selectedProduct;
-	// const selectedProductionProduct = location.state?.specificProduct;
-	// const selectedPriceProduct = location.state?.productValue;
 	const [startDate, setStartDate] = useState("2024-01-01");
 	const [endDate, setEndDate] = useState("2024-12-31");
 	const [globalProduct, setGlobalProduct] = useState(selectedProduct || "Rice");
@@ -140,7 +145,6 @@ const ProductsScreen = () => {
 			};
 		});
 	}, [productionMetrics]);
-	// console.log("Production Options:", productionOptions);
 
 	const debouncedSetDate = useMemo(
 		() => debounce((date, setter) => {
@@ -261,7 +265,7 @@ const ProductsScreen = () => {
 				if (isProductionLoading) {
 					setProductionTimeoutReached(true);
 				}
-			}, 10_000);
+			}, 12_000);
 
 			// Clean up timeout if loading finishes before timeout
 			return () => clearTimeout(timeoutId);
@@ -279,7 +283,7 @@ const ProductsScreen = () => {
 				if (isPriceLoading) {
 					setPriceTimeoutReached(true);
 				}
-			}, 12_000);
+			}, 10_000);
 
 			// Clean up timeout if loading finishes before timeout
 			return () => clearTimeout(timeoutId);
@@ -436,23 +440,8 @@ const ProductsScreen = () => {
 		};
 	}, [globalProduct]);
 
-	const production = useMemo(() => {
-		if (!dataSets) return [];
-
-		// Get all productProduction keys
-		const productionKeys = Object.keys(dataSets).filter((key) => key.startsWith("productProduction"));
-
-		// Map each key to its array
-		return productionKeys.map((key) => dataSets[key] || []);
-	}, [dataSets]);
-
-	const maxProduction = useMemo(() => {
-		if (!dataSets) return [];
-
-		const maxProductionKeys = Object.keys(dataSets).filter((key) => key.startsWith("maxProduction"));
-
-		return maxProductionKeys.map((key) => dataSets[key] || []);
-	}, [dataSets]);
+	const production = useMemo(() => processDataByKey(dataSets, "productProduction"), [dataSets]);
+	const maxProduction = useMemo(() => processDataByKey(dataSets, "maxProduction"), [dataSets]);
 
 	const productionByCountry = useMemo(() => production.map((productionData) => {
 		const grouped = groupByKey(productionData, "key");
@@ -890,8 +879,7 @@ const ProductsScreen = () => {
 					},
 				],
 				color: "secondary",
-				xaxis: { title: "Date" },
-				yaxis: { title: `Average ${units.priceUnit}` },
+				yaxis: { title: `Average ${units.priceUnit}`, automargin: true },
 				warning: !isValidPrice || !pricesTimeline.find((item) => item.key === countryKey)?.avg_price
 					? `No price timeline data available for ${priceOptions.country}`
 					: pricesTimeline.filter((item) => item.key === countryKey).length === 1
@@ -1063,7 +1051,7 @@ const ProductsScreen = () => {
 										{isProductionGauge && isPriceLoading ? (<LoadingIndicator />
 										) : plotData.warning ? (<DataWarning message={plotData.warning} />
 										) : isTimelinePlot ? (
-											<Plot scrollZoom data={plotData.data} xaxis={plotData.xaxis} yaxis={plotData.yaxis} />
+											<Plot scrollZoom data={plotData.data} xaxis={plotData.xaxis} yaxis={plotData.yaxis} showLegend={false} />
 										) : (
 											<Plot
 												showLegend

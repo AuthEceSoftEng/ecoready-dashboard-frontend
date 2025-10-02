@@ -58,7 +58,6 @@ const EcoReadyMasuria = () => {
 		},
 	], [handleYearChange, year]);
 
-	// const stationNameKey = findKeyByText(REGIONS, stationName);
 	const fetchConfigs = useMemo(
 		() => (year ? ecoReadyMasuriaConfigs(stationName.value, year) : null),
 		[stationName.value, year],
@@ -71,17 +70,28 @@ const EcoReadyMasuria = () => {
 
 	// Pre-compute data transformations
 	const chartData = useMemo(() => {
-		if (!isValidData) return [];
-		const timestamps = metrics.map((item) => item.timestamp);
-		return {
-			timestamps,
-			maxTemp: metrics.map((item) => item.maximum_daily_temperature),
-			meanTemp: metrics.map((item) => item.average_daily_temperature),
-			minTemp: metrics.map((item) => item.minimum_daily_temperature),
-			groundTemp: metrics.map((item) => item.minimum_ground_temperature),
-			precipitation: metrics.map((item) => item.daily_precipitation_sum),
-			snowHeight: metrics.map((item) => item.snow_cover_height),
-		};
+		if (!isValidData) return { timestamps: [], maxTemp: [], meanTemp: [], minTemp: [], groundTemp: [], precipitation: [], snowHeight: [] };
+
+		// 3. Use single pass instead of multiple map calls
+		const timestamps = [];
+		const maxTemp = [];
+		const meanTemp = [];
+		const minTemp = [];
+		const groundTemp = [];
+		const precipitation = [];
+		const snowHeight = [];
+
+		for (const item of metrics) {
+			timestamps.push(item.timestamp);
+			maxTemp.push(item.maximum_daily_temperature);
+			meanTemp.push(item.average_daily_temperature);
+			minTemp.push(item.minimum_daily_temperature);
+			groundTemp.push(item.minimum_ground_temperature);
+			precipitation.push(item.daily_precipitation_sum);
+			snowHeight.push(item.snow_cover_height);
+		}
+
+		return { timestamps, maxTemp, meanTemp, minTemp, groundTemp, precipitation, snowHeight };
 	}, [metrics, isValidData]);
 
 	const charts = useMemo(() => [
@@ -113,7 +123,6 @@ const EcoReadyMasuria = () => {
 					color: "third",
 				},
 			],
-			xaxis: { title: "Days" },
 			yaxis: { title: "Temperature (°C)" },
 		},
 		{
@@ -126,7 +135,6 @@ const EcoReadyMasuria = () => {
 					color: "third",
 				},
 			],
-			xaxis: { title: "Days" },
 			yaxis: { title: "Temperature (°C)" },
 		},
 		{
@@ -139,7 +147,6 @@ const EcoReadyMasuria = () => {
 					color: "primary",
 				},
 			],
-			xaxis: { title: "Days" },
 			yaxis: { title: "Precipitation (mm)" },
 		},
 		{
@@ -152,7 +159,6 @@ const EcoReadyMasuria = () => {
 					color: "blue",
 				},
 			],
-			xaxis: { title: "Days" },
 			yaxis: { title: "Snow Height (cm)" },
 		},
 	], [chartData]);
@@ -173,7 +179,6 @@ const EcoReadyMasuria = () => {
 							<Plot
 								scrollZoom
 								data={card.data}
-								// title={`${monthNames[month].text} ${year}`}
 								showLegend={index === 0}
 								height="300px"
 								xaxis={card.xaxis}

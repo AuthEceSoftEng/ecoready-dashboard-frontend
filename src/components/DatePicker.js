@@ -160,27 +160,49 @@ const DatePicker = ({
 	};
 
 	const handleChange = (newValue) => {
-		// First check if it's a valid date
-		if (newValue === null || !Number.isNaN(new Date(newValue).getTime())) {
-			const effectiveMinDate = minDate ?? new Date("2000-01-01");
-			const effectiveMaxDate = maxDate ?? new Date("2050-12-31");
+		// First check if it's a valid date and convert to Date object
+		let dateValue = null;
 
-			if (newValue !== null && (newValue < effectiveMinDate || newValue > effectiveMaxDate)) {
+		if (newValue !== null && newValue !== undefined) {
+			// Convert to Date object regardless of input type (string, dayjs, Date, etc.)
+			dateValue = new Date(newValue);
+
+			// Check if conversion resulted in valid date
+			if (Number.isNaN(dateValue.getTime())) {
+				setError(true);
+				setErrorMessage("Invalid date format");
+				return;
+			}
+		}
+
+		const effectiveMinDate = minDate ?? new Date("2000-01-01");
+		const effectiveMaxDate = maxDate ?? new Date("2050-12-31");
+
+		if (dateValue === null) {
+			// Handle null value
+			setCustomValue(newValue);
+			lastValidValueRef.current = newValue;
+			setError(false);
+			setErrorMessage("");
+			if (onChange) onChange(newValue);
+		} else {
+			// Normalize dates to compare only the date part, not time
+			const selectedDate = new Date(dateValue.getFullYear(), dateValue.getMonth(), dateValue.getDate());
+			const minDateNormalized = new Date(effectiveMinDate.getFullYear(), effectiveMinDate.getMonth(), effectiveMinDate.getDate());
+			const maxDateNormalized = new Date(effectiveMaxDate.getFullYear(), effectiveMaxDate.getMonth(), effectiveMaxDate.getDate());
+
+			if (selectedDate < minDateNormalized || selectedDate > maxDateNormalized) {
 				setError(true);
 				setErrorMessage(`Date must be between ${effectiveMinDate.toLocaleDateString()} and ${effectiveMaxDate.toLocaleDateString()}`);
-				// if (onChange) onChange(newValue);
+				// Don't call onChange for invalid dates
 			} else {
 				// Valid date within range
-				setCustomValue(newValue);
+				setCustomValue(newValue); // Keep original value format
 				lastValidValueRef.current = newValue; // Store as last valid value
 				setError(false);
 				setErrorMessage("");
 				if (onChange) onChange(newValue);
 			}
-		} else {
-			// Invalid date format
-			setError(true);
-			setErrorMessage("Invalid date format");
 		}
 	};
 

@@ -5,9 +5,9 @@ import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
 import useInit from "../utils/screen-init.js";
 import esappinConfigs, { organization } from "../config/EsappinConfig.js";
-import { getCustomDateTime, debounce, findKeyByText, isValidArray } from "../utils/data-handling-functions.js";
-import { monthNames } from "../utils/useful-constants.js";
+import { getCustomDateTime, getMonthDetails, debounce, findKeyByText, isValidArray } from "../utils/data-handling-functions.js";
 import { cardFooter, LoadingIndicator, StickyBand, DataWarning } from "../utils/rendering-items.js";
+import { monthNames } from "../utils/useful-constants.js";
 
 const PRODUCTS = [
 	{ value: "Erdbeeren", text: "Erdbeeren" },
@@ -21,42 +21,23 @@ const PRODUCTS = [
 const YEAR = 2024;
 const INITIAL_MONTH = 10;
 const MIN_DATE = new Date(2024, 8, 1);
-const MAX_DATE = new Date(2024, 10, 30);
-
-// Move getMonthDetails outside component since it doesn't depend on props/state
-const getMonthDetails = (month) => {
-	const paddedMonth = String(monthNames[month].no).padStart(2, "0");
-	const lastDay = new Date(YEAR, monthNames[month].no, 0).getDate();
-	return {
-		paddedMonth,
-		lastDay,
-		dateRange: {
-			month,
-			startDate: `${YEAR}-${paddedMonth}-01`,
-			endDate: `${YEAR}-${paddedMonth}-${lastDay}`,
-		},
-	};
-};
+const MAX_DATE = new Date(2025, 3, 31);
 
 const Esappin = () => {
 	const customDate = useMemo(() => getCustomDateTime(YEAR, INITIAL_MONTH), []);
 	const [dateRange, setDateRange] = useState(
-		() => getMonthDetails(customDate.getMonth()).dateRange,
+		() => getMonthDetails(customDate.getMonth(), YEAR).dateRange,
 	);
 
-	const debouncedSetMonth = useMemo(
-		() => debounce((date, setter) => {
-			setter(date);
-		}, 100),
-		[],
-	);
+	const debouncedSetMonth = useMemo(() => debounce((date, setter) => { setter(date); }, 100), []);
 
 	const handleMonthChange = useCallback((newValue) => {
 		if (!newValue?.$d) return;
 
 		const newMonth = newValue.$d.getMonth();
+		const newYear = newValue.$d.getFullYear();
 
-		debouncedSetMonth(getMonthDetails(newMonth).dateRange, setDateRange);
+		debouncedSetMonth(getMonthDetails(newMonth, newYear).dateRange, setDateRange);
 	}, [debouncedSetMonth]);
 
 	const year = customDate.getFullYear();
@@ -65,9 +46,7 @@ const Esappin = () => {
 
 	const handleProductChange = useCallback((event) => {
 		const selectedProduct = findKeyByText(PRODUCTS, event.target.value, true);
-		if (selectedProduct) {
-			setProduct(selectedProduct);
-		}
+		if (selectedProduct) { setProduct(selectedProduct); }
 	}, []);
 
 	const dropdownContent = useMemo(() => [{
@@ -86,7 +65,7 @@ const Esappin = () => {
 			id: "monthPicker",
 			type: "desktop",
 			sublabel: "Select Month",
-			views: ["month"],
+			views: ["month", "year"],
 			minDate: MIN_DATE,
 			maxDate: MAX_DATE,
 			value: customDate,
@@ -102,21 +81,34 @@ const Esappin = () => {
 
 	const { state } = useInit(organization, fetchConfigs);
 	const { isLoading, dataSets, minutesAgo } = state;
-	console.log("dataSets", dataSets);
 	const metrics = useMemo(() => dataSets?.metrics || [], [dataSets]);
-	// const isValidData = useMemo(() => metrics.length > 0, [metrics]);
 
 	// Pre-compute data transformations
 	const chartData = useMemo(() => {
-		if (!isValidArray(metrics)) return [];
-		const timestamps = metrics.map((item) => item.timestamp);
-		return {
-			timestamps,
-			maxTemp: metrics.map((item) => item.max_temperature),
-			minTemp: metrics.map((item) => item.min_temperature),
-			precipitation: metrics.map((item) => item.precipitation_sum),
-			radiationSum: metrics.map((item) => item.shortwave_radiation_sum),
-		};
+		if (!isValidArray(metrics)) {
+			return {
+				timestamps: [],
+				maxTemp: [],
+				minTemp: [],
+				precipitation: [],
+				radiationSum: [],
+			};
+		}
+
+		return metrics.reduce((acc, item) => {
+			acc.timestamps.push(item.timestamp);
+			acc.maxTemp.push(item.max_temperature);
+			acc.minTemp.push(item.min_temperature);
+			acc.precipitation.push(item.precipitation_sum);
+			acc.radiationSum.push(item.shortwave_radiation_sum);
+			return acc;
+		}, {
+			timestamps: [],
+			maxTemp: [],
+			minTemp: [],
+			precipitation: [],
+			radiationSum: [],
+		});
 	}, [metrics]);
 
 	const indicatorValues = useMemo(() => {
@@ -184,8 +176,7 @@ const Esappin = () => {
 					color: "third",
 				},
 			],
-			xaxis: { title: "Days" },
-			yaxis: { title: "Temperature (°C)" },
+			yaxis: { title: "Temperature (°C)", automargin: true },
 		},
 		{
 			title: "Shortwave Radiation Sum",
@@ -197,8 +188,7 @@ const Esappin = () => {
 					color: "goldenrod",
 				},
 			],
-			xaxis: { title: "Days" },
-			yaxis: { title: "Radiation Metric" },
+			yaxis: { title: "Radiation Metric", automargin: true },
 		},
 		{
 			title: "Daily Precipitation Sum",
@@ -210,8 +200,7 @@ const Esappin = () => {
 					color: "third",
 				},
 			],
-			xaxis: { title: "Days" },
-			yaxis: { title: "Precipitation (mm)" },
+			yaxis: { title: "Precipitation (mm)", automargin: true },
 		},
 		{
 			title: "Monthly Precipitation Per Field",

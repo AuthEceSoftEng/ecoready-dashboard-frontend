@@ -5,7 +5,7 @@ import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
 import useInit from "../utils/screen-init.js";
 import aidemecConfigs, { organization } from "../config/AidemecConfig.js";
-import { getCustomDateTime, debounce, findKeyByText, isValidArray } from "../utils/data-handling-functions.js";
+import { getCustomDateTime, getMonthDetails, debounce, findKeyByText, isValidArray } from "../utils/data-handling-functions.js";
 import { cardFooter, LoadingIndicator, StickyBand, DataWarning } from "../utils/rendering-items.js";
 import { monthNames } from "../utils/useful-constants.js";
 
@@ -14,39 +14,29 @@ const PRODUCTS = [
 	{ value: "Metaponto - Pantanello", text: "Tomato (Metaponto - Pantanello)" },
 ];
 
+const OVERVIEW_CONFIG = [
+	{ subtitle: "Max Temperature", key: "maxTemp", range: [-35, 45], color: "goldenrod", shape: "angular", suffix: "°C" },
+	{ subtitle: "Min Temperature", key: "minTemp", range: [-35, 45], color: "third", shape: "angular", suffix: "°C" },
+	{ subtitle: "Avg Humidity", key: "avgHumidity", range: [0, 100], color: "primary", shape: "bullet", suffix: "%" },
+	{ subtitle: "Precipitation Sum", key: "precipSum", range: [0, 500], color: "third", shape: "bullet", suffix: "mm" },
+];
+
 const AIDEMEC = () => {
-	const getMonthDetails = useMemo(() => (month) => {
-		const paddedMonth = String(monthNames[month].no).padStart(2, "0");
-		const lastDay = new Date(2024, monthNames[month].no, 0).getDate();
-		return {
-			paddedMonth,
-			lastDay,
-			dateRange: {
-				month,
-				startDate: `2024-${paddedMonth}-01`,
-				endDate: `2024-${paddedMonth}-${lastDay}`,
-			},
-		};
-	}, []);
 	const customDate = useMemo(() => getCustomDateTime(2024, 10), []);
 	const [dateRange, setDateRange] = useState(
-		() => getMonthDetails(customDate.getMonth()).dateRange,
+		() => getMonthDetails(customDate.getMonth(), 2024).dateRange,
 	);
 
-	const debouncedSetMonth = useMemo(
-		() => debounce((date, setter) => {
-			setter(date);
-		}, 100),
-		[],
-	);
+	const debouncedSetMonth = useMemo(() => debounce((date, setter) => { setter(date); }, 100), []);
 
 	const handleMonthChange = useCallback((newValue) => {
 		if (!newValue?.$d) return;
 
 		const newMonth = newValue.$d.getMonth();
+		const newYear = newValue.$d.getFullYear();
 
-		debouncedSetMonth(getMonthDetails(newMonth).dateRange, setDateRange);
-	}, [debouncedSetMonth, getMonthDetails]);
+		debouncedSetMonth(getMonthDetails(newMonth, newYear).dateRange, setDateRange);
+	}, [debouncedSetMonth]);
 
 	const year = customDate.getFullYear();
 
@@ -75,7 +65,7 @@ const AIDEMEC = () => {
 			id: "monthPicker",
 			type: "desktop",
 			sublabel: "Select Month",
-			views: ["month"],
+			views: ["month", "year"],
 			minDate: new Date(2024, 4, 1),
 			maxDate: new Date(2024, 9, 31),
 			value: customDate,
@@ -94,194 +84,108 @@ const AIDEMEC = () => {
 	const metrics = useMemo(() => dataSets?.metrics || [], [dataSets]);
 
 	const indicatorValues = useMemo(() => {
-		const maxTemp = isValidArray(dataSets?.maxTemperature)
-			? dataSets.maxTemperature[0]?.max_air_temperature_max_c
-			: null;
+		if (!dataSets) {
+			return { maxTemp: null, minTemp: null, avgHumidity: null, precipSum: null };
+		}
 
-		const minTemp = isValidArray(dataSets?.minTemperature)
-			? dataSets.minTemperature[0]?.min_air_temperature_min_c
-			: null;
+		return {
+			maxTemp: isValidArray(dataSets.maxTemperature)
+				? dataSets.maxTemperature[0]?.max_air_temperature_max_c ?? null
+				: null,
+			minTemp: isValidArray(dataSets.minTemperature)
+				? dataSets.minTemperature[0]?.min_air_temperature_min_c ?? null
+				: null,
+			avgHumidity: isValidArray(dataSets.avgHumidity)
+				? dataSets.avgHumidity[0]?.avg_relative_humidity_med_pct ?? null
+				: null,
+			precipSum: isValidArray(dataSets.precipitationSum)
+				? dataSets.precipitationSum.find((item) => item.key === product.value)?.sum_rain_mm ?? null
+				: null,
+		};
+	}, [dataSets, product.value]);
 
-		const avgHumidity = isValidArray(dataSets?.avgHumidity)
-			? dataSets.avgHumidity[0]?.avg_relative_humidity_med_pct
-			: null;
-
-		const precipSum = isValidArray(dataSets?.precipitationSum)
-			? dataSets.precipitationSum.find((item) => item.key === product.value)?.sum_rain_mm
-			: null;
-
-		return { maxTemp, minTemp, avgHumidity, precipSum };
-	}, [dataSets, product]);
-
-	const monthlyOverview = useMemo(() => [
-		{
-			data: {
-				value: indicatorValues.maxTemp,
-				subtitle: "Max Temperature",
-			},
-			range: [-35, 45],
-			color: "goldenrod",
-			shape: "angular",
-			suffix: "°C",
+	const monthlyOverview = useMemo(() => OVERVIEW_CONFIG.map((config) => ({
+		data: {
+			value: indicatorValues[config.key],
+			subtitle: config.subtitle,
 		},
-		{
-			data: {
-				value: indicatorValues.minTemp,
-				subtitle: "Min Temperature",
-			},
-			range: [-35, 45],
-			color: "third",
-			shape: "angular",
-			suffix: "°C",
-		},
-		{
-			data: {
-				value: indicatorValues.avgHumidity,
-				subtitle: "Avg Humidity",
-			},
-			range: [0, 100],
-			color: "primary",
-			shape: "bullet",
-			suffix: "%",
-		},
-		{
-			data: {
-				value: indicatorValues.precipSum,
-				subtitle: "Precipitation Sum",
-			},
-			range: [0, 500],
-			color: "third",
-			shape: "bullet",
-			suffix: "mm",
-		},
-	], [indicatorValues]);
+		range: config.range,
+		color: config.color,
+		shape: config.shape,
+		suffix: config.suffix,
+	})), [indicatorValues]);
 
 	// Pre-compute chart data transformations
-	const chartData = useMemo(() => ({
-		// Time data
-		timestamps: metrics.map((item) => item.timestamp) || [],
+	const chartData = useMemo(() => {
+		const initialStructure = {
+			timestamps: [],
+			maxTemp: [],
+			medTemp: [],
+			minTemp: [],
+			eto: [],
+			rain: [],
+			maxHumidity: [],
+			medHumidity: [],
+			minHumidity: [],
+		};
+		if (!isValidArray(metrics)) {
+			return { initialStructure };
+		}
 
-		// Temperature data
-		maxTemp: metrics.map((item) => item.air_temperature_max_c) || [],
-		// avgMaxTemp: metrics.map((item) => item.air_temperature_avg_max_c) || [],
-		medTemp: metrics.map((item) => item.air_temperature_med_c) || [],
-		// avgMinTemp: metrics.map((item) => item.air_temperature_avg_min_c) || [],
-		minTemp: metrics.map((item) => item.air_temperature_min_c) || [],
+		return metrics.reduce((acc, item) => {
+			acc.timestamps.push(item.timestamp);
+			acc.maxTemp.push(item.air_temperature_max_c);
+			acc.medTemp.push(item.air_temperature_med_c);
+			acc.minTemp.push(item.air_temperature_min_c);
+			acc.eto.push(item.eto_hargreaves_mm);
+			acc.rain.push(item.rain_mm);
+			acc.maxHumidity.push(item.relative_humidity_max_pct);
+			acc.medHumidity.push(item.relative_humidity_med_pct);
+			acc.minHumidity.push(item.relative_humidity_min_pct);
+			return acc;
+		}, initialStructure);
+	}, [metrics]);
 
-		// Water data
-		eto: metrics.map((item) => item.eto_hargreaves_mm) || [],
-		rain: metrics.map((item) => item.rain_mm) || [],
-
-		// Humidity data
-		maxHumidity: metrics.map((item) => item.relative_humidity_max_pct) || [],
-		// avgMaxHumidity: metrics.map((item) => item.relative_humidity_avg_max_pct) || [],
-		medHumidity: metrics.map((item) => item.relative_humidity_med_pct) || [],
-		// avgMinHumidity: metrics.map((item) => item.relative_humidity_avg_min_pct) || [],
-		minHumidity: metrics.map((item) => item.relative_humidity_min_pct) || [],
-
-	}), [metrics]);
-
-	const charts = useMemo(() => [
+	const createChartConfig = (data, precipitationSum) => [
 		{
 			title: "Daily Temperature Evolution",
 			data: [
-				{
-					x: chartData.timestamps,
-					y: chartData.maxTemp,
-					type: "scatter",
-					mode: "lines+markers",
-					title: "Max",
-					color: "goldenrod",
-				},
-				{
-					x: chartData.timestamps,
-					y: chartData.medTemp,
-					type: "scatter",
-					mode: "lines+markers",
-					title: "Avg",
-					color: "secondary",
-				},
-				{
-					x: chartData.timestamps,
-					y: chartData.minTemp,
-					type: "scatter",
-					mode: "lines+markers",
-					title: "Min",
-					color: "third",
-				},
+				{ x: data.timestamps, y: data.maxTemp, type: "scatter", mode: "lines+markers", title: "Max", color: "goldenrod" },
+				{ x: data.timestamps, y: data.medTemp, type: "scatter", mode: "lines+markers", title: "Avg", color: "secondary" },
+				{ x: data.timestamps, y: data.minTemp, type: "scatter", mode: "lines+markers", title: "Min", color: "third" },
 			],
-			xaxis: { title: "Days" },
 			yaxis: { title: "Temperature (°C)" },
 		},
 		{
 			title: "Daily Humidity Evolution",
 			data: [
-				{
-					x: chartData.timestamps,
-					y: chartData.maxHumidity,
-					type: "scatter",
-					mode: "lines+markers",
-					title: "Max",
-					color: "primary",
-				},
-				{
-					x: chartData.timestamps,
-					y: chartData.medHumidity,
-					type: "scatter",
-					mode: "lines+markers",
-					title: "Avg",
-					color: "secondary",
-				},
-				{
-					x: chartData.timestamps,
-					y: chartData.minHumidity,
-					type: "scatter",
-					mode: "lines+markers",
-					title: "Min",
-					color: "third",
-				},
+				{ x: data.timestamps, y: data.maxHumidity, type: "scatter", mode: "lines+markers", title: "Max", color: "primary" },
+				{ x: data.timestamps, y: data.medHumidity, type: "scatter", mode: "lines+markers", title: "Avg", color: "secondary" },
+				{ x: data.timestamps, y: data.minHumidity, type: "scatter", mode: "lines+markers", title: "Min", color: "third" },
 			],
-			xaxis: { title: "Days" },
-			yaxis: { title: "Temperature (°C)" },
+			yaxis: { title: "Humidity (%)" },
 		},
 		{
 			title: "Daily Net Precipitation",
 			data: [
-				{
-					x: chartData.timestamps,
-					y: chartData.rain,
-					type: "bar",
-					title: "Rain",
-					color: "third",
-				},
-				{
-					x: chartData.timestamps,
-					y: chartData.eto,
-					type: "bar",
-					title: "ETo",
-					color: "goldenrod",
-				},
+				{ x: data.timestamps, y: data.rain, type: "bar", title: "Rain", color: "third" },
+				{ x: data.timestamps, y: data.eto, type: "bar", title: "ETo", color: "goldenrod" },
 			],
-			xaxis: { title: "Days" },
 			yaxis: { title: "Precipitation (mm)" },
 		},
 		{
 			title: "Monthly Precipitation Per Field",
-			data: isValidArray(dataSets.precipitationSum)
-				? [
-					{
-						labels: PRODUCTS.map((item) => item.text),
-						// dataSets.precipitationSum
-						// 	.filter((item) => !item.key.includes("'"))
-						// 	.map((item) => item.key),
-						values: dataSets.precipitationSum
-							.filter((item) => !item.key.includes("'"))
-							.map((item) => item.sum_rain_mm),
-						type: "pie",
-					},
-				] : [{ labels: [], values: [], type: "pie" }],
+			data: isValidArray(precipitationSum)
+				? [{
+					labels: PRODUCTS.map((item) => item.text),
+					values: precipitationSum.filter((item) => !item.key.includes("'")).map((item) => item.sum_rain_mm),
+					type: "pie",
+				}]
+				: [{ labels: [], values: [], type: "pie" }],
 		},
-	], [chartData, dataSets.precipitationSum]);
+	];
+
+	const charts = useMemo(() => createChartConfig(chartData, dataSets.precipitationSum), [chartData, dataSets.precipitationSum]);
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
@@ -362,7 +266,6 @@ const AIDEMEC = () => {
 								data={card.data}
 								title={dateRange.month ? `${monthNames[dateRange.month].text} ${year}` : ""}
 								height="300px"
-								xaxis={card?.xaxis}
 								yaxis={card?.yaxis}
 							/>
 						) : (

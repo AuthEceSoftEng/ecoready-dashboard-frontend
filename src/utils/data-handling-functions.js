@@ -1,3 +1,4 @@
+import { monthNames } from "./useful-constants.js";
 import { timeUtils } from "./timer-manager.js";
 
 export const initialState = {
@@ -342,4 +343,18 @@ export const extractFields = (productObject, fieldName) => {
 		: Object.values(productObject.collections || {}).filter((collection) => collection.value.toLowerCase().includes(fieldName));
 
 	return { fields, collections, hasData: fields.length > 0, needsDropdown: collections.length > 1 };
+};
+
+export const getMonthDetails = (month, year) => {
+	const paddedMonth = String(monthNames[month].no).padStart(2, "0");
+	const lastDay = new Date(year, monthNames[month].no, 0).getDate();
+	return {
+		paddedMonth,
+		lastDay,
+		dateRange: {
+			month,
+			startDate: `${year}-${paddedMonth}-01`,
+			endDate: `${year}-${paddedMonth}-${lastDay}`,
+		},
+	};
 };

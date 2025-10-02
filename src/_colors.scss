@@ -11,7 +11,7 @@ $theme: (
     'dark': #262835,
     'light': #d9e0e3,
     'grey': #DBDFE1,
-    'greyDark': #BAC1C5,
+    'greyDark': #BAC1C5, //also used for "no data"
     'green': #51BEA5,
 
     'choropleth1': #fee5d9,
@@ -54,9 +54,6 @@ $theme: (
     'opportunityLow': #4DB6AC,
     'opportunityMedium': #26A69A,
     'opportunityHigh': #00695C,
-    
-    // No Data Color
-    'noData': #757575,
 );
 
 :export {

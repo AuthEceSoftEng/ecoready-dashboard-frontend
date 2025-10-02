@@ -63,3 +63,6 @@ typings/
 
 # Temporarily ignore tests
 cypress
+
+# Ignore Map config file
+src/config/MapInfoConfig.js
