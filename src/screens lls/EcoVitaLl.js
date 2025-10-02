@@ -46,7 +46,7 @@ const EcoVItaLl = () => {
 			id: "monthPicker",
 			type: "desktop",
 			sublabel: "Select Month",
-			views: ["month"],
+			views: ["month", "year"],
 			minDate: new Date(2024, 8, 1),
 			maxDate: new Date(2024, 8, 30),
 			value: "2024-09-01",
@@ -150,7 +150,6 @@ const EcoVItaLl = () => {
 					color: "third",
 				},
 			],
-			xaxis: { title: "Days" },
 			yaxis: { title: "Humidity (%)" },
 		},
 	], [dataSets.temperature, dataSets.humidity_max, dataSets.humidity_min]);
@@ -191,12 +190,12 @@ const EcoVItaLl = () => {
 													type: "indicator",
 													mode: "gauge+number",
 													value: plotData.value,
-													range: [plotData.min, plotData.max], // Gauge range
-													color: card.color, // Color of gauge bar
-													shape: "angular", // "angular" or "bullet"
-													indicator: "primary", // Color of gauge indicator/value-line
-													textColor: "primary", // Color of gauge value
-													suffix: plotData.symbol, // Suffix of gauge value
+													range: [plotData.min, plotData.max],
+													color: card.color,
+													shape: "angular",
+													indicator: "primary",
+													textColor: "primary",
+													suffix: plotData.symbol,
 												},
 											]}
 											displayBar={false}
@@ -246,12 +245,12 @@ const EcoVItaLl = () => {
 											type: "indicator",
 											mode: "gauge+number",
 											value: plot.value,
-											range: [plot.min, plot.max], // Gauge range
-											color: "third", // Color of gauge bar
-											shape: "bullet", // "angular" or "bullet"
-											indicator: "primary", // Color of gauge indicator/value-line
-											textColor: "primary", // Color of gauge value
-											suffix: plot.symbol, // Suffix of gauge value
+											range: [plot.min, plot.max],
+											color: "third",
+											shape: "bullet",
+											indicator: "primary",
+											textColor: "primary",
+											suffix: plot.symbol,
 										},
 									]}
 									displayBar={false}
