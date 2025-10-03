@@ -40,7 +40,7 @@ const rootApi = ky.extend({
 					return new Response(JSON.stringify({ success: false }), { status: 200 });
 				}
 
-				if (status === 404) {
+				if (status === 404 && !_req.url.includes("/file/download/")) {
 					globalThis.location.href = "/";
 				}
 
