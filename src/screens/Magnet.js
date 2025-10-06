@@ -8,6 +8,7 @@ import { magnetConfigs, organization } from "../config/MagnetConfig.js";
 import { findKeyByText } from "../utils/data-handling-functions.js";
 import { StickyBand } from "../utils/rendering-items.js";
 import { europeanCountries, lcaIndicators } from "../utils/useful-constants.js";
+import { getFile } from "../api/index.js";
 
 import MagnetMap from "./MagnetMap.js";
 import MAGNETGraphs from "./MagnetGraphs.js";
@@ -114,8 +115,6 @@ const LcaMag = () => {
 		setIsOpportunityState(isOpportunityIndicator(indicatorValue));
 	}, [selections.indicator]);
 
-	console.log("Indicator changed:", selections.indicator);
-
 	const fetchConfigs = useMemo(() => {
 		const compareCountries = (selections.compareCountries || []).map((countryText) => findKeyByText(EU_COUNTRIES, countryText));
 		const indicatorValue = typeof selections.indicator === "string"
@@ -127,7 +126,6 @@ const LcaMag = () => {
 
 	const { state } = useInit(organization, fetchConfigs);
 	const { isLoading, dataSets } = state;
-	console.log("Data sets:", dataSets);
 
 	// Dropdown configurations with proper null checks
 	const countryDropdown = useMemo(() => ({
@@ -159,26 +157,37 @@ const LcaMag = () => {
 					<>
 						<HighlightBackgroundButton
 							title="Metrics"
+							size="small"
 							onClick={() => updateTab("Metrics")}
 						/>
 						<HighlightBackgroundButton
 							title="Map"
+							size="small"
 							onClick={() => updateTab("Map")}
 						/>
 					</>
 				)}
 				togglePlacing="center"
+				downloadContent={(
+					<HighlightBackgroundButton
+						title="Download Methodology"
+						size="small"
+						onClick={() => getFile("MAGNET", "Methodology PSILCA social 2.pdf", "Methodology PSILCA social 2.pdf")}
+					/>
+				)}
 			/>
 
 			{selections.tab === "Metrics" && (
-				<MAGNETGraphs
-					selections={selections}
-					updateSelection={updateSelection}
-					updateCompareCountries={updateCompareCountries}
-					dataSets={dataSets}
-					isLoading={isLoading}
-					isOpportunityState={isOpportunityState}
-				/>
+				<Grid item xs={12}>
+					<MAGNETGraphs
+						selections={selections}
+						updateSelection={updateSelection}
+						updateCompareCountries={updateCompareCountries}
+						dataSets={dataSets}
+						isLoading={isLoading}
+						isOpportunityState={isOpportunityState}
+					/>
+				</Grid>
 			)}
 
 			{/* Map Section */}
@@ -187,7 +196,6 @@ const LcaMag = () => {
 					<MagnetMap dataEU={dataSets.metrics_EU} opportunity={isOpportunityState} isLoading={isLoading} />
 				</Grid>
 			)}
-
 			<Footer
 				sticky
 				customMessage={(
