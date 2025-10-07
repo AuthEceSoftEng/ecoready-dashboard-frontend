@@ -33,7 +33,15 @@ export const LoadingIndicator = ({ message = "Loading data...", minHeight = "200
 	</Grid>
 );
 
-export const StickyBand = ({ sticky = true, dropdownContent = [], formRef, formContent, toggleContent, togglePlacing, downloadContent }) => (
+export const StickyBand = ({
+	sticky = true,
+	dropdownContent = [],
+	formRef,
+	formContent,
+	toggleContent,
+	togglePlacing,
+	downloadContent,
+}) => (
 	<Grid
 		container
 		display="flex"
@@ -121,16 +129,15 @@ export const wrapText = (text, maxLength = 50) => {
 	for (const part of parts) {
 		if (part === "") {
 			// Skip empty parts
-			continue;
-		}
-
-		const testLine = String(currentLine) + part;
-
-		if (testLine.length <= maxLength) {
-			currentLine = testLine;
 		} else {
-			if (currentLine) lines.push(currentLine);
-			currentLine = part;
+			const testLine = String(currentLine) + part;
+
+			if (testLine.length <= maxLength) {
+				currentLine = testLine;
+			} else {
+				if (currentLine) lines.push(currentLine);
+				currentLine = part;
+			}
 		}
 	}
 
@@ -140,3 +147,5 @@ export const wrapText = (text, maxLength = 50) => {
 };
 
 export const truncateText = (text, maxLength = 15) => (text.length > maxLength ? `${text.slice(0, maxLength)}...` : text);
+
+export const capitalizeWords = (str) => str.split(" ").map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
