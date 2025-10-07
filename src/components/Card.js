@@ -36,7 +36,7 @@ const Card = ({
 			opacity: transparent ? opacity : 1,
 			boxSizing: "border-box", // Ensure padding is included in the width
 			overflow: "hidden", // Prevent content overflow
-			borderRadius,
+			borderRadius: `${Number.parseInt(borderRadius, 10) + Number.parseInt(padding, 10)}px`,
 			cursor: clickable ? "pointer" : "default",
 			transition: "all 0.2s ease-in-out",
 			boxShadow: transparent ? elevation : null, // Add shadow based on elevation

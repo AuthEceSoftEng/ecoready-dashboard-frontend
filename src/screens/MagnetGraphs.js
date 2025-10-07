@@ -3,19 +3,32 @@ import { memo, useMemo, useRef } from "react";
 
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
-import { groupByKey, findKeyByText } from "../utils/data-handling-functions.js";
-import { wrapText, truncateText, LoadingIndicator, StickyBand, DataWarning } from "../utils/rendering-items.js";
-import { europeanCountries, lcaIndicators, OPPORTUNITY_LEVELS, RISK_LEVELS, RISK_COLOR_MAP, OPPORTUNITY_LEVEL_ORDER, RISK_LEVEL_ORDER } from "../utils/useful-constants.js";
+import { groupByKey, findKeyByText, isOpportunityIndicator } from "../utils/data-handling-functions.js";
+import { wrapText, truncateText, capitalizeWords, LoadingIndicator, StickyBand, DataWarning } from "../utils/rendering-items.js";
+import { EU_COUNTRIES, MAGNET_INDICATORS, OPPORTUNITY_LEVELS, RISK_LEVELS, RISK_COLOR_MAP, OPPORTUNITY_LEVEL_ORDER, RISK_LEVEL_ORDER } from "../utils/useful-constants.js";
+
+const AXIS_CONFIGS = {
+	risk: {
+		tickmode: "array",
+		tickvals: [0.05, 1, 2, 3, 4, 5],
+		ticktext: ["No Data", "Very Low Risk", "Low Risk", "Medium Risk", "High Risk", "Very High Risk"],
+		range: [0, 5.5],
+	},
+	opportunity: {
+		tickmode: "array",
+		tickvals: [0.05, 1, 2, 3],
+		ticktext: ["No Opportunity", "Low Opportunity", "Medium Opportunity", "High Opportunity"],
+		range: [0, 3.5],
+	},
+};
 
 // ============================================================================
 // UTILITY FUNCTIONS
 // ============================================================================
-const EU_COUNTRIES = europeanCountries.filter((country) => country.isEU === true);
-const ALL_INDICATOR_OPTIONS = new Set(lcaIndicators.flatMap((category) => category.options.map((option) => option.value)));
+const ALL_INDICATOR_OPTIONS = new Set(MAGNET_INDICATORS.flatMap((category) => category.options.map((option) => option.value)));
 
-// Create lookup maps for better performance
 const INDICATOR_TO_CATEGORY = new Map();
-for (const category of lcaIndicators) {
+for (const category of MAGNET_INDICATORS) {
 	for (const [index, option] of category.options.entries()) {
 		INDICATOR_TO_CATEGORY.set(option.value, {
 			label: category.label,
@@ -24,6 +37,10 @@ for (const category of lcaIndicators) {
 	}
 }
 
+const findParentCategory = (indicator) => MAGNET_INDICATORS.find(
+	(category) => category.options.some((option) => option.value === indicator),
+);
+
 const getLevels = (isOpportunity = false, legend = false) => {
 	const levels = isOpportunity ? OPPORTUNITY_LEVELS : RISK_LEVELS;
 	return legend ? [...levels].reverse() : levels;
@@ -31,8 +48,6 @@ const getLevels = (isOpportunity = false, legend = false) => {
 
 const getRiskColor = (level) => RISK_COLOR_MAP[level] || "#BDBDBD";
 
-// Add this new function
-const capitalizeWords = (str) => str.split(" ").map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
 const CAPITALIZED_CACHE = new Map();
 const getCachedCapitalized = (str) => {
 	if (!CAPITALIZED_CACHE.has(str)) {
@@ -41,8 +56,6 @@ const getCachedCapitalized = (str) => {
 
 	return CAPITALIZED_CACHE.get(str);
 };
-
-const isOpportunityIndicator = (indicator) => indicator === "Contribution of the sector to economic development";
 
 const createLegendTraces = (levels) => levels.map((level) => ({
 	x: [null],
@@ -65,31 +78,13 @@ const createSeparatorShape = (position, orientation = "vertical") => ({
 	line: { color: "#666666", width: 2, dash: "dash" },
 });
 
-const AXIS_CONFIGS = {
-	risk: {
-		tickmode: "array",
-		tickvals: [0.05, 1, 2, 3, 4, 5],
-		ticktext: ["No Data", "Very Low Risk", "Low Risk", "Medium Risk", "High Risk", "Very High Risk"],
-		range: [0, 5],
-	},
-	opportunity: {
-		tickmode: "array",
-		tickvals: [0.05, 1, 2, 3],
-		ticktext: ["No Opportunity", "Low Opportunity", "Medium Opportunity", "High Opportunity"],
-		range: [0, 3],
-	},
-};
-
 const getAxisConfig = (type) => AXIS_CONFIGS[type];
 
 const getYAxisForIndicator = (indicator) => getAxisConfig(isOpportunityIndicator(indicator) ? "opportunity" : "risk");
 
 const getLevelOrder = (level, isOpportunity = false) => {
-	if (isOpportunity) {
-		return OPPORTUNITY_LEVEL_ORDER[level] === undefined ? 0 : OPPORTUNITY_LEVEL_ORDER[level];
-	}
-
-	return RISK_LEVEL_ORDER[level] === undefined ? 0 : RISK_LEVEL_ORDER[level];
+	const orderMap = isOpportunity ? OPPORTUNITY_LEVEL_ORDER : RISK_LEVEL_ORDER;
+	return orderMap[level] ?? 0;
 };
 
 const createDummyTraces = (existingLevels, allLevels, xaxis, opacity = 1) => allLevels
@@ -133,27 +128,27 @@ const groupDataByLevel = (processedData, isOpportunity) => {
 	const grouped = new Map();
 
 	for (const item of processedData) {
-		if (item.isOpportunity !== isOpportunity) continue;
+		if (item.isOpportunity === isOpportunity) {
+			let group = grouped.get(item.level);
+			if (!group) {
+				group = {
+					indicators: [],
+					scores: [],
+					colors: [],
+					fullIndicators: [],
+					categories: [],
+					descriptions: [],
+				};
+				grouped.set(item.level, group);
+			}
 
-		let group = grouped.get(item.level);
-		if (!group) {
-			group = {
-				indicators: [],
-				scores: [],
-				colors: [],
-				fullIndicators: [],
-				categories: [],
-				descriptions: [],
-			};
-			grouped.set(item.level, group);
+			group.indicators.push(item.truncatedIndicator);
+			group.fullIndicators.push(item.indicator);
+			group.categories.push(item.category);
+			group.descriptions.push(item.description);
+			group.scores.push(item.levelOrder);
+			group.colors.push(item.color);
 		}
-
-		group.indicators.push(item.truncatedIndicator);
-		group.fullIndicators.push(item.indicator);
-		group.categories.push(item.category);
-		group.descriptions.push(item.description);
-		group.scores.push(item.levelOrder);
-		group.colors.push(item.color);
 	}
 
 	return Object.fromEntries(grouped);
@@ -161,13 +156,21 @@ const groupDataByLevel = (processedData, isOpportunity) => {
 
 const createHoverTemplate = (isOpportunity, showDescription = true, showCategory = false) => {
 	const levelType = isOpportunity ? "Opportunity" : "Risk";
-	const parts = [
-		"<b>%{customdata[0]}</b><br>",
-		showDescription && "<b>Description:</b><br>%{customdata[2]}<br>",
-		showCategory && "<b>Category:</b> <i>%{customdata[1]}</i><br>",
-		`<b>${levelType} Level:</b> <i>%{customdata[1]}</i><br>`,
-	];
-	return `${parts.filter(Boolean).join("")}<extra></extra>`;
+	const parts = ["<b>%{customdata[0]}</b><br>"];
+
+	if (showDescription) {
+		parts.push("<b>Description:</b><br>%{customdata[2]}<br>");
+	}
+
+	if (showCategory) {
+		parts.push("<b>Category:</b> <i>%{customdata[1]}</i><br>", `<b>${levelType} Level:</b> <i>%{x}</i><br>`);
+	} else {
+		parts.push(`<b>${levelType} Level:</b> <i>%{customdata[1]}</i><br>`);
+	}
+
+	parts.push("<extra></extra>");
+
+	return parts.join("");
 };
 
 const separateSelectedData = (indicators, scores, levels, colors, descriptions, selected) => {
@@ -215,9 +218,9 @@ const createIndicatorTraces = (indicators, scores, levels, colors, descriptions,
 	].filter(Boolean);
 };
 
-const createTraces = (groupedData, isOpportunity, selectedIndicator = null) => {
+const createCategoryTraces = (groupedData, isOpportunity, selectedIndicator = null) => {
 	const traces = [];
-	const hoverTemplate = createHoverTemplate(isOpportunity, true, true);
+	const hovertemplate = createHoverTemplate(isOpportunity, true, true);
 
 	for (const [level, data] of Object.entries(groupedData)) {
 		traces.push({
@@ -233,7 +236,7 @@ const createTraces = (groupedData, isOpportunity, selectedIndicator = null) => {
 			xaxis: isOpportunity ? "x2" : "x1",
 			name: getCachedCapitalized(level),
 			color: data.colors,
-			hoverTemplate,
+			hovertemplate,
 			customdata: data.fullIndicators.map((indicator, index) => [
 				indicator,
 				data.categories[index],
@@ -249,15 +252,16 @@ const createIndicatorRiskChart = (indicatorsData, selectedIndicator, selectedCou
 	if (!selectedIndicator || !indicatorsData || Object.keys(indicatorsData).length === 0) return [];
 
 	// Get parent category and description for the selected indicator
-	const parentCategory = lcaIndicators.find((category) => category.options.some((option) => option.value === selectedIndicator));
+	const parentCategory = findParentCategory(selectedIndicator);
 	const indicatorIndex = parentCategory?.options.findIndex((option) => option.value === selectedIndicator) ?? -1;
 	const description = parentCategory?.desc[indicatorIndex] || "No description available";
 
 	const allCountries = new Set();
 	const compareCountriesSet = new Set(compareCountries || []);
+	const selectedCountryValue = selectedCountry?.value || selectedCountry;
 
 	if (selectedCountry) {
-		allCountries.add(selectedCountry?.value || selectedCountry);
+		allCountries.add(selectedCountryValue);
 	}
 
 	if (compareCountries && compareCountries.length > 0) {
@@ -276,7 +280,6 @@ const createIndicatorRiskChart = (indicatorsData, selectedIndicator, selectedCou
 	// If no countries are selected, return empty
 	if (allCountries.size === 0) return [];
 
-	// Create data arrays for all countries
 	const countryNames = [];
 	const riskLevels = [];
 	const customData = [];
@@ -297,7 +300,12 @@ const createIndicatorRiskChart = (indicatorsData, selectedIndicator, selectedCou
 			const countryDetails = EU_COUNTRIES.find((c) => c.value === countryValue);
 			const countryName = countryDetails?.text || countryValue;
 
-			countryNames.push(countryName);
+			// Make selected country bold
+			const displayName = countryValue === selectedCountryValue
+				? `<b>${countryName}</b>`
+				: countryName;
+
+			countryNames.push(displayName);
 			riskLevels.push(getLevelOrder(indicatorData.risk_level, isOpportunity));
 			customData.push([countryName, indicatorData.risk_level, description]);
 		}
@@ -326,7 +334,7 @@ const createIndicatorRiskChart = (indicatorsData, selectedIndicator, selectedCou
 	return [];
 };
 
-const createCountryIndicatorsChart = (riskAssessmentData, selectedIndicator = null, ascending = true) => {
+const createAllIndicatorsChart = (riskAssessmentData, selectedIndicator = null, ascending = true) => {
 	if (riskAssessmentData.length === 0) return [];
 
 	const processedData = riskAssessmentData.map((item) => processIndicatorData(item, selectedIndicator));
@@ -340,13 +348,11 @@ const createCountryIndicatorsChart = (riskAssessmentData, selectedIndicator = nu
 	const allOpportunityLevels = getLevels(true);
 
 	// Create traces for existing data
-	const riskTraces = createTraces(groupedRisk, false, selectedIndicator);
-	const opportunityTraces = createTraces(groupedOpportunity, true, selectedIndicator);
+	const riskTraces = createCategoryTraces(groupedRisk, false, selectedIndicator);
+	const opportunityTraces = createCategoryTraces(groupedOpportunity, true, selectedIndicator);
 
-	// Create dummy traces for missing risk levels
+	// Create dummy traces for missing levels
 	const dummyRiskTraces = createDummyTraces(Object.keys(groupedRisk), allRiskLevels, "x1");
-
-	// Create dummy traces for missing opportunity levels
 	const dummyOpportunityTraces = createDummyTraces(Object.keys(groupedOpportunity), allOpportunityLevels, "x2", 0);
 
 	// Sort and combine all traces
@@ -384,8 +390,7 @@ const createCountryIndicatorsChart = (riskAssessmentData, selectedIndicator = nu
 const createCategoryBarChart = (riskAssessmentData, selectedIndicator, selectedCountry) => {
 	if (!selectedIndicator) return [];
 
-	const parentCategory = lcaIndicators.find((category) => category.options.some((option) => option.value === selectedIndicator));
-	if (!parentCategory) return [];
+	const parentCategory = findParentCategory(selectedIndicator);
 
 	const countryValue = selectedCountry?.value || selectedCountry;
 	const chartData = {
@@ -466,8 +471,10 @@ const createCategoryBarChart = (riskAssessmentData, selectedIndicator, selectedC
 	};
 
 	// Add opportunity legend and separator for Economic & Social Development category
-	if (parentCategory.label === "Economic & Social Development"
-		&& chartData.riskIndicators.length > 0 && chartData.opportunityIndicators.length > 0) {
+	const isEconomicSocialDevelopment = parentCategory.label === "Economic & Social Development";
+	const hasBothIndicatorTypes = chartData.riskIndicators.length > 0 && chartData.opportunityIndicators.length > 0;
+
+	if (isEconomicSocialDevelopment && hasBothIndicatorTypes) {
 		traces.push(...createLegendTraces(getLevels(true, true)));
 
 		const separatorPosition = chartData.riskIndicators.length - 0.5;
@@ -478,6 +485,7 @@ const createCategoryBarChart = (riskAssessmentData, selectedIndicator, selectedC
 			anchor: "x",
 			overlaying: "y",
 			side: "right",
+			showgrid: false,
 			ticktext: getAxisConfig("opportunity").ticktext.map((text) => wrapText(text, 5)),
 		};
 	}
@@ -490,22 +498,20 @@ const createCategoryBarChart = (riskAssessmentData, selectedIndicator, selectedC
 // ============================================================================
 
 const useChartData = (dataSets, selectedCountry, compareCountries) => {
-	const { metrics, indicatorsData, selectedCountryMetrics, countryMetrics } = useMemo(() => {
+	const { metrics, indicatorsData, selectedCountryMetrics } = useMemo(() => {
 		if (!dataSets || Object.keys(dataSets).length === 0) {
-			return { metrics: [], indicatorsData: [], selectedCountryMetrics: [], countryMetrics: {} };
+			return { metrics: [], indicatorsData: [], selectedCountryMetrics: [] };
 		}
 
 		const selectedCountryCode = selectedCountry?.value || selectedCountry;
-		const countryMetrics = {};
-		let allMetrics = [];
-		let selectedCountryMetrics = [];
+		const allMetrics = [];
+		const selectedCountryData = [];
 
 		// Get selected country data
 		if (selectedCountry) {
 			const metricsKey = `metrics_${selectedCountryCode}`;
 			if (dataSets[metricsKey]) {
-				selectedCountryMetrics = dataSets[metricsKey];
-				countryMetrics[selectedCountryCode] = dataSets[metricsKey];
+				selectedCountryData.push(...dataSets[metricsKey]);
 			}
 		}
 
@@ -521,19 +527,16 @@ const useChartData = (dataSets, selectedCountry, compareCountries) => {
 						const filteredData = metricsKey === "metrics_EU"
 							? countryData.filter((item) => item.key !== selectedCountryCode)
 							: countryData;
-						allMetrics = [...allMetrics, ...filteredData];
+						allMetrics.push(...filteredData);
 					}
 				}
 			}
 		}
 
-		if (allMetrics.length === 0) {
-			allMetrics = selectedCountryMetrics;
-		}
-
+		const finalMetrics = allMetrics.length === 0 ? selectedCountryData : allMetrics;
 		const indicators = dataSets.indicators || [];
 
-		return { metrics: allMetrics, indicatorsData: indicators, selectedCountryMetrics, countryMetrics };
+		return { metrics: finalMetrics, indicatorsData: indicators, selectedCountryMetrics: selectedCountryData };
 	}, [dataSets, selectedCountry, compareCountries]);
 
 	const { riskAssessmentData, selectedCountryRiskData } = useMemo(() => {
@@ -562,9 +565,11 @@ const MAGNETGraphs = ({
 	updateCompareCountries,
 	dataSets,
 	isLoading,
-	isOpportunityState,
 }) => {
-	const { riskAssessmentData, indicatorsData, selectedCountryRiskData } = useChartData(dataSets, selections.country, selections.compareCountries);
+	const isOpportunityState = useMemo(() => isOpportunityIndicator(selections.indicator.value), [selections.indicator.value]);
+	const { riskAssessmentData, indicatorsData, selectedCountryRiskData } = useChartData(
+		dataSets, selections.country, selections.compareCountries,
+	);
 	const groupedByCountryRiskData = useMemo(() => groupByKey(riskAssessmentData, "key"), [riskAssessmentData]);
 
 	const countryCompareDropdown = useMemo(() => ({
@@ -604,13 +609,13 @@ const MAGNETGraphs = ({
 		[selectedCountryRiskData, selections.indicator, selections.country],
 	);
 
-	const countryIndicatorsChartData = useMemo(
-		() => createCountryIndicatorsChart(selectedCountryRiskData, selections.indicator.value, selections.asc),
+	const allIndicatorsChartData = useMemo(
+		() => createAllIndicatorsChart(selectedCountryRiskData, selections.indicator.value, selections.asc),
 		[selectedCountryRiskData, selections.indicator, selections.asc],
 	);
 
 	const selectedCategory = useMemo(
-		() => lcaIndicators.find((cat) => cat.options.some((option) => option.value === selections.indicator.value)),
+		() => MAGNET_INDICATORS.find((cat) => cat.options.some((option) => option.value === selections.indicator.value)),
 		[selections.indicator],
 	);
 
@@ -704,9 +709,9 @@ const MAGNETGraphs = ({
 									xaxis={{ tickangle: 0 }}
 									yaxis={categoryBarChartData.yaxis}
 									layout={{
-										margin: { l: 75, r: 120, t: 10, b: categoryBarChartData.isOpportunityState ? 155 : 120 },
+										margin: { l: 65, r: 120, t: 10, b: categoryBarChartData.isOpportunityState ? 155 : 120 },
 										dragmode: false,
-										legend: { x: categoryBarChartData.isOpportunityState ? 1.16 : 1 },
+										legend: { x: categoryBarChartData.isOpportunityState ? 1.19 : 1 },
 										hoverlabel: { align: "left" },
 									}}
 									shapes={categoryBarChartData.shapes}
@@ -733,7 +738,7 @@ const MAGNETGraphs = ({
 
 							<Plot
 								height="600px"
-								data={countryIndicatorsChartData.traces || countryIndicatorsChartData}
+								data={allIndicatorsChartData.traces}
 								xaxis={{
 									primary: getAxisConfig("risk"),
 									secondary: {
@@ -748,8 +753,8 @@ const MAGNETGraphs = ({
 									dragmode: false,
 									hoverlabel: { align: "left" },
 								}}
-								shapes={countryIndicatorsChartData.separatorPosition === null
-									? [] : [createSeparatorShape(countryIndicatorsChartData.separatorPosition, "horizontal")]}
+								shapes={allIndicatorsChartData.separatorPosition === null
+									? [] : [createSeparatorShape(allIndicatorsChartData.separatorPosition, "horizontal")]}
 							/>
 						</>
 					)}

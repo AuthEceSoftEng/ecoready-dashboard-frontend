@@ -1,24 +1,17 @@
 import { Grid, Typography } from "@mui/material";
-import { memo, useMemo, useState, useCallback, useEffect } from "react";
+import { memo, useMemo, useState, useCallback, useRef } from "react";
 
-import { HighlightBackgroundButton } from "../components/Buttons.js";
+import { HighlightBackgroundButton, HighlightBorderButton } from "../components/Buttons.js";
 import Footer from "../components/Footer.js";
 import useInit from "../utils/screen-init.js";
 import { magnetConfigs, organization } from "../config/MagnetConfig.js";
-import { findKeyByText } from "../utils/data-handling-functions.js";
+import { findKeyByText, isOpportunityIndicator } from "../utils/data-handling-functions.js";
 import { StickyBand } from "../utils/rendering-items.js";
-import { europeanCountries, lcaIndicators } from "../utils/useful-constants.js";
+import { EU_COUNTRIES, MAGNET_INDICATORS } from "../utils/useful-constants.js";
 import { getFile } from "../api/index.js";
 
 import MagnetMap from "./MagnetMap.js";
 import MAGNETGraphs from "./MagnetGraphs.js";
-
-// ============================================================================
-// CONSTANTS AND STATIC DATA
-// ============================================================================
-
-const EU_COUNTRIES = europeanCountries.filter((country) => country.isEU === true);
-const isOpportunityIndicator = (indicator) => indicator === "Contribution of the sector to economic development";
 
 // ============================================================================
 // CUSTOM HOOKS
@@ -27,14 +20,14 @@ const isOpportunityIndicator = (indicator) => indicator === "Contribution of the
 const useSelections = () => {
 	const [selections, setSelections] = useState({
 		country: EU_COUNTRIES[1],
-		indicator: lcaIndicators[0].options[0],
+		indicator: MAGNET_INDICATORS[0].options[0],
+		category: MAGNET_INDICATORS[0].label,
 		compareCountries: [EU_COUNTRIES[1].text],
 		asc: true,
 		tab: "Metrics",
 	});
 
-	// Add state to store previous compare countries when switching to Map
-	const [previousCompareCountries, setPreviousCompareCountries] = useState([EU_COUNTRIES[1].text]);
+	const previousCompareCountriesRef = useRef([EU_COUNTRIES[1].text]);
 
 	const updateSelection = useCallback((key, value) => {
 		setSelections((prev) => ({ ...prev, [key]: value }));
@@ -51,17 +44,15 @@ const useSelections = () => {
 	}, []);
 
 	const updateIndicator = useCallback((selectedOption) => {
-		// Find the selected option object
-		let selectedOptionObj = null;
-		for (const category of lcaIndicators) {
-			const option = category.options.find((opt) => opt.value === selectedOption);
-			if (option) {
-				selectedOptionObj = option;
-				break;
-			}
-		}
+		const categoryWithOption = MAGNET_INDICATORS.find((category) => category.options.some((opt) => opt.value === selectedOption));
 
-		updateSelection("indicator", selectedOptionObj || lcaIndicators[0].options[0]);
+		if (categoryWithOption) {
+			const selectedOptionObj = categoryWithOption.options.find(
+				(opt) => opt.value === selectedOption,
+			);
+			updateSelection("indicator", selectedOptionObj);
+			updateSelection("category", categoryWithOption.label);
+		}
 	}, [updateSelection]);
 
 	const updateCompareCountries = useCallback((selectedCountries) => {
@@ -73,11 +64,11 @@ const useSelections = () => {
 		setSelections((prev) => {
 			if (newTab === "Map" && prev.tab !== "Map") {
 				// Switching to Map: save current state and set European Union
-				setPreviousCompareCountries(prev.compareCountries);
+				previousCompareCountriesRef.current = prev.compareCountries;
 				return {
 					...prev,
 					tab: newTab,
-					compareCountries: [...previousCompareCountries, "European Union"],
+					compareCountries: [...previousCompareCountriesRef.current, "European Union"],
 				};
 			}
 
@@ -86,14 +77,14 @@ const useSelections = () => {
 				return {
 					...prev,
 					tab: newTab,
-					compareCountries: previousCompareCountries,
+					compareCountries: previousCompareCountriesRef.current,
 				};
 			}
 
 			// No change in tab or other transitions
 			return { ...prev, tab: newTab };
 		});
-	}, [previousCompareCountries]); // Remove updateCompareCountries from dependencies
+	}, []);
 
 	return { selections, updateSelection, updateTab, updateCountry, updateIndicator, updateCompareCountries };
 };
@@ -105,45 +96,43 @@ const useSelections = () => {
 const LcaMag = () => {
 	const { selections, updateSelection, updateTab, updateCountry, updateIndicator, updateCompareCountries } = useSelections();
 
-	const [isOpportunityState, setIsOpportunityState] = useState(false);
-
-	// Update state when indicator changes
-	useEffect(() => {
-		const indicatorValue = typeof selections.indicator === "string"
-			? selections.indicator
-			: selections.indicator?.value;
-		setIsOpportunityState(isOpportunityIndicator(indicatorValue));
-	}, [selections.indicator]);
+	const isOpportunityState = useMemo(
+		() => isOpportunityIndicator(selections.indicator.value),
+		[selections.indicator.value],
+	);
 
 	const fetchConfigs = useMemo(() => {
 		const compareCountries = (selections.compareCountries || []).map((countryText) => findKeyByText(EU_COUNTRIES, countryText));
-		const indicatorValue = typeof selections.indicator === "string"
-			? selections.indicator
-			: selections.indicator?.value;
+		const indicatorValue = selections.indicator?.value;
 
-		return magnetConfigs(compareCountries, indicatorValue || null);
+		return magnetConfigs(compareCountries, indicatorValue);
 	}, [selections.indicator, selections.compareCountries]);
 
 	const { state } = useInit(organization, fetchConfigs);
 	const { isLoading, dataSets } = state;
 
-	// Dropdown configurations with proper null checks
-	const countryDropdown = useMemo(() => ({
-		id: "country-dropdown",
-		label: selections.tab === "Metrics" ? "Select Country" : "",
-		items: selections.tab === "Metrics" ? EU_COUNTRIES : [EU_COUNTRIES[0]],
-		value: selections.tab === "Metrics" ? selections.country?.text : EU_COUNTRIES[0].text,
-		onChange: (event) => updateCountry(event.target.value),
-	}), [selections.country?.text, selections.tab, updateCountry]);
+	const countryDropdown = useMemo(() => {
+		const isMetrics = selections.tab === "Metrics";
+		return {
+			id: "country-dropdown",
+			label: isMetrics ? "Select Country" : "",
+			items: isMetrics ? EU_COUNTRIES : [EU_COUNTRIES[0]],
+			value: isMetrics ? selections.country?.text : EU_COUNTRIES[0].text,
+			onChange: (event) => updateCountry(event.target.value),
+		};
+	}, [selections.country?.text, selections.tab, updateCountry]);
 
 	const indicatorDropdown = useMemo(() => ({
 		id: "indicator-dropdown",
 		label: "Select Indicator",
-		items: lcaIndicators,
+		items: MAGNET_INDICATORS,
 		value: selections.indicator.value,
 		subheader: true,
 		onChange: (event) => updateIndicator(event.target.value),
 	}), [selections.indicator, updateIndicator]);
+
+	const handleMetricsClick = useCallback(() => updateTab("Metrics"), [updateTab]);
+	const handleMapClick = useCallback(() => updateTab("Map"), [updateTab]);
 
 	// ============================================================================
 	// RENDER
@@ -155,16 +144,32 @@ const LcaMag = () => {
 				dropdownContent={[countryDropdown, indicatorDropdown]}
 				toggleContent={(
 					<>
-						<HighlightBackgroundButton
-							title="Metrics"
-							size="small"
-							onClick={() => updateTab("Metrics")}
-						/>
-						<HighlightBackgroundButton
-							title="Map"
-							size="small"
-							onClick={() => updateTab("Map")}
-						/>
+						{selections.tab === "Metrics" ? (
+							<HighlightBackgroundButton
+								title="Metrics"
+								size="small"
+								onClick={handleMetricsClick}
+							/>
+						) : (
+							<HighlightBorderButton
+								title="Metrics"
+								size="small"
+								onClick={handleMetricsClick}
+							/>
+						)}
+						{selections.tab === "Map" ? (
+							<HighlightBackgroundButton
+								title="Map"
+								size="small"
+								onClick={handleMapClick}
+							/>
+						) : (
+							<HighlightBorderButton
+								title="Map"
+								size="small"
+								onClick={handleMapClick}
+							/>
+						)}
 					</>
 				)}
 				togglePlacing="center"
@@ -185,7 +190,6 @@ const LcaMag = () => {
 						updateCompareCountries={updateCompareCountries}
 						dataSets={dataSets}
 						isLoading={isLoading}
-						isOpportunityState={isOpportunityState}
 					/>
 				</Grid>
 			)}
@@ -193,7 +197,13 @@ const LcaMag = () => {
 			{/* Map Section */}
 			{selections.tab === "Map" && (
 				<Grid container xs={12} style={{ width: "100%", height: "calc(100vh - 220px)" }}>
-					<MagnetMap dataEU={dataSets.metrics_EU} opportunity={isOpportunityState} isLoading={isLoading} />
+					<MagnetMap
+						dataEU={dataSets.metrics_EU}
+						opportunity={isOpportunityState}
+						isLoading={isLoading}
+						selectedIndicator={selections.indicator.text}
+						selectedCategory={selections.category}
+					/>
 				</Grid>
 			)}
 			<Footer

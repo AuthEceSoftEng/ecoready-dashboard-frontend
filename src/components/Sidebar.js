@@ -35,6 +35,12 @@ const useStyles = makeStyles((theme) => ({
 		minHeight: "30px",
 		transition: "transform 0.3s ease-in-out",
 	},
+	buttonHover: {
+		"&:hover": {
+			backgroundColor: "rgba(255, 255, 255, 0.1)",
+			transition: "background-color 0.3s ease",
+		},
+	},
 }));
 
 const IconRenderer = ({ icon, text, size = "25px" }) => (
@@ -60,22 +66,19 @@ const LogoRenderer = ({ logo, title, size = "20px", borderRadius = "8px" }) => (
 	</div>
 );
 
-const ButtonWithText = ({ text, icon, more, handler }) => (
+const ButtonWithText = ({ text, icon, more, handler, classes }) => (
 	<span key={text}>
 		{!more
 			&& (
 				<Button
 					key={text}
+					className={classes.buttonHover}
 					sx={{
 						width: "100%",
 						display: "flex",
 						flexDirection: "row",
 						justifyContent: "flex-start",
 						padding: "8px 40px 8px 16px",
-						"&:hover": {
-							backgroundColor: "rgba(255, 255, 255, 0.1)", // subtle white overlay on hover
-							transition: "background-color 0.3s ease",
-						},
 					}}
 					onClick={(event) => handler(event)}
 				>
@@ -122,10 +125,7 @@ const ButtonWithText = ({ text, icon, more, handler }) => (
 								sx={{
 									justifyContent: "flex-start",
 									marginLeft: "20px",
-									"&:hover": {
-										backgroundColor: "rgba(255, 255, 255, 0.1)",
-										transition: "background-color 0.3s ease",
-									},
+									...classes.buttonHover,
 								}}
 								onClick={el.handler}
 							>
@@ -143,21 +143,18 @@ const ButtonWithText = ({ text, icon, more, handler }) => (
 	</span>
 );
 
-const ButtonSimple = ({ text, icon, handler, ind }) => (
+const ButtonSimple = ({ text, icon, handler, ind, classes }) => (
 	<Button
 		key={text}
+		className={classes.buttonHover}
 		sx={{
 			minWidth: "30px!important",
 			padding: "8px",
 			position: "absolute",
-			top: `${ind * 40}px`, // Fixed position based on index (adjust the multiplier as needed)
+			top: `${ind * 40}px`,
 			left: "50%",
 			transform: "translateX(-50%)",
 			transition: "top 0.5s ease-in-out, background-color 0.3s ease",
-			"&:hover": {
-				backgroundColor: "rgba(255, 255, 255, 0.1)",
-				transition: "background-color 0.3s ease",
-			},
 		}}
 		onClick={(event) => handler(event)}
 	>
@@ -179,38 +176,32 @@ const Sidebar = ({ isSmall: sidebarIsSmall, onToggleSidebar }) => {
 
 	useEffect(() => setIsSmall(sidebarIsSmall), [sidebarIsSmall]);
 
+	// Create a wrapper handler
+	const createNavigationHandler = (path) => () => {
+		handleServicesMenuClose();
+		navigate(path);
+	};
+
 	const buttons = [
 		{
 			icon: <HomeRounded />,
-			text: "Overview",
-			handler: () => {
-				handleServicesMenuClose();
-				navigate("/home");
-			},
+			text: "Home",
+			handler: createNavigationHandler("/home"),
 		},
 		{
 			icon: <AgricultureRounded />,
 			text: "Products",
-			handler: () => {
-				handleServicesMenuClose();
-				navigate("/products");
-			},
+			handler: createNavigationHandler("/products"),
 		},
 		{
 			icon: <MapRounded />,
 			text: "Map",
-			handler: () => {
-				handleServicesMenuClose();
-				navigate("/Map");
-			},
+			handler: createNavigationHandler("/Map"),
 		},
 		{
 			icon: <CrisisAlertRounded />,
 			text: "Contaminants",
-			handler: () => {
-				handleServicesMenuClose();
-				navigate("/contaminants");
-			},
+			handler: createNavigationHandler("/contaminants"),
 		},
 		{
 			icon: <SpaRounded />,
@@ -277,6 +268,7 @@ const Sidebar = ({ isSmall: sidebarIsSmall, onToggleSidebar }) => {
 				className={classes.toggleButton}
 				sx={{
 					transform: isSmall ? "rotate(-90deg)" : "rotate(90deg)",
+					...classes.buttonHover,
 				}}
 				onClick={toggleSidebar}
 			>
@@ -289,6 +281,7 @@ const Sidebar = ({ isSmall: sidebarIsSmall, onToggleSidebar }) => {
 					text={button.text}
 					handler={button.handler}
 					more={button.more}
+					classes={classes}
 				/>
 			))}
 			{isSmall && (
@@ -310,6 +303,7 @@ const Sidebar = ({ isSmall: sidebarIsSmall, onToggleSidebar }) => {
 							handler={button.handler}
 							more={button.more}
 							ind={ind}
+							classes={classes}
 						/>
 					))}
 				</div>

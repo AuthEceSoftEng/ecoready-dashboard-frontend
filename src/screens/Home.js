@@ -77,9 +77,8 @@ const CardSection = ({ items, onCardClick }) => {
 						<Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", mb: 1 }}>
 							<PrimaryBorderButton
 								id={`view-details-${index}`}
-								title="Go to Living Lab page"
-								width="220px"
 								height="27px"
+								title="Overview"
 								onClick={() => navigate(item.path, { replace: true })}
 							/>
 						</Box>
