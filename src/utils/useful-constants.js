@@ -166,6 +166,8 @@ export const europeanCountries = [
 	{ value: "UK", text: "United Kingdom", flag: "🇬🇧", isEU: false },
 ];
 
+export const EU_COUNTRIES = europeanCountries.filter((country) => country.isEU === true);
+
 export const products = [
 	{
 		value: "beef",
@@ -459,7 +461,7 @@ export const agriColors = [
 	colors.ag16, colors.ag17, colors.ag18, colors.ag19, colors.ag20,
 ];
 
-export const lcaIndicators = [
+export const MAGNET_INDICATORS = [
 	{
 		label: "Child Labour & Forced Labour",
 		options: [

@@ -358,3 +358,6 @@ export const getMonthDetails = (month, year) => {
 		},
 	};
 };
+
+export const isOpportunityIndicator = (indicator) => indicator === "Contribution of the sector to economic development";
+

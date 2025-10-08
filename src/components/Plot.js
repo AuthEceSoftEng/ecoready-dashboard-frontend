@@ -97,8 +97,11 @@ const Plot = ({
 						suffix: d.suffix,
 						font: { color: colors?.[d?.textColor] || d?.textColor || "black" },
 					},
+					hovertemplate: d.hovertemplate,
+					customdata: d.customdata,
 					sort: d.sort ?? true,
 					orientation: d.orientation || "v",
+					automargin: true,
 				};
 
 				// Add pie-specific properties
@@ -111,7 +114,6 @@ const Plot = ({
 						text: pieDataThereshold(d.values, 0.03),
 						textinfo: "text",
 						hoverinfo: "label+percent+value",
-						automargin: true,
 						insidetextorientation: "radial",
 						domain: { x: [0, 1], y: [0, 1] },
 						textfont: { color: "white", size: 12 },
@@ -126,8 +128,6 @@ const Plot = ({
 							? (colors?.[d.color] || d.color)
 							: agriColors[index % agriColors.length],
 					},
-					hovertemplate: d.hovertemplate, // Add this line
-					customdata: d.customdata, // Add this line
 					gauge: d.type === "indicator" ? {
 						axis: { range: d.range },
 						bar: { color: colors?.[d?.color] || d?.color, thickness: 1 },
@@ -141,7 +141,6 @@ const Plot = ({
 						}),
 					} : undefined,
 					domain: { x: [0, 1], y: [0, 1] },
-					automargin: true,
 					labels: d.labels,
 					textfont: { color: "white" },
 				};
