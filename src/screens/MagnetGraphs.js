@@ -376,7 +376,7 @@ const createAllIndicatorsChart = (riskAssessmentData, selectedIndicator = null, 
 	if (sortedRiskTraces.length > 0 && sortedOpportunityTraces.length > 0) {
 		// Count total indicators from risk traces (excluding dummy traces with null y values)
 		const riskIndicatorCount = sortedRiskTraces
-			.reduce((count, trace) => count + (trace.y && trace.y.filter((y) => y !== null).length), 0);
+			.reduce((count, trace) => count + (trace.y && trace.y.length > 0 ? trace.y.filter((y) => y !== null).length : 0), 0);
 
 		// Position the line between the last risk indicator and first opportunity indicator
 		separatorPosition = riskIndicatorCount - 0.5;
@@ -566,7 +566,7 @@ const MAGNETGraphs = ({
 	dataSets,
 	isLoading,
 }) => {
-	const isOpportunityState = useMemo(() => isOpportunityIndicator(selections.indicator.value), [selections.indicator.value]);
+	const isOpportunityState = isOpportunityIndicator(selections.indicator.value);
 	const { riskAssessmentData, indicatorsData, selectedCountryRiskData } = useChartData(
 		dataSets, selections.country, selections.compareCountries,
 	);
