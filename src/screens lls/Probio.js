@@ -39,8 +39,6 @@ const Probio = () => {
 
 	const handleDateChange = useCallback((newValue, setter) => {
 		if (!newValue?.$d) return;
-
-		// Immediate visual feedback
 		setter(newValue.$d);
 		debouncedSetDate(newValue.$d, setter);
 	}, [debouncedSetDate]);

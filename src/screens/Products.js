@@ -22,12 +22,7 @@ const { year } = calculateDates(customDate);
 
 const currentYear = new Date().getFullYear();
 
-const agriColors = [
-	colors.ag1, colors.ag2, colors.ag3, colors.ag4, colors.ag5,
-	colors.ag6, colors.ag7, colors.ag8, colors.ag9, colors.ag10,
-	colors.ag11, colors.ag12, colors.ag13, colors.ag14, colors.ag15,
-	colors.ag16, colors.ag17, colors.ag18, colors.ag19, colors.ag20,
-];
+const agriColors = Array.from({ length: 20 }, (_, i) => colors[`ag${i + 1}`]);
 const agColorKeys = Array.from({ length: 20 }, (_, i) => `ag${i + 1}`);
 
 const getProductionSumField = (productionData) => {
@@ -43,22 +38,27 @@ const getProductionSumField = (productionData) => {
 const getUniqueCountries = (periodPrices, globalProduct) => {
 	if (!Array.isArray(periodPrices)) return [];
 
-	// Get unique keys from periodPrices
-	const uniqueKeys = [...new Set(periodPrices.map((item) => item.key))].filter((key) => key !== "EU");
-
-	if (globalProduct === "Sugar") {
-		// For Sugar, return only countries with valid regions (Region 1, 2, 3)
-		return europeanCountries
-			.filter((country) => country.region?.startsWith("Region"))
-			.map((country) => ({
-				...country,
-				text: country.region, // Use region as display text for Sugar
-				value: country.region, // Use region as value for Sugar
-			}));
+	const uniqueKeys = new Set();
+	for (const item of periodPrices) {
+		if (item.key && item.key !== "EU") uniqueKeys.add(item.key);
 	}
 
-	// For other products, use normal country mapping
-	return uniqueKeys
+	if (globalProduct === "Sugar") {
+		const regions = new Map();
+		for (const country of europeanCountries) {
+			if (country.region?.startsWith("Region")) {
+				regions.set(country.region, {
+					...country,
+					text: country.region,
+					value: country.region,
+				});
+			}
+		}
+
+		return [...regions.values()];
+	}
+
+	return [...uniqueKeys]
 		.map((key) => europeanCountries.find((country) => country.value === key))
 		.filter(Boolean);
 };
@@ -261,7 +261,7 @@ const ProductsScreen = () => {
 			// Reset timeout flag when loading starts
 			setProductionTimeoutReached(false);
 
-			// Set a timeout (e.g., 10 seconds)
+			// Set a timeout (e.g., 12 seconds)
 			const timeoutId = setTimeout(() => {
 				if (isProductionLoading) {
 					setProductionTimeoutReached(true);
@@ -299,9 +299,11 @@ const ProductsScreen = () => {
 	const periodPrices = useMemo(() => dataSets?.periodPrices || [], [dataSets]);
 	const monthlyPrices = useMemo(() => dataSets?.monthlyPrices || [], [dataSets]);
 	const maxPrices = useMemo(() => dataSets?.maxPrice || [], [dataSets]);
-	const isValidPrice = useMemo(() => isValidArray(pricesTimeline), [pricesTimeline]);
-	const isValidPeriodPrices = useMemo(() => isValidArray(periodPrices), [periodPrices]);
-	const isValidMonthlyPrices = useMemo(() => isValidArray(monthlyPrices), [monthlyPrices]);
+	const priceValidations = useMemo(() => ({
+		timeline: isValidArray(pricesTimeline),
+		period: isValidArray(periodPrices),
+		monthly: isValidArray(monthlyPrices),
+	}), [pricesTimeline, periodPrices, monthlyPrices]);
 	const maxPrice = useMemo(() => {
 		// Ensure maxPrices is an array
 		const maxPricesArray = Array.isArray(maxPrices) ? maxPrices : [maxPrices].filter(Boolean);
@@ -391,7 +393,6 @@ const ProductsScreen = () => {
 	// Function to categorize production data by country
 	const transformProductionData = useCallback((productionData, yearPicker, sumFieldName) => {
 		const timestamp = `${yearPicker}-01-01T00:00:00`;
-		const euData = productionData.EU?.find((item) => item.timestamp === timestamp)?.[sumFieldName] || 0;
 
 		const countryMap = new Map(
 			Object.entries(productionData)
@@ -424,7 +425,6 @@ const ProductsScreen = () => {
 			}
 
 			return {
-				euProduction: euData,
 				countryData: Array.from(regionMap, ([label, production]) => ({
 					label,
 					production,
@@ -433,7 +433,6 @@ const ProductsScreen = () => {
 		}
 
 		return {
-			euProduction: euData,
 			countryData: Array.from(countryMap, ([label, production]) => ({
 				label,
 				production,
@@ -712,24 +711,22 @@ const ProductsScreen = () => {
 	}, [priceCollections, priceProducts, priceProductTypes, existingCountries, selectedPriceCollection.text, priceState, collectionOptions?.products, collectionOptions?.productTypes, priceOptions.product, priceOptions.productType, priceOptions.country, globalProduct]);
 
 	useEffect(() => {
-		if (selectedProductDetails) {
-			const priceFields = extractFields(selectedProductDetails, "prices").fields;
+		if (!selectedProductDetails) return;
 
-			setPriceOptions((prev) => ({
-				...prev,
-				// Only update if current values aren't valid options
-				product: priceProducts.some((p) => p.text === prev.product || p === prev.product)
-					? prev.product
-					: priceFields[0]?.products?.[0]?.text ?? priceFields[0]?.products?.[0],
-				productType: priceProductTypes.some((p) => p.text === prev.productType || p === prev.productType)
-					? prev.productType
-					: priceFields[0]?.productTypes?.[0]?.text ?? priceFields[0]?.productTypes?.[0],
-				productVar: priceProductTypes.some((p) => p.value === prev.productVar || p === prev.productVar)
-					? prev.productVar
-					: priceFields[0]?.productTypes?.[0]?.value ?? priceFields[0]?.productTypes?.[0],
-			}));
-		}
-	}, [selectedProductDetails, priceProducts, priceProductTypes]);
+		const priceFields = extractFields(selectedProductDetails, "prices").fields;
+		const hasValidProduct = priceProducts.some((p) => p.text === priceOptions.product || p === priceOptions.product);
+		const hasValidType = priceProductTypes.some((p) => p.text === priceOptions.productType || p === priceOptions.productType);
+		const hasValidVar = priceProductTypes.some((p) => p.value === priceOptions.productVar || p === priceOptions.productVar);
+
+		if (hasValidProduct && hasValidType) return;
+
+		setPriceOptions((prev) => ({
+			...prev,
+			product: hasValidProduct ? prev.product : priceFields[0]?.products?.[0]?.text ?? priceFields[0]?.products?.[0],
+			productType: hasValidType ? prev.productType : priceFields[0]?.productTypes?.[0]?.text ?? priceFields[0]?.productTypes?.[0],
+			productVar: hasValidVar ? prev.productVar : priceFields[0]?.productTypes?.[0]?.value ?? priceFields[0]?.productTypes?.[0],
+		}));
+	}, [selectedProductDetails, priceProducts, priceProductTypes, priceOptions.product, priceOptions.productType, priceOptions.productVar]);
 
 	useEffect(() => {
 		// Only set initial collection if no collection is currently selected
@@ -854,7 +851,7 @@ const ProductsScreen = () => {
 			// Monthly price gauge
 			{
 				data: {
-					value: isValidMonthlyPrices
+					value: priceValidations.monthly
 						? monthlyPrices.find((item) => item.key === countryKey)?.avg_price ?? null
 						: null,
 					subtitle: "Current Month's Average Price",
@@ -862,7 +859,7 @@ const ProductsScreen = () => {
 				color: "secondary",
 				suffix: `${units.priceUnit}`,
 				shape: "angular",
-				warning: !isValidMonthlyPrices || !monthlyPrices.find((item) => item.key === countryKey)?.avg_price
+				warning: !priceValidations.monthly || !monthlyPrices.find((item) => item.key === countryKey)?.avg_price
 					? `No price data available for ${priceOptions.country} in the current month`
 					: null,
 			},
@@ -871,8 +868,8 @@ const ProductsScreen = () => {
 				title: `${globalProduct}'s Price Timeline`,
 				data: [
 					{
-						x: isValidPrice ? pricesTimeline.filter((item) => item.key === countryKey).map((item) => item.interval_start) : null,
-						y: isValidPrice ? pricesTimeline.filter((item) => item.key === countryKey).map((item) => item.avg_price) : null,
+						x: priceValidations.timeline ? pricesTimeline.filter((item) => item.key === countryKey).map((item) => item.interval_start) : null,
+						y: priceValidations.timeline ? pricesTimeline.filter((item) => item.key === countryKey).map((item) => item.avg_price) : null,
 						type: "scatter",
 						mode: "lines",
 						color: "secondary",
@@ -881,7 +878,7 @@ const ProductsScreen = () => {
 				],
 				color: "secondary",
 				yaxis: { title: `Average ${units.priceUnit}`, automargin: true },
-				warning: !isValidPrice || !pricesTimeline.find((item) => item.key === countryKey)?.avg_price
+				warning: !priceValidations.timeline || !pricesTimeline.find((item) => item.key === countryKey)?.avg_price
 					? `No price timeline data available for ${priceOptions.country}`
 					: pricesTimeline.filter((item) => item.key === countryKey).length === 1
 						? "Only one data point available - unable to show timeline"
@@ -890,7 +887,7 @@ const ProductsScreen = () => {
 			// Period price gauge
 			{
 				data: {
-					value: isValidPeriodPrices
+					value: priceValidations.period
 						? periodPrices.find((item) => item.key === countryKey)?.avg_price ?? null
 						: null,
 					subtitle: "Specified Period's Average Price",
@@ -898,12 +895,12 @@ const ProductsScreen = () => {
 				color: "secondary",
 				suffix: `${units.priceUnit}`,
 				shape: "angular",
-				warning: !isValidPeriodPrices || !periodPrices.find((item) => item.key === countryKey)?.avg_price
+				warning: !priceValidations.period || !periodPrices.find((item) => item.key === countryKey)?.avg_price
 					? `No price data available for ${priceOptions.country} in the selected period`
 					: null,
 			},
 		];
-	}, [globalProduct, existingCountries, dataSets.periodProduction, europeOverview?.countryMaxValue, units.productionUnit, units.priceUnit, priceOptions.country, isValidMonthlyPrices, monthlyPrices, isValidPrice, pricesTimeline, isValidPeriodPrices, periodPrices]);
+	}, [globalProduct, existingCountries, dataSets.periodProduction, europeOverview?.countryMaxValue, units.productionUnit, units.priceUnit, priceOptions.country, priceValidations.monthly, monthlyPrices, priceValidations.timeline, pricesTimeline, priceValidations.period, periodPrices]);
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
@@ -942,7 +939,6 @@ const ProductsScreen = () => {
 									{isProductionLoading ? (<LoadingIndicator minHeight="405px" />
 									) : (hasProductionData ? (
 										<Grid container display="flex" direction="row" justifyContent="space-evenly" sx={{ flex: 1 }}>
-											{/* Rest of the production card content */}
 											<Grid container display="flex" direction="row" justifyContent="space-evenly" sx={{ flex: 1 }}>
 												<Grid item xs={12} sm={12} md={12} justifyContent="center" alignItems="center">
 													{europeOverview?.charts.gauge.warning ? (
@@ -1053,7 +1049,7 @@ const ProductsScreen = () => {
 										{isProductionGauge && isPriceLoading ? (<LoadingIndicator />
 										) : plotData.warning ? (<DataWarning message={plotData.warning} />
 										) : isTimelinePlot ? (
-											<Plot scrollZoom data={plotData.data} xaxis={plotData.xaxis} yaxis={plotData.yaxis} showLegend={false} />
+											<Plot scrollZoom data={plotData.data} yaxis={plotData.yaxis} showLegend={false} />
 										) : (
 											<Plot
 												showLegend
