@@ -3,11 +3,12 @@ import { memo, useRef, useMemo, useState, useCallback } from "react";
 
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
+import StickyBand from "../components/StickyBand.js";
 import useInit from "../utils/screen-init.js";
 import Footer from "../components/Footer.js";
 import { organization, sites, getTimelineConfigs, getLocationProductionConfigs, getVarCodeGroupedConfigs } from "../config/ConcatConfig.js";
 import { debounce, calculateDates, groupByKey, isValidArray } from "../utils/data-handling-functions.js";
-import { cardFooter, StickyBand, LoadingIndicator, DataWarning } from "../utils/rendering-items.js";
+import { cardFooter, LoadingIndicator, DataWarning } from "../utils/rendering-items.js";
 
 const currentYear = new Date().getFullYear();
 const weatherMetricList = {
@@ -136,7 +137,11 @@ const CONCATLL = () => {
 	const varietyState = useInit(organization, fetchVarCodeGroupedConfigs);
 
 	// Extract data from each state
-	const { isLoading: isLoadingProduction, dataSets: productionDataSets, minutesAgo: productionMinutesAgo } = productionState.state;
+	const {
+		isLoading: isLoadingProduction,
+		dataSets: productionDataSets,
+		minutesAgo: productionMinutesAgo,
+	} = productionState.state;
 	const { isLoading: isLoadingWeather, dataSets: weatherDataSets, minutesAgo: weatherMinutesAgo } = weatherState.state;
 	const { isLoading: isLoadingVariety, dataSets: varietyDataSets, minutesAgo: varietyMinutesAgo } = varietyState.state;
 	// Weather data processing (using weatherDataSets instead of dataSets)

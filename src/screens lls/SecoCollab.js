@@ -3,10 +3,11 @@ import { memo, useMemo, useState, useCallback, useRef } from "react";
 
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
+import StickyBand from "../components/StickyBand.js";
 import useInit from "../utils/screen-init.js";
 import secoConfigs, { organization } from "../config/SecoConfig.js";
 import { calculateDates, debounce } from "../utils/data-handling-functions.js";
-import { cardFooter, LoadingIndicator, StickyBand, DataWarning } from "../utils/rendering-items.js";
+import { cardFooter, LoadingIndicator, DataWarning } from "../utils/rendering-items.js";
 
 const timelineValues = ["Temperature", "Humidity", "Co2"];
 const MIN_DATE = new Date(2023, 9, 1);

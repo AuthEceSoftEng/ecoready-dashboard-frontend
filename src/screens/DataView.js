@@ -1,19 +1,15 @@
-import { Grid, Typography, Box, Link as MaterialLink, ToggleButtonGroup, ToggleButton } from "@mui/material";
+import { Grid, Typography, Box, Link as MaterialLink } from "@mui/material";
 import { memo, useMemo, useState, useCallback, useRef } from "react";
-import { Edit, Archive, Delete } from "@mui/icons-material";
+// import { Edit, Archive, Delete } from "@mui/icons-material";
 import { dateOldToNew, stringAToZInsensitive } from "@iamnapo/sort";
 
 import Table from "../components/Table.js";
-import Card from "../components/Card.js";
-import Plot from "../components/Plot.js";
-import useInit from "../utils/screen-init.js";
-import { organization, livOrganicConfigs } from "../config/LivOrganicConfig.js";
-import { debounce, calculateDates, calculateDifferenceBetweenDates } from "../utils/data-handling-functions.js";
+import StickyBand from "../components/StickyBand.js";
+import { debounce, calculateDates } from "../utils/data-handling-functions.js";
 // import { monthNames } from "../utils/useful-constants.js";
-import { cardFooter, DataWarning, LoadingIndicator, StickyBand } from "../utils/rendering-items.js";
+import { DataWarning } from "../utils/rendering-items.js";
 import { isFuzzyMatch, dayjs } from "../utils/index.js";
 import { products } from "../utils/useful-constants.js"; // Import the products
-import Dropdown from "../components/Dropdown"; // Already imported in StickyBand
 
 const DataView = () => {
 	const [startDate, setStartDate] = useState("2024-06-01");

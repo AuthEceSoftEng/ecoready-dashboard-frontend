@@ -3,10 +3,11 @@ import { memo, useMemo, useState, useCallback, useRef } from "react";
 
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
+import StickyBand from "../components/StickyBand.js";
 import useInit from "../utils/screen-init.js";
 import ecoReadyMasuriaConfigs, { organization } from "../config/EcoReadyMasuriaConfig.js";
 import { findKeyByText } from "../utils/data-handling-functions.js";
-import { cardFooter, StickyBand, DataWarning, LoadingIndicator } from "../utils/rendering-items.js";
+import { cardFooter, DataWarning, LoadingIndicator } from "../utils/rendering-items.js";
 
 const REGIONS = [
 	{ value: "BEZEK", text: "Bezek" },
@@ -70,9 +71,18 @@ const EcoReadyMasuria = () => {
 
 	// Pre-compute data transformations
 	const chartData = useMemo(() => {
-		if (!isValidData) return { timestamps: [], maxTemp: [], meanTemp: [], minTemp: [], groundTemp: [], precipitation: [], snowHeight: [] };
+		if (!isValidData) {
+			return {
+				timestamps: [],
+				maxTemp: [],
+				meanTemp: [],
+				minTemp: [],
+				groundTemp: [],
+				precipitation: [],
+				snowHeight: [],
+			};
+		}
 
-		// 3. Use single pass instead of multiple map calls
 		const timestamps = [];
 		const maxTemp = [];
 		const meanTemp = [];

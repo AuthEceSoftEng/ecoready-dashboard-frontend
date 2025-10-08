@@ -6,7 +6,7 @@ import Footer from "../components/Footer.js";
 import useInit from "../utils/screen-init.js";
 import { magnetConfigs, organization } from "../config/MagnetConfig.js";
 import { findKeyByText, isOpportunityIndicator } from "../utils/data-handling-functions.js";
-import { StickyBand } from "../utils/rendering-items.js";
+import StickyBand from "../components/StickyBand.js";
 import { EU_COUNTRIES, MAGNET_INDICATORS } from "../utils/useful-constants.js";
 import { getFile } from "../api/index.js";
 

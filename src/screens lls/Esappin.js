@@ -3,10 +3,11 @@ import { memo, useMemo, useState, useCallback, useRef } from "react";
 
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
+import StickyBand from "../components/StickyBand.js";
 import useInit from "../utils/screen-init.js";
 import esappinConfigs, { organization } from "../config/EsappinConfig.js";
 import { getCustomDateTime, getMonthDetails, debounce, findKeyByText, isValidArray } from "../utils/data-handling-functions.js";
-import { cardFooter, LoadingIndicator, StickyBand, DataWarning } from "../utils/rendering-items.js";
+import { cardFooter, LoadingIndicator, DataWarning } from "../utils/rendering-items.js";
 import { monthNames } from "../utils/useful-constants.js";
 
 const PRODUCTS = [

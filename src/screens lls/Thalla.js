@@ -3,10 +3,11 @@ import { memo, useMemo, useState, useCallback, useRef } from "react";
 
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
+import StickyBand from "../components/StickyBand.js";
 import useInit from "../utils/screen-init.js";
 import { thallaConfigs, organization } from "../config/ThallaConfig.js";
 import { calculateDates, calculateDifferenceBetweenDates, debounce } from "../utils/data-handling-functions.js";
-import { cardFooter, LoadingIndicator, StickyBand, DataWarning } from "../utils/rendering-items.js";
+import { cardFooter, LoadingIndicator, DataWarning } from "../utils/rendering-items.js";
 
 const REGIONS = ["Amfissa", "Evoia", "Larisa", "Lamia", "Thiva"];
 
