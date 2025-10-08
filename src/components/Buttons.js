@@ -10,6 +10,7 @@ export const PrimaryBackgroundButton = ({
 	size = "",
 	width = "200px",
 	height = null,
+	borderRadius = "8px",
 	title = "Button",
 	onClick,
 }) => (
@@ -22,7 +23,7 @@ export const PrimaryBackgroundButton = ({
 		variant="contained"
 		color="primary"
 		size={(size || "")}
-		style={{ ...(width && { width }), ...(height && { height }) }}
+		style={{ ...(width && { width }), ...(height && { height }), borderRadius }}
 		onClick={onClick}
 	>
 		<Typography className={titleClassName} sx={{ color: `${titleColor}!important` }} style={{ textTransform: "none" }}>
@@ -43,6 +44,7 @@ export const PrimaryBorderButton = ({
 	size = "",
 	width = "200px",
 	height = null,
+	borderRadius = "8px",
 	title = "Button",
 	backgroundColor = "white",
 	onClick,
@@ -56,7 +58,7 @@ export const PrimaryBorderButton = ({
 		variant="outlined"
 		color="primary"
 		size={(size || "")}
-		style={{ ...(width && { width }), ...(height && { height }), backgroundColor: (backgroundColor || "white"), borderWidth: "2px", borderColor: titleColor }}
+		style={{ ...(width && { width }), ...(height && { height }), backgroundColor: (backgroundColor || "white"), borderWidth: "2px", borderColor: titleColor, borderRadius }}
 		onClick={onClick}
 	>
 		<Typography className={titleClassName} sx={{ color: `${titleColor}!important` }} style={{ textTransform: "none" }}>
@@ -76,6 +78,7 @@ export const SecondaryBackgroundButton = ({
 	titleColor = "white",
 	size = "",
 	width = "200px",
+	borderRadius = "8px",
 	title = "Button",
 	onClick,
 }) => (
@@ -88,7 +91,7 @@ export const SecondaryBackgroundButton = ({
 		variant="contained"
 		color="secondary"
 		size={(size || "")}
-		style={{ ...(width && { width }) }}
+		style={{ ...(width && { width }), borderRadius }}
 		onClick={onClick}
 	>
 		<Typography className={titleClassName} sx={{ color: `${titleColor}!important` }} style={{ textTransform: "none" }}>
@@ -108,6 +111,7 @@ export const SecondaryBorderButton = ({
 	titleColor = "secondary",
 	size = "",
 	width = "200px",
+	borderRadius = "8px",
 	title = "Button",
 	backgroundColor = "white",
 	onClick,
@@ -121,7 +125,7 @@ export const SecondaryBorderButton = ({
 		variant="outlined"
 		color="secondary"
 		size={(size || "")}
-		style={{ ...(width && { width }), backgroundColor: (backgroundColor || "white"), borderWidth: "3px" }}
+		style={{ ...(width && { width }), backgroundColor: (backgroundColor || "white"), borderWidth: "3px", borderRadius }}
 		onClick={onClick}
 	>
 		<Typography className={titleClassName} sx={{ color: `${titleColor}!important` }} style={{ textTransform: "none" }}>
@@ -141,6 +145,7 @@ export const HighlightBackgroundButton = ({
 	titleColor = "white",
 	size = "",
 	width = "200px",
+	borderRadius = "8px",
 	title = "Button",
 	onClick,
 }) => (
@@ -153,7 +158,7 @@ export const HighlightBackgroundButton = ({
 		variant="contained"
 		color="third"
 		size={(size || "")}
-		style={{ ...(width && { width }) }}
+		style={{ ...(width && { width }), borderRadius }}
 		onClick={onClick}
 	>
 		<Typography className={titleClassName} sx={{ color: `${titleColor}!important` }} style={{ textTransform: "none" }}>
@@ -173,6 +178,7 @@ export const HighlightBorderButton = ({
 	titleColor = "third",
 	size = "",
 	width = "200px",
+	borderRadius = "8px",
 	title = "Button",
 	backgroundColor = "white",
 	onClick,
@@ -186,7 +192,7 @@ export const HighlightBorderButton = ({
 		variant="outlined"
 		color="third"
 		size={(size || "")}
-		style={{ ...(width && { width }), backgroundColor: (backgroundColor || "white"), borderWidth: "3px" }}
+		style={{ ...(width && { width }), backgroundColor: (backgroundColor || "white"), borderWidth: "3px", borderRadius }}
 		onClick={onClick}
 	>
 		<Typography className={titleClassName} sx={{ color: `${titleColor}!important` }} style={{ textTransform: "none" }}>
@@ -206,6 +212,7 @@ export const SuccessBackgroundButton = ({
 	titleColor = "white",
 	size = "",
 	width = "200px",
+	borderRadius = "8px",
 	title = "Button",
 	onClick,
 }) => (
@@ -218,7 +225,7 @@ export const SuccessBackgroundButton = ({
 		variant="contained"
 		color="success"
 		size={(size || "")}
-		style={{ ...(width && { width }) }}
+		style={{ ...(width && { width }), borderRadius }}
 		onClick={onClick}
 	>
 		<Typography className={titleClassName} sx={{ color: `${titleColor}!important` }} style={{ textTransform: "none" }}>
@@ -238,6 +245,7 @@ export const ErrorBackgroundButton = ({
 	titleColor = "white",
 	size = "",
 	width = "200px",
+	borderRadius = "8px",
 	title = "Button",
 	onClick,
 }) => (
@@ -250,7 +258,7 @@ export const ErrorBackgroundButton = ({
 		variant="contained"
 		color="error"
 		size={(size || "")}
-		style={{ ...(width && { width }) }}
+		style={{ ...(width && { width }), borderRadius }}
 		onClick={onClick}
 	>
 		<Typography className={titleClassName} sx={{ color: `${titleColor}!important` }} style={{ textTransform: "none" }}>
@@ -270,6 +278,7 @@ export const InfoBackgroundButton = ({
 	titleColor = "white",
 	size = "",
 	width = "200px",
+	borderRadius = "8px",
 	title = "Button",
 	onClick,
 }) => (
@@ -282,7 +291,7 @@ export const InfoBackgroundButton = ({
 		variant="contained"
 		color="info"
 		size={(size || "")}
-		style={{ ...(width && { width }) }}
+		style={{ ...(width && { width }), borderRadius }}
 		onClick={onClick}
 	>
 		<Typography className={titleClassName} sx={{ color: `${titleColor}!important` }} style={{ textTransform: "none" }}>

@@ -7,7 +7,7 @@ const useStyles = makeStyles((theme) => ({
 	primary_filled: {
 		backgroundColor: theme.palette.primary.main,
 		color: "white!important",
-		borderRadius: "10px",
+		borderRadius: (props) => props.borderRadius, // Use props
 		borderBottom: "0px",
 		"&, &:before, &:after": {
 			borderBottom: "0px!important",
@@ -27,7 +27,7 @@ const useStyles = makeStyles((theme) => ({
 	primary_outlined: {
 		backgroundColor: "transparent",
 		borderColor: theme.palette.primary.main,
-		borderRadius: "10px",
+		borderRadius: (props) => props.borderRadius, // Use props
 		borderBottom: "0px",
 		"&, &:before, &:after": {
 			borderBottom: "0px!important",
@@ -47,7 +47,7 @@ const useStyles = makeStyles((theme) => ({
 	secondary_filled: {
 		backgroundColor: theme.palette.secondary.main,
 		color: "white!important",
-		borderRadius: "10px",
+		borderRadius: (props) => props.borderRadius, // Use props
 		borderBottom: "0px",
 		"&, &:before, &:after": {
 			borderBottom: "0px!important",
@@ -67,7 +67,7 @@ const useStyles = makeStyles((theme) => ({
 	secondary_outlined: {
 		backgroundColor: "transparent",
 		borderColor: theme.palette.secondary.main,
-		borderRadius: "10px",
+		borderRadius: (props) => props.borderRadius, // Use props
 		borderBottom: "0px",
 		"&, &:before, &:after": {
 			borderBottom: "0px!important",
@@ -87,7 +87,7 @@ const useStyles = makeStyles((theme) => ({
 	third_filled: {
 		backgroundColor: theme.palette.third.main,
 		color: "white!important",
-		borderRadius: "10px",
+		borderRadius: (props) => props.borderRadius, // Use props
 		borderBottom: "0px",
 		"&, &:before, &:after": {
 			borderBottom: "0px!important",
@@ -107,7 +107,7 @@ const useStyles = makeStyles((theme) => ({
 	third_outlined: {
 		backgroundColor: "transparent",
 		borderColor: "third",
-		borderRadius: "10px",
+		borderRadius: (props) => props.borderRadius, // Use props
 		borderBottom: "0px",
 		"&, &:before, &:after": {
 			borderBottom: "0px!important",
@@ -138,13 +138,14 @@ const Dropdown = ({
 	background = "secondary",
 	width = "",
 	height = "",
+	borderRadius = "16px",
 	items = [],
 	value,
 	subheader = false,
 	multiple = false,
 	onChange,
 }) => {
-	const classes = useStyles();
+	const classes = useStyles({ borderRadius });
 
 	// Custom render for multiple selection
 	const renderValue = (selected) => {
