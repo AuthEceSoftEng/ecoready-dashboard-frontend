@@ -61,7 +61,6 @@ const LOFS = () => {
 	const { state } = useInit(organization, fetchConfigs);
 	const { isLoading, dataSets, minutesAgo } = state;
 	const metrics = useMemo(() => dataSets?.metrics || [], [dataSets]);
-	console.log("Metrics Data:", metrics);
 
 	const getFirstValue = useCallback((dataSet, key) => (isValidArray(dataSet) ? dataSet[0]?.[key] ?? null : null),
 		[]);
