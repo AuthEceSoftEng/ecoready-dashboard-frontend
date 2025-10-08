@@ -3,11 +3,11 @@ import { memo, useMemo, useState, useCallback, useRef } from "react";
 
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
+import StickyBand from "../components/StickyBand.js";
 import useInit from "../utils/screen-init.js";
 import { organization, livOrganicConfigs } from "../config/LivOrganicConfig.js";
 import { calculateDates, calculateDifferenceBetweenDates } from "../utils/data-handling-functions.js";
-// import { monthNames } from "../utils/useful-constants.js";
-import { cardFooter, DataWarning, LoadingIndicator, StickyBand } from "../utils/rendering-items.js";
+import { cardFooter, DataWarning, LoadingIndicator } from "../utils/rendering-items.js";
 
 const LivOrganic = () => {
 	const [startDate, setStartDate] = useState("2024-06-01");

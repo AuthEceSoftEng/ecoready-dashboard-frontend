@@ -4,10 +4,11 @@ import { memo, useMemo, useState, useCallback, useRef, useEffect } from "react";
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
 import PaginationControls from "../components/Pagination.js";
+import StickyBand from "../components/StickyBand.js";
 import efsaConfigs, { organization } from "../config/EfsaConfig.js";
 import useInit from "../utils/screen-init.js";
 import { isValidArray, groupByKey } from "../utils/data-handling-functions.js";
-import { wrapText, truncateText, capitalizeWords, cardFooter, LoadingIndicator, StickyBand, DataWarning } from "../utils/rendering-items.js";
+import { wrapText, truncateText, capitalizeWords, cardFooter, LoadingIndicator, DataWarning } from "../utils/rendering-items.js";
 import { UNIT_CONVERSION_FACTORS } from "../utils/useful-constants.js";
 
 const countries = ["Austria", "Belgium", "Bulgaria", "Croatia", "Denmark", "France", "Germany", "Greece", "Ireland", "Italy", "Lithuania", "Luxembourg", "Netherlands", "Poland", "Portugal", "Republic of north macedonia", "Romania", "Serbia", "Slovakia", "Spain", "Ukraine", "United kingdom"];

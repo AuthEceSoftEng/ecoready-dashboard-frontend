@@ -6,6 +6,7 @@ import { memo, useMemo, useState, useCallback, useRef, useEffect } from "react";
 import colors from "../_colors.scss";
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
+import StickyBand from "../components/StickyBand.js";
 import useInit from "../utils/screen-init.js";
 import { getPriceConfigs, getMonthlyPriceConfigs, getProductionConfigs, organization } from "../config/ProductConfig.js";
 import {
@@ -13,7 +14,7 @@ import {
 	debounce, isValidArray, generateYearsArray, groupByKey,
 	findKeyByText,
 } from "../utils/data-handling-functions.js";
-import { cardFooter, LoadingIndicator, StickyBand, DataWarning } from "../utils/rendering-items.js";
+import { cardFooter, LoadingIndicator, DataWarning } from "../utils/rendering-items.js";
 import { europeanCountries, products } from "../utils/useful-constants.js";
 
 const customDate = getCustomDateTime(2024, 12);
@@ -907,6 +908,7 @@ const ProductsScreen = () => {
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
 			<StickyBand dropdownContent={productDropdownContent} />
+
 			{/* PRODUCTION CARDS */}
 			<Grid item xs={12} md={12} alignItems="center" flexDirection="column">
 				<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2} sx={{ minHeight: "500px" }}>
@@ -1029,7 +1031,7 @@ const ProductsScreen = () => {
 			<Grid item xs={12} md={12} mb={2} alignItems="center" flexDirection="column">
 				<Card title="Product per Country" footer={cardFooter({ minutesAgo })}>
 					<StickyBand sticky={false} dropdownContent={priceDropdowns} formRef={formRefDate} formContent={formContentDate} />
-					{state.isLoading || isPriceLoading ? (<LoadingIndicator minHeight="400px" />
+					{state.isLoading || (isPriceLoading && !priceTimeoutReached) ? (<LoadingIndicator minHeight="400px" />
 					) : existingCountries.length === 0 ? (<DataWarning minHeight="400px" message="No Available Pricing Data For the Specified Options' Combination" />
 					) : dateMetrics.isValidDateRange ? (
 						<Grid container display="flex" direction="row" justifyContent="space-evenly" padding={0} spacing={1}>

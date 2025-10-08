@@ -4,11 +4,11 @@ import { memo, useMemo, useRef, useState, useCallback } from "react";
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
 import useInit from "../utils/screen-init.js";
-// import Form from "../components/Form.js";
+import StickyBand from "../components/StickyBand.js";
 import { ecoVitallConfigs, randomDataRadial, organization } from "../config/EcoVitallConfig.js";
 import { calculateDates, getCustomDateTime, debounce, isValidArray } from "../utils/data-handling-functions.js";
 import { monthNames } from "../utils/useful-constants.js";
-import { cardFooter, LoadingIndicator, StickyBand } from "../utils/rendering-items.js";
+import { cardFooter, LoadingIndicator } from "../utils/rendering-items.js";
 
 const PRODUCTS = [
 	{ value: "microgreens", text: "Microgreens" },

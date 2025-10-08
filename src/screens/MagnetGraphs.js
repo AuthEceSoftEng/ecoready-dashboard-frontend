@@ -3,8 +3,9 @@ import { memo, useMemo, useRef } from "react";
 
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
+import StickyBand from "../components/StickyBand.js";
 import { groupByKey, findKeyByText, isOpportunityIndicator } from "../utils/data-handling-functions.js";
-import { wrapText, truncateText, capitalizeWords, LoadingIndicator, StickyBand, DataWarning } from "../utils/rendering-items.js";
+import { wrapText, truncateText, capitalizeWords, LoadingIndicator, DataWarning } from "../utils/rendering-items.js";
 import { EU_COUNTRIES, MAGNET_INDICATORS, OPPORTUNITY_LEVELS, RISK_LEVELS, RISK_COLOR_MAP, OPPORTUNITY_LEVEL_ORDER, RISK_LEVEL_ORDER } from "../utils/useful-constants.js";
 
 const AXIS_CONFIGS = {

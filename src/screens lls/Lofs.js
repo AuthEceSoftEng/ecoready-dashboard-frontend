@@ -3,10 +3,11 @@ import { memo, useRef, useMemo, useState, useCallback } from "react";
 
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
+import StickyBand from "../components/StickyBand.js";
 import useInit from "../utils/screen-init.js";
 import lofsConfigs, { organization } from "../config/LofsConfig.js";
 import { getCustomDateTime, getMonthDetails, isValidArray } from "../utils/data-handling-functions.js";
-import { cardFooter, LoadingIndicator, StickyBand, DataWarning } from "../utils/rendering-items.js";
+import { cardFooter, LoadingIndicator, DataWarning } from "../utils/rendering-items.js";
 
 const STATIONS = ["Station 44", "Station 53", "Station 85"];
 const customDate = getCustomDateTime(2024, 10);
