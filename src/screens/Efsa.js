@@ -7,18 +7,15 @@ import PaginationControls from "../components/Pagination.js";
 import efsaConfigs, { organization } from "../config/EfsaConfig.js";
 import useInit from "../utils/screen-init.js";
 import { isValidArray, groupByKey } from "../utils/data-handling-functions.js";
-import { wrapText, truncateText, cardFooter, LoadingIndicator, StickyBand, DataWarning } from "../utils/rendering-items.js";
+import { wrapText, truncateText, capitalizeWords, cardFooter, LoadingIndicator, StickyBand, DataWarning } from "../utils/rendering-items.js";
 import { UNIT_CONVERSION_FACTORS } from "../utils/useful-constants.js";
 
 const countries = ["Austria", "Belgium", "Bulgaria", "Croatia", "Denmark", "France", "Germany", "Greece", "Ireland", "Italy", "Lithuania", "Luxembourg", "Netherlands", "Poland", "Portugal", "Republic of north macedonia", "Romania", "Serbia", "Slovakia", "Spain", "Ukraine", "United kingdom"];
 const BASE_COLORS = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"];
 const GOLDEN_RATIO = 0.618_033_988_749_895;
-
-const TARGET_UNIT = "mg/kg"; // Your standard unit
-
-const ITEMS_PER_PAGE = 7; // for pagination
-
-const MAX_LABEL_LENGTH = 10; // for truncating long labels
+const TARGET_UNIT = "mg/kg";
+const ITEMS_PER_PAGE = 7;
+const MAX_LABEL_LENGTH = 10;
 
 const CONVERSION_CACHE = new Map();
 
@@ -64,39 +61,49 @@ const Efsa = () => {
 	const [selectedProductTimeline, setSelectedProductTimeline] = useState(null);
 	const [selectedProductContaminationTimeline, setSelectedProductContaminationTimeline] = useState(null);
 	const [selectedContaminantForProduct, setSelectedContaminantForProduct] = useState(null);
-	const [yearContaminant, setYearContaminant] = useState("2023");
-	const [yearProduct, setYearProduct] = useState("2023");
-	const [yearStacked, setYearStacked] = useState("2023");
-	const [contaminantChartPage, setContaminantChartPage] = useState(0);
-	const [productChartPage, setProductChartPage] = useState(0);
-	const [stackedBarChartPage, setStackedBarChartPage] = useState(0);
+	const [selectedYears, setSelectedYears] = useState({
+		contaminant: "2023",
+		product: "2023",
+		stacked: "2023",
+	});
+	const [paginationState, setPaginationState] = useState({
+		contaminantChart: 0,
+		productChart: 0,
+		stackedBarChart: 0,
+	});
+
+	const updatePagination = useCallback((chart, page) => {
+		setPaginationState((prev) => ({ ...prev, [chart]: page }));
+	}, []);
+
+	const resetPagination = useCallback((charts) => {
+		setPaginationState((prev) => {
+			const newState = { ...prev };
+			for (const chart of charts) newState[chart] = 0;
+			return newState;
+		});
+	}, []);
 
 	const handleCountryChange = useCallback((e) => {
 		const newCountry = e.target.value;
 		setSelectedCountry(newCountry);
-		setContaminantChartPage(0);
-		setProductChartPage(0);
-		setStackedBarChartPage(0);
-	}, []);
+		resetPagination(["contaminantChart", "productChart", "stackedBarChart"]);
+	}, [resetPagination]);
 
 	const handleContaminantChange = useCallback((e) => {
 		setSelectedContaminant(e.target.value);
-		setContaminantChartPage(0);
-	}, []);
+		resetPagination(["contaminantChart"]);
+	}, [resetPagination]);
 
 	const handleProductChange = useCallback((e) => {
 		setSelectedProduct(e.target.value);
-		setProductChartPage(0);
-	}, []);
+		resetPagination(["productChart"]);
+	}, [resetPagination]);
 
 	// Create separate year change handlers
-	const createYearHandler = useCallback((setter) => (newValue) => {
-		setter(newValue.$y);
+	const handleYearChange = useCallback((type) => (newValue) => {
+		setSelectedYears((prev) => ({ ...prev, [type]: newValue.$y }));
 	}, []);
-
-	const handleContaminantYearChange = useMemo(() => createYearHandler(setYearContaminant), [createYearHandler]);
-	const handleProductYearChange = useMemo(() => createYearHandler(setYearProduct), [createYearHandler]);
-	const handleStackedYearChange = useMemo(() => createYearHandler(setYearStacked), [createYearHandler]);
 
 	// Year picker configurations - consolidated
 	const createYearPickerProps = useCallback((year, handler, key) => [{
@@ -111,24 +118,20 @@ const Efsa = () => {
 		onChange: handler,
 	}], []);
 
-	const productYearPickerRef = useRef(null);
-	const contaminantYearPickerRef = useRef(null);
-	const stackedYearPickerRef = useRef(null);
+	const yearPickerRefs = useRef({
+		contaminant: null,
+		product: null,
+		stacked: null,
+	});
 
-	const productYearPickerProps = useMemo(() => createYearPickerProps(yearProduct, handleProductYearChange, "product-year-picker"),
-		[yearProduct, handleProductYearChange, createYearPickerProps]);
+	const productYearPickerProps = useMemo(() => createYearPickerProps(selectedYears.product, handleYearChange("product")),
+		[createYearPickerProps, selectedYears.product, handleYearChange]);
+	const contaminantYearPickerProps = useMemo(() => createYearPickerProps(selectedYears.contaminant, handleYearChange("contaminant")),
+		[createYearPickerProps, selectedYears.contaminant, handleYearChange]);
+	const stackedYearPickerProps = useMemo(() => createYearPickerProps(selectedYears.stacked, handleYearChange("stacked")),
+		[createYearPickerProps, selectedYears.stacked, handleYearChange]);
 
-	const contaminantYearPickerProps = useMemo(() => createYearPickerProps(yearContaminant, handleContaminantYearChange, "contaminant-year-picker"),
-		[yearContaminant, handleContaminantYearChange, createYearPickerProps]);
-
-	const stackedYearPickerProps = useMemo(() => createYearPickerProps(yearStacked, handleStackedYearChange, "stacked-year-picker"),
-		[yearStacked, handleStackedYearChange, createYearPickerProps]);
-
-	// You'll need to modify your fetchConfigs to handle both years
-	const fetchConfigs = useMemo(
-		() => (selectedCountry ? efsaConfigs(selectedCountry.toLowerCase()) : null),
-		[selectedCountry],
-	);
+	const fetchConfigs = useMemo(() => (selectedCountry ? efsaConfigs(selectedCountry.toLowerCase()) : null), [selectedCountry]);
 
 	const { state } = useInit(organization, fetchConfigs);
 
@@ -152,84 +155,86 @@ const Efsa = () => {
 		}
 
 		// Pre-parse years once
-		const years = {
-			contaminant: Number.parseInt(yearContaminant, 10),
-			product: Number.parseInt(yearProduct, 10),
-			stacked: Number.parseInt(yearStacked, 10),
-		};
+		// Parse years once outside loop - convert strings to numbers
+		const yearContaminant = Number(selectedYears.contaminant);
+		const yearProduct = Number(selectedYears.product);
+		const yearStacked = Number(selectedYears.stacked);
 
-		// Initialize collections
-		const sets = {
-			timelineProducts: new Set(),
-			timelineContaminants: new Set(),
-			chartProducts: new Set(),
-			chartContaminants: new Set(),
-			stackedContaminants: new Set(),
-		};
+		const timelineProducts = new Set();
+		const timelineContaminants = new Set();
+		const chartProducts = new Set();
+		const chartContaminants = new Set();
 
-		const groups = {
-			timelineByProduct: {},
-			timelineByContaminant: {},
-			dataByProduct: {},
-			dataByContaminant: {},
-			dataStacked: {},
-		};
+		const timelineByProduct = Object.create(null);
+		const timelineByContaminant = Object.create(null);
+		const dataByProduct = Object.create(null);
+		const dataByContaminant = Object.create(null);
+		const dataStacked = Object.create(null);
 
 		for (const item of rawTimeline) {
-			const convertedResval = convertToStandardUnitCached(item.resval, item.resunit);
-			const convertedResloq = convertToStandardUnitCached(item.resloq, item.resunit);
+			const { resval, resunit, resloq, key, param, timestamp } = item;
+
+			// Convert units
+			const convertedResval = convertToStandardUnitCached(resval, resunit);
+			const convertedResloq = convertToStandardUnitCached(resloq, resunit);
 
 			const processedItem = {
 				...item,
-				originalResval: item.resval,
-				originalResunit: item.resunit,
 				resval: convertedResval,
 				resloq: convertedResloq,
 				resunit: TARGET_UNIT,
 			};
 
-			// Get year once
-			const itemYear = new Date(item.timestamp).getFullYear();
+			const itemYear = new Date(timestamp).getFullYear();
 
-			// Timeline data (all years)
-			sets.timelineProducts.add(item.key);
-			sets.timelineContaminants.add(item.param);
+			// Timeline data (all years) - always add
+			timelineProducts.add(key);
+			timelineContaminants.add(param);
 
-			(groups.timelineByProduct[item.key] ??= []).push(processedItem);
-			(groups.timelineByContaminant[item.param] ??= []).push(processedItem);
+			if (!timelineByProduct[key]) timelineByProduct[key] = [];
+			timelineByProduct[key].push(processedItem);
 
-			// Year-specific data - only if resval > 0
+			if (!timelineByContaminant[param]) timelineByContaminant[param] = [];
+			timelineByContaminant[param].push(processedItem);
+
+			// Only process year-specific data if resval > 0 (skip zero values early)
 			if (convertedResval > 0) {
-				if (itemYear === years.contaminant) {
-					sets.chartContaminants.add(item.param);
-					(groups.dataByContaminant[item.param] ??= []).push(processedItem);
+				if (itemYear === yearContaminant) {
+					chartContaminants.add(param);
+					if (!dataByContaminant[param]) dataByContaminant[param] = [];
+					dataByContaminant[param].push(processedItem);
 				}
 
-				if (itemYear === years.product) {
-					sets.chartProducts.add(item.key);
-					(groups.dataByProduct[item.key] ??= []).push(processedItem);
+				if (itemYear === yearProduct) {
+					chartProducts.add(key);
+					if (!dataByProduct[key]) dataByProduct[key] = [];
+					dataByProduct[key].push(processedItem);
 				}
 
-				if (itemYear === years.stacked) {
-					sets.stackedContaminants.add(item.param);
-					(groups.dataStacked[item.key] ??= []).push(processedItem);
+				if (itemYear === yearStacked) {
+					if (!dataStacked[key]) dataStacked[key] = [];
+					dataStacked[key].push(processedItem);
 				}
 			}
 		}
 
+		const sortedChartProducts = [...chartProducts].sort();
+		const sortedChartContaminants = [...chartContaminants].sort();
+		const sortedTimelineProducts = [...timelineProducts].sort();
+		const sortedTimelineContaminants = [...timelineContaminants].sort();
+
 		return {
-			uniqueChartProducts: [...sets.chartProducts].sort(),
-			uniqueChartContaminants: [...sets.chartContaminants].sort(),
-			uniqueStackedContaminants: [...sets.stackedContaminants].sort().reverse(),
-			uniqueTimelineProducts: [...sets.timelineProducts].sort(),
-			uniqueTimelineContaminants: [...sets.timelineContaminants].sort(),
-			dataGroupedByProduct: groups.dataByProduct,
-			dataGroupedByContaminant: groups.dataByContaminant,
-			dataStacked: groups.dataStacked,
-			timelineGroupedByProduct: groups.timelineByProduct,
-			timelineGroupedByContaminant: groups.timelineByContaminant,
+			uniqueChartProducts: sortedChartProducts,
+			uniqueChartContaminants: sortedChartContaminants,
+			uniqueTimelineProducts: sortedTimelineProducts,
+			uniqueTimelineContaminants: sortedTimelineContaminants,
+			dataGroupedByProduct: dataByProduct,
+			dataGroupedByContaminant: dataByContaminant,
+			dataStacked,
+			timelineGroupedByProduct: timelineByProduct,
+			timelineGroupedByContaminant: timelineByContaminant,
 		};
-	}, [dataSets?.timeline, yearContaminant, yearProduct, yearStacked]);
+	}, [dataSets?.timeline, selectedYears.contaminant, selectedYears.product, selectedYears.stacked]);
 
 	const dynamicRangesByYear = useMemo(() => {
 		const {
@@ -247,12 +252,8 @@ const Efsa = () => {
 			for (const key of Object.keys(groupedData)) {
 				const items = groupedData[key] || [];
 				for (const item of items) {
-					// Apply filter if specified
-					if (filterKey && filterValue && item[filterKey] !== filterValue) {
-						continue;
-					}
-
-					if (item.resval > 0) {
+					// Apply filter if specified. Process if no filter or if item matches filter.
+					if ((!filterKey || !filterValue || item[filterKey] === filterValue) && item.resval > 0) {
 						allValues.push(item.resval);
 					}
 				}
@@ -290,7 +291,6 @@ const Efsa = () => {
 	const {
 		uniqueChartProducts,
 		uniqueChartContaminants,
-		uniqueStackedContaminants,
 		uniqueTimelineProducts,
 		uniqueTimelineContaminants,
 		dataGroupedByProduct,
@@ -312,7 +312,7 @@ const Efsa = () => {
 		"contaminant-dropdown",
 		"Select Contaminant",
 		uniqueChartContaminants,
-		selectedContaminant || "", // Use empty string as fallback
+		selectedContaminant || "",
 		handleContaminantChange,
 	), [handleContaminantChange, selectedContaminant, uniqueChartContaminants]);
 
@@ -320,7 +320,7 @@ const Efsa = () => {
 		"product-dropdown",
 		"Select Product",
 		uniqueChartProducts,
-		selectedProduct || "", // Use empty string as fallback
+		selectedProduct || "",
 		handleProductChange,
 	), [handleProductChange, selectedProduct, uniqueChartProducts]);
 
@@ -352,8 +352,12 @@ const Efsa = () => {
 		if (!selectedProductContaminationTimeline || Object.keys(timelineGroupedByProduct).length === 0) return [];
 
 		const productData = timelineGroupedByProduct[selectedProductContaminationTimeline] || [];
-		const contaminants = [...new Set(productData.map((item) => item.param))].sort();
-		return contaminants;
+		const contaminantSet = new Set();
+		for (const item of productData) {
+			contaminantSet.add(item.param);
+		}
+
+		return [...contaminantSet].sort();
 	}, [timelineGroupedByProduct, selectedProductContaminationTimeline]);
 
 	const contaminantForProductDropdown = useMemo(() => createDropdown(
@@ -387,10 +391,8 @@ const Efsa = () => {
 
 	// Reset pagination effects - consolidated
 	useEffect(() => {
-		setContaminantChartPage(0);
-		setProductChartPage(0);
-		setStackedBarChartPage(0);
-	}, [selectedCountry, selectedContaminant, selectedProduct, yearContaminant, yearProduct]);
+		resetPagination(["contaminantChart", "productChart", "stackedBarChart"]);
+	}, [selectedCountry, resetPagination]);
 
 	const contaminantChartData = useMemo(() => {
 		if (!selectedContaminant || Object.keys(dataGroupedByContaminant).length === 0) return [];
@@ -398,7 +400,7 @@ const Efsa = () => {
 		const contaminantData = dataGroupedByContaminant[selectedContaminant] || [];
 
 		// Apply pagination
-		const startIndex = contaminantChartPage * ITEMS_PER_PAGE;
+		const startIndex = paginationState.contaminantChart * ITEMS_PER_PAGE;
 		const endIndex = startIndex + ITEMS_PER_PAGE;
 		const paginatedData = contaminantData.slice(startIndex, endIndex);
 
@@ -416,7 +418,7 @@ const Efsa = () => {
 				paginatedData, // Store for layout use
 			},
 		];
-	}, [dataGroupedByContaminant, selectedContaminant, contaminantChartPage]);
+	}, [selectedContaminant, dataGroupedByContaminant, paginationState.contaminantChart]);
 
 	const contaminantChartLayout = useMemo(() => {
 		const paginatedData = contaminantChartData[0]?.paginatedData || [];
@@ -451,7 +453,7 @@ const Efsa = () => {
 
 		const productData = dataGroupedByProduct[selectedProduct] || [];
 		// Apply pagination
-		const startIndex = productChartPage * ITEMS_PER_PAGE;
+		const startIndex = paginationState.productChart * ITEMS_PER_PAGE;
 		const endIndex = startIndex + ITEMS_PER_PAGE;
 		const paginatedData = productData.slice(startIndex, endIndex);
 
@@ -468,7 +470,7 @@ const Efsa = () => {
 				paginatedData, // Store for layout use
 			},
 		];
-	}, [dataGroupedByProduct, selectedProduct, productChartPage]);
+	}, [dataGroupedByProduct, selectedProduct, paginationState.productChart]);
 
 	const productChartLayout = useMemo(() => {
 		if (!selectedProduct || Object.keys(dataGroupedByProduct).length === 0) {
@@ -508,50 +510,56 @@ const Efsa = () => {
 	}, [selectedProduct, dataGroupedByProduct, productChartData, dynamicRangesByYear.product]);
 
 	const stackedBarChartData = useMemo(() => {
-		if (!isValidArray(dataSets?.timeline) || uniqueStackedContaminants.length === 0) return [];
+		if (!dataStacked || Object.keys(dataStacked).length === 0) return [];
 
-		// Get all products that have data
 		const availableProducts = Object.keys(dataStacked);
-
-		if (availableProducts.length === 0) return [];
-
-		const startIndex = stackedBarChartPage * ITEMS_PER_PAGE * 2; // Show more items per page for better visibility
+		const startIndex = paginationState.stackedBarChart * ITEMS_PER_PAGE * 2;
 		const endIndex = startIndex + ITEMS_PER_PAGE * 2;
 		const paginatedProducts = availableProducts.slice(startIndex, endIndex);
 
-		// Find contaminants that are actually present in the current page's products
-		const contaminantsInCurrentPage = new Set();
-		for (const product of paginatedProducts) {
-			const productData = dataStacked[product] || [];
-			for (const item of productData) {
-				contaminantsInCurrentPage.add(item.param);
+		if (paginatedProducts.length === 0) return [];
+
+		// Pre-compute all product-related data in one pass
+		const productData = paginatedProducts.map((product) => ({
+			product,
+			capitalized: capitalizeWords(product),
+			wrapped: wrapText(product, MAX_LABEL_LENGTH),
+			contaminants: Object.create(null),
+		}));
+
+		const contaminantsSet = new Set();
+
+		for (const [_, { product, contaminants }] of productData.entries()) {
+			const items = dataStacked[product];
+			if (items) {
+				for (const item of items) {
+					contaminants[item.param] = item;
+					contaminantsSet.add(item.param);
+				}
 			}
 		}
 
-		// Filter to only show contaminants that exist in current page
-		const availableContaminantsForPage = uniqueStackedContaminants.filter((contaminant) => contaminantsInCurrentPage.has(contaminant));
+		const availableContaminants = [...contaminantsSet].sort().reverse();
 
-		// Create one trace per contaminant (only for contaminants in current page)
-		return availableContaminantsForPage.map((contaminant) => {
-			const contaminantValues = paginatedProducts.map((product) => {
-				const productData = dataStacked[product] || [];
-				const dataPoint = productData.find((item) => item.param === contaminant);
-				return dataPoint ? dataPoint.resval : 0;
-			});
+		return availableContaminants.map((contaminant) => {
+			const capitalizedContaminant = capitalizeWords(contaminant);
+			const contaminantValues = Array.from({ length: productData.length });
+			const hoverText = Array.from({ length: productData.length });
 
-			const hoverText = paginatedProducts.map((product) => {
-				const productData = dataStacked[product] || [];
-				const dataPoint = productData.find((item) => item.param === contaminant);
-				return dataPoint
-					? `<b>Product</b>: ${product.replaceAll(/\b\w/g, (l) => l.toUpperCase())}`
-					+ `<br><b>Contaminant</b>: ${contaminant.replaceAll(/\b\w/g, (l) => l.toUpperCase())}`
-					+ `<br><b>Residue Value</b>: ${dataPoint.resval.toExponential(2)} ${dataPoint.resunit}`
-					: `<b>Product</b>: ${product.replaceAll(/\b\w/g, (l) => l.toUpperCase())}`
-					+ `<br><b>Contaminant</b>: ${contaminant.replaceAll(/\b\w/g, (l) => l.toUpperCase())}<br>No data`;
-			});
+			for (const [i, { capitalized, contaminants }] of productData.entries()) {
+				const dataPoint = contaminants[contaminant];
+
+				if (dataPoint) {
+					contaminantValues[i] = dataPoint.resval;
+					hoverText[i] = `<b>Product</b>: ${capitalized}<br><b>Contaminant</b>: ${capitalizedContaminant}<br><b>Residue Value</b>: ${dataPoint.resval.toExponential(2)} ${dataPoint.resunit}`;
+				} else {
+					contaminantValues[i] = 0;
+					hoverText[i] = `<b>Product</b>: ${capitalized}<br><b>Contaminant</b>: ${capitalizedContaminant}<br>No data`;
+				}
+			}
 
 			return {
-				x: paginatedProducts.map((product) => wrapText(product, MAX_LABEL_LENGTH)),
+				x: productData.map((d) => d.wrapped),
 				y: contaminantValues,
 				name: truncateText(contaminant),
 				hovertemplate: "%{customdata}<extra></extra>",
@@ -559,7 +567,7 @@ const Efsa = () => {
 				type: "bar",
 			};
 		});
-	}, [dataSets?.timeline, uniqueStackedContaminants, dataStacked, stackedBarChartPage]);
+	}, [dataStacked, paginationState.stackedBarChart]);
 
 	const stackedBarChartLayout = useMemo(() => ({
 		xaxis: { title: "Food Products", automargin: true, tickangle: 0 },
@@ -792,9 +800,9 @@ const Efsa = () => {
 		};
 	}, [selectedProductTimeline, timelineGroupedByProduct]);
 
-	//================================================================================
+	//= ===============================================================================
 	// Render
-	//================================================================================
+	//= ===============================================================================
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
 			<StickyBand dropdownContent={[countryDropdown]} />
@@ -804,7 +812,12 @@ const Efsa = () => {
 					title="Foods with Risky Contaminant Levels"
 					footer={isLoading ? undefined : cardFooter({ minutesAgo })}
 				>
-					<StickyBand sticky={false} dropdownContent={[contaminantChartDropdown]} formRef={contaminantYearPickerRef} formContent={contaminantYearPickerProps} />
+					<StickyBand
+						sticky={false}
+						dropdownContent={[contaminantChartDropdown]}
+						formRef={yearPickerRefs.contaminant}
+						formContent={contaminantYearPickerProps}
+					/>
 					{isLoading ? (
 						<LoadingIndicator minHeight="300px" />
 					) : uniqueChartContaminants.length === 0 ? (
@@ -828,11 +841,11 @@ const Efsa = () => {
 
 								return (
 									<PaginationControls
-										currentPage={contaminantChartPage}
+										currentPage={paginationState.contaminantChart}
 										totalPages={totalPages}
 										itemsPerPage={ITEMS_PER_PAGE}
 										totalItems={totalItems}
-										onPageChange={setContaminantChartPage}
+										onPageChange={(page) => updatePagination("contaminantChart", page)}
 									/>
 								);
 							})()}
@@ -846,7 +859,12 @@ const Efsa = () => {
 					title="Contaminants in Food Product"
 					footer={isLoading ? undefined : cardFooter({ minutesAgo })}
 				>
-					<StickyBand sticky={false} dropdownContent={[productChartDropdown]} formRef={productYearPickerRef} formContent={productYearPickerProps} />
+					<StickyBand
+						sticky={false}
+						dropdownContent={[productChartDropdown]}
+						formRef={yearPickerRefs.product}
+						formContent={productYearPickerProps}
+					/>
 					{isLoading ? (
 						<LoadingIndicator minHeight="300px" />
 					) : uniqueChartProducts.length === 0 ? (
@@ -871,11 +889,11 @@ const Efsa = () => {
 
 								return (
 									<PaginationControls
-										currentPage={productChartPage}
+										currentPage={paginationState.productChart}
 										totalPages={totalPages}
 										itemsPerPage={ITEMS_PER_PAGE}
 										totalItems={totalItems}
-										onPageChange={setProductChartPage}
+										onPageChange={(page) => updatePagination("productChart", page)}
 									/>
 								);
 							})()}
@@ -891,7 +909,7 @@ const Efsa = () => {
 					title="Total Contaminants per Food Product"
 					footer={isLoading ? undefined : cardFooter({ minutesAgo })}
 				>
-					<StickyBand sticky={false} formRef={stackedYearPickerRef} formContent={stackedYearPickerProps} />
+					<StickyBand sticky={false} formRef={yearPickerRefs.stacked} formContent={stackedYearPickerProps} />
 					{isLoading ? (
 						<LoadingIndicator minHeight="300px" />
 					) : Object.keys(dataStacked).length === 0 ? (
@@ -915,11 +933,11 @@ const Efsa = () => {
 
 								return (
 									<PaginationControls
-										currentPage={stackedBarChartPage}
+										currentPage={paginationState.stackedBarChart}
 										totalPages={totalPages}
 										itemsPerPage={ITEMS_PER_PAGE * 2}
 										totalItems={totalItems}
-										onPageChange={setStackedBarChartPage}
+										onPageChange={(page) => updatePagination("stackedBarChart", page)}
 									/>
 								);
 							})()}

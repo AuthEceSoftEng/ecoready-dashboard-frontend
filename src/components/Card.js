@@ -34,15 +34,15 @@ const Card = ({
 			padding,
 			backgroundColor: transparent ? "transparent" : colors?.[backgroundColor] || backgroundColor,
 			opacity: transparent ? opacity : 1,
-			boxSizing: "border-box", // Ensure padding is included in the width
-			overflow: "hidden", // Prevent content overflow
-			borderRadius,
+			boxSizing: "border-box",
+			overflow: "hidden",
+			borderRadius: `${Number.parseInt(borderRadius, 10) + Number.parseInt(padding, 10)}px`,
 			cursor: clickable ? "pointer" : "default",
 			transition: "all 0.2s ease-in-out",
-			boxShadow: transparent ? elevation : null, // Add shadow based on elevation
+			boxShadow: transparent ? elevation : null,
 			"&:hover": hoverEffect && clickable ? {
 				transform: "scale(1.02)",
-				boxShadow: transparent ? elevation + 15 : null, // Increase shadow on hover
+				boxShadow: transparent ? elevation + 15 : null,
 			} : {},
 		}}
 		onClick={clickable ? onClick : undefined}
@@ -57,9 +57,9 @@ const Card = ({
 				flexDirection="row"
 				justifyContent="center"
 				alignItems="center"
-				boxSizing="border-box" // Ensure padding is included in the width
+				boxSizing="border-box"
 				borderRadius={borderRadius}
-				sx={{ flexShrink: 0 }} // Prevent title from shrinking
+				sx={{ flexShrink: 0 }}
 			>
 				{typeof title === "string" ? (
 					<Typography variant="body" component="h2" sx={{ fontWeight: "bold", fontSize: titleFontSize }}>
@@ -75,7 +75,7 @@ const Card = ({
 			padding="10px 5px"
 			justifyContent="center"
 			alignItems="center"
-			boxSizing="border-box" // Ensure padding is included in the width
+			boxSizing="border-box"
 			flexGrow={1}
 		>
 			{children}
@@ -89,8 +89,8 @@ const Card = ({
 				flexDirection="column"
 				justifyContent="space-between"
 				alignItems="center"
-				boxSizing="border-box" // Ensure padding is included in the width
-				sx={{ flexShrink: 0 }} // Prevent footer from shrinking
+				boxSizing="border-box"
+				sx={{ flexShrink: 0 }}
 			>
 				{typeof footer === "string" ? (
 					<Typography variant="h6" component="h2" align="left" fontSize={footerFontSize}>

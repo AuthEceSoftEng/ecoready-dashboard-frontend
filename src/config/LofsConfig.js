@@ -15,7 +15,6 @@ const createStatsConfig = (baseConfig, statsParams, attribute, stat, plotId, inc
 });
 
 const lofsConfigs = (product, startDate, endDate) => {
-	// Base configuration
 	const baseConfig = {
 		project: "lofsproject",
 		collection: "weatherdata",
@@ -54,7 +53,7 @@ const lofsConfigs = (product, startDate, endDate) => {
 				attributes: [
 					"key", "timestamp", "temp_max_c", "temp_min_c",
 					"rain_mm", "etp_mm", "humidity_percent",
-					"co2_ppm", "solar_radiation_j_cm2", "solar_radiation_mj_m2", "wind_speed_2m",
+					"co2_ppm", "solar_radiation_mj_m2", "wind_speed_2m", // "solar_radiation_j_cm2",
 				],
 				filters: [baseConfig.productFilter, ...dateFilter],
 				order_by: { field: "timestamp", order: "asc" },

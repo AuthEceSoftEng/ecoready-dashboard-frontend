@@ -33,7 +33,15 @@ export const LoadingIndicator = ({ message = "Loading data...", minHeight = "200
 	</Grid>
 );
 
-export const StickyBand = ({ sticky = true, dropdownContent = [], formRef, formContent, toggleContent, togglePlacing }) => (
+export const StickyBand = ({
+	sticky = true,
+	dropdownContent = [],
+	formRef,
+	formContent,
+	toggleContent,
+	togglePlacing,
+	downloadContent,
+}) => (
 	<Grid
 		container
 		display="flex"
@@ -45,15 +53,20 @@ export const StickyBand = ({ sticky = true, dropdownContent = [], formRef, formC
 			position: sticky ? "sticky" : "relative",
 			top: -5,
 			backgroundColor: sticky ? colors.grey : "inherit",
-			zIndex: sticky ? 100 : "auto",
-			minWidth: "100.1%",
+			zIndex: sticky ? 10_000 : "auto",
+			minWidth: "100%",
 			padding: "0.3rem",
 			gap: "0.3rem",
 			margin: 0,
 		}}
 	>
+		{downloadContent && (
+			<Grid item sx={{ display: "flex", justifyContent: "flex-start", alignItems: "center", minWidth: "fit-content", flexShrink: 0 }} xs={6} sm={2} md={2}>
+				{downloadContent}
+			</Grid>
+		)}
 		{toggleContent && (
-			<Grid item sx={{ display: "flex", justifyContent: togglePlacing ?? "flex-end", alignItems: "center", minWidth: "fit-content", flexShrink: 0 }} xs={6} sm={3} md={6}>
+			<Grid item sx={{ display: "flex", justifyContent: togglePlacing ?? "flex-end", alignItems: "center", minWidth: "fit-content", flexShrink: 0 }} xs={12} sm={5} md={6}>
 				{toggleContent}
 			</Grid>
 		)}
@@ -114,18 +127,17 @@ export const wrapText = (text, maxLength = 50) => {
 	let currentLine = "";
 
 	for (const part of parts) {
-		if (!part.trim()) {
+		if (part === "") {
 			// Skip empty parts
-			continue;
-		}
-
-		const testLine = String(currentLine) + part;
-
-		if (testLine.length <= maxLength) {
-			currentLine = testLine;
 		} else {
-			if (currentLine) lines.push(currentLine);
-			currentLine = part;
+			const testLine = String(currentLine) + part;
+
+			if (testLine.length <= maxLength) {
+				currentLine = testLine;
+			} else {
+				if (currentLine) lines.push(currentLine);
+				currentLine = part;
+			}
 		}
 	}
 
@@ -135,3 +147,5 @@ export const wrapText = (text, maxLength = 50) => {
 };
 
 export const truncateText = (text, maxLength = 15) => (text.length > maxLength ? `${text.slice(0, maxLength)}...` : text);
+
+export const capitalizeWords = (str) => str.split(" ").map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");

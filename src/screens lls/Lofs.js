@@ -5,28 +5,17 @@ import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
 import useInit from "../utils/screen-init.js";
 import lofsConfigs, { organization } from "../config/LofsConfig.js";
-import { getCustomDateTime, getMonthDetails, debounce, findKeyByText, isValidArray } from "../utils/data-handling-functions.js";
+import { getCustomDateTime, getMonthDetails, isValidArray } from "../utils/data-handling-functions.js";
 import { cardFooter, LoadingIndicator, StickyBand, DataWarning } from "../utils/rendering-items.js";
-import { monthNames } from "../utils/useful-constants.js";
 
-const STATIONS = [
-	{ value: "Station 44", text: "Station 44" },
-	{ value: "Station 53", text: "Station 53" },
-	{ value: "Station 85", text: "Station 85" },
-];
+const STATIONS = ["Station 44", "Station 53", "Station 85"];
+const customDate = getCustomDateTime(2024, 10);
 
 const LOFS = () => {
-	const customDate = useMemo(() => getCustomDateTime(2024, 10), []);
 	const [dateRange, setDateRange] = useState(
 		() => getMonthDetails(customDate.getMonth(), customDate.getFullYear()).dateRange,
 	);
-
-	const debouncedSetMonth = useMemo(
-		() => debounce((date, setter) => {
-			setter(date);
-		}, 100),
-		[],
-	);
+	const [station, setStation] = useState(STATIONS[0]);
 
 	const handleMonthChange = useCallback((newValue) => {
 		if (!newValue?.$d) return;
@@ -34,23 +23,18 @@ const LOFS = () => {
 		const newMonth = newValue.$d.getMonth();
 		const newYear = newValue.$d.getFullYear();
 
-		debouncedSetMonth(getMonthDetails(newMonth, newYear).dateRange, setDateRange);
-	}, [debouncedSetMonth]);
-
-	const [station, setStation] = useState(STATIONS[0]);
+		setDateRange(getMonthDetails(newMonth, newYear).dateRange);
+	}, []);
 
 	const handleStationChange = useCallback((event) => {
-		const selectedStation = findKeyByText(STATIONS, event.target.value, true);
-		if (selectedStation) {
-			setStation(selectedStation);
-		}
+		setStation(event.target.value);
 	}, []);
 
 	const dropdownContent = useMemo(() => [{
 		id: "Station",
 		size: "small",
 		label: "Select Station",
-		value: station.text,
+		value: station,
 		items: STATIONS,
 		onChange: handleStationChange,
 	}], [station, handleStationChange]);
@@ -69,56 +53,29 @@ const LOFS = () => {
 			labelSize: 12,
 			onChange: handleMonthChange,
 		},
-	], [customDate, handleMonthChange]);
+	], [handleMonthChange]);
 
-	const fetchConfigs = useMemo(
-		() => (lofsConfigs(station.value, dateRange.startDate, dateRange.endDate)),
-		[station.value, dateRange.startDate, dateRange.endDate],
-	);
+	const fetchConfigs = useMemo(() => (lofsConfigs(station, dateRange.startDate, dateRange.endDate)),
+		[station, dateRange.startDate, dateRange.endDate]);
 
 	const { state } = useInit(organization, fetchConfigs);
 	const { isLoading, dataSets, minutesAgo } = state;
 	const metrics = useMemo(() => dataSets?.metrics || [], [dataSets]);
 
-	const indicatorValues = useMemo(() => {
-		const maxTemp = isValidArray(dataSets?.maxTemperature)
-			? dataSets.maxTemperature[0]?.max_temp_max_c
-			: null;
+	const getFirstValue = useCallback((dataSet, key) => (isValidArray(dataSet) ? dataSet[0]?.[key] ?? null : null),
+		[]);
 
-		const minTemp = isValidArray(dataSets?.minTemperature)
-			? dataSets.minTemperature[0]?.min_temp_min_c
-			: null;
-
-		const avgHumidity = isValidArray(dataSets?.avgHumidity)
-			? dataSets.avgHumidity[0]?.avg_humidity_percent
-			: null;
-
-		const precipSum = isValidArray(dataSets?.precipitationSum)
-			? dataSets.precipitationSum.find((item) => item.key === station.value)?.sum_rain_mm
-			: null;
-
-		const avgCo2 = isValidArray(dataSets?.avgCo2)
-			? dataSets.avgCo2[0]?.avg_co2_ppm
-			: null;
-
-		const avgSolarRadiation = isValidArray(dataSets?.avgSolarRadiation)
-			? dataSets.avgSolarRadiation[0]?.avg_solar_radiation_mj_m2
-			: null;
-
-		const avgWindSpeed = isValidArray(dataSets?.avgWindSpeed)
-			? dataSets.avgWindSpeed[0]?.avg_wind_speed_2m
-			: null;
-
-		return {
-			maxTemp,
-			minTemp,
-			avgHumidity,
-			precipSum,
-			avgCo2,
-			avgSolarRadiation,
-			avgWindSpeed,
-		};
-	}, [dataSets, station]);
+	const indicatorValues = useMemo(() => ({
+		maxTemp: getFirstValue(dataSets?.maxTemperature, "max_temp_max_c"),
+		minTemp: getFirstValue(dataSets?.minTemperature, "min_temp_min_c"),
+		avgHumidity: getFirstValue(dataSets?.avgHumidity, "avg_humidity_percent"),
+		precipSum: isValidArray(dataSets?.precipitationSum)
+			? dataSets.precipitationSum.find((item) => item.key === station)?.sum_rain_mm ?? null
+			: null,
+		avgCo2: getFirstValue(dataSets?.avgCo2, "avg_co2_ppm"),
+		avgSolarRadiation: getFirstValue(dataSets?.avgSolarRadiation, "avg_solar_radiation_mj_m2"),
+		avgWindSpeed: getFirstValue(dataSets?.avgWindSpeed, "avg_wind_speed_2m"),
+	}), [dataSets, station, getFirstValue]);
 
 	const monthlyOverview = useMemo(() => [
 		{
@@ -244,7 +201,8 @@ const LOFS = () => {
 					color: "third",
 				},
 			],
-			yaxis: { title: "Temperature (°C)" },
+			showLegend: true,
+			yaxis: { title: "Temperature (°C)", automargin: true },
 		},
 		{
 			title: "Daily Wind Speed",
@@ -258,7 +216,8 @@ const LOFS = () => {
 					color: "primary",
 				},
 			],
-			yaxis: { title: "Wind Speed (m/s)" },
+			showLegend: false,
+			yaxis: { title: "Wind Speed (m/s)", automargin: true },
 		},
 		{
 			title: "Daily Net Precipitation",
@@ -278,7 +237,8 @@ const LOFS = () => {
 					color: "goldenrod",
 				},
 			],
-			yaxis: { title: "Precipitation (mm)" },
+			showLegend: true,
+			yaxis: { title: "Precipitation (mm)", automargin: true },
 		},
 		{
 			title: "Daily Humidity Evolution",
@@ -292,7 +252,8 @@ const LOFS = () => {
 					color: "third",
 				},
 			],
-			yaxis: { title: "Humidity (%)" },
+			showLegend: false,
+			yaxis: { title: "Humidity (%)", automargin: true },
 		},
 		{
 			title: "Daily CO2 Levels",
@@ -306,7 +267,8 @@ const LOFS = () => {
 					color: "secondary",
 				},
 			],
-			yaxis: { title: "CO2 (ppm)" },
+			showLegend: false,
+			yaxis: { title: "CO2 (ppm)", automargin: true },
 		},
 		{
 			title: "Daily Solar Radiation",
@@ -320,18 +282,23 @@ const LOFS = () => {
 					color: "goldenrod",
 				},
 			],
-			yaxis: { title: "Solar Radiation (MJ/m²)" },
+			showLegend: false,
+			yaxis: { title: "Solar Radiation (MJ/m²)", automargin: true },
 		},
 		{
 			title: "Monthly Precipitation Per Field",
 			data: isValidArray(dataSets.precipitationSum)
 				? [
 					{
-						labels: STATIONS.map((item) => item.text),
+						labels: STATIONS,
 						values: dataSets.precipitationSum
 							.filter((item) => !item.key.includes("'"))
 							.map((item) => item.sum_rain_mm),
 						type: "pie",
+						hovertemplate: "<b>%{label}</b> "
+							+ "<br>%{value} mm"
+							+ "<br>(%{percent})"
+							+ "<extra></extra>",
 					},
 				] : [{ labels: [], values: [], type: "pie" }],
 		},
@@ -391,7 +358,10 @@ const LOFS = () => {
 											title={plotData.data.subtitle}
 										/>
 									) : (
-										<DataWarning minHeight={plotData.shape === "bullet" ? "120px" : "200px"} />
+										<DataWarning
+											message={`No Data Available on ${plotData.data.subtitle} for the selected month`}
+											minHeight={plotData.shape === "bullet" ? "120px" : "200px"}
+										/>
 									)}
 								</Grid>
 							))
@@ -412,13 +382,10 @@ const LOFS = () => {
 						) : isValidArray(metrics) ? (
 							<Plot
 								scrollZoom
-								showLegend={card.data.length > 1} // Show legend only when data has more than 1 element
+								showLegend={card.showLegend}
 								data={card.data}
-								title={dateRange.month === undefined
-									? "" : `${monthNames[dateRange.month].text} ${dateRange.year}`}
 								height="300px"
-								xaxis={card?.xaxis}
-								yaxis={card?.yaxis}
+								yaxis={card.yaxis}
 							/>
 						) : (
 							<DataWarning minHeight="300px" />

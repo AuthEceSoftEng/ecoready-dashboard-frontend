@@ -31,13 +31,17 @@ const onEachCountry = (feature, layer, levelName) => {
 	// Get the layer's name and unit from the GeoJSON properties
 	const value = feature.properties.value;
 	const formattedValue = value === "N/A" ? "N/A" : value.toLocaleString();
+	const indicator = feature.properties.indicator || "N/A";
+	const category = feature.properties.category || "N/A";
 
-	// Create popup content with proper formatting
+	// Create popup content
 	const popupContent = `
 		<div style="text-align: center;">
 			<h4 style="margin: 0;">${feature.properties.name} ${feature.properties.flag}</h4>
 			<p style="margin: 5px 0;">
-				<strong>${levelName || ""}</strong><br/>
+				<strong>Indicator:</strong> ${indicator}<br/>
+				<strong>Category:</strong> ${category}<br/>
+                <strong>${levelName || ""}</strong><br/>
 				${formattedValue}
 			</p>
 		</div>
@@ -51,6 +55,8 @@ const MagnetMap = ({
 	dataEU = [],
 	opportunity = false,
 	isLoading = false,
+	selectedIndicator = null,
+	selectedCategory = null,
 }) => {
 	const [geoJsonData, setGeoJsonData] = useState(null);
 	const [isDataReady, setIsDataReady] = useState(false);
@@ -69,7 +75,6 @@ const MagnetMap = ({
 			.catch((error) => console.error("Error loading GeoJSON:", error));
 	}, []);
 
-	// In the Map component, add this logic before creating geodata
 	const enhancedGeoJsonData = useMemo(() => {
 		if (!geoJsonData || dataEU.length === 0) return null; // Check if indicatorData is populated
 
@@ -81,14 +86,16 @@ const MagnetMap = ({
 					...feature,
 					properties: {
 						...feature.properties,
-						flag: country?.flag || "", // Add flag emoji
+						flag: country?.flag || "",
 						value: dataEU.find((p) => p.key === (country?.value))?.score ?? "-",
 						level: dataEU.find((p) => p.key === (country?.value))?.risk_level || "no data",
+						indicator: selectedIndicator || "N/A",
+						category: selectedCategory || "N/A",
 					},
 				};
 			}),
 		};
-	}, [dataEU, geoJsonData]);
+	}, [dataEU, geoJsonData, selectedCategory, selectedIndicator]);
 
 	// Add effect to monitor data readiness
 	useEffect(() => {
