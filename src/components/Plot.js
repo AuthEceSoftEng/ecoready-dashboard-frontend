@@ -3,12 +3,7 @@ import Plotly from "react-plotly.js";
 import { DataWarning } from "../utils/rendering-items.js";
 import colors from "../_colors.scss";
 
-const agriColors = [
-	colors.ag1, colors.ag2, colors.ag3, colors.ag4, colors.ag5,
-	colors.ag6, colors.ag7, colors.ag8, colors.ag9, colors.ag10,
-	colors.ag11, colors.ag12, colors.ag13, colors.ag14, colors.ag15,
-	colors.ag16, colors.ag17, colors.ag18, colors.ag19, colors.ag20,
-];
+const agriColors = Array.from({ length: 20 }, (_, i) => colors[`ag${i + 1}`]);
 
 const validatePieData = (data) => {
 	let errorMessage = "";
@@ -30,7 +25,7 @@ const validatePieData = (data) => {
 	return { hasError, errorMessage };
 };
 
-const pieDataThereshold = (data, thres = 0.03) => {
+const pieDataThreshold = (data, thres = 0.03) => {
 	const total = data.reduce((a, b) => a + b, 0);
 	const text = data.map((val) => {
 		const pct = val / total;
@@ -59,7 +54,7 @@ const Plot = ({
 	shapes = [],
 	xaxis = {},
 	yaxis = {},
-	layout = {}, // Add this prop to accept custom layout
+	layout = {},
 }) => {
 	const hasPieChart = data.some((d) => d.type === "pie");
 
@@ -95,7 +90,10 @@ const Plot = ({
 					showlegend: d.showlegend === undefined ? true : d.showlegend,
 					number: {
 						suffix: d.suffix,
-						font: { color: colors?.[d?.textColor] || d?.textColor || "black" },
+						font: {
+							color: colors?.[d?.textColor] || d?.textColor || "black",
+							size: d.shape === "bullet" ? d?.textFontSize || 20 : "auto",
+						},
 					},
 					hovertemplate: d.hovertemplate,
 					customdata: d.customdata,
@@ -111,7 +109,7 @@ const Plot = ({
 						marker: { colors: d.color || agriColors },
 						labels: d.labels,
 						textposition: "inside",
-						text: pieDataThereshold(d.values, 0.03),
+						text: pieDataThreshold(d.values, 0.03),
 						textinfo: "text",
 						hoverinfo: "label+percent+value",
 						insidetextorientation: "radial",
@@ -174,7 +172,6 @@ const Plot = ({
 			}}
 			config={{
 				scrollZoom,
-				displayModeBar: displayBar,
 				editable,
 				...(displayBar !== undefined && { displayModeBar: displayBar }),
 				displaylogo: false,

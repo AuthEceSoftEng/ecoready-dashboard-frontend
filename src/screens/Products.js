@@ -624,6 +624,7 @@ const ProductsScreen = () => {
 					}),
 					title: globalProduct === "Sugar" ? "Annual Production by Region" : "Annual Production by Country",
 					xaxis: { showticklabels: true, tickmode: "linear", tickangle: 45 },
+					yaxis: { title: `Production (${units.productionUnit})`, automargin: true },
 					warning: Object.entries(productionData).length === 0 ? "No historical production data available" : null,
 				},
 			},
@@ -1012,6 +1013,7 @@ const ProductsScreen = () => {
 													displayBar={false}
 													title={europeOverview.charts.bars.title}
 													xaxis={europeOverview.charts.bars.xaxis}
+													yaxis={europeOverview.charts.bars.yaxis}
 												/>
 											) : (<DataWarning minHeight="459px" message="No Available Data for the Specified Options' Combination" />)
 										)}
