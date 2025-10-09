@@ -674,7 +674,7 @@ const MAGNETGraphs = ({
 									<StickyBand sticky={false} dropdownContent={[countryCompareDropdown]} />
 									<Plot
 										data={indicatorRiskByCountryData}
-										height="400px"
+										// height="400px"
 										showLegend={false}
 										yaxis={getYAxisForIndicator(selections.indicator)}
 										xaxis={{ tickangle: selections.compareCountries.includes("European Union") ? 45 : 0 }}
@@ -706,7 +706,7 @@ const MAGNETGraphs = ({
 								<Plot
 									showLegend
 									data={categoryBarChartData.traces}
-									height="450px"
+									// height="450px"
 									xaxis={{ tickangle: 0 }}
 									yaxis={categoryBarChartData.yaxis}
 									layout={{
@@ -738,7 +738,7 @@ const MAGNETGraphs = ({
 							<StickyBand sticky={false} formRef={radioRef} formContent={[sortOrderRadio]} />
 
 							<Plot
-								height="600px"
+								height="500px"
 								data={allIndicatorsChartData.traces}
 								xaxis={{
 									primary: getAxisConfig("risk"),
