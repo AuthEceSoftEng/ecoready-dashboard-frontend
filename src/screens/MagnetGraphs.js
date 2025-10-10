@@ -466,7 +466,7 @@ const createCategoryBarChart = (riskAssessmentData, selectedIndicator, selectedC
 	result.yaxis = {
 		primary: {
 			...getAxisConfig("risk"),
-			ticktext: getAxisConfig("risk").ticktext.map((text) => wrapText(text, 10)),
+			ticktext: getAxisConfig("risk").ticktext.map((text) => wrapText(text, 5)),
 		},
 		secondary: null,
 	};
@@ -659,7 +659,7 @@ const MAGNETGraphs = ({
 					{/* Risk Scores Across EU Countries */}
 					<Grid item xs={12} md={6} sx={{ display: "flex" }}>
 						<Card
-							title={`${selections.indicator.text} - ${isOpportunityState ? "Opportunity" : "Risk"} Scores Across ${selections.country.text}`}
+							title={`${isOpportunityState ? "Opportunity" : "Risk"} Scores Across ${selections.country.text}`}
 							height="500px"
 						>
 							{isLoading ? (
@@ -679,7 +679,7 @@ const MAGNETGraphs = ({
 										yaxis={getYAxisForIndicator(selections.indicator)}
 										xaxis={{ tickangle: selections.compareCountries.includes("European Union") ? 45 : 0 }}
 										layout={{
-											margin: { l: 130, t: 10, b: 80 },
+											margin: { l: 130, t: 10, b: 90 },
 											dragmode: false,
 											hoverlabel: { align: "left" },
 										}}

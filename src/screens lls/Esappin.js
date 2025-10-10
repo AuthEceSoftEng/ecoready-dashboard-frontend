@@ -177,7 +177,7 @@ const Esappin = () => {
 					color: "third",
 				},
 			],
-			yaxis: { title: "Temperature (°C)", automargin: true },
+			yaxis: { title: "Temperature (°C)" },
 		},
 		{
 			title: "Shortwave Radiation Sum",
@@ -189,7 +189,7 @@ const Esappin = () => {
 					color: "goldenrod",
 				},
 			],
-			yaxis: { title: "Radiation Metric", automargin: true },
+			yaxis: { title: "Radiation Metric" },
 		},
 		{
 			title: "Daily Precipitation Sum",
@@ -201,7 +201,7 @@ const Esappin = () => {
 					color: "third",
 				},
 			],
-			yaxis: { title: "Precipitation (mm)", automargin: true },
+			yaxis: { title: "Precipitation (mm)" },
 		},
 		{
 			title: "Monthly Precipitation Per Field",

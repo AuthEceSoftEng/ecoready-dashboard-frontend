@@ -624,7 +624,7 @@ const ProductsScreen = () => {
 					}),
 					title: globalProduct === "Sugar" ? "Annual Production by Region" : "Annual Production by Country",
 					xaxis: { showticklabels: true, tickmode: "linear", tickangle: 45 },
-					yaxis: { title: `Production (${units.productionUnit})`, automargin: true },
+					yaxis: { title: `Production (${units.productionUnit})` },
 					warning: Object.entries(productionData).length === 0 ? "No historical production data available" : null,
 				},
 			},
@@ -878,7 +878,7 @@ const ProductsScreen = () => {
 					},
 				],
 				color: "secondary",
-				yaxis: { title: `Average ${units.priceUnit}`, automargin: true },
+				yaxis: { title: `Average ${units.priceUnit}` },
 				warning: !priceValidations.timeline || !pricesTimeline.find((item) => item.key === countryKey)?.avg_price
 					? `No price timeline data available for ${priceOptions.country}`
 					: pricesTimeline.filter((item) => item.key === countryKey).length === 1

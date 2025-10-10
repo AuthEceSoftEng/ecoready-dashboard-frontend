@@ -148,12 +148,14 @@ const LcaMag = () => {
 							<HighlightBackgroundButton
 								title="Metrics"
 								size="small"
+								borderRadius="14px"
 								onClick={handleMetricsClick}
 							/>
 						) : (
 							<HighlightBorderButton
 								title="Metrics"
 								size="small"
+								borderRadius="14px"
 								onClick={handleMetricsClick}
 							/>
 						)}
@@ -161,12 +163,14 @@ const LcaMag = () => {
 							<HighlightBackgroundButton
 								title="Map"
 								size="small"
+								borderRadius="14px"
 								onClick={handleMapClick}
 							/>
 						) : (
 							<HighlightBorderButton
 								title="Map"
 								size="small"
+								borderRadius="14px"
 								onClick={handleMapClick}
 							/>
 						)}
@@ -177,6 +181,7 @@ const LcaMag = () => {
 					<HighlightBackgroundButton
 						title="Download Methodology"
 						size="small"
+						borderRadius="14px"
 						onClick={() => getFile("MAGNET", "Methodology PSILCA social 2.pdf", "Methodology PSILCA social 2.pdf")}
 					/>
 				)}

@@ -69,7 +69,7 @@ export const wrapText = (text, maxLength = 50) => {
 			if (testLine.length <= maxLength) {
 				currentLine = testLine;
 			} else {
-				if (currentLine) lines.push(currentLine);
+				if (currentLine.trim()) lines.push(currentLine);
 				currentLine = part;
 			}
 		}

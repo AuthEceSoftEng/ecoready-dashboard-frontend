@@ -32,7 +32,7 @@ const CONCATLL = () => {
 	const [weatherMetric, setWeatherMetric] = useState("Temperature");
 	const [wheatMetric1, setWheatMetric1] = useState("Yield");
 	const [wheatMetric2, setWheatMetric2] = useState("Yield");
-	const [year, setYear] = useState(currentYear);
+	const [year, setYear] = useState("2020");
 	const [startDate, setStartDate] = useState("2014-01-01");
 	const [endDate, setEndDate] = useState("2015-01-01");
 
@@ -270,8 +270,8 @@ const CONCATLL = () => {
 					},
 				],
 				showLegend: false,
-				xaxis: { title: "Product Variety Code", automargin: true },
-				yaxis: { title: metric.yaxis, automargin: true },
+				xaxis: { title: "Product Variety Code" },
+				yaxis: { title: metric.yaxis },
 				hasValidData, // Add this property to track data validity
 			},
 		];

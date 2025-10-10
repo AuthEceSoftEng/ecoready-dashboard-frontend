@@ -203,7 +203,7 @@ const LOFS = () => {
 				},
 			],
 			showLegend: true,
-			yaxis: { title: "Temperature (°C)", automargin: true },
+			yaxis: { title: "Temperature (°C)" },
 		},
 		{
 			title: "Daily Wind Speed",
@@ -218,7 +218,7 @@ const LOFS = () => {
 				},
 			],
 			showLegend: false,
-			yaxis: { title: "Wind Speed (m/s)", automargin: true },
+			yaxis: { title: "Wind Speed (m/s)" },
 		},
 		{
 			title: "Daily Net Precipitation",
@@ -239,7 +239,7 @@ const LOFS = () => {
 				},
 			],
 			showLegend: true,
-			yaxis: { title: "Precipitation (mm)", automargin: true },
+			yaxis: { title: "Precipitation (mm)" },
 		},
 		{
 			title: "Daily Humidity Evolution",
@@ -254,7 +254,7 @@ const LOFS = () => {
 				},
 			],
 			showLegend: false,
-			yaxis: { title: "Humidity (%)", automargin: true },
+			yaxis: { title: "Humidity (%)" },
 		},
 		{
 			title: "Daily CO2 Levels",
@@ -269,7 +269,7 @@ const LOFS = () => {
 				},
 			],
 			showLegend: false,
-			yaxis: { title: "CO2 (ppm)", automargin: true },
+			yaxis: { title: "CO2 (ppm)" },
 		},
 		{
 			title: "Daily Solar Radiation",
@@ -284,7 +284,7 @@ const LOFS = () => {
 				},
 			],
 			showLegend: false,
-			yaxis: { title: "Solar Radiation (MJ/m²)", automargin: true },
+			yaxis: { title: "Solar Radiation (MJ/m²)" },
 		},
 		{
 			title: "Monthly Precipitation Per Field",
