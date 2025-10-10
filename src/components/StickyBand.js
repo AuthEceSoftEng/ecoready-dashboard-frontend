@@ -35,7 +35,7 @@ const StickyBand = ({
 		}}
 	>
 		{downloadContent && (
-			<Grid item sx={{ display: "flex", justifyContent: "flex-start", alignItems: "center", minWidth: "fit-content", flexShrink: 0 }} xs={6} sm={2} md={2}>
+			<Grid item sx={{ display: "flex", alignItems: "stretch", minWidth: "fit-content", flexShrink: 0, marginRight: "5.5rem" }} xs={6} sm={2} md={2}>
 				{downloadContent}
 			</Grid>
 		)}

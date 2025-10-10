@@ -87,7 +87,7 @@ const Plot = ({
 					jitter: d.jitter,
 					pointpos: d.pointpos,
 					fill: d.fill,
-					showlegend: d.showlegend === undefined ? true : d.showlegend,
+					showlegend: d.showlegend ?? true,
 					number: {
 						suffix: d.suffix,
 						font: {
@@ -99,7 +99,6 @@ const Plot = ({
 					customdata: d.customdata,
 					sort: d.sort ?? true,
 					orientation: d.orientation || "v",
-					automargin: true,
 				};
 
 				// Add pie-specific properties
@@ -153,10 +152,10 @@ const Plot = ({
 					font: { color: colors?.[titleColor] || titleColor, size: legendFontSize },
 				},
 				shapes: shapes.map((shape) => ({ ...shape })),
-				xaxis: xaxis.primary || xaxis || {},
-				...(xaxis.secondary && { xaxis2: xaxis.secondary }),
-				yaxis: yaxis.primary || yaxis || {},
-				...(yaxis.secondary && { yaxis2: yaxis.secondary }),
+				xaxis: { automargin: true, ...(xaxis.primary || xaxis) },
+				...(xaxis.secondary && { xaxis2: { automargin: true, ...xaxis.secondary } }),
+				yaxis: { automargin: true, ...(yaxis.primary || yaxis) },
+				...(yaxis.secondary && { yaxis2: { automargin: true, ...yaxis.secondary } }),
 				barmode,
 				paper_bgcolor: colors?.[background] || background,
 				plot_bgcolor: colors?.[background] || background,
@@ -168,7 +167,7 @@ const Plot = ({
 						range: polarRange,
 					},
 				},
-				...layout, // Merge custom layout props
+				...layout,
 			}}
 			config={{
 				scrollZoom,

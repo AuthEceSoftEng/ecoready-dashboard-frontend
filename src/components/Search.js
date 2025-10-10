@@ -21,7 +21,7 @@ const Search = ({
 }) => {
 	const classes = useStyles();
 	const inputRef = useRef(null);
-	const searchContainerRef = useRef(null); // Ref for the entire search component
+	const searchContainerRef = useRef(null);
 	const navigate = useNavigate();
 	const location = useLocation();
 	const [value, setValue] = useState(searchValue);
@@ -64,7 +64,7 @@ const Search = ({
 		return () => {
 			document.removeEventListener("mousedown", handleClickOutside);
 		};
-	}, [onChange]); // Added onChange to dependencies
+	}, [onChange]);
 
 	// Handle navigation to the selected result
 	const handleResultSelect = (result) => {
@@ -86,7 +86,7 @@ const Search = ({
 				if (result.subProduct && result.section) {
 					navigate("/products", {
 						state: {
-							selectedProduct: result.product.text, // Use the parent product name
+							selectedProduct: result.product.text,
 							selectedSubProduct: result.subProduct,
 							section: result.section,
 							parentProduct: result.product,
@@ -113,6 +113,11 @@ const Search = ({
 
 			case "lab": {
 				navigate(result.link, { replace: true });
+				break;
+			}
+
+			case "contaminant": {
+				navigate("/contaminants", { state: { selectedContaminant: result.name } });
 				break;
 			}
 
@@ -160,14 +165,16 @@ const Search = ({
 
 	return (
 		<div
-			ref={searchContainerRef} // Add this ref to connect the container
+			ref={searchContainerRef}
 			style={{ position: "relative", width }}
-			onClick={() => {
-				inputRef.current?.focus(); // Focus the input
-				if (value.trim()) {
-					setDropdownVisible(true); // Open dropdown if there's text
-				}
-			}}
+			// role="search"
+			// onClick={handleContainerActivation}
+			// onKeyDown={(e) => {
+			// 	if (e.key === "Enter" || e.key === " ") {
+			// 		e.preventDefault();
+			// 		handleContainerActivation();
+			// 	}
+			// }}
 		>
 			<MUIInput
 				disableUnderline
@@ -176,7 +183,7 @@ const Search = ({
 				name="search"
 				className={classes.search}
 				sx={{ width }}
-				inputRef={inputRef} // Attach the ref to the input field
+				inputRef={inputRef}
 				startAdornment={(
 					<InputAdornment sx={{ position: "absolute", display: value ? "none" : "flex", marginLeft: "0px" }} position="end">
 						<SearchIcon />
@@ -184,8 +191,8 @@ const Search = ({
 					</InputAdornment>
 				)}
 				onChange={(e) => {
-					onChange(e); // Call parent onChange
-					setDropdownVisible(true); // Ensure the dropdown is visible
+					onChange(e);
+					setDropdownVisible(true);
 				}}
 				onKeyDown={handleKeyDown}
 			/>
@@ -193,6 +200,7 @@ const Search = ({
 			{/* SEARCH DROPDOWN */}
 			{dropdownVisible && results.length > 0 && (
 				<div
+					role="listbox"
 					style={{
 						position: "absolute",
 						top: "100%",
@@ -209,6 +217,9 @@ const Search = ({
 					{results.map((result, index) => (
 						<div
 							key={index}
+							role="option"
+							aria-selected={index === focusedIndex}
+							tabIndex={0}
 							style={{
 								padding: "10px",
 								cursor: "pointer",
@@ -216,45 +227,15 @@ const Search = ({
 								color: "black",
 								display: "flex",
 								justifyContent: "space-between",
-								backgroundColor: index === focusedIndex ? "#a2ca37" : "white", // Highlight focused item
+								backgroundColor: index === focusedIndex ? "#a2ca37" : "white",
 								transition: "background-color 0.2s ease",
 							}}
-							role="button"
-							tabIndex="0"
-							aria-label={`${result.name} ${result.type}`}
-							onClick={() => {
-								handleResultSelect(result);
-							}}
+							onClick={() => handleResultSelect(result)}
 							onMouseEnter={() => setFocusedIndex(index)}
 							onKeyDown={(e) => {
 								if (e.key === "Enter" || e.key === " ") {
 									e.preventDefault();
-									switch (result.type) {
-										case "product": {
-											navigate("/products", { state: { selectedProduct: result.name } });
-											break;
-										}
-
-										case "map": {
-											navigate("/map", {
-												state: {
-													selectedProduct: result.name.replace(" Map", "").split(" (")[0],
-													productValue: result.product?.value,
-													specificProduct: result.specificProduct || null,
-													parentProduct: result.specificProduct ? result.product?.text : null,
-												},
-											});
-											break;
-										}
-
-										case "lab": {
-											navigate(result.link, { replace: true });
-											break;
-										}
-
-										default:
-										// Do nothing
-									}
+									handleResultSelect(result);
 								}
 							}}
 						>

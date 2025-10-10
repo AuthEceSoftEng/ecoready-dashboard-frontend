@@ -177,7 +177,7 @@ const THALLA = () => {
 					color: "third",
 				},
 			],
-			yaxis: { title: "Temperature (°C)", automargin: true },
+			yaxis: { title: "Temperature (°C)" },
 		},
 		{
 			title: `${differenceInDays}-day Temperature Distribution`,
@@ -201,7 +201,7 @@ const THALLA = () => {
 					color: "third",
 				},
 			],
-			yaxis: { title: "Temperature (°C)", automargin: true },
+			yaxis: { title: "Temperature (°C)" },
 		},
 		{
 			title: "Wind Speed",
@@ -215,7 +215,7 @@ const THALLA = () => {
 					color: "primary",
 				},
 			],
-			yaxis: { title: "Wind Speed (Bft)", automargin: true },
+			yaxis: { title: "Wind Speed (Bft)" },
 		},
 		{
 			title: "Daily Rain Sum",
@@ -228,7 +228,7 @@ const THALLA = () => {
 					color: "third",
 				},
 			],
-			yaxis: { title: "Rain (mm)", automargin: true },
+			yaxis: { title: "Rain (mm)" },
 		},
 	], [chartData, differenceInDays]);
 

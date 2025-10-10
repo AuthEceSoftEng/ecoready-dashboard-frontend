@@ -437,13 +437,12 @@ const Efsa = () => {
 
 		return {
 			xaxis: {
-				automargin: true,
 				tickmode: "array",
 				tickvals: paginatedData.map((_, index) => index),
 				ticktext: paginatedData.map((item) => wrapText(item.key, MAX_LABEL_LENGTH)),
 				tickangle: 0,
 			},
-			yaxis: { title: `Residue Value (${TARGET_UNIT})`, automargin: true, range: dynamicRangesByYear.contaminant },
+			yaxis: { title: `Residue Value (${TARGET_UNIT})`, range: dynamicRangesByYear.contaminant },
 			hoverlabel: { align: "left" },
 			shapes,
 		};
@@ -497,13 +496,13 @@ const Efsa = () => {
 
 		return {
 			xaxis: {
-				automargin: true,
+
 				tickmode: "array",
 				tickvals: paginatedData.map((_, index) => index),
 				ticktext: paginatedData.map((item) => wrapText(item.param, MAX_LABEL_LENGTH)),
 				tickangle: 0,
 			},
-			yaxis: { title: `Residue Value (${TARGET_UNIT})`, automargin: true, range: dynamicRangesByYear.product },
+			yaxis: { title: `Residue Value (${TARGET_UNIT})`, range: dynamicRangesByYear.product },
 			hoverlabel: { align: "left" },
 			margin: { l: 80, r: 50, t: 50, b: 120 },
 			shapes,
@@ -571,8 +570,8 @@ const Efsa = () => {
 	}, [dataStacked, paginationState.stackedBarChart]);
 
 	const stackedBarChartLayout = useMemo(() => ({
-		xaxis: { title: "Food Products", automargin: true, tickangle: 0 },
-		yaxis: { title: `Total Residue Value (${TARGET_UNIT})`, automargin: true, range: dynamicRangesByYear.stacked },
+		xaxis: { title: "Food Products", tickangle: 0 },
+		yaxis: { title: `Total Residue Value (${TARGET_UNIT})`, range: dynamicRangesByYear.stacked },
 		showlegend: true,
 		legend: { y: 1, x: 1.25, xanchor: "left" },
 		hoverlabel: { align: "left" },
@@ -630,7 +629,7 @@ const Efsa = () => {
 		return {
 			yaxis: {
 				title: `Residue Value (${TARGET_UNIT})`,
-				automargin: true,
+
 			},
 			showlegend: true,
 			legend: {
@@ -757,33 +756,31 @@ const Efsa = () => {
 			return {
 				residueValues: {
 					yaxis: { title: "Residue Value" },
-					xaxis: { automargin: true },
 				},
 				combinedMeasurements: {
 					yaxis: { title: "Measurements Exceeding Legal Limit (%)", nticks: 5 },
 					yaxis2: { title: "Number of Measurements", nticks: 5 },
-					xaxis: { automargin: true },
 				},
 			};
 		}
 
 		const baseLayout = {
 			showlegend: true,
-			legend: { y: 1, x: 1.05, xanchor: "left" }, // Move legend further right
-			margin: { r: 200 }, // Increase right margin significantly
+			legend: { y: 1, x: 1.05, xanchor: "left" },
+			margin: { r: 200 },
 		};
 
 		return {
 			residueValues: {
 				...baseLayout,
-				yaxis: { title: `Residue Value (${TARGET_UNIT})`, automargin: true },
+				yaxis: { title: `Residue Value (${TARGET_UNIT})` },
 			},
 			combinedMeasurements: {
 				...baseLayout,
 				yaxis: {
 					primary: {
 						title: "Number of Measurements",
-						automargin: true,
+
 						anchor: "x",
 						side: "right",
 						nticks: 5,
@@ -791,7 +788,7 @@ const Efsa = () => {
 					},
 					secondary: {
 						title: "Measurements Exceeding Legal Limit (%)",
-						automargin: true,
+
 						range: [0, 100],
 						overlaying: "y",
 						nticks: 6,
