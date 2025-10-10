@@ -904,12 +904,12 @@ const ProductsScreen = () => {
 	}, [globalProduct, existingCountries, dataSets.periodProduction, europeOverview?.countryMaxValue, units.productionUnit, units.priceUnit, priceOptions.country, priceValidations.monthly, monthlyPrices, priceValidations.timeline, pricesTimeline, priceValidations.period, periodPrices]);
 
 	return (
-		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
+		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
 			<StickyBand dropdownContent={productDropdownContent} />
 
 			{/* PRODUCTION CARDS */}
 			<Grid item xs={12} md={12} alignItems="center" flexDirection="column">
-				<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2} sx={{ minHeight: "500px" }}>
+				<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1} sx={{ minHeight: "500px" }}>
 					{(isPriceLoading && isProductionLoading && !productionTimeoutReached) ? (
 						<Grid item xs={12}><LoadingIndicator minHeight="500px" /></Grid>
 					) : productionTimeoutReached ? (

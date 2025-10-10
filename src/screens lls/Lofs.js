@@ -306,7 +306,7 @@ const LOFS = () => {
 	], [chartData, dataSets.precipitationSum]);
 
 	return (
-		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
+		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
 			<StickyBand dropdownContent={dropdownContent} formContent={formContentDate} formRef={formRefDate} />
 			{/* Monthly Overview Card */}
 			<Grid item xs={12} md={12} alignItems="center" flexDirection="column" padding={0}>
@@ -377,7 +377,7 @@ const LOFS = () => {
 
 			{/* Chart Cards */}
 			{charts.map((card, index) => (
-				<Grid key={index} item xs={12} sm={12} md={6} mb={index === charts.length - 1 ? 2 : 0}>
+				<Grid key={index} item xs={12} sm={12} md={index === charts.length - 1 ? 12 : 6} mb={index === charts.length - 1 ? 1 : 0}>
 					<Card title={card.title} footer={cardFooter({ minutesAgo })}>
 						{isLoading ? (<LoadingIndicator minHeight="300px" />
 						) : isValidArray(metrics) ? (
