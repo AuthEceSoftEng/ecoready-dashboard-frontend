@@ -211,7 +211,7 @@ const Probio = () => {
 	], [oatData]);
 
 	return (
-		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
+		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
 			<StickyBand dropdownContent={dropdownContent} formRef={formRefDate} formContent={formContentDate} />
 			{product === "Overview"
 				? isValidDateRange ? (

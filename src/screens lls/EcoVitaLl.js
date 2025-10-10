@@ -172,7 +172,7 @@ const EcoVItaLl = () => {
 	], [dataSets.ph_avg, dataSets.ec_avg]);
 
 	return (
-		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2} sx={{ flexGrow: 1, flexBasis: "100%", flexShrink: 0 }}>
+		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1} sx={{ flexGrow: 1, flexBasis: "100%", flexShrink: 0 }}>
 			<StickyBand formRef={formRefDate} formContent={formContentDate} />
 			{gaugeData.map((card, index) => (
 				<Grid key={index} item xs={12} md={6} alignItems="center" flexDirection="column">
@@ -209,7 +209,7 @@ const EcoVItaLl = () => {
 				</Grid>
 			))}
 			{dailyData.map((card, index) => (
-				<Grid key={index} item xs={12} sm={12} md={6} mb={index === dailyData.length - 1 ? 1 : 0}>
+				<Grid key={index} item xs={12} sm={12} md={6}>
 					<Card title={card.title} footer={cardFooter({ minutesAgo })}>
 						{isLoading ? (<LoadingIndicator />
 						) : (
@@ -238,7 +238,6 @@ const EcoVItaLl = () => {
 								<Plot
 									showLegend
 									scrollZoom
-									// width="113%"
 									height="120px"
 									data={[
 										{

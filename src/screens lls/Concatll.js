@@ -280,7 +280,7 @@ const CONCATLL = () => {
 	// = ============== RENDERING ===============
 
 	return (
-		<Grid container spacing={2} justifyContent="center" alignItems="center">
+		<Grid container spacing={1} justifyContent="center" alignItems="center">
 			<Grid item xs={12} sm={12} md={12}>
 				<Card title={`${wheatMetric1} Per Year - ${location1}`} footer={cardFooter({ minutesAgo: productionMinutesAgo })}>
 					<StickyBand sticky={false} dropdownContent={dropdownContent1} />

@@ -197,7 +197,7 @@ const LivOrganic = () => {
 	], [chartData]);
 
 	return (
-		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
+		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
 			<StickyBand formRef={formRefDate} formContent={formContentDate} />
 			{isValidDateRange ? (
 				<>

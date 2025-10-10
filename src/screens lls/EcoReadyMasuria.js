@@ -174,7 +174,7 @@ const EcoReadyMasuria = () => {
 	], [chartData]);
 
 	return (
-		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
+		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
 			<StickyBand dropdownContent={dropdownContent} formRef={formRefDate} formContent={formContentDate} />
 
 			{/* Chart Cards - Always render, with conditional content */}

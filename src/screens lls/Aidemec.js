@@ -189,7 +189,7 @@ const AIDEMEC = () => {
 	const charts = useMemo(() => createChartConfig(chartData, dataSets.precipitationSum), [chartData, dataSets.precipitationSum]);
 
 	return (
-		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
+		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
 			<StickyBand dropdownContent={dropdownContent} formContent={formContentDate} formRef={formRefDate} />
 			{/* Monthly Overview Card */}
 			<Grid item xs={12} md={12} alignItems="center" flexDirection="column" padding={0}>

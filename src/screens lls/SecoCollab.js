@@ -15,7 +15,7 @@ const MAX_DATE = new Date(new Date());
 
 const SecoCollab = () => {
 	const [metric, setMetric] = useState(timelineValues[0]);
-	const [startDate, setStartDate] = useState("2025-01-01");
+	const [startDate, setStartDate] = useState("2025-05-01");
 	const [endDate, setEndDate] = useState("2025-05-30");
 
 	const isValidDateRange = useMemo(() => startDate && endDate && new Date(startDate) <= new Date(endDate),
@@ -213,12 +213,12 @@ const SecoCollab = () => {
 		[timelineOverview, metric]);
 
 	return (
-		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
+		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
 			<StickyBand formRef={formRefDate} formContent={formContentDate} />
 			{isValidDateRange ? (
 				<>
 					<Grid item xs={12} md={12} alignItems="center" flexDirection="row">
-						<Card title="Timeframe's Averages" footer={cardFooter({ minutesAgo })}>
+						<Card title="Period's Averages" footer={cardFooter({ minutesAgo })}>
 							{isLoading ? (<LoadingIndicator />
 							) : gaugesOverview.some((plot) => plot.value !== null) ? (
 								<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
@@ -254,10 +254,10 @@ const SecoCollab = () => {
 						</Card>
 					</Grid>
 					<Grid item xs={12} md={12} alignItems="center" flexDirection="column">
-						<Card title="Timeframe's Max vs Min Values" footer={cardFooter({ minutesAgo })}>
+						<Card title="Period's Max vs Min Values" footer={cardFooter({ minutesAgo })}>
 							{isLoading ? (<LoadingIndicator />
 							) : (
-								<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
+								<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
 									{maxminOverview.map((plot, index) => (
 										<Grid key={index} item xs={12} md={4} justifyContent="center">
 											<Plot
