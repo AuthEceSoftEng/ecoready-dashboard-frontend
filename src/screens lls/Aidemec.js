@@ -3,10 +3,11 @@ import { memo, useRef, useMemo, useState, useCallback } from "react";
 
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
+import StickyBand from "../components/StickyBand.js";
 import useInit from "../utils/screen-init.js";
 import aidemecConfigs, { organization } from "../config/AidemecConfig.js";
 import { getCustomDateTime, getMonthDetails, debounce, findKeyByText, isValidArray } from "../utils/data-handling-functions.js";
-import { cardFooter, LoadingIndicator, StickyBand, DataWarning } from "../utils/rendering-items.js";
+import { cardFooter, LoadingIndicator, DataWarning } from "../utils/rendering-items.js";
 import { monthNames } from "../utils/useful-constants.js";
 
 const PRODUCTS = [
@@ -188,7 +189,7 @@ const AIDEMEC = () => {
 	const charts = useMemo(() => createChartConfig(chartData, dataSets.precipitationSum), [chartData, dataSets.precipitationSum]);
 
 	return (
-		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
+		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
 			<StickyBand dropdownContent={dropdownContent} formContent={formContentDate} formRef={formRefDate} />
 			{/* Monthly Overview Card */}
 			<Grid item xs={12} md={12} alignItems="center" flexDirection="column" padding={0}>

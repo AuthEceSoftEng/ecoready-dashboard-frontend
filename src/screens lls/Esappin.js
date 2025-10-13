@@ -3,10 +3,11 @@ import { memo, useMemo, useState, useCallback, useRef } from "react";
 
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
+import StickyBand from "../components/StickyBand.js";
 import useInit from "../utils/screen-init.js";
 import esappinConfigs, { organization } from "../config/EsappinConfig.js";
 import { getCustomDateTime, getMonthDetails, debounce, findKeyByText, isValidArray } from "../utils/data-handling-functions.js";
-import { cardFooter, LoadingIndicator, StickyBand, DataWarning } from "../utils/rendering-items.js";
+import { cardFooter, LoadingIndicator, DataWarning } from "../utils/rendering-items.js";
 import { monthNames } from "../utils/useful-constants.js";
 
 const PRODUCTS = [
@@ -176,7 +177,7 @@ const Esappin = () => {
 					color: "third",
 				},
 			],
-			yaxis: { title: "Temperature (°C)", automargin: true },
+			yaxis: { title: "Temperature (°C)" },
 		},
 		{
 			title: "Shortwave Radiation Sum",
@@ -188,7 +189,7 @@ const Esappin = () => {
 					color: "goldenrod",
 				},
 			],
-			yaxis: { title: "Radiation Metric", automargin: true },
+			yaxis: { title: "Radiation Metric" },
 		},
 		{
 			title: "Daily Precipitation Sum",
@@ -200,7 +201,7 @@ const Esappin = () => {
 					color: "third",
 				},
 			],
-			yaxis: { title: "Precipitation (mm)", automargin: true },
+			yaxis: { title: "Precipitation (mm)" },
 		},
 		{
 			title: "Monthly Precipitation Per Field",
@@ -216,7 +217,7 @@ const Esappin = () => {
 	], [chartData, dataSets.precipitationSum]);
 
 	return (
-		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
+		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
 			<StickyBand dropdownContent={dropdownContent} formContent={formContentDate} formRef={formRefDate} />
 
 			{/* Monthly Overview Card */}
@@ -285,7 +286,7 @@ const Esappin = () => {
 
 			{/* Chart Cards */}
 			{charts.map((card, index) => (
-				<Grid key={index} item xs={12} sm={12} md={6} mb={index === charts.length - 1 ? 2 : 0}>
+				<Grid key={index} item xs={12} sm={12} md={6} mb={index === charts.length - 1 ? 1 : 0}>
 					<Card title={card.title} footer={cardFooter({ minutesAgo })}>
 						{isLoading ? (<LoadingIndicator minHeight="300px" />
 						) : isValidArray(metrics) ? (
