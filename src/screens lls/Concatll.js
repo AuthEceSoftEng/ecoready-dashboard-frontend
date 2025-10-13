@@ -3,11 +3,12 @@ import { memo, useRef, useMemo, useState, useCallback } from "react";
 
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
+import StickyBand from "../components/StickyBand.js";
 import useInit from "../utils/screen-init.js";
 import Footer from "../components/Footer.js";
 import { organization, sites, getTimelineConfigs, getLocationProductionConfigs, getVarCodeGroupedConfigs } from "../config/ConcatConfig.js";
 import { debounce, calculateDates, groupByKey, isValidArray } from "../utils/data-handling-functions.js";
-import { cardFooter, StickyBand, LoadingIndicator, DataWarning } from "../utils/rendering-items.js";
+import { cardFooter, LoadingIndicator, DataWarning } from "../utils/rendering-items.js";
 
 const currentYear = new Date().getFullYear();
 const weatherMetricList = {
@@ -31,7 +32,7 @@ const CONCATLL = () => {
 	const [weatherMetric, setWeatherMetric] = useState("Temperature");
 	const [wheatMetric1, setWheatMetric1] = useState("Yield");
 	const [wheatMetric2, setWheatMetric2] = useState("Yield");
-	const [year, setYear] = useState(currentYear);
+	const [year, setYear] = useState("2020");
 	const [startDate, setStartDate] = useState("2014-01-01");
 	const [endDate, setEndDate] = useState("2015-01-01");
 
@@ -136,7 +137,11 @@ const CONCATLL = () => {
 	const varietyState = useInit(organization, fetchVarCodeGroupedConfigs);
 
 	// Extract data from each state
-	const { isLoading: isLoadingProduction, dataSets: productionDataSets, minutesAgo: productionMinutesAgo } = productionState.state;
+	const {
+		isLoading: isLoadingProduction,
+		dataSets: productionDataSets,
+		minutesAgo: productionMinutesAgo,
+	} = productionState.state;
 	const { isLoading: isLoadingWeather, dataSets: weatherDataSets, minutesAgo: weatherMinutesAgo } = weatherState.state;
 	const { isLoading: isLoadingVariety, dataSets: varietyDataSets, minutesAgo: varietyMinutesAgo } = varietyState.state;
 	// Weather data processing (using weatherDataSets instead of dataSets)
@@ -265,8 +270,8 @@ const CONCATLL = () => {
 					},
 				],
 				showLegend: false,
-				xaxis: { title: "Product Variety Code", automargin: true },
-				yaxis: { title: metric.yaxis, automargin: true },
+				xaxis: { title: "Product Variety Code" },
+				yaxis: { title: metric.yaxis },
 				hasValidData, // Add this property to track data validity
 			},
 		];
@@ -275,7 +280,7 @@ const CONCATLL = () => {
 	// = ============== RENDERING ===============
 
 	return (
-		<Grid container spacing={2} justifyContent="center" alignItems="center">
+		<Grid container spacing={1} justifyContent="center" alignItems="center">
 			<Grid item xs={12} sm={12} md={12}>
 				<Card title={`${wheatMetric1} Per Year - ${location1}`} footer={cardFooter({ minutesAgo: productionMinutesAgo })}>
 					<StickyBand sticky={false} dropdownContent={dropdownContent1} />

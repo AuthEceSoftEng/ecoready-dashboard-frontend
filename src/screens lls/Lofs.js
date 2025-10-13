@@ -3,10 +3,11 @@ import { memo, useRef, useMemo, useState, useCallback } from "react";
 
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
+import StickyBand from "../components/StickyBand.js";
 import useInit from "../utils/screen-init.js";
 import lofsConfigs, { organization } from "../config/LofsConfig.js";
 import { getCustomDateTime, getMonthDetails, isValidArray } from "../utils/data-handling-functions.js";
-import { cardFooter, LoadingIndicator, StickyBand, DataWarning } from "../utils/rendering-items.js";
+import { cardFooter, LoadingIndicator, DataWarning } from "../utils/rendering-items.js";
 
 const STATIONS = ["Station 44", "Station 53", "Station 85"];
 const customDate = getCustomDateTime(2024, 10);
@@ -202,7 +203,7 @@ const LOFS = () => {
 				},
 			],
 			showLegend: true,
-			yaxis: { title: "Temperature (°C)", automargin: true },
+			yaxis: { title: "Temperature (°C)" },
 		},
 		{
 			title: "Daily Wind Speed",
@@ -217,7 +218,7 @@ const LOFS = () => {
 				},
 			],
 			showLegend: false,
-			yaxis: { title: "Wind Speed (m/s)", automargin: true },
+			yaxis: { title: "Wind Speed (m/s)" },
 		},
 		{
 			title: "Daily Net Precipitation",
@@ -238,7 +239,7 @@ const LOFS = () => {
 				},
 			],
 			showLegend: true,
-			yaxis: { title: "Precipitation (mm)", automargin: true },
+			yaxis: { title: "Precipitation (mm)" },
 		},
 		{
 			title: "Daily Humidity Evolution",
@@ -253,7 +254,7 @@ const LOFS = () => {
 				},
 			],
 			showLegend: false,
-			yaxis: { title: "Humidity (%)", automargin: true },
+			yaxis: { title: "Humidity (%)" },
 		},
 		{
 			title: "Daily CO2 Levels",
@@ -268,7 +269,7 @@ const LOFS = () => {
 				},
 			],
 			showLegend: false,
-			yaxis: { title: "CO2 (ppm)", automargin: true },
+			yaxis: { title: "CO2 (ppm)" },
 		},
 		{
 			title: "Daily Solar Radiation",
@@ -283,7 +284,7 @@ const LOFS = () => {
 				},
 			],
 			showLegend: false,
-			yaxis: { title: "Solar Radiation (MJ/m²)", automargin: true },
+			yaxis: { title: "Solar Radiation (MJ/m²)" },
 		},
 		{
 			title: "Monthly Precipitation Per Field",
@@ -305,7 +306,7 @@ const LOFS = () => {
 	], [chartData, dataSets.precipitationSum]);
 
 	return (
-		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
+		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
 			<StickyBand dropdownContent={dropdownContent} formContent={formContentDate} formRef={formRefDate} />
 			{/* Monthly Overview Card */}
 			<Grid item xs={12} md={12} alignItems="center" flexDirection="column" padding={0}>
@@ -376,7 +377,7 @@ const LOFS = () => {
 
 			{/* Chart Cards */}
 			{charts.map((card, index) => (
-				<Grid key={index} item xs={12} sm={12} md={6} mb={index === charts.length - 1 ? 2 : 0}>
+				<Grid key={index} item xs={12} sm={12} md={index === charts.length - 1 ? 12 : 6} mb={index === charts.length - 1 ? 1 : 0}>
 					<Card title={card.title} footer={cardFooter({ minutesAgo })}>
 						{isLoading ? (<LoadingIndicator minHeight="300px" />
 						) : isValidArray(metrics) ? (

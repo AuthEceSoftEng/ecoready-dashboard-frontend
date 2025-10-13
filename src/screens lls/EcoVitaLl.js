@@ -4,11 +4,11 @@ import { memo, useMemo, useRef, useState, useCallback } from "react";
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
 import useInit from "../utils/screen-init.js";
-// import Form from "../components/Form.js";
+import StickyBand from "../components/StickyBand.js";
 import { ecoVitallConfigs, randomDataRadial, organization } from "../config/EcoVitallConfig.js";
 import { calculateDates, getCustomDateTime, debounce, isValidArray } from "../utils/data-handling-functions.js";
 import { monthNames } from "../utils/useful-constants.js";
-import { cardFooter, LoadingIndicator, StickyBand } from "../utils/rendering-items.js";
+import { cardFooter, LoadingIndicator } from "../utils/rendering-items.js";
 
 const PRODUCTS = [
 	{ value: "microgreens", text: "Microgreens" },
@@ -172,7 +172,7 @@ const EcoVItaLl = () => {
 	], [dataSets.ph_avg, dataSets.ec_avg]);
 
 	return (
-		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2} sx={{ flexGrow: 1, flexBasis: "100%", flexShrink: 0 }}>
+		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1} sx={{ flexGrow: 1, flexBasis: "100%", flexShrink: 0 }}>
 			<StickyBand formRef={formRefDate} formContent={formContentDate} />
 			{gaugeData.map((card, index) => (
 				<Grid key={index} item xs={12} md={6} alignItems="center" flexDirection="column">
@@ -209,7 +209,7 @@ const EcoVItaLl = () => {
 				</Grid>
 			))}
 			{dailyData.map((card, index) => (
-				<Grid key={index} item xs={12} sm={12} md={6} mb={index === dailyData.length - 1 ? 1 : 0}>
+				<Grid key={index} item xs={12} sm={12} md={6}>
 					<Card title={card.title} footer={cardFooter({ minutesAgo })}>
 						{isLoading ? (<LoadingIndicator />
 						) : (
@@ -238,7 +238,6 @@ const EcoVItaLl = () => {
 								<Plot
 									showLegend
 									scrollZoom
-									// width="113%"
 									height="120px"
 									data={[
 										{

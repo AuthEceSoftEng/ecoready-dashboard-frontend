@@ -3,10 +3,11 @@ import { memo, useMemo, useState, useCallback, useRef } from "react";
 
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
+import StickyBand from "../components/StickyBand.js";
 import useInit from "../utils/screen-init.js";
 import { thallaConfigs, organization } from "../config/ThallaConfig.js";
 import { calculateDates, calculateDifferenceBetweenDates, debounce } from "../utils/data-handling-functions.js";
-import { cardFooter, LoadingIndicator, StickyBand, DataWarning } from "../utils/rendering-items.js";
+import { cardFooter, LoadingIndicator, DataWarning } from "../utils/rendering-items.js";
 
 const REGIONS = ["Amfissa", "Evoia", "Larisa", "Lamia", "Thiva"];
 
@@ -176,7 +177,7 @@ const THALLA = () => {
 					color: "third",
 				},
 			],
-			yaxis: { title: "Temperature (°C)", automargin: true },
+			yaxis: { title: "Temperature (°C)" },
 		},
 		{
 			title: `${differenceInDays}-day Temperature Distribution`,
@@ -200,7 +201,7 @@ const THALLA = () => {
 					color: "third",
 				},
 			],
-			yaxis: { title: "Temperature (°C)", automargin: true },
+			yaxis: { title: "Temperature (°C)" },
 		},
 		{
 			title: "Wind Speed",
@@ -214,7 +215,7 @@ const THALLA = () => {
 					color: "primary",
 				},
 			],
-			yaxis: { title: "Wind Speed (Bft)", automargin: true },
+			yaxis: { title: "Wind Speed (Bft)" },
 		},
 		{
 			title: "Daily Rain Sum",
@@ -227,12 +228,12 @@ const THALLA = () => {
 					color: "third",
 				},
 			],
-			yaxis: { title: "Rain (mm)", automargin: true },
+			yaxis: { title: "Rain (mm)" },
 		},
 	], [chartData, differenceInDays]);
 
 	return (
-		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
+		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
 			<StickyBand dropdownContent={dropdownContent} formRef={formRefDate} formContent={formContentDate} />
 
 			{isValidDateRange ? (
@@ -285,7 +286,7 @@ const THALLA = () => {
 
 					{/* Chart Cards */}
 					{chartConfigs.map((card, index) => (
-						<Grid key={index} item xs={12} sm={12} md={6} mb={1}>
+						<Grid key={index} item xs={12} sm={12} md={6}>
 							<Card title={card.title} footer={cardFooter({ minutesAgo })}>
 								{isLoading ? (
 									<LoadingIndicator minHeight="300px" />
