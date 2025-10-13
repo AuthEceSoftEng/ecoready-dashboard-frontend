@@ -10,6 +10,7 @@ import Switch from "../components/Switch.js";
 import useInit from "../utils/screen-init.js";
 import { mapInfoConfigs, organization } from "../config/ProductConfig.js";
 import { LoadingIndicator } from "../utils/rendering-items.js";
+import { isValidArray } from "../utils/data-handling-functions.js";
 import { europeanCountries, products, labs } from "../utils/useful-constants.js";
 
 const excludedProducts = new Set(["Oilseeds", "Cereals", "Sheep/Goat Meat"]);
@@ -177,16 +178,13 @@ const Map = () => {
 				updateFilter("product", event.target.value);
 			},
 		},
-	].map((item) => ({
-		...item,
-	}))), [dispatch, filters.product, updateFilter]);
+	]), [dispatch, filters.product, updateFilter]);
 
 	useEffect(() => {
 		// Load the GeoJSON file from the public directory
 		fetch("/european_countries.json")
 			.then((response) => {
 				if (!response.ok) {
-					// console.log("Response status:", response.status);
 					throw new Error("Network response was not ok");
 				}
 
@@ -202,10 +200,8 @@ const Map = () => {
 		return stats.map((statistic) => ({
 			...geoJsonData,
 			features: geoJsonData.features.map((feature) => {
-				const country = europeanCountries.find(
-					(c) => c.text === feature.properties.name,
-				);
-				const statisticValues = Array.isArray(statistic.values) ? statistic.values : [];
+				const country = europeanCountries.find((c) => c.text === feature.properties.name);
+				const statisticValues = isValidArray(statistic.values) ? statistic.values : [];
 				const value = statisticValues.find((p) => p.key === (statistic.perRegion ? country?.region : country?.value))?.[statistic.name] || "-";
 
 				return {
@@ -226,18 +222,22 @@ const Map = () => {
 
 	// Add effect to monitor data readiness
 	useEffect(() => {
-		if (enhancedGeoJsonData && statistics.every((statistic) => (
-			Array.isArray(statistic.values) ? statistic.values : []).length > 0)
-		) { setMapState((prev) => ({ ...prev, isDataReady: true })); }
-	}, [enhancedGeoJsonData, statistics]);
+		const isReady = enhancedGeoJsonData
+			&& statistics.length > 0
+			&& statistics.every((statistic) => isValidArray(statistic.values));
+
+		if (isReady && !mapState.isDataReady) {
+			setMapState((prev) => ({ ...prev, isDataReady: true }));
+		}
+	}, [enhancedGeoJsonData, statistics, mapState.isDataReady]);
 
 	// Modify the geodata creation:
 	const geodata = useMemo(() => {
-		if (!mapState.isDataReady || !enhancedGeoJsonData || statistics.length === 0) return []; // Safeguard
+		if (!mapState.isDataReady || !enhancedGeoJsonData || statistics.length === 0) return [];
 
 		return statistics.map((statistic, index) => {
 			// Ensure values is always an array and contains valid numbers
-			const validValues = (Array.isArray(statistic.values) ? statistic.values : [])
+			const validValues = (isValidArray(statistic.values) ? statistic.values : [])
 				.filter((p) => p && p.key !== "EU" && typeof p[statistic.name] === "number")
 				.map((p) => p[statistic.name] || 0);
 
@@ -248,26 +248,13 @@ const Map = () => {
 			return {
 				name: statistic.metric,
 				type: statistic.metric.includes("Price") ? "price" : "production",
-				data: {
-					...enhancedGeoJsonData[index],
-					features: enhancedGeoJsonData[index]?.features?.map((feature) => ({
-						...feature,
-						properties: {
-							...feature.properties,
-							metric: statistic.metric,
-							unit: statistic.unit,
-						},
-					})),
-				},
+				data: enhancedGeoJsonData[index],
 				range: [minValue, maxValue],
 				unit: statistic.unit,
 				style: (feature) => ({
 					color: colors.dark,
 					weight: 1,
-					fillColor: getColor(
-						feature.properties.value,
-						[minValue, maxValue],
-					),
+					fillColor: getColor(feature.properties.value, [minValue, maxValue]),
 					fillOpacity: 0.3,
 				}),
 				action: onEachCountry,
@@ -284,7 +271,7 @@ const Map = () => {
 			.flatMap((lab) => {
 				const onClick = () => navigate(lab.path);
 
-				if (typeof lab.coordinates === "object" && !Array.isArray(lab.coordinates)) {
+				if (typeof lab.coordinates === "object" && !isValidArray(lab.coordinates)) {
 					return Object.entries(lab.coordinates)
 						.map(([key, index]) => createMarker(lab, key, index, onClick));
 				}

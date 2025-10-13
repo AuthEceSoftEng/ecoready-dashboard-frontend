@@ -1,7 +1,7 @@
 import { Grid } from "@mui/material";
 import { LayersControl, MapContainer, Marker, Popup, TileLayer, GeoJSON } from "react-leaflet";
 import { scaleQuantize } from "d3-scale";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 import colors from "../_colors.scss";
 import { formatNumber } from "../utils/data-handling-functions.js";
@@ -23,6 +23,8 @@ export const getColor = (value, range = [0, 100], colorRange = choroplethColors)
 
 // Add this new function for categorical colors (risk/opportunity levels)
 export const getCategoricalColor = (level, colorMap) => colorMap[level] || colors.greyDark;
+
+const getMetricKey = (metric) => `${metric.name}-${metric.range[0]}-${metric.range[1]}`;
 
 // Update the Legend component to handle both continuous and categorical data
 const Legend = ({ min, max, unit, colorscale = choroplethColors, levels = null, colorMap = null, isCategorical = false }) => {
@@ -146,39 +148,37 @@ const MapComponent = ({
 	const [activeLayer, setActiveLayer] = useState(null);
 	const [isInitialRender, setIsInitialRender] = useState(true);
 
-	useEffect(() => {
-		const defaultLayer = geodata.find((metric) => metric.hiddable && metric.defaultChecked);
-		if (defaultLayer) {
-			setActiveLayer(defaultLayer.name);
-			const newIndex = geodata.findIndex((metric) => metric.name === defaultLayer.name);
-			if (newIndex !== -1) {
-				setSelectedLayerIndex(newIndex);
-			}
-		}
-
-		setIsInitialRender(false);
-	}, [geodata]);
-
-	const handleLayerChange = (layerName) => {
+	const handleLayerChange = useCallback((layerName) => {
 		setActiveLayer(layerName);
 		const newIndex = geodata.findIndex((metric) => metric.name === layerName);
 		if (newIndex !== -1) {
 			setSelectedLayerIndex(newIndex);
 		}
-	};
+	}, [geodata]);
+
+	useEffect(() => {
+		const defaultLayer = geodata.find((metric) => metric.hiddable && metric.defaultChecked);
+		if (defaultLayer) {
+			handleLayerChange(defaultLayer.name);
+		}
+
+		setIsInitialRender(false);
+	}, [geodata, handleLayerChange]);
+
+	const handleMapReady = useCallback((map) => {
+		map.target.on("baselayerchange", (event) => {
+			handleLayerChange(event.name);
+		});
+	}, [handleLayerChange]);
 
 	return (
 		<Grid container style={{ width: "100%", height: "100%" }}>
-			<Grid item xs={12} style={{ width: "100%", height: "100%</Grid>" }}>
+			<Grid item xs={12} style={{ width: "100%", height: "100%" }}>
 				<MapContainer
 					style={{ width: "100%", height: "100%" }}
 					center={center}
 					zoom={zoom}
-					whenReady={(map) => {
-						map.target.on("baselayerchange", (event) => {
-							handleLayerChange(event.name);
-						});
-					}}
+					whenReady={handleMapReady}
 					scrollWheelZoom={scrollWheelZoom}
 					minZoom={2.37}
 					maxBounds={[[-90, -180], [90, 180]]}
@@ -196,13 +196,13 @@ const MapComponent = ({
 							/>
 						))}
 					{geodata.filter((metric) => !metric.hiddable).map((metric) => (
-						<GeoJSON key={`${metric.name}-${metric.range[0]}-${metric.range[1]}`} data={metric.data} style={metric.style} onEachFeature={metric.action} />
+						<GeoJSON key={getMetricKey(metric)} data={metric.data} style={metric.style} onEachFeature={metric.action} />
 					))}
 					<LayersControl position="topright" collapsed={false}>
 						{geodata
 							.filter((metric) => metric.hiddable)
 							.map((metric) => (
-								<LayersControl.BaseLayer key={`${metric.name}-${metric.range[0]}-${metric.range[1]}`} name={metric.name} checked={isInitialRender ? metric.defaultChecked : activeLayer === metric.name}>
+								<LayersControl.BaseLayer key={getMetricKey(metric)} name={metric.name} checked={isInitialRender ? metric.defaultChecked : activeLayer === metric.name}>
 									<GeoJSON data={metric.data} style={metric.style} onEachFeature={metric.action} />
 								</LayersControl.BaseLayer>
 							))}
