@@ -5,10 +5,11 @@ import { useNavigate, useLocation } from "react-router-dom";
 import colors from "../_colors.scss";
 import MapComponent, { getColor } from "../components/Map.js";
 import { SecondaryBackgroundButton } from "../components/Buttons.js";
+import StickyBand from "../components/StickyBand.js";
 import Switch from "../components/Switch.js";
 import useInit from "../utils/screen-init.js";
 import { mapInfoConfigs, organization } from "../config/ProductConfig.js";
-import { LoadingIndicator, StickyBand } from "../utils/rendering-items.js";
+import { LoadingIndicator } from "../utils/rendering-items.js";
 import { europeanCountries, products, labs } from "../utils/useful-constants.js";
 
 const excludedProducts = new Set(["Oilseeds", "Cereals", "Sheep/Goat Meat"]);

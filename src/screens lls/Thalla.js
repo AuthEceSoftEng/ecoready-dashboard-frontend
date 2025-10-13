@@ -3,19 +3,13 @@ import { memo, useMemo, useState, useCallback, useRef } from "react";
 
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
+import StickyBand from "../components/StickyBand.js";
 import useInit from "../utils/screen-init.js";
 import { thallaConfigs, organization } from "../config/ThallaConfig.js";
-import { calculateDates, calculateDifferenceBetweenDates,
-	findKeyByText, debounce } from "../utils/data-handling-functions.js";
-import { cardFooter, LoadingIndicator, StickyBand, DataWarning } from "../utils/rendering-items.js";
+import { calculateDates, calculateDifferenceBetweenDates, debounce } from "../utils/data-handling-functions.js";
+import { cardFooter, LoadingIndicator, DataWarning } from "../utils/rendering-items.js";
 
-const REGIONS = [
-	{ value: "Amfissa", text: "Amfissa" },
-	{ value: "Evoia", text: "Evoia" },
-	{ value: "Larisa", text: "Larisa" },
-	{ value: "Lamia", text: "Lamia" },
-	{ value: "Thiva", text: "Thiva" },
-];
+const REGIONS = ["Amfissa", "Evoia", "Larisa", "Lamia", "Thiva"];
 
 // Define sensor ranges once to avoid repetition
 const SENSOR_RANGES = {
@@ -28,23 +22,21 @@ const SENSOR_RANGES = {
 const getDatasetValue = (dataset, key) => (dataset?.[0] ? dataset[0][key] : null);
 
 const THALLA = () => {
-	const [startDate, setStartDate] = useState("2024-06-01");
-	const [endDate, setEndDate] = useState("2024-06-30");
+	const [dateRange, setDateRange] = useState({
+		start: "2024-06-01",
+		end: "2024-06-30",
+	});
+	const { start: startDate, end: endDate } = dateRange;
 	const [region, setRegion] = useState(REGIONS[0]);
 
-	const handleRegionChange = useCallback((event) => {
-		const selectedRegion = findKeyByText(REGIONS, event.target.value, true);
-		if (selectedRegion) {
-			setRegion(selectedRegion);
-		}
-	}, []);
+	const handleRegionChange = useCallback((event) => { setRegion(event.target.value); }, []);
 
 	const dropdownContent = useMemo(() => [
 		{
 			id: "region",
 			items: REGIONS,
 			label: "Select Area",
-			value: region.text,
+			value: region,
 			size: "small",
 			onChange: handleRegionChange,
 		},
@@ -54,7 +46,7 @@ const THALLA = () => {
 		() => debounce((date, setter) => {
 			const { currentDate } = calculateDates(date);
 			setter(currentDate);
-		}, 0),
+		}, 2000),
 		[],
 	);
 
@@ -70,15 +62,15 @@ const THALLA = () => {
 			customType: "date-range",
 			id: "dateRange",
 			width: "350px",
-			minDate: new Date(2024, 0, 1),
+			minDate: new Date(2024, 4, 1),
 			maxDate: new Date(2024, 8, 30),
 			startValue: startDate,
 			startLabel: "Start date",
 			endValue: endDate,
 			endLabel: "End date",
 			labelSize: 12,
-			onStartChange: (newValue) => handleDateChange(newValue, setStartDate),
-			onEndChange: (newValue) => handleDateChange(newValue, setEndDate),
+			onStartChange: (newValue) => handleDateChange(newValue, (val) => setDateRange((prev) => ({ ...prev, start: val }))),
+			onEndChange: (newValue) => handleDateChange(newValue, (val) => setDateRange((prev) => ({ ...prev, end: val }))),
 		},
 	], [endDate, handleDateChange, startDate]);
 
@@ -87,10 +79,9 @@ const THALLA = () => {
 
 	const { differenceInDays } = calculateDifferenceBetweenDates(startDate, endDate);
 
-	// const regionKey = findKeyByText(REGIONS, region);
 	const fetchConfigs = useMemo(
-		() => (isValidDateRange ? thallaConfigs(region.value, startDate, endDate, differenceInDays) : null),
-		[isValidDateRange, region.value, startDate, endDate, differenceInDays],
+		() => (isValidDateRange ? thallaConfigs(region, startDate, endDate, differenceInDays) : null),
+		[isValidDateRange, region, startDate, endDate, differenceInDays],
 	);
 
 	const { state } = useInit(organization, fetchConfigs);
@@ -186,7 +177,6 @@ const THALLA = () => {
 					color: "third",
 				},
 			],
-			xaxis: { title: "Days" },
 			yaxis: { title: "Temperature (°C)" },
 		},
 		{
@@ -211,7 +201,6 @@ const THALLA = () => {
 					color: "third",
 				},
 			],
-			xaxis: { title: "Days" },
 			yaxis: { title: "Temperature (°C)" },
 		},
 		{
@@ -226,7 +215,6 @@ const THALLA = () => {
 					color: "primary",
 				},
 			],
-			xaxis: { title: "Days" },
 			yaxis: { title: "Wind Speed (Bft)" },
 		},
 		{
@@ -240,13 +228,12 @@ const THALLA = () => {
 					color: "third",
 				},
 			],
-			xaxis: { title: "Days" },
 			yaxis: { title: "Rain (mm)" },
 		},
 	], [chartData, differenceInDays]);
 
 	return (
-		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
+		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
 			<StickyBand dropdownContent={dropdownContent} formRef={formRefDate} formContent={formContentDate} />
 
 			{isValidDateRange ? (
@@ -299,7 +286,7 @@ const THALLA = () => {
 
 					{/* Chart Cards */}
 					{chartConfigs.map((card, index) => (
-						<Grid key={index} item xs={12} sm={12} md={6} mb={1}>
+						<Grid key={index} item xs={12} sm={12} md={6}>
 							<Card title={card.title} footer={cardFooter({ minutesAgo })}>
 								{isLoading ? (
 									<LoadingIndicator minHeight="300px" />
@@ -309,7 +296,6 @@ const THALLA = () => {
 										data={card.data}
 										showLegend={index === 0}
 										height="300px"
-										xaxis={card.xaxis}
 										yaxis={card.yaxis}
 									/>
 								) : (

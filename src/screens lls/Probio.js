@@ -3,10 +3,11 @@ import { memo, useMemo, useState, useCallback, useRef } from "react";
 
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
+import StickyBand from "../components/StickyBand.js";
 import useInit from "../utils/screen-init.js";
 import { probioConfigs, organization } from "../config/ProbioConfig.js";
 import { calculateDates, debounce, isValidArray } from "../utils/data-handling-functions.js";
-import { cardFooter, StickyBand, LoadingIndicator, DataWarning } from "../utils/rendering-items.js";
+import { cardFooter, LoadingIndicator, DataWarning } from "../utils/rendering-items.js";
 
 const PRODUCTS = ["Overview", "Oats"];
 
@@ -38,8 +39,6 @@ const Probio = () => {
 
 	const handleDateChange = useCallback((newValue, setter) => {
 		if (!newValue?.$d) return;
-
-		// Immediate visual feedback
 		setter(newValue.$d);
 		debouncedSetDate(newValue.$d, setter);
 	}, [debouncedSetDate]);
@@ -212,13 +211,19 @@ const Probio = () => {
 	], [oatData]);
 
 	return (
-		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={2}>
+		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
 			<StickyBand dropdownContent={dropdownContent} formRef={formRefDate} formContent={formContentDate} />
 			{product === "Overview"
 				? isValidDateRange ? (
 					<>
 						{graphConfigs.map((card, index) => (
-							<Grid key={index} item xs={12} md={index === graphConfigs.length - 1 ? 12 : 6} mb={index === graphConfigs.length - 1 ? 1 : 0}>
+							<Grid
+								key={index}
+								item
+								xs={12}
+								md={index === graphConfigs.length - 1 ? 12 : 6}
+								mb={index === graphConfigs.length - 1 ? 1 : 0}
+							>
 								<Card title={card.title} footer={cardFooter({ minutesAgo })}>
 									{isLoading ? (<LoadingIndicator minHeight="300px" />
 									) : isValidArray(metrics) ? (
