@@ -142,10 +142,7 @@ const Map = () => {
 		},
 	], [filters.year, handleYearChange]);
 
-	const fetchConfigs = useMemo(
-		() => (mapInfoConfigs(filters.product, filters.year)),
-		[filters.year, filters.product],
-	);
+	const fetchConfigs = useMemo(() => (mapInfoConfigs(filters.product, filters.year)), [filters.year, filters.product]);
 
 	const { state, dispatch } = useInit(organization, fetchConfigs);
 	const { isLoading, dataSets } = state;
@@ -154,7 +151,7 @@ const Map = () => {
 		if (!fetchConfigs || !dataSets) return [];
 
 		return fetchConfigs.map((statistic) => {
-			const values = dataSets[statistic.plotId] || []; // Ensure `values` is an array
+			const values = dataSets[statistic.plotId] || [];
 			return {
 				plotId: statistic.plotId,
 				name: statistic.attributename,

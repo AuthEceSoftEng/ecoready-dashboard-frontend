@@ -9,7 +9,7 @@ const StickyBand = ({
 	sticky = true,
 	borderRadius = "16px",
 	dropdownContent = [],
-	formRef,
+	formRef = null,
 	formContent,
 	toggleContent,
 	togglePlacing,
@@ -47,18 +47,12 @@ const StickyBand = ({
 		{dropdownContent.map((dropdown, index) => (
 			<Grid key={index} item sx={{ display: "flex", justifyContent: "flex-end", minWidth: "fit-content", flexShrink: 0 }} xs={6} sm={2} md={1}>
 				<Dropdown
-					id={dropdown.id}
-					value={dropdown.value}
+					{...dropdown}
 					placeholder={dropdown.label}
-					items={dropdown.items}
-					size={dropdown.size}
 					width={dropdown.width || "170px"}
 					height={dropdown.height || "40px"}
 					borderRadius={borderRadius || "16px"}
 					background={dropdown.color ?? "primary"}
-					subheader={dropdown.subheader}
-					multiple={dropdown.multiple}
-					onChange={dropdown.onChange}
 				/>
 			</Grid>
 		))}

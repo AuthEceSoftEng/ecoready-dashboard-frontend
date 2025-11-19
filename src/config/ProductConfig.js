@@ -2,7 +2,7 @@
 import { calculateDates, findKeyByText } from "../utils/data-handling-functions.js";
 import { products } from "../utils/useful-constants.js";
 
-const fruitVegetables = new Set([
+const FRUIT_VEGETABLES = new Set([
 	"abricots", "apples", "asparagus", "avocados", "beans", "cabbages",
 	"carrots", "cauliflowers", "cherries", "clementines", "courgettes",
 	"cucumbers", "egg plants, aubergines", "garlic", "kiwis", "leeks",
@@ -10,11 +10,13 @@ const fruitVegetables = new Set([
 	"nectarines", "onions", "oranges", "peaches", "pears", "peppers",
 	"plums", "satsumas", "strawberries", "table grapes", "tomatoes", "water melons",
 ]);
-const dairyProducts = new Set(["butter", "butteroil", "cheddar", "cream", "edam", "emmental", "gouda", "smp", "wheypowder", "wmp"]); // "drinking milk",
+const DAIRY_PRODUCTS = new Set(["butter", "butteroil", "cheddar", "cream", "edam", "emmental", "gouda", "smp", "wheypowder", "wmp"]);
 
-const proteinCrops = new Set(["Alfalfa", "Broad beans", "Chickpeas", "Lentils", "Lupins", "Peas"]);
+const PROTEIN_CROPS = new Set(["Alfalfa", "Broad beans", "Chickpeas", "Lentils", "Lupins", "Peas"]);
 
-const cerealProducts = new Set(["barley", "wheat", "maize", "oats", "rye", "sorghum", "triticale"]);
+const EGG_FARMING_METHODS = new Set(["Barn", "Cage", "Free range", "Organic"]);
+
+const CEREAL_PRODUCTS = new Set(["barley", "wheat", "maize", "oats", "rye", "sorghum", "triticale"]);
 
 export const organization = "european_data";
 
@@ -71,23 +73,13 @@ const createProductionConfig = (baseConfig, params, plotId = null) => ({
 	attribute: plotId?.includes("max") ? `max_${params.attribute[0]}` : `sum_${params.attribute[0]}`,
 });
 
-const createProductionConfigs = (globalProduct, startDate, endDate, differenceInDays, productionMetric, map, filters = [], collection = null) => {
+const createProductionConfigs = (globalProduct, startDate, endDate, differenceInDays, productionMetric, filters = [], collection = null) => {
 	const year = new Date().getFullYear().toString();
 	const baseConfig = {
 		...getProductionBaseConfig(globalProduct),
 		...(collection && { collection }),
 	};
 	const interval = getInterval(differenceInDays);
-
-	if (map) {
-		const mapConfigs = [
-			{
-				params: createParams(productionMetric, "sum", startDate, endDate, interval.annually, filters),
-				plotId: "productProduction",
-			},
-		];
-		return mapConfigs.map((config) => createProductionConfig(baseConfig, config.params, config.plotId));
-	}
 
 	const configs = [
 		{
@@ -107,10 +99,10 @@ const createProductionConfigs = (globalProduct, startDate, endDate, differenceIn
 	return configs.map((config) => createProductionConfig(baseConfig, config.params, config.plotId));
 };
 
-export const getProductionConfigs = (globalProduct, startDate, endDate, differenceInDays, product = null, productionMetric = null, productionType = null, map = false) => {
+export const getProductionConfigs = (globalProduct, startDate, endDate, differenceInDays, product = null, productionMetric = null, productionType = null) => {
 	const productConfigs = {
 		Beef: {
-			metric: map ? "tonnes" : productionMetric,
+			metric: productionMetric,
 			filters: [{ property_name: "category", operator: "eq", property_value: product }],
 		},
 		Milk: {
@@ -119,23 +111,23 @@ export const getProductionConfigs = (globalProduct, startDate, endDate, differen
 			filters: [{ property_name: "category", operator: "eq", property_value: product }],
 		},
 		Pigmeat: {
-			metric: map ? "tonnes" : productionMetric,
+			metric: productionMetric,
 			filters: [],
 		},
 		Poultry: {
 			collection: "__poultry_production__",
-			metric: map ? "tonnes" : productionMetric,
+			metric: productionMetric,
 			filters: [{ property_name: "animal", operator: "eq", property_value: product }],
 		},
 		"Sheep/Goat Meat": {
-			metric: map ? "tonnes" : productionMetric,
+			metric: productionMetric,
 			filters: [
 				{ property_name: "meat", operator: "eq", property_value: product },
 				{ property_name: "item", operator: "eq", property_value: productionType },
 			],
 		},
 		Cereals: {
-			metric: map ? "gross_production" : productionMetric,
+			metric: productionMetric,
 			filters: [{ property_name: "crop", operator: "eq", property_value: product }],
 		},
 		Oilseeds: {
@@ -153,7 +145,7 @@ export const getProductionConfigs = (globalProduct, startDate, endDate, differen
 			filters: [{ property_name: "product", operator: "eq", property_value: product }],
 		},
 		Sugar: {
-			metric: map ? "gross_production" : productionMetric,
+			metric: productionMetric,
 			filters: [],
 		},
 	};
@@ -161,7 +153,7 @@ export const getProductionConfigs = (globalProduct, startDate, endDate, differen
 	const config = productConfigs[globalProduct];
 	if (!config) return [];
 
-	return createProductionConfigs(globalProduct, startDate, endDate, differenceInDays, config.metric, map, config.filters, config.collection);
+	return createProductionConfigs(globalProduct, startDate, endDate, differenceInDays, config.metric, config.filters, config.collection);
 };
 
 const getPriceBaseConfig = (globalProduct) => ({
@@ -359,7 +351,7 @@ export const getMonthlyPriceConfigs = (globalProduct, customDate, product = null
 		},
 		Dairy: {
 			collection: "__dairy_prices__",
-			filters: [{ property_name: "product", operator: "eq", property_value: product }],
+			filters: [{ property_name: "product", operator: "eq", property_value: product?.toUpperCase() }],
 		},
 		Oilseeds: {
 			collection: "__oilseeds_prices__",
@@ -460,7 +452,7 @@ export const mapInfoConfigs = (globalProduct, year) => {
 	}
 
 	if (product === "eggs") {
-		return ["Barn", "Cage", "Free range", "Organic"].map((farmingMethod, index) => createPriceMapConfig("eggs_poultry", "__egg_prices__", `Average Selling Price (${farmingMethod})`, "€/100kg", `productPrices${index + 1}`, year, [{ property_name: "farming_method", operator: "eq", property_value: farmingMethod }]));
+		return [...EGG_FARMING_METHODS].map((farmingMethod, index) => createPriceMapConfig("eggs_poultry", "__egg_prices__", `Average Selling Price (${farmingMethod})`, "€/100kg", `productPrices${index + 1}`, year, [{ property_name: "farming_method", operator: "eq", property_value: farmingMethod }]));
 	}
 
 	if (product === "wine") {
@@ -481,11 +473,11 @@ export const mapInfoConfigs = (globalProduct, year) => {
 		];
 	}
 
-	if (fruitVegetables.has(globalProduct)) {
+	if (FRUIT_VEGETABLES.has(globalProduct)) {
 		return [createPriceMapConfig("fruit_vegetables", "__prices__", "Average Price", "€/100kg", "productPrices", year, [{ property_name: "product", operator: "eq", property_value: globalProduct }])];
 	}
 
-	if (dairyProducts.has(globalProduct)) {
+	if (DAIRY_PRODUCTS.has(globalProduct)) {
 		return [createPriceMapConfig("milk_dairy", "__dairy_prices__", `Average Selling Price (${product})`, "€/100kg", "productPrices", year, [{ property_name: "product", operator: "eq", property_value: globalProduct.toUpperCase() }])];
 	}
 
@@ -496,7 +488,7 @@ export const mapInfoConfigs = (globalProduct, year) => {
 		];
 	}
 
-	if (cerealProducts.has(product)) {
+	if (CEREAL_PRODUCTS.has(product)) {
 		const productnames = products.find((item) => item.value === product)?.priceProductType || [];
 		const cropnames = products.find((item) => item.value === product)?.productionProductType || [];
 
@@ -508,7 +500,7 @@ export const mapInfoConfigs = (globalProduct, year) => {
 	}
 
 	const formattedProd = globalProduct.charAt(0).toUpperCase() + globalProduct.slice(1).toLowerCase();
-	if (proteinCrops.has(formattedProd)) {
+	if (PROTEIN_CROPS.has(formattedProd)) {
 		return [createPriceMapConfig("oilseeds_protein_crops", "__protein_crops_prices__", "Average Price", "€/t", "productPrices", year, [{ property_name: "product", operator: "eq", property_value: formattedProd }])];
 	}
 

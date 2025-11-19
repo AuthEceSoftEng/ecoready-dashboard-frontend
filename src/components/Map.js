@@ -138,7 +138,9 @@ const MapComponent = ({
 	scrollWheelZoom = true,
 	zoom = 12,
 	center = [40.627, 22.96],
-	layers = { normal: { show: false }, simple: { show: false }, dark: { show: false }, terrain: { show: false }, satellite: { show: false } },
+	layers = {
+		normal: { show: false }, simple: { show: false }, dark: { show: false }, terrain: { show: false }, satellite: { show: false },
+	},
 	markers = [],
 	geodata = [],
 	showLegend = true, // New prop to control legend visibility
@@ -202,7 +204,11 @@ const MapComponent = ({
 						{geodata
 							.filter((metric) => metric.hiddable)
 							.map((metric) => (
-								<LayersControl.BaseLayer key={getMetricKey(metric)} name={metric.name} checked={isInitialRender ? metric.defaultChecked : activeLayer === metric.name}>
+								<LayersControl.BaseLayer
+									key={getMetricKey(metric)}
+									name={metric.name}
+									checked={isInitialRender ? metric.defaultChecked : activeLayer === metric.name}
+								>
 									<GeoJSON data={metric.data} style={metric.style} onEachFeature={metric.action} />
 								</LayersControl.BaseLayer>
 							))}

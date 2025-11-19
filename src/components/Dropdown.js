@@ -1,33 +1,36 @@
-import { MenuItem, Select, FormControl, InputLabel, ListSubheader, ListItemText } from "@mui/material";
+import { MenuItem, Select, FormControl, InputLabel, ListSubheader, ListItemText, Menu } from "@mui/material";
+import ArrowRightIcon from "@mui/icons-material/ArrowRight";
+import { useState } from "react";
 import { makeStyles } from "@mui/styles";
 
 import Checkbox from "./Checkbox.js";
 
-const useStyles = makeStyles((theme) => ({
-	primary_filled: {
-		backgroundColor: theme.palette.primary.main,
+const useStyles = makeStyles((theme) => {
+	const createStyle = (color, isDark = false) => ({
+		backgroundColor: theme.palette[color].main,
 		color: "white!important",
-		borderRadius: (props) => props.borderRadius, // Use props
+		borderRadius: (props) => props.borderRadius,
 		borderBottom: "0px",
 		"&, &:before, &:after": {
 			borderBottom: "0px!important",
 		},
 		"&:hover": {
-			backgroundColor: theme.palette.primaryDark.main,
+			backgroundColor: isDark ? theme.palette[`${color}Dark`].main : theme.palette[color].main,
 			borderBottom: "0px",
 		},
 		"&:focus": {
-			backgroundColor: theme.palette.primaryDark.main,
+			backgroundColor: isDark ? theme.palette[`${color}Dark`].main : theme.palette[color].main,
 			borderBottom: "0px",
 		},
 		"&:before": {
 			borderBottom: "0px",
 		},
-	},
-	primary_outlined: {
+	});
+
+	const createOutlinedStyle = (color) => ({
 		backgroundColor: "transparent",
-		borderColor: theme.palette.primary.main,
-		borderRadius: (props) => props.borderRadius, // Use props
+		borderColor: theme.palette[color]?.main || color,
+		borderRadius: (props) => props.borderRadius,
 		borderBottom: "0px",
 		"&, &:before, &:after": {
 			borderBottom: "0px!important",
@@ -43,88 +46,17 @@ const useStyles = makeStyles((theme) => ({
 		"&:before": {
 			borderBottom: "0px",
 		},
-	},
-	secondary_filled: {
-		backgroundColor: theme.palette.secondary.main,
-		color: "white!important",
-		borderRadius: (props) => props.borderRadius, // Use props
-		borderBottom: "0px",
-		"&, &:before, &:after": {
-			borderBottom: "0px!important",
-		},
-		"&:hover": {
-			backgroundColor: theme.palette.secondaryDark.main,
-			borderBottom: "0px",
-		},
-		"&:focus": {
-			backgroundColor: theme.palette.secondaryDark.main,
-			borderBottom: "0px",
-		},
-		"&:before": {
-			borderBottom: "0px",
-		},
-	},
-	secondary_outlined: {
-		backgroundColor: "transparent",
-		borderColor: theme.palette.secondary.main,
-		borderRadius: (props) => props.borderRadius, // Use props
-		borderBottom: "0px",
-		"&, &:before, &:after": {
-			borderBottom: "0px!important",
-		},
-		"&:hover": {
-			backgroundColor: "transparent",
-			borderBottom: "0px",
-		},
-		"&:focus": {
-			backgroundColor: "transparent",
-			borderBottom: "0px",
-		},
-		"&:before": {
-			borderBottom: "0px",
-		},
-	},
-	third_filled: {
-		backgroundColor: theme.palette.third.main,
-		color: "white!important",
-		borderRadius: (props) => props.borderRadius, // Use props
-		borderBottom: "0px",
-		"&, &:before, &:after": {
-			borderBottom: "0px!important",
-		},
-		"&:hover": {
-			backgroundColor: theme.palette.thirdDark.main,
-			borderBottom: "0px",
-		},
-		"&:focus": {
-			backgroundColor: theme.palette.thirdDark.main,
-			borderBottom: "0px",
-		},
-		"&:before": {
-			borderBottom: "0px",
-		},
-	},
-	third_outlined: {
-		backgroundColor: "transparent",
-		borderColor: "third",
-		borderRadius: (props) => props.borderRadius, // Use props
-		borderBottom: "0px",
-		"&, &:before, &:after": {
-			borderBottom: "0px!important",
-		},
-		"&:hover": {
-			backgroundColor: "transparent",
-			borderBottom: "0px",
-		},
-		"&:focus": {
-			backgroundColor: "transparent",
-			borderBottom: "0px",
-		},
-		"&:before": {
-			borderBottom: "0px",
-		},
-	},
-}));
+	});
+
+	return {
+		primary_filled: createStyle("primary", true),
+		primary_outlined: createOutlinedStyle("primary"),
+		secondary_filled: createStyle("secondary", true),
+		secondary_outlined: createOutlinedStyle("secondary"),
+		third_filled: createStyle("third", true),
+		third_outlined: createOutlinedStyle("third"),
+	};
+});
 
 // Helper function to get item value
 const getItemValue = (item) => (typeof item === "string" ? item : item.text || item.value);
@@ -143,27 +75,174 @@ const Dropdown = ({
 	value,
 	subheader = false,
 	multiple = false,
+	nested = false,
 	onChange,
 }) => {
 	const classes = useStyles({ borderRadius });
+	const [anchorEl, setAnchorEl] = useState(null);
+	const [hoveredItem, setHoveredItem] = useState(null);
 
-	// Custom render for multiple selection
 	const renderValue = (selected) => {
 		if (!multiple) return selected;
-
-		if (selected.length === 0) {
-			return placeholder;
-		}
-
-		return selected.join(", ");
+		return selected.length === 0 ? placeholder : selected.join(", ");
 	};
 
-	// Helper function to check if item is selected
 	const isItemSelected = (item) => {
 		if (!multiple || !Array.isArray(value)) return false;
-		const itemValue = getItemValue(item);
-		return value.includes(itemValue);
+		return value.includes(getItemValue(item));
 	};
+
+	const handleMenuClose = () => {
+		setAnchorEl(null);
+		setHoveredItem(null);
+	};
+
+	const handleMenuItemHover = (event, item) => {
+		if (nested && item.children?.length > 0) {
+			setAnchorEl(event.currentTarget);
+			setHoveredItem(item);
+		}
+	};
+
+	const handleNestedItemClick = (childValue) => {
+		onChange({ target: { value: childValue } });
+		handleMenuClose();
+	};
+
+	// Common MenuItem renderer
+	const renderMenuItem = (itemValue, displayValue, key, extraProps = {}) => (
+		<MenuItem key={key} value={itemValue} {...extraProps}>
+			{multiple && (
+				<Checkbox
+					checked={isItemSelected(itemValue)}
+					sx={{
+						color: `${background}.main`,
+						"&.Mui-checked": {
+							color: `${background}.main`,
+						},
+					}}
+				/>
+			)}
+			<ListItemText
+				primary={displayValue}
+				sx={{
+					"& .MuiListItemText-primary": {
+						overflow: "hidden",
+						textOverflow: "ellipsis",
+						whiteSpace: "nowrap",
+					},
+				}}
+			/>
+		</MenuItem>
+	);
+
+	const renderNestedMenuItem = (item, index) => {
+		const hasChildren = item.children?.length > 0;
+		const itemValue = getItemValue(item);
+
+		return (
+			<MenuItem
+				key={`item-${index}`}
+				value={hasChildren ? undefined : itemValue}
+				sx={{
+					display: "flex",
+					justifyContent: "space-between",
+					alignItems: "center",
+				}}
+				onMouseEnter={(e) => handleMenuItemHover(e, item)}
+				onMouseLeave={handleMenuClose}
+				onClick={hasChildren ? (e) => e.preventDefault() : undefined}
+			>
+				{multiple && !hasChildren && (
+					<Checkbox
+						checked={isItemSelected(item)}
+						sx={{
+							color: `${background}.main`,
+							"&.Mui-checked": {
+								color: `${background}.main`,
+							},
+						}}
+					/>
+				)}
+				<ListItemText
+					primary={itemValue}
+					sx={{
+						"& .MuiListItemText-primary": {
+							overflow: "hidden",
+							textOverflow: "ellipsis",
+							whiteSpace: "nowrap",
+						},
+					}}
+				/>
+				{hasChildren && <ArrowRightIcon sx={{ ml: 1 }} />}
+				{hasChildren && hoveredItem?.value === item.value && (
+					<Menu
+						anchorEl={anchorEl}
+						open={Boolean(anchorEl)}
+						anchorOrigin={{ vertical: "top", horizontal: "right" }}
+						transformOrigin={{ vertical: "top", horizontal: "left" }}
+						sx={{ pointerEvents: "none" }}
+						PaperProps={{ sx: { pointerEvents: "auto", ml: 0.5 } }}
+						onClose={handleMenuClose}
+					>
+						{item.children.map((child, childIndex) => renderMenuItem(
+							child.value || child.text || child,
+							child.text || child.value || child,
+							`child-${index}-${childIndex}`,
+							{
+								onClick: () => handleNestedItemClick(child.value || child.text || child),
+								sx: { minWidth: 150 },
+							},
+						))}
+					</Menu>
+				)}
+			</MenuItem>
+		);
+	};
+
+	const renderRegularItems = () => items.flatMap((item, index) => {
+		// Handle lcaIndicators structure (has label and options)
+		if (subheader && item.label && item.options) {
+			return [
+				<ListSubheader
+					key={`header-${index}`}
+					sx={{
+						fontWeight: "bold",
+						borderTop: "1px solid rgba(0, 0, 0, 0.12)",
+						color: "black!important",
+					}}
+				>
+					{item.label}
+				</ListSubheader>,
+				...item.options.map((option, optIndex) => renderMenuItem(option.value, option.text, `item-${index}-${optIndex}`, {
+					sx: { pl: 4, backgroundColor: "rgba(0, 0, 0, 0.02)" },
+				})),
+			];
+		}
+
+		// Handle products structure (has subheader and prices.products)
+		if (subheader && item.subheader) {
+			return [
+				<ListSubheader
+					key={`header-${index}`}
+					sx={{
+						fontWeight: "bold",
+						borderTop: "1px solid rgba(0, 0, 0, 0.12)",
+						color: "black!important",
+					}}
+				>
+					{typeof item === "string" ? item : item.text}
+				</ListSubheader>,
+				...(item.prices?.products || []).map((product, prodIndex) => renderMenuItem(product.toLowerCase(), product.toLowerCase(), `item-${index}-${prodIndex}`, {
+					sx: { pl: 4, backgroundColor: "rgba(0, 0, 0, 0.02)" },
+				})),
+			];
+		}
+
+		// Handle regular items
+		const itemValue = getItemValue(item);
+		return renderMenuItem(itemValue, itemValue, `item-${index}`);
+	});
 
 	return (
 		<FormControl fullWidth={!width}>
@@ -215,131 +294,7 @@ const Dropdown = ({
 				}}
 				onChange={onChange}
 			>
-				{items.flatMap((item, index) => {
-					// Handle lcaIndicators structure (has label and options)
-					if (subheader && item.label && item.options) {
-						return [
-							<ListSubheader
-								key={`header-${index}`}
-								sx={{
-									fontWeight: "bold",
-									borderTop: "1px solid rgba(0, 0, 0, 0.12)",
-									color: "black!important",
-								}}
-							>
-								{item.label}
-							</ListSubheader>,
-							...item.options.map((option, optIndex) => (
-								<MenuItem
-									key={`item-${index}-${optIndex}`}
-									value={option.value} // Use option.value instead of option
-									sx={{
-										pl: 4,
-										backgroundColor: "rgba(0, 0, 0, 0.02)",
-									}}
-								>
-									{multiple && (
-										<Checkbox
-											checked={isItemSelected(option)}
-											sx={{
-												color: `${background}.main`,
-												"&.Mui-checked": {
-													color: `${background}.main`,
-												},
-											}}
-										/>
-									)}
-									<ListItemText
-										primary={option.text} // Use option.text for display
-										sx={{
-											"& .MuiListItemText-primary": {
-												overflow: "hidden",
-												textOverflow: "ellipsis",
-												whiteSpace: "nowrap",
-											},
-										}}
-									/>
-								</MenuItem>
-							)),
-						];
-					}
-
-					// Handle products structure (has subheader and prices.products)
-					if (subheader && item.subheader) {
-						return [
-							<ListSubheader
-								key={`header-${index}`}
-								sx={{
-									fontWeight: "bold",
-									borderTop: "1px solid rgba(0, 0, 0, 0.12)",
-									color: "black!important",
-								}}
-							>
-								{typeof item === "string" ? item : item.text}
-							</ListSubheader>,
-							...((item.prices?.products || []).map((product) => product.toLowerCase()) || []).map((product, prodIndex) => (
-								<MenuItem
-									key={`item-${index}-${prodIndex}`}
-									value={product}
-									sx={{
-										pl: 4,
-										backgroundColor: "rgba(0, 0, 0, 0.02)",
-									}}
-								>
-									{multiple && (
-										<Checkbox
-											checked={isItemSelected(product)}
-											sx={{
-												color: `${background}.main`,
-												"&.Mui-checked": {
-													color: `${background}.main`,
-												},
-											}}
-										/>
-									)}
-									<ListItemText
-										primary={product}
-										sx={{
-											"& .MuiListItemText-primary": {
-												overflow: "hidden",
-												textOverflow: "ellipsis",
-												whiteSpace: "nowrap",
-											},
-										}}
-									/>
-								</MenuItem>
-							)),
-						];
-					}
-
-					// Handle regular items (no subheader)
-					const itemValue = getItemValue(item);
-					return (
-						<MenuItem key={`item-${index}`} value={itemValue}>
-							{multiple && (
-								<Checkbox
-									checked={isItemSelected(item)}
-									sx={{
-										color: `${background}.main`,
-										"&.Mui-checked": {
-											color: `${background}.main`,
-										},
-									}}
-								/>
-							)}
-							<ListItemText
-								primary={itemValue}
-								sx={{
-									"& .MuiListItemText-primary": {
-										overflow: "hidden",
-										textOverflow: "ellipsis",
-										whiteSpace: "nowrap",
-									},
-								}}
-							/>
-						</MenuItem>
-					);
-				})}
+				{nested ? items.map((item, index) => renderNestedMenuItem(item, index)) : renderRegularItems()}
 			</Select>
 		</FormControl>
 	);

@@ -117,7 +117,7 @@ const useInit = (organization, fetchConfigs) => {
 				const warningMessage = `No data available for ${plotId}`;
 				refs.current.warning(warningMessage);
 			} else {
-				successCount++;
+				successCount += 1;
 			}
 
 			dispatch({

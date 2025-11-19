@@ -1,5 +1,12 @@
 export	const organization = "ecoready_masuria";
 
+export const REGIONS = [
+	{ value: "BEZEK", text: "Bezek" },
+	{ value: "GRABIK", text: "Grabik" },
+	{ value: "PRABUTY", text: "Prabuty" },
+	{ value: "WARSZAWA-FILTRY", text: "Warszawa-Filtry" },
+];
+
 const ecoReadyMasuriaConfigs = (stationName, year) => [
 
 	{
