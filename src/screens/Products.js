@@ -213,7 +213,6 @@ const ProductsScreen = () => {
 		},
 	};
 
-	// Replace references to state and dispatch with combined/specific versions
 	const { state, dispatch } = {
 		state: combinedState,
 		dispatch: useCallback((action) => {
@@ -261,7 +260,6 @@ const ProductsScreen = () => {
 			// Reset timeout flag when loading starts
 			setProductionTimeoutReached(false);
 
-			// Set a timeout (e.g., 12 seconds)
 			const timeoutId = setTimeout(() => {
 				if (isProductionLoading) {
 					setProductionTimeoutReached(true);
@@ -443,38 +441,53 @@ const ProductsScreen = () => {
 	const production = useMemo(() => processDataByKey(dataSets, "productProduction"), [dataSets]);
 	const maxProduction = useMemo(() => processDataByKey(dataSets, "maxProduction"), [dataSets]);
 
-	const productionByCountry = useMemo(() => production.map((productionData) => {
-		const grouped = groupByKey(productionData, "key");
+	const productionByCountry = useMemo(() => {
+		const countryByCodeMap = new Map(
+			europeanCountries.map((c) => [c.value, c]),
+		);
 
-		// Filter out EU and transform codes to names/regions
-		const result = Object.keys(grouped)
-			.filter((code) => code !== "EU" && code !== "EU Average")
-			.reduce((acc, code) => {
-				if (globalProduct === "Sugar") {
-					const country = europeanCountries.find((c) => c.region === code);
-					if (country?.region?.startsWith("Region")) {
-						// Aggregate data by region for Sugar
-						const regionData = acc[country.region] || [];
-						acc[country.region] = [...regionData, ...grouped[code]];
+		const countryByRegionMap = new Map(
+			europeanCountries
+				.filter((c) => c.region)
+				.map((c) => [c.region, c]),
+		);
+
+		const greekCountry = countryByCodeMap.get("EL");
+		if (greekCountry) {
+			countryByCodeMap.set("GR", greekCountry);
+		}
+
+		return production.map((productionData) => {
+			const grouped = groupByKey(productionData, "key");
+
+			const result = Object.keys(grouped)
+				.filter((code) => code !== "EU" && code !== "EU Average")
+				.reduce((acc, code) => {
+					if (globalProduct === "Sugar") {
+						const country = countryByRegionMap.get(code);
+						if (country?.region?.startsWith("Region")) {
+							const regionData = acc[country.region] || [];
+							acc[country.region] = [...regionData, ...grouped[code]];
+						}
+					} else {
+						const country = countryByCodeMap.get(code);
+						const countryName = country?.text;
+						if (countryName) {
+							acc[countryName] = grouped[code];
+						}
 					}
-				} else {
-					const countryName = europeanCountries.find((country) => country.value === code)?.text;
-					if (countryName) {
-						acc[countryName] = grouped[code];
-					}
-				}
 
-				return acc;
-			}, {});
+					return acc;
+				}, {});
 
-		// Sort by region/country names
-		return Object.keys(result)
-			.sort((a, b) => a.localeCompare(b))
-			.reduce((acc, key) => {
-				acc[key] = result[key];
-				return acc;
-			}, {});
-	}), [production, globalProduct]);
+			return Object.keys(result)
+				.sort((a, b) => a.localeCompare(b))
+				.reduce((acc, key) => {
+					acc[key] = result[key];
+					return acc;
+				}, {});
+		});
+	}, [production, globalProduct]);
 
 	const yearPickerRef = useRef();
 	const yearPickerProps = useMemo(() => [
@@ -820,9 +833,9 @@ const ProductsScreen = () => {
 			? existingCountries.find((country) => country.region === priceOptions.country)
 			: existingCountries.find((country) => country.text === priceOptions.country);
 
-		const countryKey = globalProduct === "Sugar"
-			? countryObj?.region
-			: countryObj?.value;
+		const countryKey = globalProduct === "Sugar" ? countryObj?.region : countryObj?.value;
+
+		const countryTimeline = priceValidations.timeline ? pricesTimeline.filter((item) => item.key === countryKey) : [];
 
 		return [
 			// Production gauge
@@ -869,8 +882,8 @@ const ProductsScreen = () => {
 				title: `${globalProduct}'s Price Timeline`,
 				data: [
 					{
-						x: priceValidations.timeline ? pricesTimeline.filter((item) => item.key === countryKey).map((item) => item.interval_start) : null,
-						y: priceValidations.timeline ? pricesTimeline.filter((item) => item.key === countryKey).map((item) => item.avg_price) : null,
+						x: countryTimeline.map((item) => item.interval_start),
+						y: countryTimeline.map((item) => item.avg_price),
 						type: "scatter",
 						mode: "lines",
 						color: "secondary",
