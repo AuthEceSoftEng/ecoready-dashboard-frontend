@@ -1,14 +1,12 @@
 /* eslint-disable max-len */
 import { useLocation } from "react-router-dom";
 import { Grid } from "@mui/material";
-import { memo, useMemo, useState, useCallback, useRef, useEffect } from "react";
+import { memo, useMemo, useState, useCallback, useEffect, useRef } from "react";
 
 import colors from "../_colors.scss";
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
 import StickyBand from "../components/StickyBand.js";
-import useInit from "../utils/screen-init.js";
-import { getPriceConfigs, getMonthlyPriceConfigs, getProductionConfigs, organization } from "../config/ProductConfig.js";
 import {
 	extractFields, getCustomDateTime, calculateDates, calculateDifferenceBetweenDates,
 	debounce, isValidArray, generateYearsArray, groupByKey,
@@ -16,6 +14,9 @@ import {
 } from "../utils/data-handling-functions.js";
 import { cardFooter, LoadingIndicator, DataWarning } from "../utils/rendering-items.js";
 import { europeanCountries, products } from "../utils/useful-constants.js";
+
+import { ProductionData } from "./ProductsProduction.js";
+import { PriceData } from "./ProductsPrice.js";
 
 const customDate = getCustomDateTime(2024, 12);
 const { year } = calculateDates(customDate);
@@ -105,65 +106,6 @@ const ProductsScreen = () => {
 	// Find the selected product's details from products array
 	const selectedProductDetails = findKeyByText(products, globalProduct, true);
 
-	const pricesItems = useMemo(() => extractFields(selectedProductDetails, "prices") || [], [selectedProductDetails]);
-	const priceCollections = useMemo(() => (pricesItems.needsDropdown ? pricesItems.collections : []), [pricesItems]);
-	const [selectedPriceCollection, setSelectedPriceCollection] = useState(priceCollections?.[0] ?? "");
-	const collectionOptions = useMemo(() => selectedProductDetails?.[selectedPriceCollection?.value] ?? null, [selectedProductDetails, selectedPriceCollection]);
-
-	const [priceOptions, setPriceOptions] = useState({
-		product: "Japonica" ?? "",
-		productType: "Avg" ?? "",
-		productVar: "Avg" ?? "",
-		country: "Greece",
-	});
-
-	const priceProducts = useMemo(() => {
-		if (pricesItems.needsDropdown) {
-			// If we have collections, use the selected collection's field
-			return collectionOptions?.products ?? [];
-		}
-
-		return pricesItems.fields[0]?.products ?? [];
-	}, [collectionOptions?.products, pricesItems.fields, pricesItems.needsDropdown]);
-
-	const priceProductTypes = useMemo(() => {
-		if (pricesItems.needsDropdown) {
-			// If we have collections, use the selected collection's field
-			return collectionOptions?.productTypes ?? [];
-		}
-
-		// If no collections, use the first field's product types
-		return pricesItems.fields[0]?.productTypes ?? [];
-	}, [collectionOptions?.productTypes, pricesItems.fields, pricesItems.needsDropdown]);
-
-	const productionItems = useMemo(() => extractFields(selectedProductDetails, "production") || [], [selectedProductDetails]);
-
-	const productionProducts = useMemo(() => productionItems.fields[0]?.products ?? [], [productionItems]);
-	const productTypes = useMemo(() => productionItems.fields[0]?.productTypes ?? [], [productionItems]);
-	const productionMetrics = useMemo(() => productionItems.fields[0]?.productionMetrics ?? [], [productionItems]);
-	const [productionOptions, setProductionOptions] = useState({
-		year: "2024",
-		product: productionProducts?.[0] ?? null,
-		productType: productTypes?.[0] ?? null,
-		productionMetricType: productionMetrics?.[0]?.text ?? null,
-		productionMetricVal: productionMetrics?.[0]?.value ?? null,
-	});
-
-	// Add ready states
-	const [isPriceConfigReady, setIsPriceConfigReady] = useState(false);
-	const [isProductionConfigReady, setIsProductionConfigReady] = useState(false);
-
-	const handleProductionMetricChange = useCallback((newProductType) => {
-		setProductionOptions((prev) => {
-			const selectedMetric = productionMetrics?.find((type) => type.text === newProductType);
-			return {
-				...prev,
-				productionMetricType: newProductType,
-				productionMetricVal: selectedMetric?.value ?? null,
-			};
-		});
-	}, [productionMetrics]);
-
 	const debouncedSetDate = useMemo(
 		() => debounce((date, setter) => {
 			const { currentDate } = calculateDates(date);
@@ -185,38 +127,29 @@ const ProductsScreen = () => {
 		};
 	}, [startDate, endDate]);
 
-	// Separate production configs
-	const productionConfigs = useMemo(
-		() => {
-			if (!isProductionConfigReady) return [];
-			return getProductionConfigs(globalProduct, startDate, endDate, dateMetrics.differenceInDays, productionOptions.product, productionOptions.productionMetricVal, productionOptions.productType) || [];
-		},
-		[isProductionConfigReady, globalProduct, startDate, endDate, dateMetrics.differenceInDays, productionOptions.product, productionOptions.productionMetricVal, productionOptions.productType],
-	);
+	const {
+		productionOptions,
+		setProductionOptions,
+		productionProducts,
+		productTypes,
+		productionMetrics,
+		handleProductionMetricChange,
+		productionState,
+		productionUnit,
+	} = ProductionData(globalProduct, selectedProductDetails, startDate, endDate, dateMetrics);
 
-	// Separate price configs
-	const priceConfigs = useMemo(
-		() => {
-			if (!isPriceConfigReady) return [];
-			const configs = [];
-			if (getPriceConfigs) {
-				configs.push(
-					...getPriceConfigs(globalProduct, startDate, endDate, dateMetrics.differenceInDays, priceOptions.product, priceOptions.productVar, selectedPriceCollection?.value),
-				);
-			}
-
-			if (getMonthlyPriceConfigs) {
-				configs.push(...getMonthlyPriceConfigs(globalProduct, customDate, priceOptions.product, priceOptions.productVar, selectedPriceCollection?.value));
-			}
-
-			return configs;
-		},
-		[isPriceConfigReady, globalProduct, startDate, endDate, dateMetrics.differenceInDays, priceOptions.product, priceOptions.productVar, selectedPriceCollection?.value],
-	);
-
-	// Create separate useInit hooks for price and production
-	const productionState = useInit(organization, productionConfigs);
-	const priceState = useInit(organization, priceConfigs);
+	const {
+		priceOptions,
+		setPriceOptions,
+		selectedPriceCollection,
+		setSelectedPriceCollection,
+		priceProducts,
+		priceProductTypes,
+		priceCollections,
+		collectionOptions,
+		priceState,
+		priceUnit,
+	} = PriceData(globalProduct, selectedProductDetails, startDate, endDate, dateMetrics);
 
 	// Combine states for components that need both
 	const combinedState = {
@@ -225,51 +158,31 @@ const ProductsScreen = () => {
 		isProductionLoading: productionState.state.isProductionLoading,
 		minutesAgo: Math.max(priceState.state.minutesAgo, productionState.state.minutesAgo),
 		dataSets: {
-			...priceState.state.dataSets,
 			...productionState.state.dataSets,
+			...priceState.state.dataSets,
 		},
 	};
 
-	const { state, dispatch } = {
-		state: combinedState,
-		dispatch: useCallback((action) => {
-			if (action.type.includes("PRICE")) {
-				priceState.dispatch(action);
-			} else if (action.type.includes("PRODUCTION")) {
-				productionState.dispatch(action);
-			} else {
-				priceState.dispatch(action);
-				productionState.dispatch(action);
-			}
-		}, [priceState, productionState]),
-	};
+	const dispatch = useCallback((action) => {
+		const actionType = action.type.toUpperCase();
 
-	// Add validation effects
-	useEffect(() => {
-		const isPriceReady = Boolean(
-			globalProduct
-			&& dateMetrics.isValidDateRange
-			&& Object.values(priceOptions).some(Boolean)
-			&& !priceState.state.error,
-		);
-		setIsPriceConfigReady(isPriceReady);
-	}, [globalProduct, dateMetrics.isValidDateRange, priceOptions, priceState.state.error]);
-
-	useEffect(() => {
-		const isProductionReady = Boolean(
-			globalProduct
-			&& Object.values(productionOptions).some(Boolean)
-			&& !productionState.state.error,
-		);
-		setIsProductionConfigReady(isProductionReady);
-	}, [globalProduct, productionOptions, productionState.state.error]);
+		if (actionType.includes("PRICE")) {
+			priceState.dispatch(action);
+		} else if (actionType.includes("PRODUCTION")) {
+			productionState.dispatch(action);
+		} else {
+			// Broadcast to both for generic actions
+			priceState.dispatch(action);
+			productionState.dispatch(action);
+		}
+	}, [priceState, productionState]);
 
 	const units = useMemo(() => ({
-		priceUnit: priceConfigs?.[0]?.unit || "",
-		productionUnit: productionConfigs?.[0]?.unit || "",
-	}), [priceConfigs, productionConfigs]);
+		priceUnit: priceUnit || "",
+		productionUnit: productionUnit || "",
+	}), [priceUnit, productionUnit]);
 
-	const { isPriceLoading, isProductionLoading, dataSets, minutesAgo } = state;
+	const { isPriceLoading, isProductionLoading, dataSets, minutesAgo } = combinedState;
 
 	const [productionTimeoutReached, setProductionTimeoutReached] = useTimeoutFlag(isProductionLoading, 12_000);
 	const [priceTimeoutReached, setPriceTimeoutReached] = useTimeoutFlag(isPriceLoading, 10_000);
@@ -328,7 +241,7 @@ const ProductsScreen = () => {
 
 			let initialPriceProduct;
 			let initialPriceType;
-			if (pricesFields.needsDropdown && collectionConfig) {
+			if (pricesFields?.needsDropdown && collectionConfig) {
 				// Use collection config if collections exist
 				initialPriceProduct = collectionConfig.products?.[0]?.text ?? collectionConfig.products?.[0] ?? null;
 				initialPriceType = collectionConfig.productTypes?.[0] ?? null;
@@ -369,14 +282,7 @@ const ProductsScreen = () => {
 			label: "Select Product",
 			onChange: handleProductChange,
 		}];
-	}, [dispatch, globalProduct, setPriceTimeoutReached, setProductionTimeoutReached]);
-
-	useEffect(() => {
-		if (selectedProduct) {
-			setGlobalProduct(selectedProduct);
-			setIsSugar(selectedProduct === "Sugar");
-		}
-	}, [selectedProduct]);
+	}, [dispatch, globalProduct, setPriceOptions, setPriceTimeoutReached, setProductionOptions, setProductionTimeoutReached, setSelectedPriceCollection]);
 
 	// PRODUCTION GRAPHS
 	// Function to categorize production data by country
@@ -421,63 +327,67 @@ const ProductsScreen = () => {
 
 	const productionByCountry = useMemo(() => {
 		// Create lookup maps once, outside the loop
-		const countryByCodeMap = new Map(
-			europeanCountries.map((c) => [c.value, c]),
-		);
-
-		const countryByRegionMap = new Map(
-			europeanCountries
-				.filter((c) => c.region)
-				.map((c) => [c.region, c]),
-		);
+		const countryMaps = {
+			byCode: new Map(europeanCountries.map((c) => [c.value, c])),
+			byRegion: new Map(europeanCountries.filter((c) => c.region).map((c) => [c.region, c])),
+		};
 
 		// Handle Greek country mapping
-		const greekCountry = countryByCodeMap.get("EL");
+		const greekCountry = countryMaps.byCode.get("EL");
 		if (greekCountry) {
-			countryByCodeMap.set("GR", greekCountry);
+			countryMaps.byCode.set("GR", greekCountry);
 		}
 
 		return production.map((productionData) => {
 			const grouped = groupByKey(productionData, "key");
 
 			// Pre-filter keys once
-			const validKeys = Object.keys(grouped).filter((code) => code !== "EU" && code !== "EU Average");
-
-			// Build result object directly without intermediate object
-			const result = {};
+			const validEntries = Object.entries(grouped).filter(([code]) => code !== "EU" && code !== "EU Average");
 
 			if (isSugar) {
-				// Sugar path: aggregate by region
-				for (const code of validKeys) {
-					const country = countryByRegionMap.get(code);
+				// Sugar path: aggregate by region with early filtering
+				const regionMap = new Map();
+
+				for (const [code, data] of validEntries) {
+					const country = countryMaps.byRegion.get(code);
 					if (country?.region?.startsWith("Region")) {
-						const region = country.region;
-						result[region] = result[region]
-							? [...result[region], ...grouped[code]]
-							: grouped[code];
+						const existing = regionMap.get(country.region);
+						regionMap.set(
+							country.region,
+							existing ? [...existing, ...data] : data,
+						);
 					}
 				}
-			} else {
-				// Non-Sugar path: map by country name
-				for (const code of validKeys) {
-					const country = countryByCodeMap.get(code);
-					if (country?.text) {
-						result[country.text] = grouped[code];
-					}
+
+				// Convert to sorted object
+				return [...regionMap.entries()]
+					.sort(([a], [b]) => a.localeCompare(b))
+					.reduce((acc, [region, data]) => {
+						acc[region] = data;
+						return acc;
+					}, {});
+			}
+
+			// Non-Sugar path: map by country name
+			const countryMap = new Map();
+
+			for (const [code, data] of validEntries) {
+				const country = countryMaps.byCode.get(code);
+				if (country?.text) {
+					countryMap.set(country.text, data);
 				}
 			}
 
-			// Sort keys and return sorted object
-			return Object.keys(result)
-				.sort((a, b) => a.localeCompare(b))
-				.reduce((acc, key) => {
-					acc[key] = result[key];
+			// Convert to sorted object
+			return [...countryMap.entries()]
+				.sort(([a], [b]) => a.localeCompare(b))
+				.reduce((acc, [name, data]) => {
+					acc[name] = data;
 					return acc;
 				}, {});
 		});
 	}, [production, isSugar]);
 
-	const yearPickerRef = useRef();
 	const yearPickerProps = useMemo(() => [
 		{
 			customType: "date-picker",
@@ -489,7 +399,7 @@ const ProductsScreen = () => {
 			maxDate: new Date(`${currentYear}-01-01`),
 			onChange: (newValue) => { if (newValue) { setProductionOptions((prev) => ({ ...prev, year: newValue.$y.toString() })); } },
 		},
-	], []);
+	], [setProductionOptions]);
 
 	const productionDropdowns = useMemo(() => {
 		const dropdowns = [];
@@ -537,7 +447,7 @@ const ProductsScreen = () => {
 		}
 
 		return dropdowns;
-	}, [productionProducts, productTypes, productionMetrics, productionOptions.product, productionOptions.productType, productionOptions.productionMetricType, productionState, handleProductionMetricChange]);
+	}, [productionProducts, productTypes, productionMetrics, productionOptions.product, productionOptions.productType, productionOptions.productionMetricType, productionState, setProductionOptions, handleProductionMetricChange]);
 
 	const europeOverview = useMemo(() => {
 		const productionData = productionOptions.productionVal
@@ -546,10 +456,9 @@ const ProductsScreen = () => {
 
 		// Early return with specific warnings if no production data
 		if (!productionData) {
-			const warningMessage = "No production data available for the selected options";
 			return {
 				charts: {
-					gauge: { warning: warningMessage },
+					gauge: { warning: "No production data available for the selected options" },
 					pie: { warning: "No production distribution data available for the selected options" },
 					bars: { warning: "No historical production data available for the selected options" },
 				},
@@ -596,8 +505,7 @@ const ProductsScreen = () => {
 				sort: false,
 			}] : [],
 			warning: !isValidArray(countryData) || countryData.every((item) => item.production === 0)
-				? `No production distribution data available for ${productionOptions.year}`
-				: null,
+				? `No production distribution data available for ${productionOptions.year}` : null,
 			title: isSugar ? "Production by Region" : "Production by Country",
 		};
 
@@ -722,7 +630,7 @@ const ProductsScreen = () => {
 		}
 
 		return dropdowns;
-	}, [priceCollections, priceProducts, priceProductTypes, existingCountries, selectedPriceCollection.text, priceState, collectionOptions?.products, collectionOptions?.productTypes, priceOptions.product, priceOptions.productType, priceOptions.country, globalProduct, isSugar]);
+	}, [priceCollections, priceProducts, priceProductTypes, existingCountries, selectedPriceCollection?.text, priceState, setSelectedPriceCollection, setPriceOptions, collectionOptions?.products, collectionOptions?.productTypes, priceOptions.product, priceOptions.productType, priceOptions.country, globalProduct, isSugar]);
 
 	useEffect(() => {
 		if (!selectedProductDetails) return;
@@ -744,76 +652,230 @@ const ProductsScreen = () => {
 				productVar: hasValidVar ? prev.productVar : initialField?.productTypes?.[0]?.value ?? initialField?.productTypes?.[0] ?? prev.productVar,
 			};
 		});
-	}, [selectedProductDetails, priceProducts, priceProductTypes, priceOptions.product, priceOptions.productType, priceOptions.productVar]);
+	}, [selectedProductDetails, priceProducts, priceProductTypes, priceOptions.product, priceOptions.productType, priceOptions.productVar, setPriceOptions]);
 
+	// useEffect(() => {
+	// 	// Only set initial collection if no collection is currently selected
+	// 	if (!priceCollections?.length || selectedPriceCollection) return;
+
+	// 	// Set initial collection only if selectedPriceCollection is empty/null
+	// 	setSelectedPriceCollection(priceCollections[0].text);
+	// }, [priceCollections, selectedPriceCollection, setSelectedPriceCollection]);
+
+	// useEffect(() => {
+	// 	if (pricesItems.needsDropdown) {
+	// 		setPriceOptions((prev) => ({
+	// 			...prev,
+	// 			product: collectionOptions?.products?.some((p) => p.text === prev.product || p === prev.product)
+	// 				? prev.product : collectionOptions?.products?.[0]?.text ?? collectionOptions?.products?.[0] ?? prev.product,
+	// 			productType: collectionOptions?.productTypes?.some((p) => p.text === prev.productType || p === prev.productType)
+	// 				? prev.productType : collectionOptions?.productTypes?.[0]?.text ?? collectionOptions?.productTypes?.[0] ?? prev.productType,
+	// 			productVar: collectionOptions?.productTypes?.some((p) => p.value === prev.productVar || p === prev.productVar)
+	// 				? prev.productVar : collectionOptions?.productTypes?.[0]?.value ?? collectionOptions?.productTypes?.[0] ?? prev.productVar,
+	// 		}));
+	// 	} else {
+	// 		// If no dropdowns needed, respect existing values if they're valid options
+	// 		if (priceProducts?.length) {
+	// 			setPriceOptions((prev) => ({
+	// 				...prev,
+	// 				product: priceProducts.some((p) => p.text === prev.product || p === prev.product)
+	// 					? prev.product : priceProducts[0]?.text ?? priceProducts[0] ?? prev.product,
+	// 			}));
+	// 		}
+
+	// 		if (priceProductTypes?.length) {
+	// 			setPriceOptions((prev) => ({
+	// 				...prev,
+	// 				productType: priceProductTypes.some((p) => p.text === prev.productType || p === prev.productType)
+	// 					? prev.productType : priceProductTypes[0]?.text ?? priceProductTypes[0] ?? prev.productType,
+	// 				productVar: priceProductTypes.some((p) => p.value === prev.productVar || p === prev.productVar)
+	// 					? prev.productVar : priceProductTypes[0]?.value ?? priceProductTypes[0] ?? prev.productVar,
+	// 			}));
+	// 		}
+	// 	}
+	// }, [priceProducts, priceProductTypes, selectedPriceCollection, pricesItems, selectedProductDetails, collectionOptions?.products, collectionOptions?.productTypes, setPriceOptions]);
+
+	// useEffect(() => {
+	// 	if (isPriceLoading) return;
+
+	// 	if (existingCountries?.length) {
+	// 		// Check if current country/region exists in new list
+	// 		const currentExists = existingCountries.some(
+	// 			(country) => (isSugar
+	// 				? country.region === priceOptions.country
+	// 				: country.text === priceOptions.country),
+	// 		);
+
+	// 		// If current selection doesn't exist in new list, set to first available option
+	// 		if (!currentExists) {
+	// 			setPriceOptions((prev) => ({
+	// 				...prev,
+	// 				country: isSugar
+	// 					? existingCountries.find((c) => c.region?.startsWith("Region"))?.region : existingCountries[0].text,
+	// 			}));
+	// 		}
+	// 	}
+	// }, [existingCountries, priceOptions.country, isSugar, setPriceOptions]);
+	// const isInitialMount = useRef(true);
+
+	// useEffect(() => {
+	// 	// Skip the initial mount to prevent cascading updates
+	// 	if (isInitialMount.current) {
+	// 		isInitialMount.current = false;
+	// 		return;
+	// 	}
+
+	// 	// Don't update while loading to prevent race conditions
+	// 	if (isPriceLoading) return;
+
+	// 	// Early exit if no product details
+	// 	if (!selectedProductDetails) return;
+
+	// 	setPriceOptions((prev) => {
+	// 		const newOptions = { ...prev };
+	// 		let hasChanges = false;
+
+	// 		// 1. Handle product and productType validation
+	// 		if (pricesItems.needsDropdown && collectionOptions) {
+	// 			// Using collection-based options
+	// 			const validProduct = collectionOptions.products?.some(
+	// 				(p) => p.text === prev.product || p === prev.product,
+	// 			);
+	// 			const validType = collectionOptions.productTypes?.some(
+	// 				(p) => p.text === prev.productType || p === prev.productType,
+	// 			);
+	// 			const validVar = collectionOptions.productTypes?.some(
+	// 				(p) => p.value === prev.productVar || p === prev.productVar,
+	// 			);
+
+	// 			if (!validProduct) {
+	// 				newOptions.product = collectionOptions.products?.[0]?.text
+	//                 ?? collectionOptions.products?.[0]
+	//                 ?? prev.product;
+	// 				hasChanges = true;
+	// 			}
+
+	// 			if (!validType) {
+	// 				newOptions.productType = collectionOptions.productTypes?.[0]?.text
+	//                 ?? collectionOptions.productTypes?.[0]
+	//                 ?? prev.productType;
+	// 				hasChanges = true;
+	// 			}
+
+	// 			if (!validVar) {
+	// 				newOptions.productVar = collectionOptions.productTypes?.[0]?.value
+	//                 ?? collectionOptions.productTypes?.[0]
+	//                 ?? prev.productVar;
+	// 				hasChanges = true;
+	// 			}
+	// 		} else {
+	// 			// Using direct fields
+	// 			if (priceProducts?.length) {
+	// 				const validProduct = priceProducts.some(
+	// 					(p) => p.text === prev.product || p === prev.product,
+	// 				);
+	// 				if (!validProduct) {
+	// 					newOptions.product = priceProducts[0]?.text ?? priceProducts[0] ?? prev.product;
+	// 					hasChanges = true;
+	// 				}
+	// 			}
+
+	// 			if (priceProductTypes?.length) {
+	// 				const validType = priceProductTypes.some(
+	// 					(p) => p.text === prev.productType || p === prev.productType,
+	// 				);
+	// 				const validVar = priceProductTypes.some(
+	// 					(p) => p.value === prev.productVar || p === prev.productVar,
+	// 				);
+
+	// 				if (!validType) {
+	// 					newOptions.productType = priceProductTypes[0]?.text
+	//                     ?? priceProductTypes[0]
+	//                     ?? prev.productType;
+	// 					hasChanges = true;
+	// 				}
+
+	// 				if (!validVar) {
+	// 					newOptions.productVar = priceProductTypes[0]?.value
+	//                     ?? priceProductTypes[0]
+	//                     ?? prev.productVar;
+	// 					hasChanges = true;
+	// 				}
+	// 			}
+	// 		}
+
+	// 		// 2. Handle country validation
+	// 		if (existingCountries?.length) {
+	// 			const currentCountryExists = existingCountries.some((country) => (
+	// 				isSugar
+	// 					? country.region === prev.country
+	// 					: country.text === prev.country
+	// 			));
+
+	// 			if (!currentCountryExists) {
+	// 				newOptions.country = isSugar
+	// 					? existingCountries.find((c) => c.region?.startsWith("Region"))?.region
+	// 					: existingCountries[0]?.text;
+	// 				hasChanges = true;
+	// 			}
+	// 		}
+
+	// 		// Only return new object if something actually changed
+	// 		return hasChanges ? newOptions : prev;
+	// 	});
+	// }, [
+	// 	isPriceLoading,
+	// 	selectedProductDetails,
+	// 	pricesItems.needsDropdown,
+	// 	collectionOptions,
+	// 	priceProducts,
+	// 	priceProductTypes,
+	// 	existingCountries,
+	// 	isSugar,
+	// 	setPriceOptions,
+	// ]);
+
+	const isInitialMount = useRef(true);
+	const previousCountriesLength = useRef(0);
+
+	// Simple effect ONLY for country validation when data loads
 	useEffect(() => {
-		// Only set initial collection if no collection is currently selected
-		if (!priceCollections?.length || selectedPriceCollection) return;
+		// Skip initial mount
+		if (isInitialMount.current) {
+			isInitialMount.current = false;
+			return;
+		}
 
-		// Set initial collection only if selectedPriceCollection is empty/null
-		setSelectedPriceCollection(priceCollections[0].text);
-	}, [priceCollections, selectedPriceCollection]);
+		// Only run when countries actually change (not just reference)
+		if (existingCountries.length === previousCountriesLength.current) {
+			return;
+		}
 
-	useEffect(() => {
-		if (pricesItems.needsDropdown) {
-			setPriceOptions((prev) => ({
+		previousCountriesLength.current = existingCountries.length;
+
+		// Don't update while loading
+		if (isPriceLoading) return;
+
+		// Only validate country
+		if (!existingCountries?.length) return;
+
+		setPriceOptions((prev) => {
+			const currentCountryExists = existingCountries.some((country) => (
+				isSugar
+					? country.region === prev.country
+					: country.text === prev.country
+			));
+
+			if (currentCountryExists) return prev;
+
+			return {
 				...prev,
-				product: collectionOptions?.products?.some((p) => p.text === prev.product || p === prev.product)
-					? prev.product
-					: collectionOptions?.products?.[0]?.text ?? collectionOptions?.products?.[0] ?? prev.product,
-				productType: collectionOptions?.productTypes?.some((p) => p.text === prev.productType || p === prev.productType)
-					? prev.productType
-					: collectionOptions?.productTypes?.[0]?.text ?? collectionOptions?.productTypes?.[0] ?? prev.productType,
-				productVar: collectionOptions?.productTypes?.some((p) => p.value === prev.productVar || p === prev.productVar)
-					? prev.productVar
-					: collectionOptions?.productTypes?.[0]?.value ?? collectionOptions?.productTypes?.[0] ?? prev.productVar,
-			}));
-		} else {
-			// If no dropdowns needed, respect existing values if they're valid options
-			if (priceProducts?.length) {
-				setPriceOptions((prev) => ({
-					...prev,
-					product: priceProducts.some((p) => p.text === prev.product || p === prev.product)
-						? prev.product
-						: priceProducts[0]?.text ?? priceProducts[0] ?? prev.product,
-				}));
-			}
-
-			if (priceProductTypes?.length) {
-				setPriceOptions((prev) => ({
-					...prev,
-					productType: priceProductTypes.some((p) => p.text === prev.productType || p === prev.productType)
-						? prev.productType
-						: priceProductTypes[0]?.text ?? priceProductTypes[0] ?? prev.productType,
-					productVar: priceProductTypes.some((p) => p.value === prev.productVar || p === prev.productVar)
-						? prev.productVar
-						: priceProductTypes[0]?.value ?? priceProductTypes[0] ?? prev.productVar,
-				}));
-			}
-		}
-	}, [priceProducts, priceProductTypes, selectedPriceCollection, pricesItems,
-		selectedProductDetails, collectionOptions?.products, collectionOptions?.productTypes]);
-
-	useEffect(() => {
-		if (existingCountries?.length) {
-			// Check if current country/region exists in new list
-			const currentExists = existingCountries.some(
-				(country) => (isSugar
-					? country.region === priceOptions.country
-					: country.text === priceOptions.country),
-			);
-
-			// If current selection doesn't exist in new list, set to first available option
-			if (!currentExists) {
-				setPriceOptions((prev) => ({
-					...prev,
-					country: isSugar
-						? existingCountries.find((c) => c.region?.startsWith("Region"))?.region
-						: existingCountries[0].text,
-				}));
-			}
-		}
-	}, [existingCountries, priceOptions.country, isSugar]);
+				country: isSugar
+					? existingCountries.find((c) => c.region?.startsWith("Region"))?.region
+					: existingCountries[0]?.text,
+			};
+		});
+	}, [isPriceLoading, existingCountries.length, isSugar, setPriceOptions, existingCountries]);
 
 	const formContentDate = useMemo(() => [
 		{
@@ -951,7 +1013,7 @@ const ProductsScreen = () => {
 							>
 								<Card title="EU's Annual Overview" footer={cardFooter({ minutesAgo })} sx={{ display: "flex", flexDirection: "column" }}>
 									<Grid item xs={12} md={12} display="flex" justifyContent="flex-end">
-										<StickyBand sticky={false} dropdownContent={productionDropdowns} formRef={yearPickerRef} formContent={yearPickerProps} />
+										<StickyBand sticky={false} dropdownContent={productionDropdowns} formContent={yearPickerProps} />
 									</Grid>
 									{isProductionLoading ? (<LoadingIndicator minHeight="405px" />
 									) : (hasProductionData ? (
@@ -1045,7 +1107,7 @@ const ProductsScreen = () => {
 			<Grid item xs={12} md={12} mb={2} alignItems="center" flexDirection="column">
 				<Card title="Product per Country" footer={cardFooter({ minutesAgo })}>
 					<StickyBand sticky={false} dropdownContent={priceDropdowns} formContent={formContentDate} />
-					{state.isLoading || (isPriceLoading && !priceTimeoutReached) ? (<LoadingIndicator minHeight="400px" />
+					{(isPriceLoading && !priceTimeoutReached) ? (<LoadingIndicator minHeight="400px" />
 					) : existingCountries.length === 0 ? (<DataWarning minHeight="400px" message="No Available Pricing Data For the Specified Options' Combination" />
 					) : dateMetrics.isValidDateRange ? (
 						<Grid container display="flex" direction="row" justifyContent="space-evenly" padding={0} spacing={1}>
