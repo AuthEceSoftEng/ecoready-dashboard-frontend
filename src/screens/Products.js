@@ -146,13 +146,12 @@ const ProductsScreen = () => {
 		priceProducts,
 		priceProductTypes,
 		priceCollections,
-		collectionOptions,
 		priceState,
 		priceUnit,
 	} = PriceData(globalProduct, selectedProductDetails, startDate, endDate, dateMetrics);
 
 	// Combine states for components that need both
-	const combinedState = {
+	const combinedState = useMemo(() => ({
 		isLoading: priceState.state.isLoading && productionState.state.isLoading,
 		isPriceLoading: priceState.state.isPriceLoading,
 		isProductionLoading: productionState.state.isProductionLoading,
@@ -161,7 +160,10 @@ const ProductsScreen = () => {
 			...productionState.state.dataSets,
 			...priceState.state.dataSets,
 		},
-	};
+	}), [priceState, productionState]);
+
+	// Destructure after memoization
+	const { isPriceLoading, isProductionLoading, dataSets, minutesAgo } = combinedState;
 
 	const dispatch = useCallback((action) => {
 		const actionType = action.type.toUpperCase();
@@ -182,10 +184,8 @@ const ProductsScreen = () => {
 		productionUnit: productionUnit || "",
 	}), [priceUnit, productionUnit]);
 
-	const { isPriceLoading, isProductionLoading, dataSets, minutesAgo } = combinedState;
-
 	const [productionTimeoutReached, setProductionTimeoutReached] = useTimeoutFlag(isProductionLoading, 12_000);
-	const [priceTimeoutReached, setPriceTimeoutReached] = useTimeoutFlag(isPriceLoading, 10_000);
+	const [priceTimeoutReached, setPriceTimeoutReached] = useTimeoutFlag(isPriceLoading, 12_000);
 
 	const hasProductionData = dataSets
 		&& dataSets.productProduction
@@ -206,22 +206,23 @@ const ProductsScreen = () => {
 
 	const maxPrice = useMemo(() => {
 		// Ensure maxPrices is an array
-		const maxPricesArray = Array.isArray(priceData.maxPrices) ? priceData.maxPrices : [priceData.maxPrices].filter(Boolean);
+		const maxPricesArray = isValidArray(priceData.maxPrices) ? priceData.maxPrices : [priceData.maxPrices].filter(Boolean);
 
 		if (maxPricesArray.length === 0) return 100; // Default value if empty
 
-		// Filter out undefined/null values and get max
-		const validPrices = maxPricesArray.filter((item) => item && typeof item.max_price === "number").map((item) => item.max_price);
+		let max = -Infinity;
+		for (const item of maxPricesArray) {
+			if (item?.max_price > max) {
+				max = item.max_price;
+			}
+		}
 
-		// If no valid prices found, return default
-		if (validPrices.length === 0) return 100;
-
-		return Math.max(...validPrices);
+		return max === -Infinity ? 100 : max;
 	}, [priceData.maxPrices]);
 
 	const existingCountries = useMemo(() => getUniqueCountries(priceData.timeline, globalProduct), [priceData.timeline, globalProduct]);
 
-	const productDropdownContent = useMemo(() => {
+	const globalProductDropdownContent = useMemo(() => {
 		const handleProductChange = (event) => {
 			const newProduct = event.target.value;
 			dispatch({ type: "FETCH_START" });
@@ -243,17 +244,17 @@ const ProductsScreen = () => {
 			let initialPriceType;
 			if (pricesFields?.needsDropdown && collectionConfig) {
 				// Use collection config if collections exist
-				initialPriceProduct = collectionConfig.products?.[0]?.text ?? collectionConfig.products?.[0] ?? null;
-				initialPriceType = collectionConfig.productTypes?.[0] ?? null;
+				initialPriceProduct = collectionConfig.products?.[0]?.text ?? collectionConfig.products?.[0] ?? "";
+				initialPriceType = collectionConfig.productTypes?.[0] ?? "";
 			} else {
 				// Otherwise use direct fields
-				initialPriceProduct = pricesFields.fields[0]?.products?.[0]?.text ?? pricesFields.fields[0]?.products?.[0] ?? null;
-				initialPriceType = pricesFields.fields[0]?.productTypes?.[0] ?? null;
+				initialPriceProduct = pricesFields.fields[0]?.products?.[0]?.text ?? pricesFields.fields[0]?.products?.[0] ?? "";
+				initialPriceType = pricesFields.fields[0]?.productTypes?.[0] ?? "";
 			}
 
-			const initialProduct = productionFields[0]?.products?.[0] ?? null;
-			const initialType = productionFields[0]?.productTypes?.[0] ?? null;
-			const initialMetric = productionFields[0]?.productionMetrics?.[0] ?? null;
+			const initialProduct = productionFields[0]?.products?.[0] ?? "";
+			const initialType = productionFields[0]?.productTypes?.[0] ?? "";
+			const initialMetric = productionFields[0]?.productionMetrics?.[0] ?? "";
 
 			setGlobalProduct(newProduct);
 			setIsSugar(newProduct === "Sugar");
@@ -263,15 +264,15 @@ const ProductsScreen = () => {
 				...prev,
 				product: initialProduct,
 				productType: initialType,
-				productionMetricType: initialMetric?.text ?? null,
-				productionMetricVal: initialMetric?.value ?? null,
+				productionMetricType: initialMetric?.text ?? "",
+				productionMetricVal: initialMetric?.value ?? "",
 			}));
 
 			setPriceOptions({
 				product: initialPriceProduct,
-				productType: initialPriceType?.text ?? initialPriceType ?? null,
-				productVar: initialPriceType?.value ?? initialPriceType ?? null,
-				country: null,
+				productType: initialPriceType?.text ?? initialPriceType ?? "",
+				productVar: initialPriceType?.value ?? initialPriceType ?? "",
+				country: "",
 			});
 		};
 
@@ -447,7 +448,7 @@ const ProductsScreen = () => {
 		}
 
 		return dropdowns;
-	}, [productionProducts, productTypes, productionMetrics, productionOptions.product, productionOptions.productType, productionOptions.productionMetricType, productionState, setProductionOptions, handleProductionMetricChange]);
+	}, [productionProducts, productTypes, productionMetrics, productionOptions, productionState, setProductionOptions, handleProductionMetricChange]);
 
 	const europeOverview = useMemo(() => {
 		const productionData = productionOptions.productionVal
@@ -568,12 +569,24 @@ const ProductsScreen = () => {
 						(category) => category.text === event.target.value,
 					);
 					setSelectedPriceCollection(selectedCollection);
-					setPriceOptions((prev) => ({
-						...prev,
-						product: collectionOptions?.products?.[0] ?? null,
-						productType: collectionOptions?.productTypes?.[0]?.text ?? collectionOptions?.productTypes?.[0] ?? null,
-						productVar: collectionOptions?.productTypes?.[0]?.value ?? collectionOptions?.productTypes?.[0] ?? null,
-					}));
+					console.log("Selected Price Collection Changed To:", selectedCollection);
+
+					const newCollectionConfig = selectedProductDetails?.[selectedCollection?.value];
+					const newProduct = newCollectionConfig.products?.[0]?.text ?? newCollectionConfig.products?.[0] ?? "";
+					const newProductType = newCollectionConfig.productTypes?.[0]?.text ?? newCollectionConfig.productTypes?.[0] ?? "";
+					const newProductVar = newCollectionConfig.productTypes?.[0]?.value ?? newCollectionConfig.productTypes?.[0] ?? "";
+
+					console.log("Resetting price options for collection:",
+						newProduct,
+						newProductType,
+						newProductVar);
+
+					setPriceOptions({
+						product: newProduct,
+						productType: newProductType,
+						productVar: newProductVar,
+						country: "",
+					});
 				},
 			});
 		}
@@ -630,7 +643,12 @@ const ProductsScreen = () => {
 		}
 
 		return dropdowns;
-	}, [priceCollections, priceProducts, priceProductTypes, existingCountries, selectedPriceCollection?.text, priceState, setSelectedPriceCollection, setPriceOptions, collectionOptions?.products, collectionOptions?.productTypes, priceOptions.product, priceOptions.productType, priceOptions.country, globalProduct, isSugar]);
+	}, [
+		priceCollections, priceProducts, priceProductTypes, existingCountries,
+		selectedPriceCollection.text, priceState, setSelectedPriceCollection, selectedProductDetails,
+		setPriceOptions, priceOptions.product, priceOptions.productType, priceOptions.country,
+		globalProduct, isSugar,
+	]);
 
 	useEffect(() => {
 		if (!selectedProductDetails) return;
@@ -927,8 +945,7 @@ const ProductsScreen = () => {
 			{
 				data: {
 					value: priceValidations.monthly
-						? priceData.monthly.find((item) => item.key === countryKey)?.avg_price ?? null
-						: null,
+						? priceData.monthly.find((item) => item.key === countryKey)?.avg_price : null,
 					subtitle: "Current Month's Average Price",
 				},
 				color: "secondary",
@@ -983,7 +1000,7 @@ const ProductsScreen = () => {
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
-			<StickyBand dropdownContent={productDropdownContent} />
+			<StickyBand dropdownContent={globalProductDropdownContent} />
 
 			{/* PRODUCTION CARDS */}
 			<Grid item xs={12} md={12} alignItems="center" flexDirection="column">

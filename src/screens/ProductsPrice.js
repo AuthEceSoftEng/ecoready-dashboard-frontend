@@ -6,115 +6,60 @@ import { extractFields, getCustomDateTime } from "../utils/data-handling-functio
 
 const customDate = getCustomDateTime(2024, 12);
 
-// Track if this is the very first mount of the component
-const isFirstMount = { current: true };
+const DEFAULT_PRICE_OPTIONS = {
+	product: "Japonica",
+	productType: "Avg",
+	productVar: "Avg",
+	country: "Greece",
+};
+
+const EMPTY_PRICE_OPTIONS = {
+	product: "",
+	productType: "",
+	productVar: "",
+	country: "",
+};
 
 export const PriceData = (globalProduct, selectedProductDetails, startDate, endDate, dateMetrics) => {
-	const pricesItems = useMemo(() => extractFields(selectedProductDetails, "prices") || [], [selectedProductDetails]);
-	const priceCollections = useMemo(() => (pricesItems.needsDropdown ? pricesItems.collections : []), [pricesItems]);
-
-	const hasInitializedCollection = useRef(false);
-	const hasInitializedOptions = useRef(false);
+	const isFirstMount = useRef(true);
 	const previousProduct = useRef(globalProduct);
+	const hasInitializedCollection = useRef(false);
+
+	const { pricesItems, priceCollections } = useMemo(() => {
+		const items = extractFields(selectedProductDetails, "prices") || { fields: [], needsDropdown: false };
+		return {
+			pricesItems: items,
+			priceCollections: items.needsDropdown ? items.collections : [],
+		};
+	}, [selectedProductDetails]);
 
 	const [selectedPriceCollection, setSelectedPriceCollection] = useState(priceCollections?.[0] ?? "");
-	const [priceOptions, setPriceOptions] = useState(() => {
-		if (isFirstMount.current) {
-			return {
-				product: "Japonica",
-				productType: "Avg",
-				productVar: "Avg",
-				country: "Greece",
-			};
-		}
-
-		return {
-			product: "",
-			productType: "",
-			productVar: "",
-			country: "",
-		};
-	});
+	const [priceOptions, setPriceOptions] = useState(() => (isFirstMount.current ? DEFAULT_PRICE_OPTIONS : EMPTY_PRICE_OPTIONS));
 
 	useEffect(() => {
 		if (previousProduct.current !== globalProduct) {
 			previousProduct.current = globalProduct;
 			hasInitializedCollection.current = false;
-			hasInitializedOptions.current = false;
+			setSelectedPriceCollection("");
 		}
+	}, [globalProduct]);
 
+	useEffect(() => {
 		if (!hasInitializedCollection.current && priceCollections?.length) {
 			setSelectedPriceCollection(priceCollections[0]);
 			hasInitializedCollection.current = true;
 		}
-	}, [globalProduct, priceCollections]);
+	}, [priceCollections]);
 
 	const collectionValue = selectedPriceCollection?.value;
+
+	// Mark first mount as complete after initial render
+	useEffect(() => { isFirstMount.current = false; }, []);
 
 	const collectionOptions = useMemo(() => {
 		if (!collectionValue || !selectedProductDetails) return null;
 		return selectedProductDetails[collectionValue] ?? null;
 	}, [selectedProductDetails, collectionValue]);
-
-	// Compute initial options based on available data
-	const initialOptions = useMemo(() => {
-		if (pricesItems.needsDropdown && collectionOptions) {
-			return {
-				product: collectionOptions.products?.[0]?.text ?? collectionOptions.products?.[0] ?? "",
-				productType: collectionOptions.productTypes?.[0]?.text ?? collectionOptions.productTypes?.[0] ?? "",
-				productVar: collectionOptions.productTypes?.[0]?.value ?? collectionOptions.productTypes?.[0] ?? "",
-				country: "",
-			};
-		}
-
-		const fields = pricesItems.fields?.[0];
-		return {
-			product: fields?.products?.[0]?.text ?? fields?.products?.[0] ?? "",
-			productType: fields?.productTypes?.[0]?.text ?? fields?.productTypes?.[0] ?? "",
-			productVar: fields?.productTypes?.[0]?.value ?? fields?.productTypes?.[0] ?? "",
-			country: "",
-		};
-	}, [pricesItems, collectionOptions]);
-
-	// Reset country when collection changes (after initial mount)
-	const previousCollection = useRef(collectionValue);
-	useEffect(() => {
-		if (previousCollection.current !== collectionValue) {
-			previousCollection.current = collectionValue;
-			// Reset country to empty so it gets set by the country validation effect in Products.js
-			setPriceOptions((prev) => ({
-				...prev,
-				country: "",
-			}));
-		}
-	}, [collectionValue]);
-
-	// Mark first mount as complete after initial render
-	useEffect(() => {
-		if (isFirstMount.current) {
-			isFirstMount.current = false;
-		}
-	}, []);
-
-	// Initialize options when they become available (skip on first mount since we have hardcoded values)
-	useEffect(() => {
-		if (hasInitializedOptions.current) return;
-		if (!initialOptions.product) return;
-
-		// Skip initialization if we already have valid hardcoded values (first mount)
-		if (priceOptions.product && priceOptions.productType && priceOptions.productVar) {
-			hasInitializedOptions.current = true;
-			return;
-		}
-
-		hasInitializedOptions.current = true;
-		setPriceOptions((prev) => ({
-			...prev,
-			product: initialOptions.product,
-			productType: initialOptions.productType,
-			productVar: initialOptions.productVar,
-		}));
-	}, [initialOptions, priceOptions.product, priceOptions.productType, priceOptions.productVar]);
 
 	const priceProducts = useMemo(() => {
 		if (pricesItems.needsDropdown) {
@@ -136,15 +81,11 @@ export const PriceData = (globalProduct, selectedProductDetails, startDate, endD
 	const { isValidDateRange, differenceInDays } = dateMetrics;
 	const { product: priceProduct, productVar } = priceOptions;
 
-	const isPriceConfigReady = Boolean(
-		globalProduct
-		&& isValidDateRange
-		&& (priceProduct || productVar),
-	);
+	const isPriceConfigReady = Boolean(globalProduct && isValidDateRange && (priceProduct || productVar));
 
 	const priceConfigs = useMemo(
 		() => {
-			if (!isPriceConfigReady) return [];
+			// if (!isPriceConfigReady) return [];
 			const configs = [];
 			if (getPriceConfigs) {
 				configs.push(...getPriceConfigs(
@@ -170,19 +111,12 @@ export const PriceData = (globalProduct, selectedProductDetails, startDate, endD
 
 			return configs;
 		},
-		[
-			isPriceConfigReady,
-			globalProduct,
-			startDate,
-			endDate,
-			differenceInDays,
-			priceProduct,
-			productVar,
-			collectionValue,
-		],
+		[globalProduct, startDate, endDate, differenceInDays, priceProduct, productVar, collectionValue],
 	);
 
 	const priceState = useInit(organization, priceConfigs);
+
+	const priceUnit = useMemo(() => priceConfigs?.[0]?.unit || "", [priceConfigs]);
 
 	return {
 		priceOptions,
@@ -192,9 +126,8 @@ export const PriceData = (globalProduct, selectedProductDetails, startDate, endD
 		priceProducts,
 		priceProductTypes,
 		priceCollections,
-		collectionOptions,
 		priceState,
 		isPriceConfigReady,
-		priceUnit: priceConfigs?.[0]?.unit || "",
+		priceUnit,
 	};
 };

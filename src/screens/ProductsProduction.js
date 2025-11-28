@@ -5,18 +5,22 @@ import useInit from "../utils/screen-init.js";
 import { extractFields } from "../utils/data-handling-functions.js";
 
 export const ProductionData = (globalProduct, selectedProductDetails, startDate, endDate, dateMetrics) => {
-	const productionItems = useMemo(() => extractFields(selectedProductDetails, "production") || [], [selectedProductDetails]);
-	const productionFields = useMemo(() => productionItems.fields[0] ?? {}, [productionItems]);
-	const productionProducts = useMemo(() => productionFields.products ?? [], [productionFields]);
-	const productTypes = useMemo(() => productionFields.productTypes ?? [], [productionFields]);
-	const productionMetrics = useMemo(() => productionFields.productionMetrics ?? [], [productionFields]);
+	const { productionProducts, productTypes, productionMetrics } = useMemo(() => {
+		const items = extractFields(selectedProductDetails, "production") || { fields: [] };
+		const fields = items.fields[0] ?? {};
+		return {
+			productionProducts: fields.products ?? [],
+			productTypes: fields.productTypes ?? [],
+			productionMetrics: fields.productionMetrics ?? [],
+		};
+	}, [selectedProductDetails]);
 
 	const [productionOptions, setProductionOptions] = useState({
 		year: "2024",
-		product: productionProducts?.[0] ?? null,
-		productType: productTypes?.[0] ?? null,
-		productionMetricType: productionMetrics?.[0]?.text ?? null,
-		productionMetricVal: productionMetrics?.[0]?.value ?? null,
+		product: productionProducts?.[0] ?? "",
+		productType: productTypes?.[0] ?? "",
+		productionMetricType: productionMetrics?.[0]?.text ?? "",
+		productionMetricVal: productionMetrics?.[0]?.value ?? "",
 	});
 
 	const [isProductionConfigReady, setIsProductionConfigReady] = useState(false);
@@ -53,11 +57,13 @@ export const ProductionData = (globalProduct, selectedProductDetails, startDate,
 	useEffect(() => {
 		const isProductionReady = Boolean(
 			globalProduct
-            && Object.values(productionOptions).some(Boolean)
-            && !productionState.state.error,
+			&& Object.values(productionOptions).some(Boolean)
+			&& !productionState.state.error,
 		);
 		setIsProductionConfigReady(isProductionReady);
 	}, [globalProduct, productionOptions, productionState.state.error]);
+
+	const productionUnit = useMemo(() => productionConfigs?.[0]?.unit || "", [productionConfigs]);
 
 	return {
 		productionOptions,
@@ -68,6 +74,6 @@ export const ProductionData = (globalProduct, selectedProductDetails, startDate,
 		handleProductionMetricChange,
 		productionState,
 		isProductionConfigReady,
-		productionUnit: productionConfigs?.[0]?.unit || "",
+		productionUnit,
 	};
 };
