@@ -27,11 +27,6 @@ const lcaConfigs = (ll, category) => [
 					operator: "eq",
 					property_value: category,
 				},
-				// {
-				// 	property_name: "type",
-				// 	operator: "ne",
-				// 	property_value: "Subcategory",
-				// },
 			],
 		}),
 		plotId: "lca_pies",

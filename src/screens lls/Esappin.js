@@ -1,5 +1,5 @@
 import { Grid } from "@mui/material";
-import { memo, useMemo, useState, useCallback, useRef } from "react";
+import { memo, useMemo, useState, useCallback } from "react";
 
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
@@ -10,6 +10,8 @@ import { getCustomDateTime, getMonthDetails, debounce, findKeyByText, isValidArr
 import { cardFooter, LoadingIndicator, DataWarning } from "../utils/rendering-items.js";
 import { monthNames } from "../utils/useful-constants.js";
 
+import LcaData from "./LcaCharts.js";
+
 const PRODUCTS = [
 	{ value: "Erdbeeren", text: "Erdbeeren" },
 	{ value: "Gerstefeld G1", text: "Gerstefeld G1" },
@@ -18,6 +20,8 @@ const PRODUCTS = [
 	{ value: "Rapsfeld H1", text: "Rapsfeld H1" },
 	{ value: "Rapsfeld H2", text: "Rapsfeld H2" },
 ];
+
+const SITES = ["1", "2"];
 
 const YEAR = 2024;
 const INITIAL_MONTH = 10;
@@ -59,7 +63,6 @@ const Esappin = () => {
 		onChange: handleProductChange,
 	}], [product, handleProductChange]);
 
-	const formRefDate = useRef();
 	const formContentDate = useMemo(() => [
 		{
 			customType: "date-picker",
@@ -74,6 +77,20 @@ const Esappin = () => {
 			onChange: handleMonthChange,
 		},
 	], [handleMonthChange, customDate]);
+
+	const [site, setSite] = useState(SITES[0]);
+
+	const handleSiteChange = useCallback((event) => {
+		setSite(event.target.value);
+	}, []);
+
+	const siteDropdown = useMemo(() => ({
+		id: "site-dropdown",
+		label: "Select Site",
+		items: SITES,
+		value: site,
+		onChange: handleSiteChange,
+	}), [site, handleSiteChange]);
 
 	const fetchConfigs = useMemo(
 		() => (esappinConfigs(product.value, dateRange.startDate, dateRange.endDate)),
@@ -218,7 +235,7 @@ const Esappin = () => {
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
-			<StickyBand dropdownContent={dropdownContent} formContent={formContentDate} formRef={formRefDate} />
+			<StickyBand dropdownContent={dropdownContent} formContent={formContentDate} />
 
 			{/* Monthly Overview Card */}
 			<Grid item xs={12} md={12} alignItems="center" flexDirection="column" padding={0}>
@@ -286,7 +303,7 @@ const Esappin = () => {
 
 			{/* Chart Cards */}
 			{charts.map((card, index) => (
-				<Grid key={index} item xs={12} sm={12} md={6} mb={index === charts.length - 1 ? 1 : 0}>
+				<Grid key={index} item xs={12} sm={12} md={6}>
 					<Card title={card.title} footer={cardFooter({ minutesAgo })}>
 						{isLoading ? (<LoadingIndicator minHeight="300px" />
 						) : isValidArray(metrics) ? (
@@ -296,7 +313,6 @@ const Esappin = () => {
 								title={dateRange.month ? `${monthNames[dateRange.month].text} ${year}` : ""}
 								showLegend={index === 0 || index === 3}
 								height="300px"
-								xaxis={card?.xaxis}
 								yaxis={card?.yaxis}
 							/>
 						) : (
@@ -305,6 +321,8 @@ const Esappin = () => {
 					</Card>
 				</Grid>
 			))}
+			{/* LCA Data */}
+			<LcaData organization={`${organization}1_${site}`} minutesAgo={minutesAgo} additionalDropdown={siteDropdown} />
 		</Grid>
 	);
 };

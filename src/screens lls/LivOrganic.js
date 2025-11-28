@@ -1,5 +1,5 @@
 import { Grid } from "@mui/material";
-import { memo, useMemo, useState, useCallback, useRef } from "react";
+import { memo, useMemo, useState, useCallback } from "react";
 
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
@@ -8,6 +8,8 @@ import useInit from "../utils/screen-init.js";
 import { organization, livOrganicConfigs } from "../config/LivOrganicConfig.js";
 import { calculateDates, calculateDifferenceBetweenDates } from "../utils/data-handling-functions.js";
 import { cardFooter, DataWarning, LoadingIndicator } from "../utils/rendering-items.js";
+
+import LcaData from "./LcaCharts.js";
 
 const LivOrganic = () => {
 	const [startDate, setStartDate] = useState("2024-06-01");
@@ -19,8 +21,6 @@ const LivOrganic = () => {
 		const { currentDate } = calculateDates(newValue.$d);
 		setter(currentDate);
 	}, []);
-
-	const formRefDate = useRef();
 
 	const formContentDate = useMemo(() => [
 		{
@@ -198,7 +198,7 @@ const LivOrganic = () => {
 
 	return (
 		<Grid container display="flex" direction="row" justifyContent="space-around" spacing={1}>
-			<StickyBand formRef={formRefDate} formContent={formContentDate} />
+			<StickyBand formContent={formContentDate} />
 			{isValidDateRange ? (
 				<>
 					<Grid item xs={12} md={12} alignItems="center" flexDirection="column">
@@ -246,7 +246,7 @@ const LivOrganic = () => {
 						</Card>
 					</Grid>
 					{graphConfigs.map((card, index) => (
-						<Grid key={index} item xs={12} sm={12} md={6} mb={index === graphConfigs.length - 1 ? 1 : 0}>
+						<Grid key={card.title} item xs={12} sm={12} md={6}>
 							<Card title={card.title} footer={cardFooter({ minutesAgo })}>
 								{isLoading ? (
 									<LoadingIndicator minHeight="300px" message={`Loading ${card.title.toLowerCase()}...`} />
@@ -268,6 +268,8 @@ const LivOrganic = () => {
 				</>
 			) : (<DataWarning message="Please Select a Valid Date Range" />
 			)}
+			{/* LCA Section */}
+			<LcaData organization={organization} minutesAgo={minutesAgo} />
 		</Grid>
 	);
 };
